@@ -1,0 +1,38 @@
+{
+  "_comentario": "Enemigos fijos (mini-jefe y jefe) del arco tutorial/chunin. Los enemigos genéricos de los nodos de combate normales se pueden generar aparte, escalando stats según el nivel del nodo.",
+  "jefesDelArco": [
+    {
+      "id": "haku",
+      "nombre": "Haku",
+      "rol": "miniJefe",
+      "tipo": "suiton",
+      "statsBase": { "hp": 90, "ataque": 14, "defensa": 12, "velocidad": 14 },
+      "jutsu": {
+        "nombre": "Espejos de Hielo Demoniaco",
+        "descripcion": "Encierra al rival en una prisión de espejos de hielo, ralentizándolo.",
+        "danoBase": 1.3,
+        "efectoEstado": { "stat": "velocidad", "objetivo": "enemigo", "cantidad": -3, "duracionTurnos": 2 }
+      },
+      "recompensa": { "xp": 150, "objetoGarantizado": "pergamino_viento" }
+    },
+    {
+      "id": "gaara",
+      "nombre": "Gaara",
+      "rol": "jefeFinal",
+      "tipo": "doton",
+      "statsBase": { "hp": 160, "ataque": 18, "defensa": 16, "velocidad": 11 },
+      "jutsu": {
+        "nombre": "Ataúd de Arena",
+        "descripcion": "Aplasta al rival con arena compacta, reduciendo su defensa de forma severa.",
+        "danoBase": 1.4,
+        "efectoEstado": { "stat": "defensa", "objetivo": "enemigo", "cantidad": -4, "duracionTurnos": 3 }
+      },
+      "modo": {
+        "nombre": "Escudo de Arena Absoluta",
+        "activoDesdeVidaPorcentaje": 50,
+        "multiplicadores": { "ataque": 1.2, "defensa": 1.6, "velocidad": 0.9, "hp": 1.0 }
+      },
+      "recompensa": { "xp": 400, "objetoGarantizado": "calabaza_arena", "desbloqueaSiguienteArco": true }
+    }
+  ]
+}

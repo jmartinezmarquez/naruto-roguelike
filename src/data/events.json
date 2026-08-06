@@ -1,0 +1,65 @@
+{
+  "_comentario": "Cada evento tiene un texto de contexto y 2-3 elecciones con efectos concretos sobre el equipo/inventario. El motor solo necesita interpretar el campo 'efecto' de cada elección.",
+  "eventos": [
+    {
+      "id": "puente_naruto",
+      "titulo": "El puente a medio construir",
+      "descripcion": "Encontráis a Tazuna supervisando la obra. Os ofrece descansar antes de seguir.",
+      "elecciones": [
+        {
+          "texto": "Descansar y curar al equipo",
+          "efecto": { "tipo": "curarEquipo", "cantidad": "20porciento" }
+        },
+        {
+          "texto": "Seguir entrenando en el bosque",
+          "efecto": { "tipo": "ganarXpEquipo", "cantidad": 15 }
+        }
+      ]
+    },
+    {
+      "id": "mercader_ambulante",
+      "titulo": "Mercader ambulante",
+      "descripcion": "Un comerciante nervioso os ofrece un objeto misterioso a cambio de ryo.",
+      "elecciones": [
+        {
+          "texto": "Comprar el objeto misterioso (30 ryo)",
+          "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 30 }
+        },
+        {
+          "texto": "Rechazar y seguir camino",
+          "efecto": { "tipo": "ninguno" }
+        }
+      ]
+    },
+    {
+      "id": "trampa_niebla",
+      "titulo": "Niebla espesa",
+      "descripcion": "Una niebla densa cubre el camino. Podría ser una trampa... o un atajo.",
+      "elecciones": [
+        {
+          "texto": "Avanzar con cautela",
+          "efecto": { "tipo": "combateSorpresa", "probabilidad": 0.5, "nivelEnemigo": "actual" }
+        },
+        {
+          "texto": "Rodear la niebla",
+          "efecto": { "tipo": "perderTiempo", "consecuencia": "menosOroSiguienteTienda" }
+        }
+      ]
+    },
+    {
+      "id": "pergamino_abandonado",
+      "titulo": "Pergamino abandonado",
+      "descripcion": "Alguien dejó caer un pergamino de técnicas a medio completar.",
+      "elecciones": [
+        {
+          "texto": "Estudiarlo (sube una estadística permanente al azar)",
+          "efecto": { "tipo": "mejoraPermanenteAleatoria", "objetivo": "personajeAleatorioEquipo" }
+        },
+        {
+          "texto": "Ignorarlo, no es de fiar",
+          "efecto": { "tipo": "ninguno" }
+        }
+      ]
+    }
+  ]
+}
