@@ -57,7 +57,10 @@ que reciben datos y devuelven datos nuevos. Detalle en `documentacion/09-motor-e
 - [x] `engine/leveling.js`, `engine/combat.js` (combate automático 1v1, `obtenerModoActivo` soporta hasta 2 tiers)
 - [x] `store/useGameStore.js` (equipo, oro, inventario, `jugarCombate`, `reclutarPersonaje(id, nivelInicial)`, reparto de XP con banquillo, persistencia en localStorage)
 - [x] `engine/mapGenerator.js` (`generarMapa`, `resolverEnemigoDeNodo`, `calcularNivelPorPiso`)
-- [ ] Componentes de UI — próximo paso. El store necesita ampliarse para guardar `mapa` y `nodoActualId` real, pasar `nivelInicial` real al reclutar, y para interpretar `recompensa.finDeLaRun` (victoria de la run completa).
+- [x] `components/Map/MapScreen.jsx` — pantalla de Mapa con dirección visual propia (tinta/pergamino). Store ampliado con `mapa`, `avanzarANodo`, `obtenerNodosDisponibles`.
+- [ ] Pantalla de Combate — próximo paso. `avanzarANodo` ya resuelve el combate en el store, pero no hay UI que muestre `ultimoResultadoCombate` todavía.
+- [ ] Pantallas de Evento, Tienda, Descanso, Reclutamiento, Equipo/Inventario.
+- [ ] `App.jsx` real (el actual es temporal, solo para probar el mapa).
 
 Diseños documentados pero NO implementados: sistema de logros/meta-progresión
 (`project-data/achievements-DISEÑO.json`), cadena de jefes para combates de grupo

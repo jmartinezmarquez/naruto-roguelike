@@ -1,1 +1,27 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+
+@theme {
+  --font-display: "Shippori Mincho", serif;
+  --font-body: "Zen Kaku Gothic New", sans-serif;
+
+  --color-tinta-950: #151210;
+  --color-tinta-900: #1E1A16;
+  --color-tinta-800: #2A241E;
+  --color-pergamino-100: #EDE3CC;
+  --color-pergamino-200: #E0D3B0;
+  --color-sello-600: #B23A2E;
+  --color-sello-500: #C94A3C;
+
+  --color-katon: #D9532B;
+  --color-fuuton: #5E9C84;
+  --color-raiton: #D9B23C;
+  --color-doton: #8C6B47;
+  --color-suiton: #3D7A9E;
+}
+
+body {
+  margin: 0;
+  background: var(--color-tinta-950);
+  font-family: var(--font-body);
+}

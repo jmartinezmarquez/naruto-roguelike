@@ -10,6 +10,7 @@ import configGlobal from '../data/config.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp } from '../engine/leveling';
+import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
 
@@ -31,6 +32,8 @@ export const useGameStore = create((set, get) => ({
   oro: 0,
   inventario: [], // array de ids de items (pasivos obtenidos + consumibles sin usar)
   arcoActualId: null,
+  arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
+  mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
   ultimoResultadoCombate: null, // { historial, ganadorId } — para que la UI lo anime
   runTerminada: false,
@@ -39,22 +42,56 @@ export const useGameStore = create((set, get) => ({
   // ---------- ACCIONES ----------
 
   /** Arranca una run nueva con hasta 3 personajes iniciales (config.equipo.tamanoMaximo). */
-  iniciarRun(personajesInicialesIds, arcoId) {
+  iniciarRun(personajesInicialesIds, arco) {
     const tamanoMaximo = configGlobal.equipo.tamanoMaximo;
     const equipoInicial = personajesInicialesIds
       .slice(0, tamanoMaximo)
-      .map(crearInstanciaPersonaje);
+      .map((id) => crearInstanciaPersonaje(id));
 
     set({
       equipo: equipoInicial,
       oro: configGlobal.economia.oroInicial,
       inventario: [],
-      arcoActualId: arcoId,
+      arcoActualId: arco.id,
+      arcoActualDatos: arco,
+      mapa: generarMapa(arco),
       nodoActualId: null,
       ultimoResultadoCombate: null,
       runTerminada: false,
       runGanada: false,
     });
+  },
+
+  /**
+   * Avanza al nodo indicado: lo marca visitado, actualiza nodoActualId, y si
+   * es un nodo con combate lo resuelve automáticamente contra el enemigo que
+   * le corresponda. La UI llama a esto cuando el jugador pulsa un nodo
+   * disponible en el mapa.
+   */
+  avanzarANodo(nodoId) {
+    const { mapa, arcoActualDatos } = get();
+    if (!mapa || !mapa.nodos[nodoId]) return null;
+
+    const nodo = mapa.nodos[nodoId];
+    const mapaActualizado = {
+      ...mapa,
+      nodos: { ...mapa.nodos, [nodoId]: { ...nodo, visitado: true } },
+    };
+    set({ mapa: mapaActualizado, nodoActualId: nodoId });
+
+    const infoEnemigo = resolverEnemigoDeNodo(nodo, arcoActualDatos);
+    if (infoEnemigo) {
+      return get().jugarCombate(infoEnemigo.enemigoBase, infoEnemigo.nivel);
+    }
+    return null; // nodo sin combate (evento/tienda/descanso/reclutamiento) — lo resuelve otra pantalla
+  },
+
+  /** Ids de los nodos a los que el jugador puede ir ahora mismo desde donde está. */
+  obtenerNodosDisponibles() {
+    const { mapa, nodoActualId } = get();
+    if (!mapa) return [];
+    if (nodoActualId === null) return mapa.nodosIniciales;
+    return mapa.nodos[nodoActualId]?.conexiones ?? [];
   },
 
   /**
