@@ -7,7 +7,7 @@
 - [x] Diseño del sistema de tipos (naturalezas de chakra).
 - [x] Diseño de personajes (stats, jutsu, modo) — 12 personajes + 2 jefes.
 - [x] Scaffolding inicial del proyecto (Vite + React + Zustand + Tailwind v4).
-- [x] JSON de datos: `types.json`, `characters.json`, `enemies.json`, `arcs/tutorial-chunin.json`, `events.json`.
+- [x] JSON de datos: `types.json`, `characters.json`, `enemies.json`, `common-enemies.json`, `items.json`, `config.json`, `arcs/tutorial-chunin.json`, `events.json`.
 
 ## Próximos pasos (en orden sugerido)
 
@@ -21,7 +21,6 @@
 ## Backlog (post-MVP)
 
 - Arcos adicionales (fuera del tutorial/chunin).
-- Objetos pasivos / reliquias.
 - Modo Nuzlocke.
 - Sistema de cuentas / guardado remoto.
 - Arte propio (sustituir placeholders).

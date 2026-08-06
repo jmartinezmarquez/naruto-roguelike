@@ -1,0 +1,101 @@
+{
+  "_comentario": "Dos categorías: plantillasGenericas (se instancian escalando statsBaseNivel1 * escaladoNivelPorPiso, definido en el arco) para rellenar nodos de combate aleatorios, y enemigosNombrados (fijos, con más presencia narrativa, aparecen en pisos concretos según se configure).",
+  "plantillasGenericas": [
+    {
+      "id": "genin_rival_katon",
+      "nombre": "Genin Rival",
+      "tipo": "katon",
+      "statsBaseNivel1": { "hp": 20, "ataque": 5, "defensa": 4, "velocidad": 5 },
+      "jutsuGenerico": {
+        "nombre": "Jutsu de Fuego Menor",
+        "danoBase": 1.1,
+        "efectoEstado": { "stat": "defensa", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
+      }
+    },
+    {
+      "id": "genin_rival_fuuton",
+      "nombre": "Genin Rival",
+      "tipo": "fuuton",
+      "statsBaseNivel1": { "hp": 18, "ataque": 5, "defensa": 3, "velocidad": 6 },
+      "jutsuGenerico": {
+        "nombre": "Ráfaga Cortante",
+        "danoBase": 1.1,
+        "efectoEstado": { "stat": "velocidad", "objetivo": "propio", "cantidad": 1, "duracionTurnos": 1 }
+      }
+    },
+    {
+      "id": "genin_rival_raiton",
+      "nombre": "Genin Rival",
+      "tipo": "raiton",
+      "statsBaseNivel1": { "hp": 19, "ataque": 6, "defensa": 3, "velocidad": 5 },
+      "jutsuGenerico": {
+        "nombre": "Descarga Menor",
+        "danoBase": 1.15,
+        "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
+      }
+    },
+    {
+      "id": "genin_rival_doton",
+      "nombre": "Genin Rival",
+      "tipo": "doton",
+      "statsBaseNivel1": { "hp": 22, "ataque": 4, "defensa": 6, "velocidad": 3 },
+      "jutsuGenerico": {
+        "nombre": "Muro de Tierra",
+        "danoBase": 0.9,
+        "efectoEstado": { "stat": "defensa", "objetivo": "propio", "cantidad": 2, "duracionTurnos": 2 }
+      }
+    },
+    {
+      "id": "genin_rival_suiton",
+      "nombre": "Genin Rival",
+      "tipo": "suiton",
+      "statsBaseNivel1": { "hp": 20, "ataque": 5, "defensa": 5, "velocidad": 4 },
+      "jutsuGenerico": {
+        "nombre": "Latigazo de Agua",
+        "danoBase": 1.1,
+        "efectoEstado": { "stat": "velocidad", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
+      }
+    }
+  ],
+  "enemigosNombrados": [
+    {
+      "id": "zaku",
+      "nombre": "Zaku Abumi",
+      "tipo": "fuuton",
+      "statsBase": { "hp": 42, "ataque": 10, "defensa": 6, "velocidad": 7 },
+      "jutsu": {
+        "nombre": "Slicing Sound Wave",
+        "descripcion": "Ondas de aire comprimido lanzadas desde los brazos.",
+        "danoBase": 1.25,
+        "efectoEstado": { "stat": "defensa", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
+      },
+      "recompensa": { "xp": 60 }
+    },
+    {
+      "id": "dosu",
+      "nombre": "Dosu Kinuta",
+      "tipo": "raiton",
+      "statsBase": { "hp": 45, "ataque": 9, "defensa": 8, "velocidad": 6 },
+      "jutsu": {
+        "nombre": "Vibración Sónica",
+        "descripcion": "Un brazalete emite un sonido que desorienta al rival.",
+        "danoBase": 1.15,
+        "efectoEstado": { "stat": "velocidad", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
+      },
+      "recompensa": { "xp": 60 }
+    },
+    {
+      "id": "kin",
+      "nombre": "Kin Tsuchi",
+      "tipo": "doton",
+      "statsBase": { "hp": 38, "ataque": 8, "defensa": 6, "velocidad": 8 },
+      "jutsu": {
+        "nombre": "Senbon Ilusorio",
+        "descripcion": "Agujas lanzadas con precisión para debilitar la concentración del rival.",
+        "danoBase": 1.1,
+        "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
+      },
+      "recompensa": { "xp": 50 }
+    }
+  ]
+}
