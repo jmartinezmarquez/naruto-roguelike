@@ -14,7 +14,10 @@
 - `crearLuchador(personajeBase, nivel)` — instancia de combate con stats calculadas. Calcula el modo activo **internamente** con `obtenerModoActivo` — ya no recibe `modoActivo` como parámetro, no hace falta decidirlo por fuera.
 - `calcularDano(atacante, defensor, jutsu)` — fórmula: `ataqueEfectivo * jutsu.danoBase * eficacia - defensaEfectiva * 0.5`, mínimo 1.
 - `aplicarEfectoEstado` / `reducirDuracionModificadores` — buffs/debuffs temporales con contador de turnos.
-- `resolverTurno(luchador1, luchador2)` — resuelve un turno completo (orden por velocidad, ambos ataques, reduce duración de efectos).
+- `resolverTurno(luchador1, luchador2)` — resuelve un turno completo (orden por velocidad, ambos ataques, reduce duración de efectos). Usada internamente por `resolverCombateCompleto`.
+- `resolverCombateCompleto(luchador1, luchador2)` — encadena turnos automáticamente hasta que uno caiga o se alcance `config.combate.turnosMaximos` (empate resuelto por % de HP restante).
+
+> Bug corregido: al introducir `resolverCombateCompleto`, un `str_replace` sustituyó por completo la función `resolverTurno` sin darse cuenta de que la nueva función la sigue llamando internamente en su bucle — quedó una llamada a una función inexistente (`ReferenceError: resolverTurno is not defined`). Reinsertada. Lección: al reemplazar una función que otra sigue usando, verificar las llamadas internas antes de dar el cambio por bueno.
 
 ## `store/useGameStore.js`
 

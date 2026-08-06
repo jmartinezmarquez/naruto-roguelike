@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 
 // Un icono simple por tipo de nodo, en vez de depender de assets externos.
@@ -80,6 +80,21 @@ export default function MapScreen() {
   const posiciones = useMemo(() => (mapa ? calcularPosiciones(mapa) : {}), [mapa]);
   const disponibles = useMemo(() => new Set(obtenerNodosDisponibles()), [mapa, nodoActualId]);
 
+  // TEMPORAL: mientras no existan pantallas de Evento/Tienda/Descanso/
+  // Reclutamiento, avisamos en vez de dejar el clic sin ningún efecto visible.
+  // Quitar cuando esas pantallas existan.
+  const [avisoNodoSinPantalla, setAvisoNodoSinPantalla] = useState(null);
+  const tiposConPantalla = new Set(['combate', 'miniJefe', 'jefe']);
+
+  function manejarClicNodo(nodoId) {
+    const nodo = mapa.nodos[nodoId];
+    if (!tiposConPantalla.has(nodo.tipo)) {
+      setAvisoNodoSinPantalla(nodo.tipo);
+      setTimeout(() => setAvisoNodoSinPantalla(null), 2500);
+    }
+    avanzarANodo(nodoId);
+  }
+
   if (!mapa) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
@@ -97,6 +112,11 @@ export default function MapScreen() {
         <h1 className="font-display text-3xl font-bold text-pergamino-100">
           {arcoActualDatos?.nombre}
         </h1>
+        {avisoNodoSinPantalla && (
+          <p className="mt-2 text-xs text-raiton bg-tinta-800 border border-raiton/30 rounded-full inline-block px-3 py-1">
+            El nodo "{avisoNodoSinPantalla}" todavía no tiene pantalla propia (próximamente)
+          </p>
+        )}
       </header>
 
       <div className="max-w-2xl mx-auto overflow-x-auto">
@@ -138,7 +158,7 @@ export default function MapScreen() {
               disponible={disponibles.has(nodo.id)}
               visitado={nodo.visitado}
               esActual={nodo.id === nodoActualId}
-              onClick={avanzarANodo}
+              onClick={manejarClicNodo}
             />
           ))}
         </div>

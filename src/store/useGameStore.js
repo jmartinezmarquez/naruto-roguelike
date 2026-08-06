@@ -35,7 +35,8 @@ export const useGameStore = create((set, get) => ({
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
   mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
-  ultimoResultadoCombate: null, // { historial, ganadorId } — para que la UI lo anime
+  pantalla: 'mapa', // 'mapa' | 'combate' — qué pantalla debe mostrar la UI ahora mismo
+  ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   runTerminada: false,
   runGanada: false,
 
@@ -56,6 +57,7 @@ export const useGameStore = create((set, get) => ({
       arcoActualDatos: arco,
       mapa: generarMapa(arco),
       nodoActualId: null,
+      pantalla: 'mapa',
       ultimoResultadoCombate: null,
       runTerminada: false,
       runGanada: false,
@@ -81,7 +83,9 @@ export const useGameStore = create((set, get) => ({
 
     const infoEnemigo = resolverEnemigoDeNodo(nodo, arcoActualDatos);
     if (infoEnemigo) {
-      return get().jugarCombate(infoEnemigo.enemigoBase, infoEnemigo.nivel);
+      const resultado = get().jugarCombate(infoEnemigo.enemigoBase, infoEnemigo.nivel);
+      set({ pantalla: 'combate' });
+      return resultado;
     }
     return null; // nodo sin combate (evento/tienda/descanso/reclutamiento) — lo resuelve otra pantalla
   },
@@ -141,7 +145,30 @@ export const useGameStore = create((set, get) => ({
     const resultado = resolverCombateCompleto(luchadorJugador, luchadorEnemigo);
     const jugadorGano = resultado.ganadorId === luchadorJugador.id;
 
-    set({ ultimoResultadoCombate: resultado });
+    // Resumen enriquecido para la UI: nombres y HP máximo, no solo IDs.
+    // luchadorJugador/luchadorEnemigo ya tienen hpActual final (mutado por
+    // resolverCombateCompleto), así que lo capturamos aquí.
+    const resumen = {
+      historial: resultado.historial,
+      turnosUsados: resultado.turnosUsados,
+      jugadorGano,
+      jugador: {
+        id: luchadorJugador.id,
+        nombre: luchadorJugador.nombre,
+        hpMaximo: luchadorJugador.hpMaximo,
+        hpFinal: luchadorJugador.hpActual,
+        modoActivoNombre: luchadorJugador.modoActivo?.nombre ?? null,
+      },
+      enemigo: {
+        id: luchadorEnemigo.id,
+        nombre: luchadorEnemigo.nombre,
+        hpMaximo: luchadorEnemigo.hpMaximo,
+        hpFinal: luchadorEnemigo.hpActual,
+        modoActivoNombre: luchadorEnemigo.modoActivo?.nombre ?? null,
+      },
+    };
+
+    set({ ultimoResultadoCombate: resumen });
 
     if (jugadorGano) {
       get()._aplicarVictoria(activo.id, personajeBase, enemigoBase);
@@ -149,7 +176,12 @@ export const useGameStore = create((set, get) => ({
       get()._aplicarDerrota(activo.id);
     }
 
-    return resultado;
+    return resumen;
+  },
+
+  /** Vuelve del resultado de combate al mapa. La UI la llama al pulsar "Continuar". */
+  volverAlMapa() {
+    set({ pantalla: 'mapa', ultimoResultadoCombate: null });
   },
 
   /** Interno: aplica XP y recompensas tras ganar un combate. No lo llames desde la UI. */

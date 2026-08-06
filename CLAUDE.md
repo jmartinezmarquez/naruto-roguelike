@@ -58,9 +58,10 @@ que reciben datos y devuelven datos nuevos. Detalle en `documentacion/09-motor-e
 - [x] `store/useGameStore.js` (equipo, oro, inventario, `jugarCombate`, `reclutarPersonaje(id, nivelInicial)`, reparto de XP con banquillo, persistencia en localStorage)
 - [x] `engine/mapGenerator.js` (`generarMapa`, `resolverEnemigoDeNodo`, `calcularNivelPorPiso`)
 - [x] `components/Map/MapScreen.jsx` — pantalla de Mapa con dirección visual propia (tinta/pergamino). Store ampliado con `mapa`, `avanzarANodo`, `obtenerNodosDisponibles`.
-- [ ] Pantalla de Combate — próximo paso. `avanzarANodo` ya resuelve el combate en el store, pero no hay UI que muestre `ultimoResultadoCombate` todavía.
-- [ ] Pantallas de Evento, Tienda, Descanso, Reclutamiento, Equipo/Inventario.
-- [ ] `App.jsx` real (el actual es temporal, solo para probar el mapa).
+- [x] `components/Combat/CombatScreen.jsx` — animación turno a turno del combate. Store ampliado con `pantalla` ('mapa'|'combate'), `volverAlMapa`. `jugarCombate` ahora guarda un resumen enriquecido (nombres, HP máximo) en `ultimoResultadoCombate`, no solo IDs.
+- [ ] Pantallas de Evento, Tienda, Descanso, Reclutamiento, Equipo/Inventario — próximo paso.
+- [ ] Pantalla de Game Over dedicada (ahora mismo runTerminada solo muestra un mensaje sin botón dentro de CombatScreen).
+- [ ] `App.jsx` real (el actual es temporal, solo para probar Mapa/Combate).
 
 Diseños documentados pero NO implementados: sistema de logros/meta-progresión
 (`project-data/achievements-DISEÑO.json`), cadena de jefes para combates de grupo

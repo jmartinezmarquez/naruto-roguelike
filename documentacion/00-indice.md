@@ -14,7 +14,7 @@
 - [10 - Generador de mapa](./10-generador-de-mapa.md)
 - [11 - Progresión y arcos](./11-progresion-y-arcos.md)
 - [12 - Cadena de jefes (grupo de rivales)](./12-cadena-de-jefes.md)
-- [13 - UI: dirección visual y pantalla de Mapa](./13-ui-mapa.md)
+- [13 - UI: dirección visual, Mapa y Combate](./13-ui-mapa-y-combate.md)
 
 ## Diseños pendientes de implementar
 

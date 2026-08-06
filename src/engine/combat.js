@@ -107,6 +107,33 @@ export function determinarOrden(luchadorA, luchadorB) {
 }
 
 /**
+ * Resuelve un turno completo de combate 1 vs 1: orden por velocidad, ambos
+ * ataques (si el segundo sigue con vida), y reduce la duración de los
+ * efectos de estado al final. No decide qué jutsu usa cada uno (cada
+ * personaje solo tiene un jutsu, así que no hay elección que resolver).
+ */
+export function resolverTurno(luchador1, luchador2) {
+  const [primero, segundo] = determinarOrden(luchador1, luchador2);
+  const eventos = [ejecutarJutsu(primero, segundo)];
+
+  if (segundo.hpActual > 0) {
+    eventos.push(ejecutarJutsu(segundo, primero));
+  }
+
+  reducirDuracionModificadores(luchador1);
+  reducirDuracionModificadores(luchador2);
+
+  const luchador1Derrotado = luchador1.hpActual <= 0;
+  const luchador2Derrotado = luchador2.hpActual <= 0;
+
+  return {
+    eventos,
+    combateTerminado: luchador1Derrotado || luchador2Derrotado,
+    ganadorId: luchador1Derrotado ? luchador2.id : luchador2Derrotado ? luchador1.id : null,
+  };
+}
+
+/**
  * Resuelve un combate 1 vs 1 completo de forma automática, encadenando
  * turnos hasta que uno de los dos caiga o se alcance el límite de turnos
  * (config.combate.turnosMaximos). No hay ninguna decisión del jugador
