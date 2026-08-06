@@ -1,0 +1,18 @@
+{
+  "_comentario": "Sistema de 5 naturalezas de chakra. Ciclo canon: Katon > Fuuton > Raiton > Doton > Suiton > Katon. Multiplicador 1.5 = fuerte contra, 0.5 = débil contra, 1.0 = neutral.",
+  "elementos": ["katon", "fuuton", "raiton", "doton", "suiton"],
+  "nombres": {
+    "katon": "Katon (Fuego)",
+    "fuuton": "Fuuton (Viento)",
+    "raiton": "Raiton (Rayo)",
+    "doton": "Doton (Tierra)",
+    "suiton": "Suiton (Agua)"
+  },
+  "tablaEficacias": {
+    "katon":  { "katon": 1.0, "fuuton": 1.5, "raiton": 1.0, "doton": 1.0, "suiton": 0.5 },
+    "fuuton": { "katon": 0.5, "fuuton": 1.0, "raiton": 1.5, "doton": 1.0, "suiton": 1.0 },
+    "raiton": { "katon": 1.0, "fuuton": 0.5, "raiton": 1.0, "doton": 1.5, "suiton": 1.0 },
+    "doton":  { "katon": 1.0, "fuuton": 1.0, "raiton": 0.5, "doton": 1.0, "suiton": 1.5 },
+    "suiton": { "katon": 1.5, "fuuton": 1.0, "raiton": 1.0, "doton": 0.5, "suiton": 1.0 }
+  }
+}
