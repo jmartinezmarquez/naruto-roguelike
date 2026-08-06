@@ -1,0 +1,25 @@
+{
+  "_comentario": "Segundo arco de la run (nivel ~16 a 55). El equipo ya viene formado del arco anterior; solo se elige personajesInicialesIds en el primer arco de la run.",
+  "id": "examen_chunin",
+  "nombre": "Examen Chunin",
+  "temaVisual": "bosque_de_la_muerte",
+  "numeroPisos": 10,
+  "nodosPorPiso": { "min": 2, "max": 3 },
+  "poolTiposNodo": [
+    { "tipo": "combate", "peso": 45 },
+    { "tipo": "evento", "peso": 25 },
+    { "tipo": "reclutamiento", "peso": 15 },
+    { "tipo": "tienda", "peso": 10 },
+    { "tipo": "descanso", "peso": 5 }
+  ],
+  "pisoMiniJefe": 5,
+  "miniJefeId": "kabuto",
+  "pisoJefeFinal": 10,
+  "jefeFinalId": "gaara",
+  "personajesReclutablesIds": [
+    "rock_lee", "neji", "tenten", "shikamaru", "ino",
+    "choji", "kiba", "hinata", "shino"
+  ],
+  "nivelEnemigoBase": 16,
+  "escaladoNivelPorPiso": 4.3
+}

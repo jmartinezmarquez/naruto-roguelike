@@ -8,5 +8,16 @@
 - [04 - Estructura de datos (JSON)](./04-estructura-de-datos.md)
 - [05 - Roadmap](./05-roadmap.md)
 - [06 - FAQ](./06-faq.md)
+- [07 - Estructura de carpetas](./07-estructura-carpetas.md)
+- [08 - Git y GitHub](./08-git-y-github.md)
+- [09 - Motor del juego (engine)](./09-motor-engine.md)
+- [10 - Generador de mapa](./10-generador-de-mapa.md)
+- [11 - Progresión y arcos](./11-progresion-y-arcos.md)
+- [12 - Cadena de jefes (grupo de rivales)](./12-cadena-de-jefes.md)
+
+## Diseños pendientes de implementar
+
+- `project-data/achievements-DISEÑO.json` (fuera de `src/data/` a propósito, no se importa desde
+  ningún código todavía) — esquema propuesto para el sistema de logros/meta-progresión entre runs.
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

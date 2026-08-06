@@ -14,7 +14,9 @@
     "ordenPorVelocidad": true
   },
   "progresion": {
-    "nivelMaximo": 20,
+    "nivelMaximo": 100,
+    "crecimientoStatsPorNivel": 0.08,
+    "porcentajeXpBanquillo": 0.4,
     "multiplicadorEficaciaFuerte": 1.5,
     "multiplicadorEficaciaDebil": 0.5,
     "multiplicadorEficaciaNeutral": 1.0

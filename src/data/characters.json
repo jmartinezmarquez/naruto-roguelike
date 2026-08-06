@@ -1,233 +1,671 @@
 {
-  "_comentario": "Cada personaje tiene stats base (nivel 1), un jutsu característico que inflige daño y mejora/empeora un estado, y un 'modo' que se activa a partir de cierto nivel: multiplica stats pero NO cambia el jutsu, igual que las transformaciones DBZ.",
+  "_comentario": "Cada personaje tiene stats base (nivel 1), un jutsu característico que inflige daño y mejora/empeora un estado, y un array 'modos' con hasta 2 transformaciones. Cada modo se activa a partir de nivelDesbloqueo (el motor elige automáticamente el de mayor nivel desbloqueado) y multiplica stats — NUNCA cambia el jutsu, igual que las transformaciones DBZ.",
   "personajes": [
     {
       "id": "naruto",
       "nombre": "Naruto Uzumaki",
       "tipo": "fuuton",
       "rareza": "inicial",
-      "statsBase": { "hp": 45, "ataque": 9, "defensa": 7, "velocidad": 8 },
-      "curvaXp": { "xpParaSiguienteNivel": 40, "crecimiento": 1.12 },
+      "statsBase": {
+        "hp": 45,
+        "ataque": 9,
+        "defensa": 7,
+        "velocidad": 8
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 24,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Rasengan",
         "descripcion": "Esfera giratoria de chakra que daña y desestabiliza al rival.",
         "danoBase": 1.3,
-        "efectoEstado": { "stat": "defensa", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "defensa",
+          "objetivo": "enemigo",
+          "cantidad": -2,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Manto de Chakra del Kyuubi",
-        "nivelDesbloqueo": 12,
-        "multiplicadores": { "ataque": 1.4, "defensa": 1.2, "velocidad": 1.3, "hp": 1.2 }
-      }
+      "modos": [
+        {
+          "nombre": "Manto de Chakra del Kyuubi",
+          "nivelDesbloqueo": 12,
+          "multiplicadores": {
+            "ataque": 1.4,
+            "defensa": 1.2,
+            "velocidad": 1.3,
+            "hp": 1.2
+          }
+        },
+        {
+          "nombre": "Modo Sabio",
+          "nivelDesbloqueo": 62,
+          "multiplicadores": {
+            "ataque": 1.8,
+            "defensa": 1.5,
+            "velocidad": 1.6,
+            "hp": 1.4
+          }
+        }
+      ]
     },
     {
       "id": "sasuke",
       "nombre": "Sasuke Uchiha",
       "tipo": "katon",
       "rareza": "inicial",
-      "statsBase": { "hp": 38, "ataque": 11, "defensa": 6, "velocidad": 9 },
-      "curvaXp": { "xpParaSiguienteNivel": 40, "crecimiento": 1.12 },
+      "statsBase": {
+        "hp": 38,
+        "ataque": 11,
+        "defensa": 6,
+        "velocidad": 9
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 24,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Gran Bola de Fuego",
         "descripcion": "Bola de fuego que quema al rival, reduciendo su ataque por el dolor.",
         "danoBase": 1.35,
-        "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "ataque",
+          "objetivo": "enemigo",
+          "cantidad": -2,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Marca de Maldición (Nivel 2)",
-        "nivelDesbloqueo": 12,
-        "multiplicadores": { "ataque": 1.5, "defensa": 1.1, "velocidad": 1.3, "hp": 1.1 }
-      }
+      "modos": [
+        {
+          "nombre": "Marca de Maldición (Nivel 2)",
+          "nivelDesbloqueo": 12,
+          "multiplicadores": {
+            "ataque": 1.5,
+            "defensa": 1.1,
+            "velocidad": 1.3,
+            "hp": 1.1
+          }
+        },
+        {
+          "nombre": "Susanoo",
+          "nivelDesbloqueo": 68,
+          "multiplicadores": {
+            "ataque": 1.9,
+            "defensa": 1.7,
+            "velocidad": 1.2,
+            "hp": 1.5
+          }
+        }
+      ]
     },
     {
       "id": "sakura",
       "nombre": "Sakura Haruno",
       "tipo": "suiton",
       "rareza": "inicial",
-      "statsBase": { "hp": 40, "ataque": 7, "defensa": 8, "velocidad": 7 },
-      "curvaXp": { "xpParaSiguienteNivel": 40, "crecimiento": 1.12 },
+      "statsBase": {
+        "hp": 40,
+        "ataque": 7,
+        "defensa": 8,
+        "velocidad": 7
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 23,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Golpe de Chakra Médico",
         "descripcion": "Concentra chakra en el puño y de paso estabiliza su propia resistencia.",
         "danoBase": 1.15,
-        "efectoEstado": { "stat": "defensa", "objetivo": "propio", "cantidad": 2, "duracionTurnos": 3 }
+        "efectoEstado": {
+          "stat": "defensa",
+          "objetivo": "propio",
+          "cantidad": 2,
+          "duracionTurnos": 3
+        }
       },
-      "modo": {
-        "nombre": "Control de Chakra Byakugou",
-        "nivelDesbloqueo": 14,
-        "multiplicadores": { "ataque": 1.3, "defensa": 1.4, "velocidad": 1.1, "hp": 1.3 }
-      }
+      "modos": [
+        {
+          "nombre": "Golpe de Fuerza Monstruosa",
+          "nivelDesbloqueo": 20,
+          "multiplicadores": {
+            "ataque": 1.4,
+            "defensa": 1.2,
+            "velocidad": 1.0,
+            "hp": 1.2
+          }
+        },
+        {
+          "nombre": "Sello de los Cien (Byakugou)",
+          "nivelDesbloqueo": 60,
+          "multiplicadores": {
+            "ataque": 1.6,
+            "defensa": 1.6,
+            "velocidad": 1.2,
+            "hp": 1.8
+          }
+        }
+      ]
     },
     {
       "id": "rock_lee",
       "nombre": "Rock Lee",
       "tipo": "doton",
       "rareza": "comun",
-      "statsBase": { "hp": 42, "ataque": 10, "defensa": 7, "velocidad": 10 },
-      "curvaXp": { "xpParaSiguienteNivel": 38, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 42,
+        "ataque": 10,
+        "defensa": 7,
+        "velocidad": 10
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 22,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Loto Inicial",
         "descripcion": "Taijutsu puro a máxima velocidad; se arriesga a bajar su propia defensa.",
         "danoBase": 1.4,
-        "efectoEstado": { "stat": "defensa", "objetivo": "propio", "cantidad": -2, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "defensa",
+          "objetivo": "propio",
+          "cantidad": -2,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Puertas Internas Abiertas",
-        "nivelDesbloqueo": 13,
-        "multiplicadores": { "ataque": 1.5, "defensa": 0.9, "velocidad": 1.6, "hp": 1.0 }
-      }
+      "modos": [
+        {
+          "nombre": "Puertas Internas Abiertas",
+          "nivelDesbloqueo": 22,
+          "multiplicadores": {
+            "ataque": 1.5,
+            "defensa": 0.9,
+            "velocidad": 1.6,
+            "hp": 1.0
+          }
+        },
+        {
+          "nombre": "Puerta de la Muerte",
+          "nivelDesbloqueo": 70,
+          "multiplicadores": {
+            "ataque": 2.1,
+            "defensa": 0.8,
+            "velocidad": 2.0,
+            "hp": 0.9
+          }
+        }
+      ]
     },
     {
       "id": "neji",
       "nombre": "Neji Hyuga",
       "tipo": "raiton",
       "rareza": "comun",
-      "statsBase": { "hp": 39, "ataque": 10, "defensa": 8, "velocidad": 9 },
-      "curvaXp": { "xpParaSiguienteNivel": 38, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 39,
+        "ataque": 10,
+        "defensa": 8,
+        "velocidad": 9
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 22,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Ocho Trigramas: 64 Palmas",
         "descripcion": "Ataca los puntos de chakra del rival, bloqueando parte de su energía.",
         "danoBase": 1.3,
-        "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -3, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "ataque",
+          "objetivo": "enemigo",
+          "cantidad": -3,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Byakugan Pleno",
-        "nivelDesbloqueo": 12,
-        "multiplicadores": { "ataque": 1.3, "defensa": 1.3, "velocidad": 1.2, "hp": 1.1 }
-      }
+      "modos": [
+        {
+          "nombre": "Byakugan Pleno",
+          "nivelDesbloqueo": 24,
+          "multiplicadores": {
+            "ataque": 1.3,
+            "defensa": 1.3,
+            "velocidad": 1.2,
+            "hp": 1.1
+          }
+        },
+        {
+          "nombre": "Ocho Trigramas: 128 Palmas",
+          "nivelDesbloqueo": 75,
+          "multiplicadores": {
+            "ataque": 1.7,
+            "defensa": 1.4,
+            "velocidad": 1.4,
+            "hp": 1.2
+          }
+        }
+      ]
     },
     {
       "id": "tenten",
       "nombre": "Tenten",
       "tipo": "fuuton",
       "rareza": "comun",
-      "statsBase": { "hp": 36, "ataque": 9, "defensa": 6, "velocidad": 8 },
-      "curvaXp": { "xpParaSiguienteNivel": 36, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 36,
+        "ataque": 9,
+        "defensa": 6,
+        "velocidad": 8
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 21,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Invocación de Armas",
         "descripcion": "Lluvia de armas arrojadizas que mejora su propia precisión.",
         "danoBase": 1.2,
-        "efectoEstado": { "stat": "velocidad", "objetivo": "propio", "cantidad": 2, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "velocidad",
+          "objetivo": "propio",
+          "cantidad": 2,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Arsenal Celestial",
-        "nivelDesbloqueo": 15,
-        "multiplicadores": { "ataque": 1.3, "defensa": 1.1, "velocidad": 1.2, "hp": 1.1 }
-      }
+      "modos": [
+        {
+          "nombre": "Arsenal Celestial",
+          "nivelDesbloqueo": 20,
+          "multiplicadores": {
+            "ataque": 1.3,
+            "defensa": 1.1,
+            "velocidad": 1.2,
+            "hp": 1.1
+          }
+        },
+        {
+          "nombre": "Soten Hiken (Dragones Gemelos)",
+          "nivelDesbloqueo": 78,
+          "multiplicadores": {
+            "ataque": 1.7,
+            "defensa": 1.2,
+            "velocidad": 1.3,
+            "hp": 1.2
+          }
+        }
+      ]
     },
     {
       "id": "shikamaru",
       "nombre": "Shikamaru Nara",
       "tipo": "doton",
       "rareza": "comun",
-      "statsBase": { "hp": 34, "ataque": 6, "defensa": 7, "velocidad": 6 },
-      "curvaXp": { "xpParaSiguienteNivel": 36, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 34,
+        "ataque": 6,
+        "defensa": 7,
+        "velocidad": 6
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 21,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Posesión de Sombras",
         "descripcion": "Inmoviliza al rival, reduciendo drásticamente su velocidad.",
         "danoBase": 0.9,
-        "efectoEstado": { "stat": "velocidad", "objetivo": "enemigo", "cantidad": -4, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "velocidad",
+          "objetivo": "enemigo",
+          "cantidad": -4,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Sombra Ampliada",
-        "nivelDesbloqueo": 14,
-        "multiplicadores": { "ataque": 1.1, "defensa": 1.2, "velocidad": 1.0, "hp": 1.2 }
-      }
+      "modos": [
+        {
+          "nombre": "Sombra Ampliada",
+          "nivelDesbloqueo": 26,
+          "multiplicadores": {
+            "ataque": 1.1,
+            "defensa": 1.2,
+            "velocidad": 1.0,
+            "hp": 1.2
+          }
+        },
+        {
+          "nombre": "Estrangulamiento de Sombra",
+          "nivelDesbloqueo": 80,
+          "multiplicadores": {
+            "ataque": 1.4,
+            "defensa": 1.3,
+            "velocidad": 1.1,
+            "hp": 1.3
+          }
+        }
+      ]
     },
     {
       "id": "ino",
       "nombre": "Ino Yamanaka",
       "tipo": "suiton",
       "rareza": "comun",
-      "statsBase": { "hp": 33, "ataque": 7, "defensa": 6, "velocidad": 7 },
-      "curvaXp": { "xpParaSiguienteNivel": 36, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 33,
+        "ataque": 7,
+        "defensa": 6,
+        "velocidad": 7
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 21,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Posesión Mental",
         "descripcion": "Toma el control momentáneo del rival, mermando su ataque.",
         "danoBase": 0.85,
-        "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -3, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "ataque",
+          "objetivo": "enemigo",
+          "cantidad": -3,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Vínculo Mental Reforzado",
-        "nivelDesbloqueo": 13,
-        "multiplicadores": { "ataque": 1.2, "defensa": 1.1, "velocidad": 1.2, "hp": 1.1 }
-      }
+      "modos": [
+        {
+          "nombre": "Vínculo Mental Reforzado",
+          "nivelDesbloqueo": 23,
+          "multiplicadores": {
+            "ataque": 1.2,
+            "defensa": 1.1,
+            "velocidad": 1.2,
+            "hp": 1.1
+          }
+        },
+        {
+          "nombre": "Posesión Mental a Distancia",
+          "nivelDesbloqueo": 72,
+          "multiplicadores": {
+            "ataque": 1.5,
+            "defensa": 1.2,
+            "velocidad": 1.3,
+            "hp": 1.2
+          }
+        }
+      ]
     },
     {
       "id": "choji",
       "nombre": "Choji Akimichi",
       "tipo": "katon",
       "rareza": "comun",
-      "statsBase": { "hp": 48, "ataque": 9, "defensa": 9, "velocidad": 5 },
-      "curvaXp": { "xpParaSiguienteNivel": 38, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 48,
+        "ataque": 9,
+        "defensa": 9,
+        "velocidad": 5
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 22,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Bala Humana",
         "descripcion": "Se lanza como una bola gigante, ganando corpulencia y aguante.",
         "danoBase": 1.25,
-        "efectoEstado": { "stat": "hp", "objetivo": "propio", "cantidad": 3, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "hp",
+          "objetivo": "propio",
+          "cantidad": 3,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Mariposa de las Tres Alas",
-        "nivelDesbloqueo": 15,
-        "multiplicadores": { "ataque": 1.4, "defensa": 1.3, "velocidad": 1.3, "hp": 1.2 }
-      }
+      "modos": [
+        {
+          "nombre": "Mariposa de las Tres Alas",
+          "nivelDesbloqueo": 28,
+          "multiplicadores": {
+            "ataque": 1.4,
+            "defensa": 1.3,
+            "velocidad": 1.3,
+            "hp": 1.2
+          }
+        },
+        {
+          "nombre": "Mariposa Dorada del Sabio",
+          "nivelDesbloqueo": 85,
+          "multiplicadores": {
+            "ataque": 1.8,
+            "defensa": 1.6,
+            "velocidad": 1.5,
+            "hp": 1.4
+          }
+        }
+      ]
     },
     {
       "id": "kiba",
       "nombre": "Kiba Inuzuka",
       "tipo": "raiton",
       "rareza": "comun",
-      "statsBase": { "hp": 37, "ataque": 10, "defensa": 6, "velocidad": 10 },
-      "curvaXp": { "xpParaSiguienteNivel": 36, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 37,
+        "ataque": 10,
+        "defensa": 6,
+        "velocidad": 10
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 21,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Colmillo Sobre Colmillo",
         "descripcion": "Ataque giratorio junto a Akamaru que gana velocidad con el impulso.",
         "danoBase": 1.3,
-        "efectoEstado": { "stat": "velocidad", "objetivo": "propio", "cantidad": 2, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "velocidad",
+          "objetivo": "propio",
+          "cantidad": 2,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Transformación Bestial Doble",
-        "nivelDesbloqueo": 13,
-        "multiplicadores": { "ataque": 1.4, "defensa": 1.1, "velocidad": 1.4, "hp": 1.1 }
-      }
+      "modos": [
+        {
+          "nombre": "Transformación Bestial Doble",
+          "nivelDesbloqueo": 21,
+          "multiplicadores": {
+            "ataque": 1.4,
+            "defensa": 1.1,
+            "velocidad": 1.4,
+            "hp": 1.1
+          }
+        },
+        {
+          "nombre": "Colmillo del Lobo Voraz",
+          "nivelDesbloqueo": 74,
+          "multiplicadores": {
+            "ataque": 1.7,
+            "defensa": 1.2,
+            "velocidad": 1.7,
+            "hp": 1.2
+          }
+        }
+      ]
     },
     {
       "id": "hinata",
       "nombre": "Hinata Hyuga",
       "tipo": "suiton",
       "rareza": "comun",
-      "statsBase": { "hp": 36, "ataque": 8, "defensa": 8, "velocidad": 7 },
-      "curvaXp": { "xpParaSiguienteNivel": 36, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 36,
+        "ataque": 8,
+        "defensa": 8,
+        "velocidad": 7
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 21,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Ocho Trigramas: Dos Palmas",
         "descripcion": "Golpe preciso a los tenketsu que refuerza su propia defensa por concentración.",
         "danoBase": 1.1,
-        "efectoEstado": { "stat": "defensa", "objetivo": "propio", "cantidad": 2, "duracionTurnos": 2 }
+        "efectoEstado": {
+          "stat": "defensa",
+          "objetivo": "propio",
+          "cantidad": 2,
+          "duracionTurnos": 2
+        }
       },
-      "modo": {
-        "nombre": "Byakugan Pleno",
-        "nivelDesbloqueo": 14,
-        "multiplicadores": { "ataque": 1.2, "defensa": 1.3, "velocidad": 1.2, "hp": 1.2 }
-      }
+      "modos": [
+        {
+          "nombre": "Byakugan Pleno",
+          "nivelDesbloqueo": 25,
+          "multiplicadores": {
+            "ataque": 1.2,
+            "defensa": 1.3,
+            "velocidad": 1.2,
+            "hp": 1.2
+          }
+        },
+        {
+          "nombre": "Ocho Trigramas: Vacío Celestial",
+          "nivelDesbloqueo": 82,
+          "multiplicadores": {
+            "ataque": 1.6,
+            "defensa": 1.5,
+            "velocidad": 1.4,
+            "hp": 1.4
+          }
+        }
+      ]
     },
     {
       "id": "shino",
       "nombre": "Shino Aburame",
       "tipo": "doton",
       "rareza": "comun",
-      "statsBase": { "hp": 35, "ataque": 8, "defensa": 8, "velocidad": 6 },
-      "curvaXp": { "xpParaSiguienteNivel": 36, "crecimiento": 1.1 },
+      "statsBase": {
+        "hp": 35,
+        "ataque": 8,
+        "defensa": 8,
+        "velocidad": 6
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 21,
+        "crecimiento": 1.015
+      },
       "jutsu": {
         "nombre": "Enjambre de Insectos Destructores",
         "descripcion": "Sus insectos drenan chakra del rival, mermando su ataque poco a poco.",
         "danoBase": 1.0,
-        "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 3 }
+        "efectoEstado": {
+          "stat": "ataque",
+          "objetivo": "enemigo",
+          "cantidad": -2,
+          "duracionTurnos": 3
+        }
       },
-      "modo": {
-        "nombre": "Enjambre Total",
-        "nivelDesbloqueo": 14,
-        "multiplicadores": { "ataque": 1.2, "defensa": 1.2, "velocidad": 1.1, "hp": 1.3 }
-      }
+      "modos": [
+        {
+          "nombre": "Enjambre Total",
+          "nivelDesbloqueo": 27,
+          "multiplicadores": {
+            "ataque": 1.2,
+            "defensa": 1.2,
+            "velocidad": 1.1,
+            "hp": 1.3
+          }
+        },
+        {
+          "nombre": "Colonia Devoradora Definitiva",
+          "nivelDesbloqueo": 79,
+          "multiplicadores": {
+            "ataque": 1.6,
+            "defensa": 1.5,
+            "velocidad": 1.3,
+            "hp": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "id": "sai",
+      "nombre": "Sai",
+      "tipo": "fuuton",
+      "rareza": "comun",
+      "statsBase": {
+        "hp": 37,
+        "ataque": 8,
+        "defensa": 6,
+        "velocidad": 8
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 17,
+        "crecimiento": 1.015
+      },
+      "jutsu": {
+        "nombre": "Bestia de Tinta Súper Gigante",
+        "descripcion": "Invoca una bestia de tinta que ataca y desorienta al rival.",
+        "danoBase": 1.25,
+        "efectoEstado": {
+          "stat": "velocidad",
+          "objetivo": "enemigo",
+          "cantidad": -2,
+          "duracionTurnos": 2
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Ejército de Tinta",
+          "nivelDesbloqueo": 75,
+          "multiplicadores": {
+            "ataque": 1.5,
+            "defensa": 1.3,
+            "velocidad": 1.3,
+            "hp": 1.2
+          }
+        }
+      ]
+    },
+    {
+      "id": "yamato",
+      "nombre": "Yamato",
+      "tipo": "doton",
+      "rareza": "raro",
+      "statsBase": {
+        "hp": 50,
+        "ataque": 9,
+        "defensa": 11,
+        "velocidad": 6
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 18,
+        "crecimiento": 1.015
+      },
+      "jutsu": {
+        "nombre": "Estilo de Madera: Muro Nacido de la Tierra",
+        "descripcion": "Levanta un muro de madera que protege y fortalece al equipo.",
+        "danoBase": 1.1,
+        "efectoEstado": {
+          "stat": "defensa",
+          "objetivo": "propio",
+          "cantidad": 3,
+          "duracionTurnos": 3
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Liberación Total de Estilo de Madera",
+          "nivelDesbloqueo": 80,
+          "multiplicadores": {
+            "ataque": 1.5,
+            "defensa": 1.7,
+            "velocidad": 1.1,
+            "hp": 1.5
+          }
+        }
+      ]
     }
   ]
 }

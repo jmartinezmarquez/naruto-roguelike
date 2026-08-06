@@ -2,9 +2,9 @@
 
 ## Alcance del MVP
 
-- Un solo arco jugable: **País de las Olas + inicio del Examen Chunin** (fusionados en un único nivel).
-- Mini-jefe: **Haku**.
-- Jefe final: **Gaara**.
+- Un solo arco jugable: **País de las Olas** (`arcs/pais-de-las-olas.json`).
+- Mini-jefe: **Haku** (recompensa propia).
+- Jefe final obligatorio: **Zabuza Momochi**.
 - Equipo de hasta **3 personajes** en combate.
 - **10-12 personajes** reclutables (12 definidos), cada uno con:
   - Stats base (hp, ataque, defensa, velocidad).
@@ -26,9 +26,17 @@ Multiplicadores: 1.5x si es fuerte contra el rival, 0.5x si es débil, 1.0x neut
 
 **Iniciales:** Naruto (fuuton), Sasuke (katon), Sakura (suiton).
 
-**Reclutables:** Rock Lee (doton), Neji (raiton), Tenten (fuuton), Shikamaru (doton), Ino (suiton), Choji (katon), Kiba (raiton), Hinata (suiton), Shino (doton).
+**Reclutables (arco Examen Chunin, no País de las Olas):** Rock Lee (doton), Neji (raiton), Tenten (fuuton), Shikamaru (doton), Ino (suiton), Choji (katon), Kiba (raiton), Hinata (suiton), Shino (doton). Corregido: estos personajes ahora se reclutan en el arco donde canónicamente aparecen — ver [11 - Progresión y arcos](./11-progresion-y-arcos.md).
+
+**Reclutables (arco Invasión de Pain):** Sai (fuuton), Yamato (doton) — personajes nuevos añadidos para dar contenido de reclutamiento al tramo final de la run.
 
 > Nota: la asignación de tipo para personajes sin afinidad elemental clara en el canon (Rock Lee, Shikamaru, Tenten) es una decisión de diseño propia, no estrictamente canónica. Revisable.
+
+## Transformaciones (hasta 2 por personaje)
+
+Cada personaje puede tener **hasta 2 modos** (`modos: []`, array ordenado de menor a mayor `nivelDesbloqueo`), no solo 1. El motor elige automáticamente el de mayor nivel que esté desbloqueado — nunca hay dos modos activos a la vez. Regla sin excepciones: la activación es **solo por nivel**, decidida siempre antes de que empiece el combate, tanto para personajes jugables como para cualquier enemigo o jefe. Ningún modo cambia el jutsu del personaje, solo multiplica estadísticas.
+
+Ejemplo (Naruto): tier 1 "Manto de Chakra del Kyuubi" (nivel 12, arco 1), tier 2 "Modo Sabio" (nivel 60, arco 3). La mayoría de los jefes de un solo arco (Zabuza, Haku, Kabuto) solo tienen 1 tier, porque se enfrentan al jugador una única vez a un nivel conocido — Gaara y Pain sí tienen progresión de tiers relevante porque su nivel de aparición cubre un rango más amplio dentro de su arco.
 
 ## Principio de diseño clave: el motor es agnóstico del contenido
 

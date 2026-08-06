@@ -1,0 +1,59 @@
+
+{
+  "_comentario": "DISEÑO, NO IMPLEMENTADO TODAVÍA. Esquema propuesto para un sistema de logros que desbloquea contenido permanente entre runs (meta-progresión, estilo Slay the Spire/Hades). Cuando se implemente: persistencia en localStorage bajo una clave separada de la run en curso (los logros sobreviven a un game over, la run no).",
+  "logros": [
+    {
+      "id": "derrotar_zabuza",
+      "nombre": "El Demonio de la Niebla",
+      "descripcion": "Derrota a Zabuza en cualquier run.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "zabuza"
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeInicial",
+        "personajeId": "sakura"
+      }
+    },
+    {
+      "id": "run_sin_bajas",
+      "nombre": "Equipo Intacto",
+      "descripcion": "Completa País de las Olas sin que ningún personaje caiga en combate.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "pais_de_las_olas"
+      },
+      "recompensa": {
+        "tipo": "desbloquearObjetoInicial",
+        "objetoId": "sello_chakra"
+      }
+    },
+    {
+      "id": "completar_run",
+      "nombre": "Fin del Camino Ninja",
+      "descripcion": "Derrota a Pain y completa la run.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "pain_camino_deva"
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeReclutable",
+        "personajeId": "yamato",
+        "disponibleDesdeArco": "pais_de_las_olas"
+      }
+    }
+  ],
+  "_tiposDeCondicionPropuestos": [
+    "derrotarJefe (jefeId)",
+    "completarArcoSinDerrotas (arcoId)",
+    "alcanzarNivel (nivel)",
+    "reclutarATodos (arcoId)",
+    "completarRunEnDificultad (dificultad) — si se añade selector de dificultad más adelante"
+  ],
+  "_tiposDeRecompensaPropuestos": [
+    "desbloquearPersonajeInicial (personajeId) — aparece como opción al elegir equipo inicial",
+    "desbloquearObjetoInicial (objetoId) — empiezas la run con ese objeto ya en inventario",
+    "desbloquearPersonajeReclutable (personajeId, disponibleDesdeArco) — el personaje se puede reclutar antes del arco donde apareció originalmente",
+    "cosmetico (aún sin definir — título, color de UI, etc.)"
+  ]
+}

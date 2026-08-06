@@ -1,0 +1,23 @@
+{
+  "_comentario": "Config genérica de arco: el motor de generación de mapa solo necesita este objeto para construir el grafo de nodos. Primer arco de la run (nivel ~1 a 15).",
+  "id": "pais_de_las_olas",
+  "nombre": "País de las Olas",
+  "temaVisual": "bosque_konoha",
+  "numeroPisos": 8,
+  "nodosPorPiso": { "min": 2, "max": 3 },
+  "poolTiposNodo": [
+    { "tipo": "combate", "peso": 45 },
+    { "tipo": "evento", "peso": 25 },
+    { "tipo": "reclutamiento", "peso": 15 },
+    { "tipo": "tienda", "peso": 10 },
+    { "tipo": "descanso", "peso": 5 }
+  ],
+  "pisoMiniJefe": 4,
+  "miniJefeId": "haku",
+  "pisoJefeFinal": 8,
+  "jefeFinalId": "zabuza",
+  "personajesReclutablesIds": [],
+  "personajesInicialesIds": ["naruto", "sasuke", "sakura"],
+  "nivelEnemigoBase": 3,
+  "escaladoNivelPorPiso": 1.7
+}
