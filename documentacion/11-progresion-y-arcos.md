@@ -82,3 +82,7 @@ piso donde se recluta — pendiente de que el flujo de nodos (aún sin construir
 - **Pain (Camino Deva)** — jefe final de la run completa. Su recompensa incluye `finDeLaRun: true` en `recompensa`, un campo nuevo que el store deberá interpretar para marcar la run como completada con éxito (`runGanada: true`), no solo terminada.
 
 > Nota: `recompensa.finDeLaRun` es un campo nuevo, todavía no leído por ningún código — pendiente de conectar en `useGameStore.js` cuando se implemente el flujo completo de "victoria de la run" (distinto de `runTerminada`, que hoy solo cubre la derrota).
+
+## Jefes como reclutables (rareza, curvaXp)
+
+Cada jefe/mini-jefe en `enemies.json` tiene ahora `rareza` (`raro` para mini-jefes, `legendario` para jefes finales) y `curvaXp`, además de `desbloqueablePorLogro: true`. Detalle completo del diseño en [14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md).

@@ -17,13 +17,17 @@
 - [x] Curva de XP validada por simulación real (la original era matemáticamente inviable: pedía 24,8M de XP para un presupuesto de ~5.082 XP en toda la run) y corregida. Añadido reparto de XP con el banquillo (40%) para que los personajes no activos también progresen.
 - [x] Pantalla de Mapa (`components/Map/MapScreen.jsx`) con dirección visual propia (tinta/pergamino ninja). Store ampliado con `mapa`, `avanzarANodo`, `obtenerNodosDisponibles`.
 - [x] Pantalla de Combate (`components/Combat/CombatScreen.jsx`) con animación turno a turno. Store ampliado con `pantalla`, `volverAlMapa`, y `jugarCombate` ahora guarda un resumen enriquecido (nombres, HP máximo) en vez de solo IDs.
+- [x] HP persistente entre combates (antes se reseteaba a HP completo cada vez). Buffs temporales de evento (multiplicadores, N combates). Bonificaciones permanentes de personaje.
+- [x] Pantalla de Evento (`components/Event/EventScreen.jsx`) con 12 eventos canónicos (4 por arco), sin ningún efecto de combate.
+- [x] Nodo de descanso resuelto automáticamente (cura y revive a todo el equipo).
+- [x] Diseño (sin implementar) de reclutamiento vía tienda y jerarquía de rareza — jefes/minijefes desbloqueables como reclutables por logro. Ver [14](./14-reclutamiento-y-rareza.md).
 
 ## Próximos pasos (en orden sugerido)
 
-1. **Pantalla de Evento** — leer `events.json` y aplicar la elección del jugador.
-2. **Pantallas de Tienda, Descanso, Reclutamiento, Equipo/Inventario.**
-3. **Pantalla de Game Over dedicada** — ahora mismo, si `runTerminada` es true, `CombatScreen` solo muestra un mensaje sin botón, sin pantalla propia de fin de run.
-4. **Flujo real de `App.jsx`** — selección de personajes iniciales → mapa → combate/evento → ... (sustituye el `App.jsx` temporal actual).
+1. **Pantalla de Tienda** — objetos + reclutamiento (diseño ya cerrado, ver [14](./14-reclutamiento-y-rareza.md)).
+2. **Pantalla de Game Over dedicada.**
+3. **Sistema de logros real** (esquema ya diseñado en `achievements-DISEÑO.json`).
+4. **Flujo real de `App.jsx`** — selección de personajes iniciales → mapa → ...
 5. **Conectar `guardarRun`/`cargarRun`** a un hook de autoguardado tras cada nodo.
 6. **Playtest interno del MVP** y ajuste de balance.
 

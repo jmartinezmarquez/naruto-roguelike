@@ -51,17 +51,29 @@ que reciben datos y devuelven datos nuevos. Detalle en `documentacion/09-motor-e
   refactor, chore). Un commit = un cambio lógico coherente. Detalle en
   `documentacion/08-git-y-github.md`.
 
-## Estado actual (actualizar tras cada sesión relevante)
+## Eficiencia de contexto (para sesiones largas, gastar menos tokens)
+
+- **Antes de leer un archivo entero, usa `grep`/búsqueda dirigida** para encontrar la función o sección concreta que necesitas. No releas `useGameStore.js` completo para un cambio de 3 líneas.
+- **Consulta primero `documentacion/00-indice.md`** para saber qué documento cubre el tema antes de explorar el código a ciegas — la documentación ya explica el porqué de casi todas las decisiones, evita releer el código para inferirlo.
+- **Agrupa cambios relacionados en menos operaciones** en vez de editar el mismo archivo muchas veces seguidas para cambios pequeños.
+- **No repitas explicaciones de diseño ya cubiertas en `documentacion/`** — enlaza al documento en vez de reexplicar (ej. "ver 09-motor-engine.md" en vez de reescribir cómo funciona `crearLuchador`).
+- **Verifica llamadas internas antes de reemplazar una función** con `str_replace`/similar — ya hemos tenido bugs reales por borrar una función que otra seguía llamando (`resolverTurno`, ver nota en `09-motor-engine.md`). Un `grep` del nombre de la función antes de tocarla es más barato que el bug después.
+- **Antes de dar una respuesta larga con muchos archivos, plantea primero el plan en un mensaje corto** si el cambio es grande o ambiguo, en vez de generar todo y corregir después.
+
+
 
 - [x] Datos completos: types, characters (14 personajes, curva de XP corregida y validada por simulación), enemies (6 jefes/minijefes, balance corregido con ratios fijos), common-enemies, items, config (nivelMaximo 100, porcentajeXpBanquillo 0.4), events, arcs/{pais-de-las-olas, examen-chunin, invasion-de-pain}
 - [x] `engine/leveling.js`, `engine/combat.js` (combate automático 1v1, `obtenerModoActivo` soporta hasta 2 tiers)
 - [x] `store/useGameStore.js` (equipo, oro, inventario, `jugarCombate`, `reclutarPersonaje(id, nivelInicial)`, reparto de XP con banquillo, persistencia en localStorage)
 - [x] `engine/mapGenerator.js` (`generarMapa`, `resolverEnemigoDeNodo`, `calcularNivelPorPiso`)
-- [x] `components/Map/MapScreen.jsx` — pantalla de Mapa con dirección visual propia (tinta/pergamino). Store ampliado con `mapa`, `avanzarANodo`, `obtenerNodosDisponibles`.
-- [x] `components/Combat/CombatScreen.jsx` — animación turno a turno del combate. Store ampliado con `pantalla` ('mapa'|'combate'), `volverAlMapa`. `jugarCombate` ahora guarda un resumen enriquecido (nombres, HP máximo) en `ultimoResultadoCombate`, no solo IDs.
-- [ ] Pantallas de Evento, Tienda, Descanso, Reclutamiento, Equipo/Inventario — próximo paso.
-- [ ] Pantalla de Game Over dedicada (ahora mismo runTerminada solo muestra un mensaje sin botón dentro de CombatScreen).
-- [ ] `App.jsx` real (el actual es temporal, solo para probar Mapa/Combate).
+- [x] `components/Map/MapScreen.jsx` — pantalla de Mapa con dirección visual propia (tinta/pergamino) y tira de HP del equipo. Store ampliado con `mapa`, `avanzarANodo`, `obtenerNodosDisponibles`, `obtenerHpMaximo`.
+- [x] `components/Combat/CombatScreen.jsx` — animación turno a turno del combate.
+- [x] `components/Event/EventScreen.jsx` — 12 eventos canónicos (4 por arco), sin combate. Nodo de descanso auto-resuelto (cura+revive todo el equipo).
+- [x] HP persistente entre combates (`equipo[].hpActual`), buffs temporales de evento, bonificaciones permanentes de personaje.
+- [x] Diseño (sin implementar): reclutamiento vía tienda con precio por rareza, jefes/minijefes desbloqueables como reclutables por logro. Ver `documentacion/14-reclutamiento-y-rareza.md`.
+- [ ] Pantalla de Tienda (objetos + reclutamiento) — próximo paso, diseño ya cerrado.
+- [ ] Pantalla de Game Over dedicada.
+- [ ] `App.jsx` real (el actual es temporal, solo para probar Mapa/Combate/Evento).
 
 Diseños documentados pero NO implementados: sistema de logros/meta-progresión
 (`project-data/achievements-DISEÑO.json`), cadena de jefes para combates de grupo

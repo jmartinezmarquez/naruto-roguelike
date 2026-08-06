@@ -8,10 +8,13 @@
 - `obtenerModoActivo(personajeBase, nivelActual)` — de `personajeBase.modos` (array, 0 a 2 tiers), devuelve el de mayor `nivelDesbloqueo` que esté disponible, o `null`. Sustituye al antiguo `modoDesbloqueado` (que solo soportaba 1 modo booleano).
 - `aplicarMultiplicadoresModo(stats, modo)` — aplica los multiplicadores del modo a unas stats ya calculadas.
 
+- `aplicarMultiplicadores(stats, multiplicadores)` — genérico: aplica un objeto `{ataque, defensa, velocidad, hp}` a unas stats ya calculadas. Lo usan tanto los modos como los buffs temporales de eventos (mismo mecanismo, distinta duración).
+- `aplicarMultiplicadoresModo(stats, modo)` — wrapper fino sobre `aplicarMultiplicadores`, para modos/transformaciones.
+
 ## `combat.js`
 
 - `obtenerEficacia(tipoAtacante, tipoDefensor)` — lee la matriz de `types.json`.
-- `crearLuchador(personajeBase, nivel)` — instancia de combate con stats calculadas. Calcula el modo activo **internamente** con `obtenerModoActivo` — ya no recibe `modoActivo` como parámetro, no hace falta decidirlo por fuera.
+- `crearLuchador(personajeBase, nivel, hpActualInicial, multiplicadoresExtra)` — instancia de combate. **`hpActualInicial`** (nuevo): si se pasa, el luchador empieza con ese HP en vez de a HP completo — es lo que permite que el HP persista entre combates. **`multiplicadoresExtra`** (nuevo): multiplicadores aplicados después del modo, para los buffs temporales de eventos ("+20% ataque, 3 combates"). El modo activo se sigue calculando internamente con `obtenerModoActivo`.
 - `calcularDano(atacante, defensor, jutsu)` — fórmula: `ataqueEfectivo * jutsu.danoBase * eficacia - defensaEfectiva * 0.5`, mínimo 1.
 - `aplicarEfectoEstado` / `reducirDuracionModificadores` — buffs/debuffs temporales con contador de turnos.
 - `resolverTurno(luchador1, luchador2)` — resuelve un turno completo (orden por velocidad, ambos ataques, reduce duración de efectos). Usada internamente por `resolverCombateCompleto`.
@@ -23,14 +26,27 @@
 
 Store de Zustand. Es el "pegamento" entre el motor puro (`engine/`) y la UI: decide qué llamar y cuándo, no cómo se calcula nada.
 
-**Estado:** `equipo` (instancias de run: id, nivel, xpActual, derrotado), `oro`, `inventario`, `arcoActualId`, `nodoActualId`, `ultimoResultadoCombate`, `runTerminada`, `runGanada`.
+**Estado:** `equipo` (instancias: id, nivel, xpActual, derrotado, **hpActual**, **bonificaciones**), `oro`, `inventario`, **`buffsTemporales`**, `arcoActualId`, `arcoActualDatos`, `mapa`, `nodoActualId`, `pantalla`, `ultimoResultadoCombate`, **`eventoActual`**, `runTerminada`, `runGanada`.
+
+**HP persistente entre combates (cambio importante):** antes, cada combate empezaba a HP completo. Ahora `equipo[].hpActual` se mantiene entre combates — solo se restaura con curación explícita (nodo de descanso, o el efecto `curarEquipoPorcentaje` de un evento). Al subir de nivel, `hpActual` sube en la misma cantidad que sube `hpMaximo` (no cura de regalo, pero tampoco se queda atrás respecto a la nueva vida máxima). Esto se calcula en `aplicarXpYActualizarHp` (interna).
+
+**`bonificaciones`** (nuevo campo de instancia): `{ ataque, defensa, velocidad, hp }`, permanentes, ganadas por el evento `mejoraPermanenteAleatoria`. Se suman a `statsBase` justo antes de crear el luchador (`personajeBaseConBonificaciones`, interna).
+
+**`buffsTemporales`** (nuevo, a nivel de run, no por personaje): `[{ multiplicadores, combatesRestantes }]`, del efecto de evento `buffTemporalEquipo`. Se combinan todos con `combinarMultiplicadoresTemporales` (interna) y se pasan como `multiplicadoresExtra` a `crearLuchador`. Se consumen 1 uso por combate jugado (ganado o perdido), vía `_consumirUsoBuffsTemporales`.
 
 **Acciones principales:**
-- `iniciarRun(personajesInicialesIds, arcoId)`
-- `reclutarPersonaje(id)` / `reordenarEquipo(nuevoOrdenIds)`
-- `jugarCombate(enemigoBase, nivelEnemigo)` — construye los luchadores con `crearLuchador` (que ya resuelve el modo activo internamente), resuelve con `resolverCombateCompleto`, y aplica el resultado (XP/oro/objeto si se gana, derrota si se pierde).
-- `curarPersonaje(id)` — revive a un personaje derrotado (uso: nodo de descanso).
+- `iniciarRun(personajesInicialesIds, arco)`
+- `reclutarPersonaje(id, nivelInicial)` / `reordenarEquipo(nuevoOrdenIds)`
+- `avanzarANodo(nodoId)` — resuelve combate, evento, o descanso automático según el tipo de nodo (ver `13-ui-mapa-y-combate.md`).
+- `jugarCombate(enemigoBase, nivelEnemigo)` — construye los luchadores con `crearLuchador` (pasando `hpActual` persistido y los buffs temporales activos), resuelve con `resolverCombateCompleto`, aplica XP/oro/objeto (`_aplicarVictoria`) o derrota (`_aplicarDerrota`), y consume 1 uso de los buffs temporales.
+- `resolverEventoEleccion(indiceEleccion)` — intérprete de efectos de evento (ver más abajo).
+- `curarPersonaje(id)` / `_curarEquipoCompleto()` — curan a HP completo y revive si estaba derrotado.
+- `obtenerHpMaximo(id)` — selector para que la UI pueda pintar barras de HP reales.
 - `guardarRun()` / `cargarRun()` / `borrarRunGuardada()` — persistencia en `localStorage`.
+
+### Efectos de evento soportados (`resolverEventoEleccion`)
+
+`curarEquipoPorcentaje`, `buffTemporalEquipo`, `ganarXpEquipo`, `ganarOro`, `perderOro`, `comprarObjetoAleatorio`, `mejoraPermanenteAleatoria`, `ninguno`. **Ningún efecto de evento desencadena combate** — ya hay suficientes combates por piso en `poolTiposNodo` (decisión explícita, se quitó `combateSorpresa` del diseño original).
 
 ### Decisión de diseño: qué pasa al perder un combate
 

@@ -70,15 +70,23 @@ export function obtenerModoActivo(personajeBase, nivelActual) {
 }
 
 /**
- * Aplica los multiplicadores de un modo a unas stats ya calculadas por nivel.
+ * Aplica un objeto de multiplicadores {ataque, defensa, velocidad, hp} a unas
+ * stats ya calculadas. Genérico: lo usan tanto los modos/transformaciones
+ * como los buffs temporales de eventos (mismo mecanismo, distinta duración).
+ * Los stats no presentes en el objeto de multiplicadores no se tocan (x1).
  */
+export function aplicarMultiplicadores(stats, multiplicadores) {
+  if (!multiplicadores) return stats;
+  return {
+    hp: Math.round(stats.hp * (multiplicadores.hp ?? 1)),
+    ataque: Math.round(stats.ataque * (multiplicadores.ataque ?? 1)),
+    defensa: Math.round(stats.defensa * (multiplicadores.defensa ?? 1)),
+    velocidad: Math.round(stats.velocidad * (multiplicadores.velocidad ?? 1)),
+  };
+}
+
+/** Aplica los multiplicadores de un modo (transformación) a unas stats ya calculadas. */
 export function aplicarMultiplicadoresModo(stats, modo) {
   if (!modo) return stats;
-  const m = modo.multiplicadores;
-  return {
-    hp: Math.round(stats.hp * m.hp),
-    ataque: Math.round(stats.ataque * m.ataque),
-    defensa: Math.round(stats.defensa * m.defensa),
-    velocidad: Math.round(stats.velocidad * m.velocidad),
-  };
+  return aplicarMultiplicadores(stats, modo.multiplicadores);
 }

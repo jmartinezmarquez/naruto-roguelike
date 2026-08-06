@@ -7,7 +7,7 @@
 
 import tiposData from '../data/types.json';
 import configGlobal from '../data/config.json';
-import { calcularStatsPorNivel, aplicarMultiplicadoresModo, obtenerModoActivo } from './leveling';
+import { calcularStatsPorNivel, aplicarMultiplicadoresModo, aplicarMultiplicadores, obtenerModoActivo } from './leveling';
 
 /** Multiplicador de eficacia de un tipo atacante contra un tipo defensor. */
 export function obtenerEficacia(tipoAtacante, tipoDefensor) {
@@ -19,13 +19,26 @@ export function obtenerEficacia(tipoAtacante, tipoDefensor) {
  * sus datos base y nivel actual. El modo activo (si lo hay) se calcula
  * internamente según el nivel — nunca hay que decidirlo desde fuera ni a
  * mitad de combate.
+ *
+ * hpActualInicial: si se pasa, el luchador empieza con ese HP en vez de a HP
+ * completo (para el HP persistido entre combates). Se recorta al hpMaximo
+ * calculado, por si un buff/derrota de modo lo dejó por encima.
+ *
+ * multiplicadoresExtra: multiplicadores adicionales aplicados DESPUÉS del
+ * modo (ej. buffs temporales de eventos, "20% más ataque 3 combates"). Mismo
+ * mecanismo que un modo, pero decidido por el store, no por el nivel.
  */
-export function crearLuchador(personajeBase, nivel) {
+export function crearLuchador(personajeBase, nivel, hpActualInicial = null, multiplicadoresExtra = null) {
   const modoActivo = obtenerModoActivo(personajeBase, nivel);
   let stats = calcularStatsPorNivel(personajeBase.statsBase, nivel);
   if (modoActivo) {
     stats = aplicarMultiplicadoresModo(stats, modoActivo);
   }
+  if (multiplicadoresExtra) {
+    stats = aplicarMultiplicadores(stats, multiplicadoresExtra);
+  }
+  const hpMaximo = stats.hp;
+  const hpActual = hpActualInicial !== null ? Math.min(hpActualInicial, hpMaximo) : hpMaximo;
   return {
     id: personajeBase.id,
     nombre: personajeBase.nombre,
@@ -33,10 +46,10 @@ export function crearLuchador(personajeBase, nivel) {
     jutsu: personajeBase.jutsu,
     modoActivo, // null o el objeto de modo en uso, útil para que la UI lo muestre
     nivel,
-    hpMaximo: stats.hp,
-    hpActual: stats.hp,
+    hpMaximo,
+    hpActual,
     statsBase: stats,
-    modificadoresTemporales: [], // { stat, cantidad, turnosRestantes }
+    modificadoresTemporales: [], // { stat, cantidad, turnosRestantes } — solo dura el combate
   };
 }
 

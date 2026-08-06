@@ -1,5 +1,5 @@
 {
-  "_comentario": "Catálogo de jefes reutilizable entre arcos. Mismo esquema que un personaje: statsBase, jutsu, modos (array, 0-2 transformaciones activadas solo por nivel, nunca a mitad de combate). BALANCE: statsBase de jefes/minijefes se calcula como un múltiplo fijo de un personaje medio (hp41/atq9/def7/vel8), NO como valores absolutos — minijefe: x1.8 hp, x1.3 atq/def, x1.2 vel. jefe: x2.2 hp, x1.5 atq, x1.4 def, x1.2 vel. Como jugador y enemigo escalan con la misma fórmula por nivel, el ratio se mantiene constante en cualquier punto de la run — un jefe de nivel 100 es proporcionalmente igual de duro que uno de nivel 15, no más. Cada arco referencia los ids que necesita vía miniJefeId/jefeFinalId en su config.",
+  "_comentario": "Catálogo de jefes reutilizable entre arcos. Mismo esquema que un personaje: statsBase, jutsu, modos (array, 0-2 transformaciones activadas solo por nivel, nunca a mitad de combate). BALANCE: statsBase de jefes/minijefes se calcula como un múltiplo fijo de un personaje medio (hp41/atq9/def7/vel8), NO como valores absolutos — minijefe: x1.8 hp, x1.3 atq/def, x1.2 vel. jefe: x2.2 hp, x1.5 atq, x1.4 def, x1.2 vel. Como jugador y enemigo escalan con la misma fórmula por nivel, el ratio se mantiene constante en cualquier punto de la run — un jefe de nivel 100 es proporcionalmente igual de duro que uno de nivel 15, no más. Cada arco referencia los ids que necesita vía miniJefeId/jefeFinalId en su config. Cada jefe tiene además 'rareza' y 'curvaXp': con eso, el mismo objeto sirve tal cual como personajeBase si se desbloquea como reclutable vía logro (desbloqueablePorLogro: true) — no hace falta duplicarlo en characters.json.",
   "jefes": [
     {
       "id": "haku",
@@ -26,7 +26,13 @@
       "recompensa": {
         "xp": 150,
         "objetoGarantizado": "pergamino_viento"
-      }
+      },
+      "rareza": "raro",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 19,
+        "crecimiento": 1.015
+      },
+      "desbloqueablePorLogro": true
     },
     {
       "id": "zabuza",
@@ -65,7 +71,13 @@
         "xp": 450,
         "objetoGarantizado": "kubikiribocho_fragmento",
         "desbloqueaSiguienteArco": true
-      }
+      },
+      "rareza": "legendario",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 25,
+        "crecimiento": 1.015
+      },
+      "desbloqueablePorLogro": true
     },
     {
       "id": "kabuto",
@@ -102,7 +114,13 @@
       ],
       "recompensa": {
         "xp": 220
-      }
+      },
+      "rareza": "raro",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 19,
+        "crecimiento": 1.015
+      },
+      "desbloqueablePorLogro": true
     },
     {
       "id": "gaara",
@@ -151,7 +169,13 @@
         "xp": 900,
         "objetoGarantizado": "calabaza_arena",
         "desbloqueaSiguienteArco": true
-      }
+      },
+      "rareza": "legendario",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 25,
+        "crecimiento": 1.015
+      },
+      "desbloqueablePorLogro": true
     },
     {
       "id": "camino_animal_pain",
@@ -177,7 +201,13 @@
       "modos": [],
       "recompensa": {
         "xp": 700
-      }
+      },
+      "rareza": "raro",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 19,
+        "crecimiento": 1.015
+      },
+      "desbloqueablePorLogro": true
     },
     {
       "id": "pain_camino_deva",
@@ -216,7 +246,13 @@
         "xp": 2000,
         "objetoGarantizado": "anillo_rinnegan_fragmento",
         "finDeLaRun": true
-      }
+      },
+      "rareza": "legendario",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 25,
+        "crecimiento": 1.015
+      },
+      "desbloqueablePorLogro": true
     }
   ]
 }

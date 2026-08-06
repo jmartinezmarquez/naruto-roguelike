@@ -27,6 +27,19 @@ function generarIdNodo() {
 }
 
 /**
+ * Número de nodos de un piso normal (no el de jefe): forma de diamante,
+ * estrecho en los extremos del arco y ancho en el centro — más variabilidad
+ * que un rango fijo repetido en cada piso.
+ */
+function anchoDelPiso(piso, numeroPisosNormales, min, max) {
+  const centro = (numeroPisosNormales + 1) / 2;
+  const distanciaAlCentro = Math.abs(piso - centro) / centro; // 0 en el centro, ~1 en los extremos
+  const ancho = Math.round(max - distanciaAlCentro * (max - min));
+  const variacion = numeroAleatorioEntre(-1, 1); // un poco de ruido para que no sea idéntico cada run
+  return Math.min(max, Math.max(min, ancho + variacion));
+}
+
+/**
  * Genera el mapa completo de un arco: nodos organizados por piso, con
  * conexiones hacia el piso siguiente. El último piso es siempre un único
  * nodo de tipo 'jefe'. El piso de mini-jefe fuerza un nodo de tipo 'miniJefe'.
@@ -35,17 +48,25 @@ export function generarMapa(arco) {
   contadorId = 0;
   const nodos = {};
   const pisos = [];
+  const numeroPisosNormales = arco.numeroPisos - 1; // todos menos el del jefe
 
   for (let piso = 1; piso <= arco.numeroPisos; piso++) {
     const esUltimoPiso = piso === arco.pisoJefeFinal;
     const numNodos = esUltimoPiso
       ? 1
-      : numeroAleatorioEntre(arco.nodosPorPiso.min, arco.nodosPorPiso.max);
+      : anchoDelPiso(piso, numeroPisosNormales, arco.nodosPorPiso.min, arco.nodosPorPiso.max);
+
+    // El primer piso nunca debe ofrecer un nodo de descanso: empezar la run
+    // "curando" algo que ya está a HP completo es un desperdicio, no una
+    // opción real — desventaja sin motivo.
+    const poolDeEstePiso = piso === 1
+      ? arco.poolTiposNodo.filter((t) => t.tipo !== 'descanso')
+      : arco.poolTiposNodo;
 
     const idsPiso = [];
     for (let i = 0; i < numNodos; i++) {
       const id = generarIdNodo();
-      const tipo = esUltimoPiso ? 'jefe' : elegirTipoPorPeso(arco.poolTiposNodo);
+      const tipo = esUltimoPiso ? 'jefe' : elegirTipoPorPeso(poolDeEstePiso);
       nodos[id] = { id, piso, tipo, conexiones: [], visitado: false, completado: false };
       idsPiso.push(id);
     }
@@ -93,32 +114,39 @@ export function generarMapa(arco) {
 }
 
 /**
- * Nivel de un enemigo según el piso en el que aparece. Escalado ADITIVO
- * (no exponencial): nivel = nivelEnemigoBase + (piso - 1) * escaladoNivelPorPiso.
+ * Nivel de un enemigo de combate normal, según el piso en el que aparece.
+ * Escalado ADITIVO fijo (no depende del nivel del jugador): recalibrado con
+ * el número REAL de combates de un único camino recorrido (no la suma de
+ * todos los nodos del piso, que sobreestimaba mucho el ritmo de subida de
+ * nivel real de una run — ver documentacion/11-progresion-y-arcos.md).
  */
 export function calcularNivelPorPiso(piso, arco) {
-  return Math.round(arco.nivelEnemigoBase + (piso - 1) * arco.escaladoNivelPorPiso);
+  return Math.max(1, Math.round(arco.nivelEnemigoBase + (piso - 1) * arco.escaladoNivelPorPiso));
 }
 
 /**
  * Devuelve { enemigoBase, nivel } listo para pasar a store.jugarCombate(),
  * o null si el nodo no tiene combate (evento, tienda, descanso, reclutamiento).
  *
+ * Los combates normales escalan por piso (calcularNivelPorPiso). Los
+ * mini-jefes/jefes usan un nivel FIJO explícito (arco.nivelMiniJefe /
+ * arco.nivelJefeFinal), calculado aparte para que sean superables incluso
+ * por el "camino mínimo" (saltando todo lo opcional) — ver
+ * documentacion/11-progresion-y-arcos.md.
+ *
  * Probabilidad de enemigo nombrado vs plantilla genérica en nodos 'combate'
  * normales: 20% / 80%, fija por ahora — candidato a mover a config.json si
  * hace falta ajustarla en el playtest.
  */
 export function resolverEnemigoDeNodo(nodo, arco) {
-  const nivel = calcularNivelPorPiso(nodo.piso, arco);
-
   if (nodo.tipo === 'jefe') {
     const jefe = enemiesData.jefes.find((j) => j.id === arco.jefeFinalId);
-    return { enemigoBase: jefe, nivel };
+    return { enemigoBase: jefe, nivel: arco.nivelJefeFinal };
   }
 
   if (nodo.tipo === 'miniJefe') {
     const miniJefe = enemiesData.jefes.find((j) => j.id === arco.miniJefeId);
-    return { enemigoBase: miniJefe, nivel };
+    return { enemigoBase: miniJefe, nivel: arco.nivelMiniJefe };
   }
 
   if (nodo.tipo === 'combate') {
@@ -129,7 +157,7 @@ export function resolverEnemigoDeNodo(nodo, arco) {
       ? enemigosNombrados[numeroAleatorioEntre(0, enemigosNombrados.length - 1)]
       : plantillasGenericas[numeroAleatorioEntre(0, plantillasGenericas.length - 1)];
 
-    return { enemigoBase, nivel };
+    return { enemigoBase, nivel: calcularNivelPorPiso(nodo.piso, arco) };
   }
 
   return null; // evento, tienda, descanso, reclutamiento
