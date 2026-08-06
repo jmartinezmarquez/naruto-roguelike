@@ -1,0 +1,77 @@
+{
+  "_comentario": "Objetos que aparecen en eventos, tienda y recompensas de combate. 'pasivo' se queda activo toda la run desde que se obtiene. 'consumible' se gasta una vez usado.",
+  "objetos": [
+    {
+      "id": "pildora_soldado",
+      "nombre": "Píldora del Soldado",
+      "descripcion": "Restaura HP al instante a un personaje, a cambio de fatiga futura.",
+      "tipo": "consumible",
+      "rareza": "comun",
+      "precioTienda": 25,
+      "efecto": { "tipo": "curarPersonaje", "cantidad": "40porciento" }
+    },
+    {
+      "id": "banda_repuesto",
+      "nombre": "Banda Ninja de Repuesto",
+      "descripcion": "Si un personaje del equipo cae en combate, revive con 1 HP. Se consume al activarse.",
+      "tipo": "pasivo",
+      "rareza": "raro",
+      "precioTienda": 60,
+      "efecto": { "tipo": "revivirUnaVez", "hpAlRevivir": 1 }
+    },
+    {
+      "id": "sello_chakra",
+      "nombre": "Sello de Chakra",
+      "descripcion": "Aumenta permanentemente el ataque de todo el equipo.",
+      "tipo": "pasivo",
+      "rareza": "comun",
+      "precioTienda": 40,
+      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "ataque", "cantidad": 2 }
+    },
+    {
+      "id": "pergamino_reserva",
+      "nombre": "Pergamino de Reserva de Chakra",
+      "descripcion": "Aumenta permanentemente el HP máximo de todo el equipo.",
+      "tipo": "pasivo",
+      "rareza": "comun",
+      "precioTienda": 40,
+      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "hp", "cantidad": 8 }
+    },
+    {
+      "id": "semilla_sabio",
+      "nombre": "Semilla del Sabio Ermitaño",
+      "descripcion": "Cura un porcentaje del HP del equipo automáticamente tras cada combate ganado.",
+      "tipo": "pasivo",
+      "rareza": "raro",
+      "precioTienda": 55,
+      "efecto": { "tipo": "curacionPostCombate", "cantidad": "15porciento" }
+    },
+    {
+      "id": "fragmento_sello_maldito",
+      "nombre": "Fragmento de Sello Maldito",
+      "descripcion": "Aumenta mucho el ataque del equipo, pero reduce su defensa. Arriesgado.",
+      "tipo": "pasivo",
+      "rareza": "raro",
+      "precioTienda": 65,
+      "efecto": { "tipo": "buffYDebuffPermanenteEquipo", "buff": { "stat": "ataque", "cantidad": 4 }, "debuff": { "stat": "defensa", "cantidad": -2 } }
+    },
+    {
+      "id": "pergamino_viento",
+      "nombre": "Pergamino de Viento",
+      "descripcion": "Aumenta la velocidad de todo el equipo. Obtenido al derrotar a Haku.",
+      "tipo": "pasivo",
+      "rareza": "raro",
+      "precioTienda": null,
+      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "velocidad", "cantidad": 3 }
+    },
+    {
+      "id": "calabaza_arena",
+      "nombre": "Calabaza de Arena (fragmento)",
+      "descripcion": "Aumenta considerablemente la defensa del equipo. Obtenido al derrotar a Gaara.",
+      "tipo": "pasivo",
+      "rareza": "legendario",
+      "precioTienda": null,
+      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "defensa", "cantidad": 5 }
+    }
+  ]
+}

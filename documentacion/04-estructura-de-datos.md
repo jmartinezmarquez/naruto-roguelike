@@ -17,7 +17,21 @@ Array `personajes`, cada uno con:
 
 ## `enemies.json`
 
-Array `jefesDelArco` con la misma forma que un personaje pero con `rol` (`miniJefe` / `jefeFinal`) y `recompensa`. Los enemigos genéricos de nodos de combate normal no están definidos aquí (pendiente: generación procedural escalando algún roster base).
+Array `jefesDelArco` con la misma forma que un personaje pero con `rol` (`miniJefe` / `jefeFinal`) y `recompensa`.
+
+## `common-enemies.json`
+
+Dos categorías:
+- `plantillasGenericas`: una por elemento, con `statsBaseNivel1` que el motor escala según `nivelEnemigoBase` y `escaladoNivelPorPiso` del arco. Rellenan los nodos de combate normal sin tener que definir cada enemigo a mano.
+- `enemigosNombrados`: enemigos fijos con más peso narrativo (Zaku, Dosu, Kin), con stats ya definidos y recompensa propia.
+
+## `items.json`
+
+Array `objetos`, cada uno con `tipo` (`pasivo` — se queda activo toda la run, o `consumible` — se gasta al usarse), `rareza`, `precioTienda` (`null` si no es comprable, solo se obtiene como recompensa) y `efecto` (tipo + parámetros que el motor interpreta).
+
+## `config.json`
+
+Parámetros globales independientes de cualquier arco: tamaño de equipo, economía (oro inicial y por combate/evento), reglas de combate, progresión (nivel máximo, multiplicadores de eficacia) y ajustes de tienda/guardado.
 
 ## `arcs/tutorial-chunin.json`
 

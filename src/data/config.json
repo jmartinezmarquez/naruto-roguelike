@@ -1,0 +1,30 @@
+{
+  "_comentario": "Parámetros globales del juego, independientes del arco. El motor los lee una sola vez al arrancar una run.",
+  "equipo": {
+    "tamanoMaximo": 3,
+    "numeroPersonajesInicialesAElegir": 1
+  },
+  "economia": {
+    "oroInicial": 50,
+    "oroPorCombateGanado": { "min": 10, "max": 20 },
+    "oroPorEventoPositivo": { "min": 5, "max": 15 }
+  },
+  "combate": {
+    "turnosMaximos": 20,
+    "ordenPorVelocidad": true
+  },
+  "progresion": {
+    "nivelMaximo": 20,
+    "multiplicadorEficaciaFuerte": 1.5,
+    "multiplicadorEficaciaDebil": 0.5,
+    "multiplicadorEficaciaNeutral": 1.0
+  },
+  "tienda": {
+    "numeroObjetosOfrecidos": 3,
+    "probabilidadRareza": { "comun": 65, "raro": 30, "legendario": 5 }
+  },
+  "guardado": {
+    "claveLocalStorage": "naruto-roguelike-run-actual",
+    "guardarSoloRunEnCurso": true
+  }
+}
