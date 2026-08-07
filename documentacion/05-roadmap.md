@@ -20,12 +20,23 @@
 
 **UI**
 - [x] Dirección visual propia (tinta/pergamino ninja, tipografía japonesa) — ver [13](./13-ui-mapa-y-combate.md).
-- [x] Pantalla de Mapa: forma de diamante por piso, panel de equipo reordenable, leyenda de nodos.
+- [x] Pantalla de Mapa: forma de diamante por piso, panel de equipo reordenable, leyenda de nodos,
+  pictograma de ventaja de chakra debajo de la leyenda.
 - [x] Pantalla de Combate: animación por rondas, HP real (no siempre lleno), botón Nueva Run al perder.
 - [x] Pantalla de Evento: 12 eventos canónicos, pistas automáticas por elección, sin combate.
-- [x] Pantalla de Tienda: consumibles, objeto gratuito, reclutamiento exclusivo — ver [15](./15-tienda.md).
+- [x] Pantalla de Tienda: consumibles, objeto gratuito, reclutamiento exclusivo con reemplazo si el
+  equipo está lleno — ver [15](./15-tienda.md).
 - [x] Nodo de descanso auto-resuelto (cura y revive a todo el equipo).
 - [x] Pantalla de Game Over dedicada, con el estado final del equipo — ver [17](./17-game-over.md).
+- [x] Tarjeta de hover con stats/tipo/jutsu/HP en todo sitio donde se muestra un personaje (mapa,
+  combate, tienda, selección) — `components/common/PersonajeHoverCard.jsx`.
+
+**Flujo real de la run**
+- [x] `App.jsx` real: pantalla de selección de personaje inicial (`CharacterSelectScreen.jsx`) en
+  vez de arrancar fijo con Naruto/Sasuke/Sakura — se elige 1 y el resto del equipo se completa
+  reclutando durante la run — ver [19](./19-seleccion-de-personaje.md).
+- [x] Reclutar con el equipo lleno ahora deja elegir a quién reemplazar, en vez de bloquear el
+  reclutamiento — ver [19](./19-seleccion-de-personaje.md).
 
 **Sistema de logros**
 - [x] Motor y persistencia (`engine/achievements.js` + `store/useAchievementsStore.js`), meta-progresión
@@ -36,13 +47,12 @@
 - [x] Reclutamiento vía tienda y jerarquía de rareza (ver [14](./14-reclutamiento-y-rareza.md)) — esto ya se implementó, este punto queda como referencia histórica del diseño previo.
 
 **Calidad**
-- [x] Testing con Vitest: 74 tests sobre motor y store — ver [16](./16-testing.md).
+- [x] Testing con Vitest: 81 tests sobre motor y store — ver [16](./16-testing.md).
 
 ## Próximos pasos (en orden sugerido)
 
-1. **Flujo real de `App.jsx`** — selección de personajes iniciales → mapa → ... (hoy arranca fijo con Naruto/Sasuke/Sakura). Desbloqueará también la recompensa de logro `desbloquearPersonajeInicial`, pendiente hasta que exista esta pantalla.
-2. **Conectar `guardarRun`/`cargarRun`** a un hook de autoguardado tras cada nodo.
-3. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en [11](./11-progresion-y-arcos.md)).
+1. **Conectar `guardarRun`/`cargarRun`** a un hook de autoguardado tras cada nodo.
+2. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en un arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`).
 
 ## Backlog (post-MVP)
 

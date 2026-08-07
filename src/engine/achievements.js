@@ -38,3 +38,10 @@ export function obtenerObjetosInicialesDesbloqueados(logros, idsDesbloqueados) {
     .filter((l) => idsDesbloqueados.includes(l.id) && l.recompensa.tipo === 'desbloquearObjetoInicial')
     .map((l) => l.recompensa.objetoId);
 }
+
+/** Ids de personaje desbloqueados como opción de equipo inicial (recompensa desbloquearPersonajeInicial) entre los logros ya conseguidos. */
+export function obtenerPersonajesInicialesDesbloqueados(logros, idsDesbloqueados) {
+  return logros
+    .filter((l) => idsDesbloqueados.includes(l.id) && l.recompensa.tipo === 'desbloquearPersonajeInicial')
+    .map((l) => l.recompensa.personajeId);
+}

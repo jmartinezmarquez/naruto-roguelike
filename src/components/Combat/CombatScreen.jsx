@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
+import PersonajeHoverCard from '../common/PersonajeHoverCard';
 
 const VELOCIDAD_AUTOPLAY_MS = 900;
 const PAUSA_ENTRE_RONDAS_MS = 1400;
@@ -12,23 +13,29 @@ function colorBarraHp(porcentaje) {
   return 'bg-sello-500';
 }
 
-function BarraLuchador({ nombre, nivel, hp, hpMaximo, modoActivoNombre, alineacion }) {
+function BarraLuchador({ id, nombre, nivel, hp, hpMaximo, modoActivoNombre, alineacion }) {
   const porcentaje = Math.max(0, hp / hpMaximo);
+  // El jugador (izquierda) abre el tooltip hacia la derecha (hacia el centro
+  // de la pantalla) y el enemigo (derecha) hacia la izquierda, para que
+  // ninguno de los dos se salga de la pantalla.
+  const posicionTooltip = alineacion === 'derecha' ? 'izquierda' : 'derecha';
   return (
-    <div className={alineacion === 'derecha' ? 'text-right' : 'text-left'}>
-      <p className="font-display text-lg text-pergamino-100">{nombre}</p>
-      <p className="text-xs text-pergamino-200/60">Nv. {nivel}</p>
-      {modoActivoNombre && (
-        <p className="text-xs text-sello-500 uppercase tracking-wide">{modoActivoNombre}</p>
-      )}
-      <div className="h-3 w-full bg-tinta-800 rounded-full overflow-hidden mt-1 border border-pergamino-100/10">
-        <div
-          className={`h-full ${colorBarraHp(porcentaje)} transition-all duration-500`}
-          style={{ width: `${porcentaje * 100}%` }}
-        />
+    <PersonajeHoverCard id={id} nivel={nivel} hpActual={hp} hpMaximo={hpMaximo} posicion={posicionTooltip}>
+      <div className={alineacion === 'derecha' ? 'text-right' : 'text-left'}>
+        <p className="font-display text-lg text-pergamino-100">{nombre}</p>
+        <p className="text-xs text-pergamino-200/60">Nv. {nivel}</p>
+        {modoActivoNombre && (
+          <p className="text-xs text-sello-500 uppercase tracking-wide">{modoActivoNombre}</p>
+        )}
+        <div className="h-3 w-full bg-tinta-800 rounded-full overflow-hidden mt-1 border border-pergamino-100/10">
+          <div
+            className={`h-full ${colorBarraHp(porcentaje)} transition-all duration-500`}
+            style={{ width: `${porcentaje * 100}%` }}
+          />
+        </div>
+        <p className="text-xs text-pergamino-200/70 mt-0.5">{Math.max(0, hp)} / {hpMaximo} HP</p>
       </div>
-      <p className="text-xs text-pergamino-200/70 mt-0.5">{Math.max(0, hp)} / {hpMaximo} HP</p>
-    </div>
+    </PersonajeHoverCard>
   );
 }
 
@@ -127,6 +134,7 @@ export default function CombatScreen() {
 
         <div className="flex items-start justify-between gap-6 mb-8">
           <BarraLuchador
+            id={ronda.jugador.id}
             nombre={ronda.jugador.nombre}
             nivel={ronda.jugador.nivel}
             hp={hpEnTurnoActual.hpJugador}
@@ -136,6 +144,7 @@ export default function CombatScreen() {
           />
           <span className="font-display text-2xl text-sello-500 pt-1">対</span>
           <BarraLuchador
+            id={ronda.enemigo.id}
             nombre={ronda.enemigo.nombre}
             nivel={ronda.enemigo.nivel}
             hp={hpEnTurnoActual.hpEnemigo}

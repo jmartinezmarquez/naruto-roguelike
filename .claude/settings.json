@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e \"console.log\\(typeof localStorage\\)\")"
+      "Bash(node -e \"console.log\\(typeof localStorage\\)\")",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('src/data/achievements.json','utf8'\\)\\); console.log\\('valid json'\\)\")"
     ]
   }
 }

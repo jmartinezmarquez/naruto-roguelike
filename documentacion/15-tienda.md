@@ -33,9 +33,23 @@ jefe — no entra indefenso si es tarde en la run.
 
 - `comprarConsumibleTienda(itemId)` — descuenta oro, añade al inventario, quita el item de la oferta.
 - `reclamarObjetoGratuitoTienda()` — añade el objeto gratuito sin coste, una sola vez por visita.
-- `reclutarDeTienda(personajeId)` — llama a `reclutarPersonaje(id, nivelReclutamiento)`, descuenta
-  el oro, y vacía `reclutables` (descarta la otra opción). No cobra si el equipo está lleno (la
-  llamada a `reclutarPersonaje` falla primero).
+- `reclutarDeTienda(personajeId, idAReemplazar = null)` — llama a
+  `reclutarPersonaje(id, nivelReclutamiento, idAReemplazar)`, descuenta el oro, y vacía
+  `reclutables` (descarta la otra opción). No cobra si `reclutarPersonaje` falla.
+
+## Reclutar con el equipo lleno: reemplazo, no bloqueo
+
+Desde que la run empieza con 1 solo personaje (ver
+[19 - Selección de personaje](./19-seleccion-de-personaje.md)), llegar a `tamanoMaximo` reclutando
+y luego querer reclutar OTRO más es el caso normal, no una excepción — así que ya no se bloquea el
+botón. `reclutarPersonaje(id, nivelInicial, idAReemplazar)`: si hay hueco, añade igual que siempre;
+si no, exige `idAReemplazar` (si no se pasa, no hace nada — así la UI puede pedírselo al jugador en
+vez de fallar en silencio) y sustituye a ese personaje **en su misma posición** del equipo. El
+reemplazado sale de la run tal cual estaba, no hay banquillo aparte donde guardarlo.
+
+En `ShopScreen.jsx`, pulsar "Reclutar" con el equipo lleno abre un panel `ElegirReemplazo` con los
+3 miembros actuales (cada uno con su tarjeta de hover, igual que en cualquier otro sitio donde se
+muestra un personaje) para elegir a quién sacar, o cancelar sin cobrar nada.
 
 ## Dirección visual
 

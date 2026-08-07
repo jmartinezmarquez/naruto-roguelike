@@ -2,12 +2,14 @@
 
 ## Alcance
 
-Motor + persistencia (evaluar condiciones, desbloquear logros, aplicar los dos tipos de recompensa
-usables con el código actual) **más UI**: pantalla dedicada de Logros y notificación al
-desbloquear uno. `desbloquearPersonajeInicial` (aparecer como opción al elegir equipo inicial)
-queda sin implementar a propósito: no existe pantalla de selección de personajes iniciales en
-`App.jsx` todavía (arranca fijo con Naruto/Sasuke/Sakura) y esa recompensa no tendría dónde
-engancharse — es el siguiente paso del roadmap.
+Motor + persistencia (evaluar condiciones, desbloquear logros, aplicar recompensas) más UI:
+pantalla dedicada de Logros y notificación al desbloquear uno. Los tres tipos de recompensa del
+diseño original ya están implementados: `desbloquearPersonajeReclutable`, `desbloquearObjetoInicial`
+y `desbloquearPersonajeInicial` — este último quedó pendiente en la sesión en la que se construyó
+el motor (no existía todavía la pantalla de selección de personaje inicial donde engancharlo) y se
+completó al construir `CharacterSelectScreen.jsx` — ver
+[19 - Selección de personaje](./19-seleccion-de-personaje.md). Ningún logro del `achievements.json`
+actual usa ese tipo de recompensa todavía, pero `engine/achievements.js` ya lo resuelve.
 
 ## Por qué un store separado (`useAchievementsStore`)
 
@@ -40,9 +42,9 @@ logro:
 ```
 
 Tipos de condición implementados: `derrotarJefe` (jefeId), `completarArcoSinDerrotas` (arcoId).
-Tipos de recompensa implementados: `desbloquearPersonajeReclutable`, `desbloquearObjetoInicial`.
-El resto de tipos propuestos en el diseño original quedan documentados en
-`_pendienteDeImplementar` dentro del propio JSON, sin código muerto en `engine/`.
+Tipos de recompensa implementados: `desbloquearPersonajeReclutable`, `desbloquearObjetoInicial`,
+`desbloquearPersonajeInicial`. El resto de tipos propuestos en el diseño original quedan
+documentados en `_pendienteDeImplementar` dentro del propio JSON, sin código muerto en `engine/`.
 
 ## `engine/achievements.js` (puro, sin store ni React)
 

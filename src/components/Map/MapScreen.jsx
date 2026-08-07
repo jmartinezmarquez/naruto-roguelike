@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import personajesData from '../../data/characters.json';
+import typesData from '../../data/types.json';
+import PersonajeHoverCard from '../common/PersonajeHoverCard';
 
 function nombrePersonaje(id) {
   return personajesData.personajes.find((p) => p.id === id)?.nombre ?? id;
@@ -103,29 +105,37 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo }) {
             const porcentaje = Math.max(0, p.hpActual / hpMaximo);
             const esActivo = index === 0;
             return (
-              <button
+              <PersonajeHoverCard
                 key={p.id}
-                type="button"
-                onClick={() => ponerEnFrente(p.id)}
-                disabled={p.derrotado || esActivo}
-                className={[
-                  'text-left rounded-md p-2 border transition-colors',
-                  esActivo ? 'border-sello-600 bg-sello-600/10' : 'border-tinta-950/15 bg-tinta-950/5',
-                  p.derrotado ? 'opacity-40 cursor-default' : 'cursor-pointer hover:border-sello-600/60',
-                ].join(' ')}
-                title={esActivo ? 'Este personaje está en posición 1' : 'Poner en posición 1'}
+                id={p.id}
+                nivel={p.nivel}
+                hpActual={p.hpActual}
+                hpMaximo={hpMaximo}
+                className="block w-full"
               >
-                <p className="text-xs font-display font-bold truncate">
-                  {nombrePersonaje(p.id)} {esActivo && '★'}
-                </p>
-                <p className="text-[10px] opacity-70">Nv. {p.nivel}{p.derrotado ? ' — caído' : ''}</p>
-                <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden mt-1">
-                  <div
-                    className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
-                    style={{ width: `${porcentaje * 100}%` }}
-                  />
-                </div>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => ponerEnFrente(p.id)}
+                  disabled={p.derrotado || esActivo}
+                  className={[
+                    'w-full text-left rounded-md p-2 border transition-colors',
+                    esActivo ? 'border-sello-600 bg-sello-600/10' : 'border-tinta-950/15 bg-tinta-950/5',
+                    p.derrotado ? 'opacity-40 cursor-default' : 'cursor-pointer hover:border-sello-600/60',
+                  ].join(' ')}
+                  title={esActivo ? 'Este personaje está en posición 1' : 'Poner en posición 1'}
+                >
+                  <p className="text-xs font-display font-bold truncate">
+                    {nombrePersonaje(p.id)} {esActivo && '★'}
+                  </p>
+                  <p className="text-[10px] opacity-70">Nv. {p.nivel}{p.derrotado ? ' — caído' : ''}</p>
+                  <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden mt-1">
+                    <div
+                      className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
+                      style={{ width: `${porcentaje * 100}%` }}
+                    />
+                  </div>
+                </button>
+              </PersonajeHoverCard>
             );
           })}
         </div>
@@ -153,6 +163,105 @@ function LeyendaMapa() {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+const ORDEN_CICLO_CHAKRA = typesData.elementos; // ['katon', 'fuuton', 'raiton', 'doton', 'suiton'] — ya en orden de ventaja del ciclo
+const CENTRO_RUEDA = 55;
+const RADIO_RUEDA = 42;
+const RADIO_NODO_CHAKRA = 12;
+
+/** Posición del punto i-ésimo de un pentágono, empezando arriba y en sentido horario. */
+function puntoRuedaChakra(indice, total) {
+  const angulo = (indice / total) * 2 * Math.PI - Math.PI / 2;
+  return {
+    x: CENTRO_RUEDA + RADIO_RUEDA * Math.cos(angulo),
+    y: CENTRO_RUEDA + RADIO_RUEDA * Math.sin(angulo),
+  };
+}
+
+/**
+ * Pictograma del ciclo de ventajas de chakra (Katon > Fuuton > Raiton > Doton
+ * > Suiton > Katon, ver types.json): un pentágono con una flecha de cada
+ * elemento al que es fuerte contra. Pensado para quien no tenga memorizado
+ * el sistema de naturalezas de chakra de Naruto — la tabla de eficacias por
+ * sí sola (`tablaEficacias`) no es intuitiva sin verla dibujada como ciclo.
+ */
+function RuedaChakra() {
+  const total = ORDEN_CICLO_CHAKRA.length;
+  const puntos = ORDEN_CICLO_CHAKRA.map((_, i) => puntoRuedaChakra(i, total));
+
+  return (
+    <div className="w-40 shrink-0">
+      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
+        <p className="font-display font-bold text-sm tracking-wide">VENTAJA DE CHAKRA</p>
+        <p className="text-[9px] opacity-60 mt-1 mb-2 leading-snug">
+          Cada flecha apunta al elemento contra el que es fuerte.
+        </p>
+        <svg viewBox="0 0 110 110" className="w-full">
+          <defs>
+            {ORDEN_CICLO_CHAKRA.map((tipo) => (
+              <marker
+                key={tipo}
+                id={`flecha-chakra-${tipo}`}
+                markerUnits="userSpaceOnUse"
+                markerWidth="8"
+                markerHeight="8"
+                refX="5"
+                refY="2.5"
+                orient="auto"
+              >
+                <path d="M0,0 L5,2.5 L0,5 Z" fill={`var(--color-${tipo})`} />
+              </marker>
+            ))}
+          </defs>
+          {ORDEN_CICLO_CHAKRA.map((tipo, i) => {
+            const origen = puntos[i];
+            const destino = puntos[(i + 1) % total];
+            // Curva ligera hacia el centro para que las 5 flechas no se solapen entre sí.
+            const puntoMedioX = (origen.x + destino.x) / 2;
+            const puntoMedioY = (origen.y + destino.y) / 2;
+            const controlX = puntoMedioX + (CENTRO_RUEDA - puntoMedioX) * 0.3;
+            const controlY = puntoMedioY + (CENTRO_RUEDA - puntoMedioY) * 0.3;
+            // Recorta el final de la curva justo al borde del círculo destino
+            // (tangente = dirección control→destino) — si la flecha termina
+            // en el centro del círculo, el círculo (dibujado encima) la tapa
+            // por completo y no se ve ninguna punta.
+            const dx = destino.x - controlX;
+            const dy = destino.y - controlY;
+            const distancia = Math.hypot(dx, dy) || 1;
+            const finX = destino.x - (dx / distancia) * RADIO_NODO_CHAKRA;
+            const finY = destino.y - (dy / distancia) * RADIO_NODO_CHAKRA;
+            return (
+              <path
+                key={tipo}
+                d={`M ${origen.x} ${origen.y} Q ${controlX} ${controlY} ${finX} ${finY}`}
+                fill="none"
+                stroke={`var(--color-${tipo})`}
+                strokeWidth="2"
+                opacity="0.85"
+                markerEnd={`url(#flecha-chakra-${tipo})`}
+              />
+            );
+          })}
+          {ORDEN_CICLO_CHAKRA.map((tipo, i) => (
+            <g key={tipo}>
+              <circle cx={puntos[i].x} cy={puntos[i].y} r={RADIO_NODO_CHAKRA} fill={`var(--color-${tipo})`} />
+              <text
+                x={puntos[i].x}
+                y={puntos[i].y + 3}
+                textAnchor="middle"
+                fontSize="8"
+                fontWeight="bold"
+                fill="var(--color-pergamino-100)"
+              >
+                {tipo.slice(0, 3).toUpperCase()}
+              </text>
+            </g>
+          ))}
+        </svg>
       </div>
     </div>
   );
@@ -264,7 +373,10 @@ export default function MapScreen() {
           </div>
         </div>
 
-        <LeyendaMapa />
+        <div className="flex flex-col gap-4">
+          <LeyendaMapa />
+          <RuedaChakra />
+        </div>
       </div>
     </div>
   );

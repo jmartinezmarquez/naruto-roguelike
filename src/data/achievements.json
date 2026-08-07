@@ -100,7 +100,6 @@
       "completarRunEnDificultad (dificultad) — si se añade selector de dificultad más adelante"
     ],
     "tiposDeRecompensa": [
-      "desbloquearPersonajeInicial (personajeId) — necesita la pantalla de selección de personajes iniciales en App.jsx, todavía no existe",
       "cosmetico (aún sin definir — título, color de UI, etc.)"
     ]
   }

@@ -14,7 +14,7 @@ import achievementsData from '../data/achievements.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp } from '../engine/leveling';
-import { generarMapa, resolverEnemigoDeNodo, calcularNivelPorPiso } from '../engine/mapGenerator';
+import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
 import { useAchievementsStore } from './useAchievementsStore';
 
@@ -239,8 +239,12 @@ export const useGameStore = create((set, get) => ({
     }
 
     if (nodo.tipo === 'tienda') {
-      const nivelReclutamiento = calcularNivelPorPiso(nodo.piso, arcoActualDatos);
-      const oferta = generarOfertaTienda(get().equipo, arcoActualDatos, nivelReclutamiento);
+      const equipoActual = get().equipo;
+      // Nivel equilibrado con el equipo (el del más fuerte), no con el piso
+      // — antes usaba calcularNivelPorPiso y el reclutado podía entrar muy
+      // por debajo del resto (p. ej. nivel 2 con el equipo ya en nivel 8).
+      const nivelReclutamiento = Math.max(1, ...equipoActual.map((p) => p.nivel));
+      const oferta = generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento);
       set({ tiendaActual: oferta, pantalla: 'tienda' });
       return null;
     }
@@ -258,16 +262,34 @@ export const useGameStore = create((set, get) => ({
   },
 
   /**
-   * Añade un personaje reclutado al final del equipo, si hay hueco.
-   * nivelInicial: nivel del piso donde se recluta (calcularNivelPorPiso del
-   * generador de mapa), para que no entre indefenso si es un reclutamiento
-   * tardío en la run. Por defecto 1, para el equipo inicial del primer arco.
+   * Añade un personaje reclutado al equipo. Si hay hueco libre (por debajo
+   * de tamanoMaximo), se añade al final con `nivelInicial` tal cual — ya
+   * viene equilibrado con el equipo (nivel del más fuerte, ver
+   * `avanzarANodo`). Si el equipo ya está completo, hace falta indicar
+   * `idAReemplazar` (el personaje sale del equipo — y de la run — para
+   * dejarle el sitio); sin ese id, no hace nada y devuelve false para que
+   * la UI pueda pedírselo al jugador. Reemplazar da además
+   * `bonusNivelAlReemplazar` de más — así reemplazar a alguien es mejor que
+   * simplemente rellenar un hueco vacío, no solo lateral.
    */
-  reclutarPersonaje(id, nivelInicial = 1) {
+  reclutarPersonaje(id, nivelInicial = 1, idAReemplazar = null) {
     const { equipo } = get();
-    if (equipo.length >= configGlobal.equipo.tamanoMaximo) return false;
     if (equipo.some((p) => p.id === id)) return false; // ya está en el equipo
-    set({ equipo: [...equipo, crearInstanciaPersonaje(id, nivelInicial)] });
+
+    if (equipo.length < configGlobal.equipo.tamanoMaximo) {
+      set({ equipo: [...equipo, crearInstanciaPersonaje(id, nivelInicial)] });
+      return true;
+    }
+
+    if (!idAReemplazar) return false; // equipo lleno, hace falta saber a quién reemplazar
+    const indiceAReemplazar = equipo.findIndex((p) => p.id === idAReemplazar);
+    if (indiceAReemplazar === -1) return false;
+
+    const nivelConBonus = nivelInicial + configGlobal.equipo.bonusNivelAlReemplazar;
+    const nuevaInstancia = crearInstanciaPersonaje(id, nivelConBonus);
+    const equipoActualizado = [...equipo];
+    equipoActualizado[indiceAReemplazar] = nuevaInstancia;
+    set({ equipo: equipoActualizado });
     return true;
   },
 
@@ -414,16 +436,18 @@ export const useGameStore = create((set, get) => ({
   /**
    * Recluta a uno de los dos personajes ofrecidos en la tienda actual. Al
    * reclutar uno, el otro se descarta automáticamente (solo se puede elegir
-   * uno de los dos, como pedía el diseño).
+   * uno de los dos, como pedía el diseño). Si el equipo ya está completo,
+   * `idAReemplazar` indica a quién saca del equipo para dejarle el sitio —
+   * ver `reclutarPersonaje`.
    */
-  reclutarDeTienda(personajeId) {
+  reclutarDeTienda(personajeId, idAReemplazar = null) {
     const { tiendaActual, oro } = get();
     if (!tiendaActual) return false;
     const opcion = tiendaActual.reclutables.find((r) => r.personajeId === personajeId);
     if (!opcion || oro < opcion.precio) return false;
 
-    const reclutado = get().reclutarPersonaje(personajeId, tiendaActual.nivelReclutamiento);
-    if (!reclutado) return false; // equipo lleno, no se cobra
+    const reclutado = get().reclutarPersonaje(personajeId, tiendaActual.nivelReclutamiento, idAReemplazar);
+    if (!reclutado) return false; // equipo lleno y sin idAReemplazar (o no válido), no se cobra
 
     set({
       oro: oro - opcion.precio,

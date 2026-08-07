@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
 import { useAchievementsStore } from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
+import configGlobal from '../data/config.json';
 
 const enemigoHakuDePrueba = {
   // Mismo id que el mini-jefe real del arco de prueba (miniJefeId: 'haku'),
@@ -276,10 +277,60 @@ describe('tienda', () => {
     expect(reclutado.nivel).toBe(10);
   });
 
-  it('reclutarDeTienda no hace nada si el equipo ya está completo', () => {
+  it('reclutarDeTienda no hace nada si el equipo ya está completo y no se indica a quién reemplazar', () => {
     fijarTiendaDePrueba(); // el equipo del beforeEach ya tiene 3/3
     const exito = useGameStore.getState().reclutarDeTienda('rock_lee');
     expect(exito).toBe(false);
     expect(useGameStore.getState().equipo.map((p) => p.id)).not.toContain('rock_lee');
+  });
+
+  it('reclutarDeTienda con idAReemplazar saca a ese personaje y pone al reclutado en su lugar', () => {
+    fijarTiendaDePrueba(); // el equipo del beforeEach ya tiene 3/3: naruto, sasuke, sakura
+    const exito = useGameStore.getState().reclutarDeTienda('rock_lee', 'sasuke');
+    expect(exito).toBe(true);
+
+    const { equipo, oro } = useGameStore.getState();
+    expect(equipo.map((p) => p.id)).toEqual(['naruto', 'rock_lee', 'sakura']); // reemplaza en su misma posición
+    expect(equipo).toHaveLength(3); // el equipo no crece, solo se reemplaza
+    expect(oro).toBeLessThan(1000); // sí que cobra al reemplazar
+  });
+
+  it('reemplazar da bonusNivelAlReemplazar de más sobre el nivel de la oferta, para que compense frente a rellenar un hueco vacío', () => {
+    fijarTiendaDePrueba(); // nivelReclutamiento: 10 en la oferta de prueba
+    useGameStore.getState().reclutarDeTienda('rock_lee', 'sasuke');
+    const reclutado = useGameStore.getState().equipo.find((p) => p.id === 'rock_lee');
+    expect(reclutado.nivel).toBe(10 + configGlobal.equipo.bonusNivelAlReemplazar);
+  });
+
+  it('reclutarDeTienda con un idAReemplazar que no está en el equipo no hace nada', () => {
+    fijarTiendaDePrueba();
+    const exito = useGameStore.getState().reclutarDeTienda('rock_lee', 'kakashi');
+    expect(exito).toBe(false);
+    expect(useGameStore.getState().equipo.map((p) => p.id)).not.toContain('rock_lee');
+  });
+});
+
+describe('nivel de reclutamiento al entrar en un nodo de tienda', () => {
+  function fijarMapaConTienda() {
+    useGameStore.setState({
+      mapa: {
+        nodos: { tienda_test: { tipo: 'tienda', piso: 2, conexiones: [], visitado: false } },
+        nodosIniciales: ['tienda_test'],
+      },
+      nodoActualId: null,
+    });
+  }
+
+  it('usa el nivel del personaje más fuerte del equipo, no el nivel fijo del piso', () => {
+    // El piso 2 de pais-de-las-olas daría un nivel muy bajo por calcularNivelPorPiso
+    // (nivelEnemigoBase 1 + escalado) — aquí el equipo ya está muy por encima,
+    // y la oferta debe reflejarlo para que reclutar siga siendo relevante.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, nivel: 8 } : p)),
+    }));
+    fijarMapaConTienda();
+
+    useGameStore.getState().avanzarANodo('tienda_test');
+    expect(useGameStore.getState().tiendaActual.nivelReclutamiento).toBe(8);
   });
 });

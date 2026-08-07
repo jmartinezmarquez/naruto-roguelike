@@ -2,7 +2,8 @@
   "_comentario": "Parámetros globales del juego, independientes del arco. El motor los lee una sola vez al arrancar una run.",
   "equipo": {
     "tamanoMaximo": 3,
-    "numeroPersonajesInicialesAElegir": 1
+    "numeroPersonajesInicialesAElegir": 1,
+    "bonusNivelAlReemplazar": 2
   },
   "economia": {
     "oroInicial": 50,

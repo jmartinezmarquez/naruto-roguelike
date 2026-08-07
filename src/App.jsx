@@ -8,6 +8,7 @@ import ShopScreen from './components/Shop/ShopScreen';
 import GameOverScreen from './components/GameOver/GameOverScreen';
 import AchievementsScreen from './components/Achievements/AchievementsScreen';
 import LogroToast from './components/Achievements/LogroToast';
+import CharacterSelectScreen from './components/CharacterSelect/CharacterSelectScreen';
 import arcoPaisDeLasOlas from './data/arcs/pais-de-las-olas.json';
 
 function pantallaActual(pantalla) {
@@ -25,15 +26,22 @@ export default function App() {
   const mapa = useGameStore((s) => s.mapa);
   const pantalla = useGameStore((s) => s.pantalla);
 
+  // Los logros de sesiones anteriores se cargan una vez al montar, antes de
+  // elegir personaje — el roster de CharacterSelectScreen depende de ellos
+  // (recompensa desbloquearPersonajeInicial).
   useEffect(() => {
-    if (!mapa) {
-      // Los logros de sesiones anteriores deben estar cargados ANTES de
-      // iniciarRun, porque el inventario inicial puede depender de ellos
-      // (recompensa desbloquearObjetoInicial).
-      cargarLogros();
-      iniciarRun(['naruto', 'sasuke', 'sakura'], arcoPaisDeLasOlas);
-    }
-  }, [mapa, iniciarRun, cargarLogros]);
+    cargarLogros();
+  }, [cargarLogros]);
+
+  // Sin run en curso (arranque, o tras reiniciarRun desde Game Over): hay
+  // que elegir personaje antes de nada. iniciarRun ya no se llama solo.
+  if (!mapa) {
+    return (
+      <CharacterSelectScreen
+        onConfirmar={(idsElegidos) => iniciarRun(idsElegidos, arcoPaisDeLasOlas)}
+      />
+    );
+  }
 
   return (
     <>

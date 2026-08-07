@@ -3,6 +3,7 @@ import {
   evaluarLogrosDesbloqueables,
   obtenerPersonajesReclutablesDesbloqueados,
   obtenerObjetosInicialesDesbloqueados,
+  obtenerPersonajesInicialesDesbloqueados,
 } from './achievements';
 
 const logrosDePrueba = [
@@ -15,6 +16,11 @@ const logrosDePrueba = [
     id: 'run_sin_bajas',
     condicion: { tipo: 'completarArcoSinDerrotas', arcoId: 'pais_de_las_olas' },
     recompensa: { tipo: 'desbloquearObjetoInicial', objetoId: 'sello_chakra' },
+  },
+  {
+    id: 'completar_run',
+    condicion: { tipo: 'derrotarJefe', jefeId: 'pain_camino_deva' },
+    recompensa: { tipo: 'desbloquearPersonajeInicial', personajeId: 'pain_camino_deva' },
   },
 ];
 
@@ -79,5 +85,17 @@ describe('obtenerObjetosInicialesDesbloqueados', () => {
   it('devuelve el objeto de los logros de tipo desbloquearObjetoInicial ya conseguidos', () => {
     const resultado = obtenerObjetosInicialesDesbloqueados(logrosDePrueba, ['run_sin_bajas']);
     expect(resultado).toEqual(['sello_chakra']);
+  });
+});
+
+describe('obtenerPersonajesInicialesDesbloqueados', () => {
+  it('devuelve el personaje de los logros de tipo desbloquearPersonajeInicial ya conseguidos', () => {
+    const resultado = obtenerPersonajesInicialesDesbloqueados(logrosDePrueba, ['completar_run']);
+    expect(resultado).toEqual(['pain_camino_deva']);
+  });
+
+  it('ignora logros no desbloqueados o de otro tipo de recompensa', () => {
+    const resultado = obtenerPersonajesInicialesDesbloqueados(logrosDePrueba, ['derrotar_haku']);
+    expect(resultado).toEqual([]);
   });
 });

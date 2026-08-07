@@ -28,14 +28,16 @@ pantalla, para que aparezca sin importar cuál esté activa.
 - Layout: pisos apilados de abajo (nivel 1) hacia arriba (jefe), como si se escalara un pergamino. Conexiones dibujadas con `<path>` curvos (SVG), no líneas rectas de diagrama de flujo — el camino ya recorrido se resalta en rojo sello, el resto queda tenue.
 - Nodos: círculo con glifo kanji por tipo (combate/evento/reclutamiento/tienda/descanso), color según tipo; el nodo de jefe usa un cuadrado con borde doble en vez de círculo, para diferenciarlo sin depender de un asset externo.
 - Nodos no alcanzables desde la posición actual aparecen atenuados y no son clicables.
-- **Tira de HP del equipo** (nuevo): muestra cada personaje con nivel, barra de HP real (vía el selector `obtenerHpMaximo` del store) y si está derrotado — necesario ahora que el HP persiste entre combates, para que el jugador sepa cuándo curarse.
-- Aviso temporal para nodos sin pantalla implementada todavía (tienda/reclutamiento), y aviso de "equipo curado" tras un nodo de descanso.
+- **Tira de HP del equipo**: muestra cada personaje con nivel, barra de HP real (vía el selector `obtenerHpMaximo` del store) y si está derrotado — necesario ahora que el HP persiste entre combates, para que el jugador sepa cuándo curarse. Cada entrada envuelta en `PersonajeHoverCard` (ver más abajo).
+- Aviso temporal para nodos sin pantalla implementada todavía (reclutamiento, que ya no existe como nodo), y aviso de "equipo curado" tras un nodo de descanso.
+- **`RuedaChakra`**: pictograma del ciclo de ventajas de chakra, debajo de la leyenda del mapa —
+  ver [19 - Selección de personaje](./19-seleccion-de-personaje.md).
 
 ## `components/Combat/CombatScreen.jsx`
 
 - Lee `ultimoResultadoCombate` del store (resumen enriquecido: nombres, HP máximo, modo activo).
 - Reproduce `historial` turno a turno con auto-avance (900ms/turno), reconstruyendo el HP de cada lado restando el daño acumulado de los turnos ya revelados. Botón "Saltar animación".
-- Barras de HP con color según % restante (`fuuton` >50%, `raiton` 20-50%, `sello` <20%).
+- Barras de HP con color según % restante (`fuuton` >50%, `raiton` 20-50%, `sello` <20%). Cada `BarraLuchador` envuelta en `PersonajeHoverCard` (jugador se abre hacia la derecha, enemigo hacia la izquierda, para no salirse de la pantalla).
 - Al completarse: banner de Victoria/Derrota y botón "Continuar" → `volverAlMapa()`. Si `runTerminada` es `true`, el botón dice "Ver resultado" y navega a `GameOverScreen` en su lugar (ver [17](./17-game-over.md)).
 
 ## `components/Event/EventScreen.jsx` (nuevo)
@@ -47,6 +49,19 @@ pantalla, para que aparezca sin importar cuál esté activa.
 
 Antes, `ultimoResultadoCombate` era el resultado crudo del motor (`{ historial, ganadorId, turnosUsados }`), con solo IDs. Ahora `jugarCombate` construye un resumen con `jugador`/`enemigo` (`{ id, nombre, hpMaximo, hpFinal, modoActivoNombre }`) además del historial. El motor (`engine/combat.js`) no cambió — esto es una capa de presentación añadida en el store.
 
-## `App.jsx` (temporal)
+## `components/common/PersonajeHoverCard.jsx`
 
-El `App.jsx` actual solo llama a `iniciarRun` con el equipo inicial fijo y alterna entre `MapScreen`/`CombatScreen`/`EventScreen` según `pantalla`, para poder probar el flujo. Se sustituirá por un flujo real (pantalla de selección de personajes iniciales → mapa → ...) cuando se construya esa pantalla.
+Tarjeta de detalle (tipo de chakra, stats, HP, jutsu) al hacer hover sobre cualquier trigger que
+represente a un personaje o jefe — envuelve al elemento, no lo reemplaza. Usada en `MapScreen`,
+`CombatScreen`, `ShopScreen` y `CharacterSelectScreen`. Detalle completo en
+[19 - Selección de personaje](./19-seleccion-de-personaje.md).
+
+## `App.jsx`
+
+Flujo real: mientras `mapa` es `null` (arranque, o tras `reiniciarRun()` desde Game Over) se
+muestra `CharacterSelectScreen` en vez de cualquier pantalla del store — ahí el jugador elige su
+personaje inicial y `onConfirmar` llama a `iniciarRun`. Con `mapa` ya creado, alterna entre
+`MapScreen`/`CombatScreen`/`EventScreen`/`ShopScreen`/`GameOverScreen`/`AchievementsScreen` según
+`pantalla`, más `LogroToast` montado aparte. Antes de todo esto, un efecto llama a
+`cargarLogros()` una vez al montar — el roster de `CharacterSelectScreen` depende de qué logros
+ya estén desbloqueados. Ver [19 - Selección de personaje](./19-seleccion-de-personaje.md).
