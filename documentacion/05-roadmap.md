@@ -84,21 +84,34 @@
   `GameOverScreen` ahora distingue victoria de derrota. Ver [20](./20-arcos-encadenados.md).
   **Sin implementar a propósito**: el evento narrativo de transición entre arcos (hoy es un botón
   directo "Continuar al siguiente arco", sin pausa) — queda anotado como posible mejora ahí mismo.
+- [x] Al derrotar al jefe final de un arco, todo el equipo se cura y revive por completo (estilo
+  Slay the Spire) antes de continuar — reutiliza `_curarEquipoCompleto`, mismo mecanismo que el
+  nodo de descanso. Ver [20](./20-arcos-encadenados.md).
+
+**Objetos y oro visibles, hover en nodos**
+- [x] `PanelObjetos` (`MapScreen.jsx`) debajo del panel de equipo: oro + inventario agrupado por
+  id con "×N", hover por objeto con descripción y efecto exacto en números (`ItemHoverCard`).
+- [x] `LeyendaMapa` (fija, siempre visible) sustituida por hover en cada nodo del mapa: qué es y
+  qué beneficio da, más su estado actual (visitado/aquí/fuera de alcance).
+- [x] Extraída la mecánica de hover a `components/common/HoverTooltip.jsx` (antes vivía duplicada
+  dentro de `PersonajeHoverCard`) — la reutilizan `PersonajeHoverCard`, `ItemHoverCard` y el hover
+  de nodo. Ver [13](./13-ui-mapa-y-combate.md).
+
+**Objetos equipables y consumibles (aplicación real de efectos)**
+- [x] El hueco de la sesión anterior (ningún objeto aplicaba su efecto de verdad) está resuelto —
+  se descartó el diseño original de "pasivo de todo el equipo" a favor de un sistema de equipo:
+  cada objeto no-consumible se asigna a un personaje concreto (`equiparObjeto`/`desequiparObjeto`),
+  solo beneficia a quien lo lleve puesto, y vuelve al inventario si lo desequipas o reemplazas a
+  ese personaje. `revivirUnaVez` y `curacionPostCombate` ya se disparan de verdad en combate; los
+  consumibles se usan desde `PanelObjetos` (`usarConsumible`). Ver [21](./21-objetos-equipables.md).
 
 ## Próximos pasos (en orden sugerido)
 
-1. **Nodo de "reclutar" dedicado en el mapa** — ahora que la run empieza con 1 solo personaje (ver
+1. **Ajuste de nodos, "reclutar" dedicado en el mapa y cambio en la Tienda** — ahora que la run empieza con 1 solo personaje (ver
    [19](./19-seleccion-de-personaje.md)), reclutar ya no es un extra de la tienda, es una necesidad
-   central del run. Falta decidir en la propia sesión: ¿nodo propio con su propia oferta, o dar más
-   peso al reclutamiento dentro de la tienda existente? ¿Coste distinto al de tienda?
+   central del run. (ver [ReclutarLayout](./Reclutar-layout.png)) Asimismo, me gustaría hacer una Tienda parecida al evento Item de Pokeclicker. Que aparezcan tres cards en pantalla, con 3 objetos aleatorios, tanto consumibles o equipables, que el usuario puede comprar. Pero ya no habrá reclutamientos en Tienda ni objetos gratuitos. Solo los mini-bosses soltaran objetos gratuitos. Layout en (ver [LayoutTienda](./Tienda-layout.png))
 
-2. **Nodo de "Combate en cadena"**  — En Pokelike tenemos encuentros salvajes (1 solo enemigo), entrenadores (enemigos con mas de 1 encuentro uno detras de otro) y entrenadores de elite (Rival, con un equipo mas fuerte y mas combates en cadena). Nuestro mini-boss (Haku p.e) sería de este tercer tipo, y un combate con Genin Ninja sería el primer tipo. Para combates contra personajes nombrados (Zaku, Dosu, Rin, etc) quizá estaría bien añadirle uno o dos genin estandar para simbolizar un combate más largo. 
-
-3. **Tarjeta de Objetos y Oro** debajo del panel de equipo en `MapScreen.jsx` — muestra el
-   inventario actual y el oro, con **hover en cada objeto** revelando su descripción y su efecto
-   exacto (qué cura, qué bonificación da, etc.), mismo patrón que `PersonajeHoverCard` pero para
-   `items.json`.  - Creo que podemos prescindir de la leyenda de nodos para dar sitio al inventario (oro + objetos). En su lugar, hacer hover en un nodo deberia decirte lo que es, y el beneficio que te da, como en Pokelike. Por ejemplo:
-  Tienda - Compra objetos, Combate aleatorio - + 1 Nivel, Mini-boss - Recompensa adicional, etc. 
+3. **Nodo de "Combate en cadena"**  — En Pokelike tenemos encuentros salvajes (1 solo enemigo), entrenadores (enemigos con mas de 1 encuentro uno detras de otro) y entrenadores de elite (Rival, con un equipo mas fuerte y mas combates en cadena). Nuestro mini-boss (Haku p.e) sería de este tercer tipo, y un combate con Genin Ninja sería el primer tipo. Para combates contra personajes nombrados (Zaku, Dosu, Rin, etc) quizá estaría bien añadirle uno o dos genin estandar para simbolizar un combate más largo. 
 
 4. **Ampliar el roster de enemigos nombrados y logros** — No hace falta cubrir todos los ninjas del manga pero que no se sienta que siempre te van a salir los mismos enemigos al clicar en un Combate del tipo Entrenador. Añadiendo variedad en cada arco. Además añadir logros para la "completion" de los arcos. No todos los logros tienen por qué desbloquear personajes u objetos permanentes, otros simplemente son por coleccionismo. También pueden afectar al oro inicial, de manera que empieces las siguientes runs con más oro, etc. El sistema de logros de Pokelike lo hace bastante bien, dando un balance entre desbloqueos tempranos e incrementales y logros dificiles de conseguir para jugadores mas coleccionistas.
 
@@ -137,9 +150,6 @@
 Ideas nuevas pensadas para encajar con el formato Pokelike/Slay the Spire, marcadas aparte por ser
 más grandes de lo que cabe en una sesión de bugfixing/ajuste:
 
-- **Fila de reliquias visible** (estilo Slay the Spire): los objetos pasivos ya existen en el
-  inventario, pero no hay ninguna vista dedicada tipo "iconos de reliquia siempre visibles" — hoy
-  solo se ven al abrir la futura tarjeta de Objetos y Oro (punto 3 de arriba).
 - **Vista previa del jefe antes de entrar al nodo**: hover sobre el nodo `jefe`/`miniJefe` en el
   mapa mostrando su ficha completa (reutilizando `PersonajeHoverCard`), para decidir con
   información si conviene ir a curarse antes.

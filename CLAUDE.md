@@ -70,13 +70,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 93 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 116 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 93 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 116 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -92,6 +92,16 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   automáticamente con el siguiente (`avanzarSiguienteArco`, `ORDEN_ARCOS` en `useGameStore.js`).
   Derrotar a Pain (`recompensa.finDeLaRun: true`) marca la run como ganada de verdad —
   `GameOverScreen` ya distingue victoria de derrota. Ver `documentacion/20-arcos-encadenados.md`.
+  Al superar el jefe de un arco, el equipo se cura y revive por completo (estilo Slay the Spire).
+- [x] `PanelObjetos` (mapa): oro + inventario agrupado con hover de descripción/efecto exacto por
+  objeto (`ItemHoverCard`); `LeyendaMapa` sustituida por hover en cada nodo del mapa. Mecánica de
+  hover extraída a `components/common/HoverTooltip.jsx` (la reutilizan `PersonajeHoverCard`,
+  `ItemHoverCard` y el hover de nodo). Ver `documentacion/13-ui-mapa-y-combate.md`.
+- [x] Objetos equipables y consumibles con efecto real (ya no solo texto): un hueco de equipo por
+  personaje (`instancia.objetoEquipadoId`), solo beneficia a quien lo lleve puesto y vuelve al
+  inventario si lo desequipas o reemplazas a ese personaje (`equiparObjeto`/`desequiparObjeto` en
+  `useGameStore.js`); `revivirUnaVez` y `curacionPostCombate` ya se disparan de verdad en combate;
+  consumibles se usan desde `PanelObjetos` (`usarConsumible`). Ver `documentacion/21-objetos-equipables.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 

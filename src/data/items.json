@@ -1,5 +1,5 @@
 {
-  "_comentario": "Objetos que aparecen en eventos, tienda y recompensas de combate. 'pasivo' se queda activo toda la run desde que se obtiene. 'consumible' se gasta una vez usado.",
+  "_comentario": "Objetos que aparecen en eventos, tienda y recompensas de combate. 'equipable' se asigna a un personaje concreto (un hueco por personaje) y solo beneficia a quien lo lleve puesto — si lo desequipas o reemplazas a ese personaje, el objeto vuelve al inventario (revivirUnaVez es la excepción: se consume al activarse, no vuelve). 'consumible' se gasta una vez usado sobre un personaje.",
   "objetos": [
     {
       "id": "pildora_soldado",
@@ -13,8 +13,8 @@
     {
       "id": "banda_repuesto",
       "nombre": "Banda Ninja de Repuesto",
-      "descripcion": "Si un personaje del equipo cae en combate, revive con 1 HP. Se consume al activarse.",
-      "tipo": "pasivo",
+      "descripcion": "Si quien la lleva equipada cae en combate, revive con 1 HP. Se consume al activarse (no vuelve al inventario).",
+      "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": 60,
       "efecto": { "tipo": "revivirUnaVez", "hpAlRevivir": 1 }
@@ -22,26 +22,26 @@
     {
       "id": "sello_chakra",
       "nombre": "Sello de Chakra",
-      "descripcion": "Aumenta permanentemente el ataque de todo el equipo.",
-      "tipo": "pasivo",
+      "descripcion": "Aumenta el ataque de quien lo lleve equipado.",
+      "tipo": "equipable",
       "rareza": "comun",
       "precioTienda": 40,
-      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "ataque", "cantidad": 2 }
+      "efecto": { "tipo": "buffEquipable", "stat": "ataque", "cantidad": 2 }
     },
     {
       "id": "pergamino_reserva",
       "nombre": "Pergamino de Reserva de Chakra",
-      "descripcion": "Aumenta permanentemente el HP máximo de todo el equipo.",
-      "tipo": "pasivo",
+      "descripcion": "Aumenta el HP máximo de quien lo lleve equipado.",
+      "tipo": "equipable",
       "rareza": "comun",
       "precioTienda": 40,
-      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "hp", "cantidad": 8 }
+      "efecto": { "tipo": "buffEquipable", "stat": "hp", "cantidad": 8 }
     },
     {
       "id": "semilla_sabio",
       "nombre": "Semilla del Sabio Ermitaño",
-      "descripcion": "Cura un porcentaje del HP del equipo automáticamente tras cada combate ganado.",
-      "tipo": "pasivo",
+      "descripcion": "Cura un porcentaje del HP de quien lo lleve equipado, automáticamente tras cada combate ganado.",
+      "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": 55,
       "efecto": { "tipo": "curacionPostCombate", "cantidad": "15porciento" }
@@ -49,47 +49,47 @@
     {
       "id": "fragmento_sello_maldito",
       "nombre": "Fragmento de Sello Maldito",
-      "descripcion": "Aumenta mucho el ataque del equipo, pero reduce su defensa. Arriesgado.",
-      "tipo": "pasivo",
+      "descripcion": "Aumenta mucho el ataque de quien lo lleve equipado, pero reduce su defensa. Arriesgado.",
+      "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": 65,
-      "efecto": { "tipo": "buffYDebuffPermanenteEquipo", "buff": { "stat": "ataque", "cantidad": 4 }, "debuff": { "stat": "defensa", "cantidad": -2 } }
+      "efecto": { "tipo": "buffYDebuffEquipable", "buff": { "stat": "ataque", "cantidad": 4 }, "debuff": { "stat": "defensa", "cantidad": -2 } }
     },
     {
       "id": "pergamino_viento",
       "nombre": "Pergamino de Viento",
-      "descripcion": "Aumenta la velocidad de todo el equipo. Obtenido al derrotar a Haku.",
-      "tipo": "pasivo",
+      "descripcion": "Aumenta la velocidad de quien lo lleve equipado. Obtenido al derrotar a Haku.",
+      "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": null,
-      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "velocidad", "cantidad": 3 }
+      "efecto": { "tipo": "buffEquipable", "stat": "velocidad", "cantidad": 3 }
     },
     {
       "id": "kubikiribocho_fragmento",
       "nombre": "Fragmento de la Kubikiribōchō",
-      "descripcion": "Un trozo de la legendaria espada decapitadora. Aumenta el ataque y la velocidad del equipo. Obtenido al derrotar a Zabuza.",
-      "tipo": "pasivo",
+      "descripcion": "Un trozo de la legendaria espada decapitadora. Aumenta el ataque de quien lo lleve equipado. Obtenido al derrotar a Zabuza.",
+      "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "ataque", "cantidad": 4 }
+      "efecto": { "tipo": "buffEquipable", "stat": "ataque", "cantidad": 4 }
     },
     {
       "id": "calabaza_arena",
       "nombre": "Calabaza de Arena (fragmento)",
-      "descripcion": "Aumenta considerablemente la defensa del equipo. Obtenido al derrotar a Gaara.",
-      "tipo": "pasivo",
+      "descripcion": "Aumenta considerablemente la defensa de quien lo lleve equipado. Obtenido al derrotar a Gaara.",
+      "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "defensa", "cantidad": 5 }
+      "efecto": { "tipo": "buffEquipable", "stat": "defensa", "cantidad": 5 }
     },
     {
       "id": "anillo_rinnegan_fragmento",
       "nombre": "Fragmento del Anillo Rinnegan",
-      "descripcion": "Un fragmento del poder de los Seis Caminos. Trofeo de fin de run — aumenta todas las estadísticas del equipo.",
-      "tipo": "pasivo",
+      "descripcion": "Un fragmento del poder de los Seis Caminos. Trofeo de fin de run — aumenta todas las estadísticas de quien lo lleve equipado.",
+      "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "todas", "cantidad": 3 }
+      "efecto": { "tipo": "buffEquipable", "stat": "todas", "cantidad": 3 }
     }
   ]
 }

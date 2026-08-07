@@ -2,15 +2,24 @@ import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import personajesData from '../../data/characters.json';
 import typesData from '../../data/types.json';
+import itemsData from '../../data/items.json';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
+import ItemHoverCard from '../common/ItemHoverCard';
+import HoverTooltip from '../common/HoverTooltip';
 
 function nombrePersonaje(id) {
   return personajesData.personajes.find((p) => p.id === id)?.nombre ?? id;
 }
 
+function nombreObjeto(id) {
+  return itemsData.objetos.find((o) => o.id === id)?.nombre ?? id;
+}
+
 // Un icono simple por tipo de nodo, en vez de depender de assets externos.
-// Se acompaña de una leyenda (ver LeyendaMapa) porque los kanjis solos no
-// son legibles para quien no lee japonés.
+// Los kanjis solos no son legibles para quien no lee japonés, así que cada
+// nodo lleva además su propio hover con nombre + beneficio (ver INFO_NODO) —
+// sustituye a la vieja leyenda fija del lateral, que ocupaba sitio siempre
+// visible por algo que solo hace falta consultar de vez en cuando.
 const ICONO_NODO = {
   combate: '⚔',
   evento: '?',
@@ -27,6 +36,15 @@ const ETIQUETA_NODO = {
   descanso: 'Descanso',
   miniJefe: 'Mini-jefe',
   jefe: 'Jefe',
+};
+
+const INFO_NODO = {
+  combate: 'Enemigo aleatorio — gana XP y oro al vencer.',
+  evento: 'Elección narrativa: cura, oro, mejoras... sin combate.',
+  tienda: 'Compra objetos y recluta (o reemplaza) personajes.',
+  descanso: 'Cura y revive a todo el equipo por completo.',
+  miniJefe: 'Combate más duro, con recompensa adicional garantizada.',
+  jefe: 'El jefe final del arco — superarlo cura a todo el equipo.',
 };
 
 const COLOR_NODO = {
@@ -68,44 +86,58 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
   // ya visitado (greyed out, no se puede repetir), disponible para elegir, o
   // todavía fuera de alcance (más adelante en el mapa).
   let estadoClases;
-  let title;
+  let estadoTexto;
   if (esActual) {
     estadoClases = 'cursor-not-allowed shadow-lg shadow-black/40';
-    title = 'Estás aquí';
+    estadoTexto = 'Estás aquí';
   } else if (visitado) {
     estadoClases = 'cursor-not-allowed opacity-50 grayscale';
-    title = 'Visitado';
+    estadoTexto = 'Visitado';
   } else if (disponible) {
     estadoClases = 'cursor-pointer hover:scale-110 shadow-lg shadow-black/40';
   } else {
     estadoClases = 'cursor-not-allowed opacity-30 grayscale';
-    title = 'Este nodo no es alcanzable desde tu posición actual';
+    estadoTexto = 'Todavía no alcanzable';
   }
 
+  const contenidoTooltip = (
+    <div className="bg-pergamino-100 text-tinta-950 rounded-lg border-2 border-sello-600 shadow-xl p-2.5 w-44 text-left">
+      <p className="font-display font-bold text-xs">{ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}</p>
+      <p className="text-[10px] opacity-70 mt-0.5">{INFO_NODO[nodo.tipo] ?? ''}</p>
+      {estadoTexto && (
+        <p className="text-[10px] text-sello-600 font-display mt-1 pt-1 border-t border-tinta-950/10">
+          {estadoTexto}
+        </p>
+      )}
+    </div>
+  );
+
   return (
-    <button
-      type="button"
-      disabled={!disponible}
-      onClick={() => onClick(nodo.id)}
-      className={[
-        'absolute flex items-center justify-center border-2 font-display text-lg',
-        'transition-transform duration-200',
-        esJefe ? 'w-14 h-14 border-double border-4' : 'rounded-full w-12 h-12',
-        estilo,
-        estadoClases,
-        esActual && 'ring-2 ring-sello-500 ring-offset-2 ring-offset-tinta-950 scale-110',
-      ].filter(Boolean).join(' ')}
-      style={{ left: posicion.x - RADIO_NODO, top: posicion.y - RADIO_NODO }}
-      title={title}
-      aria-label={`Nodo de tipo ${ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}${visitado ? ', visitado' : disponible ? ', disponible' : ', no disponible'}`}
-    >
-      {icono}
-    </button>
+    <div className="absolute" style={{ left: posicion.x - RADIO_NODO, top: posicion.y - RADIO_NODO }}>
+      <HoverTooltip posicion="abajo" contenido={contenidoTooltip}>
+        <button
+          type="button"
+          disabled={!disponible}
+          onClick={() => onClick(nodo.id)}
+          className={[
+            'flex items-center justify-center border-2 font-display text-lg',
+            'transition-transform duration-200',
+            esJefe ? 'w-14 h-14 border-double border-4' : 'rounded-full w-12 h-12',
+            estilo,
+            estadoClases,
+            esActual && 'ring-2 ring-sello-500 ring-offset-2 ring-offset-tinta-950 scale-110',
+          ].filter(Boolean).join(' ')}
+          aria-label={`Nodo de tipo ${ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}${visitado ? ', visitado' : disponible ? ', disponible' : ', no disponible'}`}
+        >
+          {icono}
+        </button>
+      </HoverTooltip>
+    </div>
   );
 }
 
 /** Panel izquierdo: equipo con HP, clicable para reordenar (pon a alguien en posición 1). */
-function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo }) {
+function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjeto }) {
   function ponerEnFrente(idElegido) {
     if (equipo[0]?.id === idElegido) return;
     const nuevoOrden = [idElegido, ...equipo.filter((p) => p.id !== idElegido).map((p) => p.id)];
@@ -130,28 +162,45 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo }) {
                 hpMaximo={hpMaximo}
                 className="block w-full"
               >
-                <button
-                  type="button"
-                  onClick={() => ponerEnFrente(p.id)}
-                  disabled={p.derrotado || esActivo}
+                <div
                   className={[
                     'w-full text-left rounded-md p-2 border transition-colors',
                     esActivo ? 'border-sello-600 bg-sello-600/10' : 'border-tinta-950/15 bg-tinta-950/5',
-                    p.derrotado ? 'opacity-40 cursor-default' : 'cursor-pointer hover:border-sello-600/60',
+                    p.derrotado ? 'opacity-40' : '',
                   ].join(' ')}
-                  title={esActivo ? 'Este personaje está en posición 1' : 'Poner en posición 1'}
                 >
-                  <p className="text-xs font-display font-bold truncate">
-                    {nombrePersonaje(p.id)} {esActivo && '★'}
-                  </p>
-                  <p className="text-[10px] opacity-70">Nv. {p.nivel}{p.derrotado ? ' — caído' : ''}</p>
-                  <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden mt-1">
-                    <div
-                      className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
-                      style={{ width: `${porcentaje * 100}%` }}
-                    />
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => ponerEnFrente(p.id)}
+                    disabled={p.derrotado || esActivo}
+                    className={`w-full text-left ${p.derrotado ? 'cursor-default' : 'cursor-pointer'}`}
+                    title={esActivo ? 'Este personaje está en posición 1' : 'Poner en posición 1'}
+                  >
+                    <p className="text-xs font-display font-bold truncate">
+                      {nombrePersonaje(p.id)} {esActivo && '★'}
+                    </p>
+                    <p className="text-[10px] opacity-70">Nv. {p.nivel}{p.derrotado ? ' — caído' : ''}</p>
+                    <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden mt-1">
+                      <div
+                        className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
+                        style={{ width: `${porcentaje * 100}%` }}
+                      />
+                    </div>
+                  </button>
+                  {p.objetoEquipadoId && (
+                    <div className="flex items-center justify-between gap-1 mt-1.5 pt-1.5 border-t border-tinta-950/10">
+                      <span className="text-[9px] opacity-70 truncate">🎒 {nombreObjeto(p.objetoEquipadoId)}</span>
+                      <button
+                        type="button"
+                        onClick={() => desequiparObjeto(p.id)}
+                        className="text-[9px] opacity-60 hover:opacity-100 shrink-0 underline"
+                        title="Desequipar (vuelve al inventario)"
+                      >
+                        quitar
+                      </button>
+                    </div>
+                  )}
+                </div>
               </PersonajeHoverCard>
             );
           })}
@@ -164,22 +213,85 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo }) {
   );
 }
 
-/** Panel derecho: leyenda de los tipos de nodo, ya que los kanjis solos no son legibles. */
-function LeyendaMapa() {
+/**
+ * Panel debajo del equipo: oro y objetos del inventario, agrupados por id
+ * (con "xN" si hay varios) — hover en cada uno para ver su descripción y su
+ * efecto exacto (`ItemHoverCard`). Tocar un objeto abre un selector de
+ * personaje: "Equipar en..." para equipables, "Usar en..." para
+ * consumibles — los objetos ya equipados no aparecen aquí (se ven y se
+ * desequipan desde `PanelEquipo`, están "puestos", no en la mochila).
+ */
+function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }) {
+  const [itemSeleccionadoId, setItemSeleccionadoId] = useState(null);
+
+  const conteoPorId = inventario.reduce((acc, id) => {
+    acc[id] = (acc[id] ?? 0) + 1;
+    return acc;
+  }, {});
+  const idsUnicos = Object.keys(conteoPorId);
+  const itemSeleccionado = itemsData.objetos.find((o) => o.id === itemSeleccionadoId) ?? null;
+
+  function elegirPersonaje(idPersonaje) {
+    if (itemSeleccionado.tipo === 'equipable') equiparObjeto(itemSeleccionado.id, idPersonaje);
+    else if (itemSeleccionado.tipo === 'consumible') usarConsumible(itemSeleccionado.id, idPersonaje);
+    setItemSeleccionadoId(null);
+  }
+
   return (
     <div className="w-40 shrink-0">
       <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm mb-3 tracking-wide">LEYENDA</p>
-        <div className="flex flex-col gap-2">
-          {Object.keys(ETIQUETA_NODO).map((tipo) => (
-            <div key={tipo} className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-tinta-950 text-pergamino-100 flex items-center justify-center text-xs font-display shrink-0">
-                {ICONO_NODO[tipo]}
-              </span>
-              <span className="text-xs">{ETIQUETA_NODO[tipo]}</span>
+        <p className="font-display font-bold text-sm tracking-wide">OBJETOS</p>
+        <p className="text-xs text-sello-600 font-display mt-0.5 mb-3">{oro} de oro</p>
+
+        {itemSeleccionado ? (
+          <div>
+            <p className="text-[10px] mb-2 leading-snug">
+              {itemSeleccionado.tipo === 'equipable' ? 'Equipar' : 'Usar'}{' '}
+              <span className="font-display font-bold">{itemSeleccionado.nombre}</span> en:
+            </p>
+            <div className="flex flex-col gap-1.5">
+              {equipo.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => elegirPersonaje(p.id)}
+                  className="text-left text-xs bg-tinta-950/5 hover:bg-sello-600/20 border border-tinta-950/15 hover:border-sello-600/60 rounded-md px-2 py-1.5 transition-colors"
+                >
+                  {nombrePersonaje(p.id)}
+                  {p.objetoEquipadoId && itemSeleccionado.tipo === 'equipable' && (
+                    <span className="opacity-60"> (cambia {nombreObjeto(p.objetoEquipadoId)})</span>
+                  )}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
+            <button
+              type="button"
+              onClick={() => setItemSeleccionadoId(null)}
+              className="mt-2 text-[10px] underline opacity-60 hover:opacity-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : idsUnicos.length === 0 ? (
+          <p className="text-[10px] opacity-50 leading-snug">Todavía no tienes ningún objeto.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {idsUnicos.map((id) => (
+              <ItemHoverCard key={id} id={id} className="block w-full">
+                <button
+                  type="button"
+                  onClick={() => setItemSeleccionadoId(id)}
+                  className="w-full flex items-center justify-between gap-1 rounded-md border border-tinta-950/15 bg-tinta-950/5 hover:border-sello-600/60 px-2 py-1.5 transition-colors"
+                >
+                  <p className="text-xs font-display truncate">{nombreObjeto(id)}</p>
+                  {conteoPorId[id] > 1 && (
+                    <span className="text-[10px] opacity-60 shrink-0">x{conteoPorId[id]}</span>
+                  )}
+                </button>
+              </ItemHoverCard>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -352,6 +464,11 @@ export default function MapScreen() {
   const equipo = useGameStore((s) => s.equipo);
   const obtenerHpMaximo = useGameStore((s) => s.obtenerHpMaximo);
   const reordenarEquipo = useGameStore((s) => s.reordenarEquipo);
+  const inventario = useGameStore((s) => s.inventario);
+  const oro = useGameStore((s) => s.oro);
+  const equiparObjeto = useGameStore((s) => s.equiparObjeto);
+  const desequiparObjeto = useGameStore((s) => s.desequiparObjeto);
+  const usarConsumible = useGameStore((s) => s.usarConsumible);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
 
@@ -403,7 +520,21 @@ export default function MapScreen() {
       </header>
 
       <div className="flex-1 min-h-0 flex justify-center items-start gap-6 max-w-4xl mx-auto w-full">
-        <PanelEquipo equipo={equipo} obtenerHpMaximo={obtenerHpMaximo} reordenarEquipo={reordenarEquipo} />
+        <div className="flex flex-col gap-4">
+          <PanelEquipo
+            equipo={equipo}
+            obtenerHpMaximo={obtenerHpMaximo}
+            reordenarEquipo={reordenarEquipo}
+            desequiparObjeto={desequiparObjeto}
+          />
+          <PanelObjetos
+            inventario={inventario}
+            oro={oro}
+            equipo={equipo}
+            equiparObjeto={equiparObjeto}
+            usarConsumible={usarConsumible}
+          />
+        </div>
 
         <div ref={contenedorRef} className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden">
           <div style={{ width: ANCHO * escala, height: alturaLienzo * escala }}>
@@ -479,10 +610,7 @@ export default function MapScreen() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <LeyendaMapa />
-          <RuedaChakra />
-        </div>
+        <RuedaChakra />
       </div>
     </div>
   );

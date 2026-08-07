@@ -22,5 +22,6 @@
 - [18 - Sistema de logros](./18-sistema-de-logros.md)
 - [19 - Selección de personaje inicial y reclutar-con-reemplazo](./19-seleccion-de-personaje.md)
 - [20 - Arcos encadenados en una sola run](./20-arcos-encadenados.md)
+- [21 - Objetos equipables y consumibles](./21-objetos-equipables.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

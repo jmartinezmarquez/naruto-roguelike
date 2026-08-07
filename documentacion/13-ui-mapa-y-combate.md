@@ -38,19 +38,32 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 - Nodos: círculo con glifo kanji por tipo (combate/evento/tienda/descanso), color según tipo; el
   nodo de jefe usa un cuadrado con borde doble en vez de círculo, para diferenciarlo sin depender de
   un asset externo. 4 estados igual de diferenciados que las aristas: nodo actual (anillo sello),
-  visitado (greyed out + escala de grises, `title="Visitado"`), disponible (brillante, clicable),
-  fuera de alcance (muy tenue + escala de grises, no clicable).
+  visitado (greyed out + escala de grises), disponible (brillante, clicable), fuera de alcance (muy
+  tenue + escala de grises, no clicable).
+- **Hover en cada nodo** en vez de una leyenda fija (`LeyendaMapa` se quitó): pasar el ratón sobre
+  cualquier nodo muestra su tipo, qué hace (`INFO_NODO`, texto tipo "Compra objetos y recluta...")
+  y su estado actual (Visitado/Estás aquí/Todavía no alcanzable) — la vieja leyenda ocupaba sitio
+  siempre visible para algo que solo hace falta consultar de vez en cuando. Usa `HoverTooltip`
+  (`components/common/HoverTooltip.jsx`, extraído de `PersonajeHoverCard` para no repetir la
+  mecánica CSS del hover en cada sitio nuevo que la necesite).
 - **Cabe siempre en el viewport, sin scroll** (estilo Pokelike: su `<svg>` escala nativamente vía
   `viewBox` + `width:100%;height:100%`). Como aquí los nodos son `<button>` de verdad superpuestos
   al SVG (no vive todo dentro del propio SVG), no se puede usar ese truco nativo directamente —
   en su lugar, `MapScreen` mide con `ResizeObserver` el espacio disponible del contenedor central
-  (columna entre el panel de equipo y la leyenda) y aplica un `transform: scale(...)` al bloque
-  entero SVG+nodos, calculado como `Math.min(anchoDisponible / ANCHO, altoDisponible / alturaLienzo)`.
+  y aplica un `transform: scale(...)` al bloque entero SVG+nodos, calculado como
+  `Math.min(anchoDisponible / ANCHO, altoDisponible / alturaLienzo)`.
   El wrapper exterior se dimensiona ya al tamaño escalado (`ANCHO*escala`/`alturaLienzo*escala`) para
   que el layout no deje hueco en blanco. La página entera es `h-screen overflow-hidden` (ya no
   `min-h-screen`) — todo el contenido tiene que caber, en vez de crecer y scrollear.
 - **Tira de HP del equipo**: muestra cada personaje con nivel, barra de HP real (vía el selector `obtenerHpMaximo` del store) y si está derrotado — necesario ahora que el HP persiste entre combates, para que el jugador sepa cuándo curarse. Cada entrada envuelta en `PersonajeHoverCard` (ver más abajo).
-- **`RuedaChakra`**: pictograma del ciclo de ventajas de chakra, debajo de la leyenda del mapa —
+- **`PanelObjetos`**, debajo del panel de equipo: oro y objetos del inventario (solo lo que está
+  suelto — lo ya equipado vive en `PanelEquipo`, no aquí), agrupados por id con "×N" si hay
+  repetidos. Cada objeto envuelto en `ItemHoverCard` (ver más abajo) — descripción en prosa más el
+  efecto exacto en números, no solo "aumenta el ataque" sino "+2 ATQ permanente". Tocar un objeto
+  abre un selector inline de personaje ("Equipar en..." si es `equipable`, "Usar en..." si es
+  `consumible`) que despacha a `equiparObjeto`/`usarConsumible` en el store — ver
+  [21 - Objetos equipables](./21-objetos-equipables.md).
+- **`RuedaChakra`**: pictograma del ciclo de ventajas de chakra, junto al mapa —
   ver [19 - Selección de personaje](./19-seleccion-de-personaje.md).
 - **`MenuIconos`**: esquina superior derecha, estilo Pokelike — Logros (🏆), Pantalla completa (⛶,
   Fullscreen API del navegador) y Reiniciar Run (⟲, con `window.confirm` porque borra la run actual
@@ -78,12 +91,23 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 
 Antes, `ultimoResultadoCombate` era el resultado crudo del motor (`{ historial, ganadorId, turnosUsados }`), con solo IDs. Ahora `jugarCombate` construye un resumen con `jugador`/`enemigo` (`{ id, nombre, hpMaximo, hpFinal, modoActivoNombre }`) además del historial. El motor (`engine/combat.js`) no cambió — esto es una capa de presentación añadida en el store.
 
-## `components/common/PersonajeHoverCard.jsx`
+## `components/common/HoverTooltip.jsx` + tarjetas que lo usan
 
-Tarjeta de detalle (tipo de chakra, stats, HP, jutsu) al hacer hover sobre cualquier trigger que
-represente a un personaje o jefe — envuelve al elemento, no lo reemplaza. Usada en `MapScreen`,
-`CombatScreen`, `ShopScreen` y `CharacterSelectScreen`. Detalle completo en
-[19 - Selección de personaje](./19-seleccion-de-personaje.md).
+`HoverTooltip` es la mecánica genérica de "mostrar algo al hacer hover" (CSS puro, named group de
+Tailwind `group/hover`, sin JS de posicionamiento) — extraída para no repetirla cada vez que hace
+falta un tooltip nuevo. Tres usos hoy:
+
+- **`PersonajeHoverCard.jsx`** — tarjeta de detalle (tipo de chakra, stats, HP, jutsu) al hacer
+  hover sobre cualquier trigger que represente a un personaje o jefe. Usada en `MapScreen`,
+  `CombatScreen`, `ShopScreen` y `CharacterSelectScreen`. Detalle completo en
+  [19 - Selección de personaje](./19-seleccion-de-personaje.md).
+- **`ItemHoverCard.jsx`** — tarjeta de detalle de un objeto (`items.json`): tipo, rareza,
+  descripción en prosa y el efecto exacto en números (`textoEfecto`, traduce `item.efecto` a texto
+  legible: "+2 ATQ permanente", "Cura un 15% de HP tras cada combate ganado", etc.), más un
+  `equipadoEnNombre` opcional ("Equipado en X"). Usada en `PanelObjetos` de `MapScreen`. El efecto
+  ya se aplica de verdad, no es solo texto — ver [21 - Objetos equipables](./21-objetos-equipables.md).
+- **Hover de nodo del mapa** (dentro de `NodoMapa`, `MapScreen.jsx`) — tipo de nodo, qué hace, y su
+  estado actual. Sustituye a la vieja `LeyendaMapa` fija.
 
 ## `App.jsx`
 

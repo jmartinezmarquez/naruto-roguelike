@@ -465,3 +465,149 @@ describe('nivel de reclutamiento al entrar en un nodo de tienda', () => {
     expect(useGameStore.getState().tiendaActual.nivelReclutamiento).toBe(8);
   });
 });
+
+describe('equiparObjeto / desequiparObjeto', () => {
+  it('equipa un objeto del inventario a un personaje y lo saca del inventario', () => {
+    useGameStore.setState({ inventario: ['sello_chakra'] });
+    const exito = useGameStore.getState().equiparObjeto('sello_chakra', 'naruto');
+    expect(exito).toBe(true);
+
+    const { equipo, inventario } = useGameStore.getState();
+    expect(equipo.find((p) => p.id === 'naruto').objetoEquipadoId).toBe('sello_chakra');
+    expect(inventario).not.toContain('sello_chakra');
+  });
+
+  it('equipar un segundo objeto al mismo personaje devuelve el anterior al inventario', () => {
+    useGameStore.setState({ inventario: ['sello_chakra', 'pergamino_reserva'] });
+    useGameStore.getState().equiparObjeto('sello_chakra', 'naruto');
+    useGameStore.getState().equiparObjeto('pergamino_reserva', 'naruto');
+
+    const { equipo, inventario } = useGameStore.getState();
+    expect(equipo.find((p) => p.id === 'naruto').objetoEquipadoId).toBe('pergamino_reserva');
+    expect(inventario).toContain('sello_chakra');
+    expect(inventario).not.toContain('pergamino_reserva');
+  });
+
+  it('falla si el objeto no está en el inventario', () => {
+    const exito = useGameStore.getState().equiparObjeto('sello_chakra', 'naruto');
+    expect(exito).toBe(false);
+  });
+
+  it('falla si el objeto es consumible, no equipable', () => {
+    useGameStore.setState({ inventario: ['pildora_soldado'] });
+    const exito = useGameStore.getState().equiparObjeto('pildora_soldado', 'naruto');
+    expect(exito).toBe(false);
+    expect(useGameStore.getState().inventario).toContain('pildora_soldado');
+  });
+
+  it('desequiparObjeto lo devuelve al inventario y limpia el hueco', () => {
+    useGameStore.setState({ inventario: ['sello_chakra'] });
+    useGameStore.getState().equiparObjeto('sello_chakra', 'naruto');
+
+    const exito = useGameStore.getState().desequiparObjeto('naruto');
+    expect(exito).toBe(true);
+
+    const { equipo, inventario } = useGameStore.getState();
+    expect(equipo.find((p) => p.id === 'naruto').objetoEquipadoId).toBeNull();
+    expect(inventario).toContain('sello_chakra');
+  });
+
+  it('desequiparObjeto falla si el personaje no lleva nada equipado', () => {
+    const exito = useGameStore.getState().desequiparObjeto('naruto');
+    expect(exito).toBe(false);
+  });
+
+  it('el objeto equipado afecta a las stats reales (HP máximo, vía obtenerHpMaximo)', () => {
+    const hpAntes = useGameStore.getState().obtenerHpMaximo('naruto');
+    useGameStore.setState({ inventario: ['pergamino_reserva'] });
+    useGameStore.getState().equiparObjeto('pergamino_reserva', 'naruto');
+    const hpDespues = useGameStore.getState().obtenerHpMaximo('naruto');
+    expect(hpDespues).toBe(hpAntes + 8);
+  });
+});
+
+describe('reclutarPersonaje — el objeto equipado del reemplazado vuelve al inventario', () => {
+  it('al reemplazar a alguien con algo equipado, el objeto no se pierde', () => {
+    useGameStore.setState({ inventario: ['sello_chakra'] });
+    useGameStore.getState().equiparObjeto('sello_chakra', 'sasuke');
+
+    // El equipo del beforeEach ya está 3/3, así que esto entra por la vía de reemplazo.
+    const exito = useGameStore.getState().reclutarPersonaje('rock_lee', 5, 'sasuke');
+    expect(exito).toBe(true);
+
+    const { inventario, equipo } = useGameStore.getState();
+    expect(inventario).toContain('sello_chakra');
+    expect(equipo.find((p) => p.id === 'rock_lee').objetoEquipadoId).toBeNull();
+  });
+});
+
+describe('revivirUnaVez (equipado) — a través de _aplicarDerrota', () => {
+  it('revive con el HP indicado por el objeto y lo consume (no vuelve al inventario)', () => {
+    useGameStore.setState({ inventario: ['banda_repuesto'] });
+    useGameStore.getState().equiparObjeto('banda_repuesto', 'naruto');
+
+    useGameStore.getState()._aplicarDerrota('naruto');
+
+    const { equipo, inventario, runTerminada } = useGameStore.getState();
+    const naruto = equipo.find((p) => p.id === 'naruto');
+    expect(naruto.derrotado).toBe(false);
+    expect(naruto.hpActual).toBe(1);
+    expect(naruto.objetoEquipadoId).toBeNull();
+    expect(inventario).not.toContain('banda_repuesto');
+    expect(runTerminada).toBe(false);
+  });
+
+  it('una vez consumido, la siguiente derrota del mismo personaje es normal', () => {
+    useGameStore.setState({ inventario: ['banda_repuesto'] });
+    useGameStore.getState().equiparObjeto('banda_repuesto', 'naruto');
+    useGameStore.getState()._aplicarDerrota('naruto'); // revive, consume el objeto
+    useGameStore.getState()._aplicarDerrota('naruto'); // esta vez cae de verdad
+
+    const naruto = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    expect(naruto.derrotado).toBe(true);
+    expect(naruto.hpActual).toBe(0);
+  });
+});
+
+describe('curacionPostCombate (equipado) — a través de _aplicarVictoria', () => {
+  it('cura un % extra a quien lo lleva equipado, además de su HP final de combate', () => {
+    useGameStore.setState({ inventario: ['semilla_sabio'] });
+    useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
+
+    const hpMaximo = useGameStore.getState().obtenerHpMaximo('naruto');
+    const hpFinalBajo = Math.round(hpMaximo * 0.3); // terminó el combate con poco HP
+    useGameStore.getState()._aplicarVictoria('naruto', hpFinalBajo, enemigoDebilDePrueba, new Set());
+
+    const naruto = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    expect(naruto.hpActual).toBeGreaterThan(hpFinalBajo);
+  });
+});
+
+describe('usarConsumible', () => {
+  it('cura un % de HP, revive si estaba derrotado, y gasta 1 copia del objeto', () => {
+    useGameStore.setState((estado) => ({
+      inventario: ['pildora_soldado'],
+      equipo: estado.equipo.map((p) => (p.id === 'sasuke' ? { ...p, derrotado: true, hpActual: 0 } : p)),
+    }));
+
+    const exito = useGameStore.getState().usarConsumible('pildora_soldado', 'sasuke');
+    expect(exito).toBe(true);
+
+    const { equipo, inventario } = useGameStore.getState();
+    const sasuke = equipo.find((p) => p.id === 'sasuke');
+    expect(sasuke.derrotado).toBe(false);
+    expect(sasuke.hpActual).toBeGreaterThan(0);
+    expect(inventario).not.toContain('pildora_soldado');
+  });
+
+  it('falla si el objeto no está en el inventario', () => {
+    const exito = useGameStore.getState().usarConsumible('pildora_soldado', 'naruto');
+    expect(exito).toBe(false);
+  });
+
+  it('falla si el objeto es equipable, no consumible', () => {
+    useGameStore.setState({ inventario: ['sello_chakra'] });
+    const exito = useGameStore.getState().usarConsumible('sello_chakra', 'naruto');
+    expect(exito).toBe(false);
+  });
+});

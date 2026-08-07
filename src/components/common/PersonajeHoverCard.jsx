@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import { crearLuchador } from '../../engine/combat';
+import HoverTooltip from './HoverTooltip';
 
 /** Busca los datos base de un personaje jugable o de un jefe, por id. */
 function encontrarBase(id) {
@@ -18,11 +19,6 @@ const COLOR_TIPO = {
   raiton: 'bg-raiton',
   doton: 'bg-doton',
   suiton: 'bg-suiton',
-};
-
-const POSICION_CLASES = {
-  derecha: 'left-full ml-2 top-0',
-  izquierda: 'right-full mr-2 top-0',
 };
 
 /**
@@ -102,23 +98,20 @@ export default function PersonajeHoverCard({
   if (!encontrarBase(id)) return children;
 
   return (
-    <div className={`relative group/hover ${className}`}>
-      {children}
-      <div
-        className={[
-          'absolute z-40 w-56 opacity-0 scale-95 pointer-events-none origin-left',
-          'group-hover/hover:opacity-100 group-hover/hover:scale-100 transition-all duration-150',
-          POSICION_CLASES[posicion] ?? POSICION_CLASES.derecha,
-        ].join(' ')}
-      >
+    <HoverTooltip
+      posicion={posicion}
+      className={className}
+      contenido={(
         <FichaPersonaje
           id={id}
           nivel={nivel}
           hpActual={hpActual}
           hpMaximo={hpMaximo}
-          className="border-2 border-sello-600 shadow-xl p-3"
+          className="w-56 border-2 border-sello-600 shadow-xl p-3"
         />
-      </div>
-    </div>
+      )}
+    >
+      {children}
+    </HoverTooltip>
   );
 }

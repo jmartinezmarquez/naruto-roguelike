@@ -19,6 +19,7 @@ import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
+import { calcularBonificacionDeObjetoEquipado } from '../engine/items';
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
@@ -44,17 +45,25 @@ function encontrarPersonajeBase(id) {
   throw new Error(`Personaje no encontrado en characters.json ni como jefe desbloqueable por logro: ${id}`);
 }
 
-/** Datos base del personaje con sus bonificaciones permanentes ya sumadas a statsBase. */
+/**
+ * Datos base del personaje con sus bonificaciones permanentes (evento
+ * `mejoraPermanenteAleatoria`) Y la bonificación del objeto que lleve
+ * equipado (`objetoEquipadoId`, ver `equiparObjeto`) ya sumadas a statsBase.
+ * El objeto equipado es "de verdad" — se relee de `itemsData` cada vez, no
+ * se hornea en la instancia, así que equipar/desequipar/reemplazar se nota
+ * al instante sin tener que tocar nada más.
+ */
 function personajeBaseConBonificaciones(instancia) {
   const base = encontrarPersonajeBase(instancia.id);
   const b = instancia.bonificaciones ?? { ataque: 0, defensa: 0, velocidad: 0, hp: 0 };
+  const eq = calcularBonificacionDeObjetoEquipado(instancia.objetoEquipadoId, itemsData.objetos);
   return {
     ...base,
     statsBase: {
-      hp: base.statsBase.hp + b.hp,
-      ataque: base.statsBase.ataque + b.ataque,
-      defensa: base.statsBase.defensa + b.defensa,
-      velocidad: base.statsBase.velocidad + b.velocidad,
+      hp: base.statsBase.hp + b.hp + eq.hp,
+      ataque: base.statsBase.ataque + b.ataque + eq.ataque,
+      defensa: base.statsBase.defensa + b.defensa + eq.defensa,
+      velocidad: base.statsBase.velocidad + b.velocidad + eq.velocidad,
     },
   };
 }
@@ -73,9 +82,21 @@ function crearInstanciaPersonaje(id, nivel = 1) {
     derrotado: false,
     hpActual: 0, // se rellena justo debajo, necesita el resto de campos ya puestos
     bonificaciones: { ataque: 0, defensa: 0, velocidad: 0, hp: 0 },
+    objetoEquipadoId: null, // id de items.json equipado, o null — ver equiparObjeto/desequiparObjeto
   };
   instanciaBase.hpActual = calcularHpMaximo(instanciaBase);
   return instanciaBase;
+}
+
+/** Convierte el formato de porcentaje de items.json ("40porciento") a la fracción 0.4. */
+function porcentajeDesdeTexto(cantidadTexto) {
+  return parseInt(cantidadTexto, 10) / 100;
+}
+
+/** Objeto equipado por una instancia, o null si no lleva nada (o el id no se encuentra). */
+function objetoEquipadoDe(instancia) {
+  if (!instancia.objetoEquipadoId) return null;
+  return itemsData.objetos.find((o) => o.id === instancia.objetoEquipadoId) ?? null;
 }
 
 /**
@@ -116,7 +137,7 @@ function elegirVariosAlAzar(array, n) {
 
 /**
  * Genera la oferta de un nodo de tienda, al estilo Slay the Spire: 2
- * consumibles comprables, 1 objeto pasivo gratuito, y 2 personajes
+ * consumibles comprables, 1 objeto equipable gratuito, y 2 personajes
  * reclutables entre los que solo se puede elegir uno (al reclutar uno se
  * descarta el otro). nivelReclutamiento: nivel al que entraría el reclutado,
  * el del piso donde está la tienda (igual que un reclutamiento de recompensa
@@ -126,8 +147,8 @@ function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) 
   const consumiblesDisponibles = itemsData.objetos.filter(
     (o) => o.tipo === 'consumible' && o.precioTienda !== null,
   );
-  const pasivosDisponibles = itemsData.objetos.filter(
-    (o) => o.tipo === 'pasivo' && o.precioTienda !== null,
+  const equipablesDisponibles = itemsData.objetos.filter(
+    (o) => o.tipo === 'equipable' && o.precioTienda !== null,
   );
 
   const idsDesbloqueadosPorLogro = obtenerPersonajesReclutablesDesbloqueados(
@@ -158,7 +179,7 @@ function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) 
 
   return {
     consumibles: elegirVariosAlAzar(consumiblesDisponibles, 2).map((o) => o.id),
-    gratuito: elegirVariosAlAzar(pasivosDisponibles, 1)[0]?.id ?? null,
+    gratuito: elegirVariosAlAzar(equipablesDisponibles, 1)[0]?.id ?? null,
     reclutables: elegirVariosAlAzar(reclutablesDisponibles, 2),
     nivelReclutamiento,
   };
@@ -168,7 +189,7 @@ export const useGameStore = create((set, get) => ({
   // ---------- ESTADO ----------
   equipo: [], // instancias { id, nivel, xpActual, derrotado, hpActual, bonificaciones }, en orden de posición
   oro: 0,
-  inventario: [], // array de ids de items (pasivos obtenidos + consumibles sin usar)
+  inventario: [], // ids de items sin asignar: equipables sueltos + consumibles sin usar (los equipados viven en equipo[].objetoEquipadoId, no aquí)
   buffsTemporales: [], // [{ multiplicadores: {stat: x}, combatesRestantes }] — de eventos tipo "boost 3 combates"
   arcoActualId: null,
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
@@ -287,10 +308,12 @@ export const useGameStore = create((set, get) => ({
    * dejarle el sitio); sin ese id, no hace nada y devuelve false para que
    * la UI pueda pedírselo al jugador. Reemplazar da además
    * `bonusNivelAlReemplazar` de más — así reemplazar a alguien es mejor que
-   * simplemente rellenar un hueco vacío, no solo lateral.
+   * simplemente rellenar un hueco vacío, no solo lateral. Si el reemplazado
+   * llevaba algo equipado, el objeto vuelve al inventario — no desaparece
+   * con él.
    */
   reclutarPersonaje(id, nivelInicial = 1, idAReemplazar = null) {
-    const { equipo } = get();
+    const { equipo, inventario } = get();
     if (equipo.some((p) => p.id === id)) return false; // ya está en el equipo
 
     if (equipo.length < configGlobal.equipo.tamanoMaximo) {
@@ -302,11 +325,16 @@ export const useGameStore = create((set, get) => ({
     const indiceAReemplazar = equipo.findIndex((p) => p.id === idAReemplazar);
     if (indiceAReemplazar === -1) return false;
 
+    const reemplazado = equipo[indiceAReemplazar];
+    const inventarioActualizado = reemplazado.objetoEquipadoId
+      ? [...inventario, reemplazado.objetoEquipadoId]
+      : inventario;
+
     const nivelConBonus = nivelInicial + configGlobal.equipo.bonusNivelAlReemplazar;
     const nuevaInstancia = crearInstanciaPersonaje(id, nivelConBonus);
     const equipoActualizado = [...equipo];
     equipoActualizado[indiceAReemplazar] = nuevaInstancia;
-    set({ equipo: equipoActualizado });
+    set({ equipo: equipoActualizado, inventario: inventarioActualizado });
     return true;
   },
 
@@ -317,6 +345,82 @@ export const useGameStore = create((set, get) => ({
       .map((id) => equipo.find((p) => p.id === id))
       .filter(Boolean);
     set({ equipo: reordenado });
+  },
+
+  /**
+   * Equipa un objeto del inventario a un personaje del equipo — un hueco
+   * por personaje. Si ese personaje ya llevaba algo puesto, vuelve al
+   * inventario (se reemplaza, no se pierde). El objeto sale del inventario
+   * mientras esté equipado.
+   */
+  equiparObjeto(itemId, idPersonaje) {
+    const { inventario, equipo } = get();
+    if (!inventario.includes(itemId)) return false;
+    const item = itemsData.objetos.find((o) => o.id === itemId);
+    if (!item || item.tipo !== 'equipable') return false;
+    const indice = equipo.findIndex((p) => p.id === idPersonaje);
+    if (indice === -1) return false;
+
+    const anterior = equipo[indice].objetoEquipadoId;
+    // Quita solo UNA copia del itemId (no todas, por si hay más de una).
+    const posicionEnInventario = inventario.indexOf(itemId);
+    const inventarioActualizado = [
+      ...inventario.slice(0, posicionEnInventario),
+      ...inventario.slice(posicionEnInventario + 1),
+      ...(anterior ? [anterior] : []), // lo que llevaba antes vuelve al inventario
+    ];
+
+    const equipoActualizado = [...equipo];
+    equipoActualizado[indice] = { ...equipo[indice], objetoEquipadoId: itemId };
+    set({ equipo: equipoActualizado, inventario: inventarioActualizado });
+    return true;
+  },
+
+  /** Desequipa el objeto de un personaje, si lleva alguno — vuelve al inventario. */
+  desequiparObjeto(idPersonaje) {
+    const { equipo, inventario } = get();
+    const indice = equipo.findIndex((p) => p.id === idPersonaje);
+    if (indice === -1 || !equipo[indice].objetoEquipadoId) return false;
+
+    const equipoActualizado = [...equipo];
+    const itemId = equipo[indice].objetoEquipadoId;
+    equipoActualizado[indice] = { ...equipo[indice], objetoEquipadoId: null };
+    set({ equipo: equipoActualizado, inventario: [...inventario, itemId] });
+    return true;
+  },
+
+  /**
+   * Usa un objeto consumible del inventario sobre un personaje del equipo y
+   * gasta 1 copia. Hoy solo hay un efecto de consumible implementado:
+   * `curarPersonaje` (restaura un % de HP — también revive si estaba
+   * derrotado, a ese % de su HP máximo, no a HP completo).
+   */
+  usarConsumible(itemId, idPersonaje) {
+    const { inventario, equipo } = get();
+    if (!inventario.includes(itemId)) return false;
+    const item = itemsData.objetos.find((o) => o.id === itemId);
+    if (!item || item.tipo !== 'consumible') return false;
+    const indice = equipo.findIndex((p) => p.id === idPersonaje);
+    if (indice === -1) return false;
+    if (item.efecto.tipo !== 'curarPersonaje') return false; // ningún otro efecto de consumible implementado todavía
+
+    const objetivo = equipo[indice];
+    const hpMax = calcularHpMaximo(objetivo);
+    const curado = Math.min(
+      hpMax,
+      objetivo.hpActual + Math.round(hpMax * porcentajeDesdeTexto(item.efecto.cantidad)),
+    );
+    const equipoActualizado = [...equipo];
+    equipoActualizado[indice] = { ...objetivo, derrotado: false, hpActual: curado };
+
+    const posicionEnInventario = inventario.indexOf(itemId);
+    const inventarioActualizado = [
+      ...inventario.slice(0, posicionEnInventario),
+      ...inventario.slice(posicionEnInventario + 1),
+    ];
+
+    set({ equipo: equipoActualizado, inventario: inventarioActualizado });
+    return true;
   },
 
   /** El personaje en posición 1 vivo. null si todo el equipo está derrotado. */
@@ -490,7 +594,7 @@ export const useGameStore = create((set, get) => ({
     return true;
   },
 
-  /** Reclama el objeto pasivo gratuito de la tienda actual (una sola vez por visita). */
+  /** Reclama el objeto equipable gratuito de la tienda actual (una sola vez por visita). */
   reclamarObjetoGratuitoTienda() {
     const { tiendaActual, inventario } = get();
     if (!tiendaActual || !tiendaActual.gratuito) return false;
@@ -567,7 +671,21 @@ export const useGameStore = create((set, get) => ({
       const xpParaEste = p.id === idPersonaje ? xpGanada : Math.round(xpGanada * porcentajeBanquillo);
       const conXp = aplicarXpYActualizarHp(p, xpParaEste);
 
-      if (p.id === idPersonaje) return { ...conXp, hpActual: hpFinalActivo };
+      if (p.id === idPersonaje) {
+        const conHp = { ...conXp, hpActual: hpFinalActivo };
+        // Semilla del Sabio Ermitaño (curacionPostCombate): cura un % extra
+        // a quien la lleve equipada, justo tras ganar el combate.
+        const itemEquipado = objetoEquipadoDe(conHp);
+        if (itemEquipado?.efecto?.tipo === 'curacionPostCombate') {
+          const hpMax = calcularHpMaximo(conHp);
+          const curado = Math.min(
+            hpMax,
+            conHp.hpActual + Math.round(hpMax * porcentajeDesdeTexto(itemEquipado.efecto.cantidad)),
+          );
+          return { ...conHp, hpActual: curado };
+        }
+        return conHp;
+      }
       if (p.derrotado) return { ...conXp, hpActual: 0 }; // cayó en este combate: gana XP, sigue a 0 HP
       return conXp; // vivo y no participó: gana su XP de banquillo, HP sin cambios
     });
@@ -600,9 +718,30 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
-  /** Interno: marca al personaje como derrotado (HP a 0) y lo manda al final del orden. */
+  /**
+   * Interno: marca al personaje como derrotado (HP a 0) y lo manda al final
+   * del orden — SALVO que lleve equipado un objeto `revivirUnaVez`, en cuyo
+   * caso revive con `hpAlRevivir` HP en su lugar y el objeto se consume (no
+   * vuelve al inventario, "se consume al activarse"). El bucle de
+   * `jugarCombate` lo vuelve a poner como activo automáticamente — sigue
+   * siendo el mismo personaje, solo que sobrevivió por los pelos.
+   */
   _aplicarDerrota(idPersonaje) {
     const { equipo } = get();
+    const instancia = equipo.find((p) => p.id === idPersonaje);
+    const itemEquipado = instancia && objetoEquipadoDe(instancia);
+
+    if (itemEquipado?.efecto?.tipo === 'revivirUnaVez') {
+      set({
+        equipo: equipo.map((p) => (
+          p.id === idPersonaje
+            ? { ...p, hpActual: itemEquipado.efecto.hpAlRevivir, objetoEquipadoId: null }
+            : p
+        )),
+      });
+      return;
+    }
+
     const actualizado = equipo.map((p) =>
       p.id === idPersonaje ? { ...p, derrotado: true, hpActual: 0 } : p,
     );
