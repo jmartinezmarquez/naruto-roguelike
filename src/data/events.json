@@ -1,14 +1,31 @@
 {
-  "_comentario": "Cada evento tiene un texto de contexto y 2-3 elecciones con efectos concretos sobre el equipo/inventario. El motor solo necesita interpretar el campo 'efecto' de cada elección.",
+  "_comentario": "Eventos narrativos con 2 elecciones cada uno, al estilo Slay the Spire, tematizados por arco (campo arcoId). Ningún efecto de evento desencadena combate — ya hay suficientes combates por piso en poolTiposNodo. cantidad en curarEquipoPorcentaje es una fracción 0-1 (0.3 = 30%).",
   "eventos": [
     {
-      "id": "puente_naruto",
-      "titulo": "El puente a medio construir",
-      "descripcion": "Encontráis a Tazuna supervisando la obra. Os ofrece descansar antes de seguir.",
+      "id": "tsunade_y_jiraiya",
+      "arcoId": "pais_de_las_olas",
+      "titulo": "Los Sannin en el camino",
+      "descripcion": "Tsunade y Jiraiya se cruzan en vuestro camino, de paso hacia otra misión. Se ofrecen a ayudaros un momento antes de seguir viaje.",
       "elecciones": [
         {
-          "texto": "Descansar y curar al equipo",
-          "efecto": { "tipo": "curarEquipo", "cantidad": "20porciento" }
+          "texto": "Pedir a Tsunade que cure al equipo",
+          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.4 }
+        },
+        {
+          "texto": "Entrenar con Jiraiya (+20% ataque, 3 combates)",
+          "efecto": { "tipo": "buffTemporalEquipo", "stat": "ataque", "multiplicador": 1.2, "combates": 3 }
+        }
+      ]
+    },
+    {
+      "id": "puente_de_tazuna",
+      "arcoId": "pais_de_las_olas",
+      "titulo": "El puente a medio construir",
+      "descripcion": "Encontráis a Tazuna supervisando la obra. Os ofrece un momento de respiro antes de seguir.",
+      "elecciones": [
+        {
+          "texto": "Descansar junto al puente",
+          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.25 }
         },
         {
           "texto": "Seguir entrenando en el bosque",
@@ -17,46 +34,163 @@
       ]
     },
     {
-      "id": "mercader_ambulante",
+      "id": "mercader_de_las_olas",
+      "arcoId": "pais_de_las_olas",
       "titulo": "Mercader ambulante",
-      "descripcion": "Un comerciante nervioso os ofrece un objeto misterioso a cambio de ryo.",
+      "descripcion": "Un comerciante nervioso, huyendo de los hombres de Gato, os ofrece parte de su mercancía a buen precio.",
       "elecciones": [
         {
-          "texto": "Comprar el objeto misterioso (30 ryo)",
+          "texto": "Comprar un objeto (30 de oro)",
           "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 30 }
         },
         {
-          "texto": "Rechazar y seguir camino",
+          "texto": "Darle algo de oro por su información (-10 oro, +XP)",
+          "efecto": { "tipo": "perderOro", "cantidad": 10 }
+        }
+      ]
+    },
+    {
+      "id": "pergamino_abandonado_olas",
+      "arcoId": "pais_de_las_olas",
+      "titulo": "Pergamino abandonado",
+      "descripcion": "Alguien dejó caer un pergamino de técnicas a medio completar entre la maleza.",
+      "elecciones": [
+        {
+          "texto": "Estudiarlo con calma",
+          "efecto": { "tipo": "mejoraPermanenteAleatoria" }
+        },
+        {
+          "texto": "Ignorarlo, no es de fiar",
+          "efecto": { "tipo": "ninguno" }
+        }
+      ]
+    },
+
+    {
+      "id": "anko_os_pone_a_prueba",
+      "arcoId": "examen_chunin",
+      "titulo": "Anko Mitarashi os observa",
+      "descripcion": "La examinadora aparece entre los árboles del Bosque de la Muerte, evaluando vuestro nivel con una sonrisa afilada.",
+      "elecciones": [
+        {
+          "texto": "Aceptar su entrenamiento intensivo",
+          "efecto": { "tipo": "ganarXpEquipo", "cantidad": 60 }
+        },
+        {
+          "texto": "Mantener la cautela y descansar",
+          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.3 }
+        }
+      ]
+    },
+    {
+      "id": "pergamino_robado",
+      "arcoId": "examen_chunin",
+      "titulo": "Un pergamino robado",
+      "descripcion": "Encontráis los restos del campamento de otro equipo — parece que perdieron su pergamino a manos de un rival.",
+      "elecciones": [
+        {
+          "texto": "Quedaros con lo que dejaron atrás",
+          "efecto": { "tipo": "ganarOro", "cantidad": 25 }
+        },
+        {
+          "texto": "Dejarlo, no es vuestro",
           "efecto": { "tipo": "ninguno" }
         }
       ]
     },
     {
-      "id": "trampa_niebla",
-      "titulo": "Niebla espesa",
-      "descripcion": "Una niebla densa cubre el camino. Podría ser una trampa... o un atajo.",
+      "id": "mercader_de_rollos",
+      "arcoId": "examen_chunin",
+      "titulo": "Mercader de rollos prohibidos",
+      "descripcion": "Un ninja renegado ofrece objetos de dudosa procedencia a cambio de oro, escondido entre los árboles.",
       "elecciones": [
         {
-          "texto": "Avanzar con cautela",
-          "efecto": { "tipo": "combateSorpresa", "probabilidad": 0.5, "nivelEnemigo": "actual" }
+          "texto": "Comprar un objeto (35 de oro)",
+          "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 35 }
         },
         {
-          "texto": "Rodear la niebla",
-          "efecto": { "tipo": "perderTiempo", "consecuencia": "menosOroSiguienteTienda" }
+          "texto": "No fiarse y seguir camino",
+          "efecto": { "tipo": "ninguno" }
         }
       ]
     },
     {
-      "id": "pergamino_abandonado",
-      "titulo": "Pergamino abandonado",
-      "descripcion": "Alguien dejó caer un pergamino de técnicas a medio completar.",
+      "id": "trampa_del_bosque",
+      "arcoId": "examen_chunin",
+      "titulo": "Trampa del Bosque de la Muerte",
+      "descripcion": "Una trampa oculta os hace perder parte de vuestro equipo mientras escapáis por los árboles.",
       "elecciones": [
         {
-          "texto": "Estudiarlo (sube una estadística permanente al azar)",
-          "efecto": { "tipo": "mejoraPermanenteAleatoria", "objetivo": "personajeAleatorioEquipo" }
+          "texto": "Recuperar lo posible sobre la marcha",
+          "efecto": { "tipo": "perderOro", "cantidad": 15 }
         },
         {
-          "texto": "Ignorarlo, no es de fiar",
+          "texto": "Abandonarlo y seguir rápido (+XP por el esfuerzo)",
+          "efecto": { "tipo": "ganarXpEquipo", "cantidad": 25 }
+        }
+      ]
+    },
+
+    {
+      "id": "katsuyu_os_encuentra",
+      "arcoId": "invasion_de_pain",
+      "titulo": "Katsuyu, la babosa de Tsunade",
+      "descripcion": "Un fragmento de Katsuyu os localiza entre los escombros, transmitiendo la voz de Tsunade a distancia.",
+      "elecciones": [
+        {
+          "texto": "Pedir curación a través de Katsuyu",
+          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.5 }
+        },
+        {
+          "texto": "Pedir información de las posiciones enemigas (+XP)",
+          "efecto": { "tipo": "ganarXpEquipo", "cantidad": 80 }
+        }
+      ]
+    },
+    {
+      "id": "escombros_de_konoha",
+      "arcoId": "invasion_de_pain",
+      "titulo": "Escombros de Konoha",
+      "descripcion": "Entre los restos de un edificio derrumbado, algo brilla bajo los cascotes.",
+      "elecciones": [
+        {
+          "texto": "Buscar supervivientes y objetos útiles",
+          "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 0 }
+        },
+        {
+          "texto": "Asegurar la zona y avanzar con cautela",
+          "efecto": { "tipo": "buffTemporalEquipo", "stat": "defensa", "multiplicador": 1.25, "combates": 3 }
+        }
+      ]
+    },
+    {
+      "id": "fukasaku_el_sabio",
+      "arcoId": "invasion_de_pain",
+      "titulo": "Fukasaku, el sabio sapo",
+      "descripcion": "El viejo sabio de Myoboku aparece un instante para ofrecer su ayuda antes de la batalla final.",
+      "elecciones": [
+        {
+          "texto": "Entrenamiento relámpago de senjutsu",
+          "efecto": { "tipo": "mejoraPermanenteAleatoria" }
+        },
+        {
+          "texto": "Replegarse y curar heridas",
+          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.35 }
+        }
+      ]
+    },
+    {
+      "id": "mercader_superviviente",
+      "arcoId": "invasion_de_pain",
+      "titulo": "Mercader superviviente",
+      "descripcion": "Entre el caos de la invasión, un comerciante sigue intentando vender sus últimas existencias.",
+      "elecciones": [
+        {
+          "texto": "Comprar un objeto (45 de oro)",
+          "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 45 }
+        },
+        {
+          "texto": "No hay tiempo para comprar, seguir adelante",
           "efecto": { "tipo": "ninguno" }
         }
       ]

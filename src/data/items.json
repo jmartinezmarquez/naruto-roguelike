@@ -65,6 +65,15 @@
       "efecto": { "tipo": "buffPermanenteEquipo", "stat": "velocidad", "cantidad": 3 }
     },
     {
+      "id": "kubikiribocho_fragmento",
+      "nombre": "Fragmento de la Kubikiribōchō",
+      "descripcion": "Un trozo de la legendaria espada decapitadora. Aumenta el ataque y la velocidad del equipo. Obtenido al derrotar a Zabuza.",
+      "tipo": "pasivo",
+      "rareza": "legendario",
+      "precioTienda": null,
+      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "ataque", "cantidad": 4 }
+    },
+    {
       "id": "calabaza_arena",
       "nombre": "Calabaza de Arena (fragmento)",
       "descripcion": "Aumenta considerablemente la defensa del equipo. Obtenido al derrotar a Gaara.",
@@ -72,6 +81,15 @@
       "rareza": "legendario",
       "precioTienda": null,
       "efecto": { "tipo": "buffPermanenteEquipo", "stat": "defensa", "cantidad": 5 }
+    },
+    {
+      "id": "anillo_rinnegan_fragmento",
+      "nombre": "Fragmento del Anillo Rinnegan",
+      "descripcion": "Un fragmento del poder de los Seis Caminos. Trofeo de fin de run — aumenta todas las estadísticas del equipo.",
+      "tipo": "pasivo",
+      "rareza": "legendario",
+      "precioTienda": null,
+      "efecto": { "tipo": "buffPermanenteEquipo", "stat": "todas", "cantidad": 3 }
     }
   ]
 }

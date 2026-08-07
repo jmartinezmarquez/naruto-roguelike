@@ -1,0 +1,43 @@
+{
+  "_comentario": "Primer arco de la run. Nivel de enemigos FIJO por piso (no relativo al jugador — la dificultad de un roguelike debe ser fija para que subir de nivel siga significando algo, ver documentacion/11-progresion-y-arcos.md). Recalibrado con el número REAL de combates de un único camino (no la suma de todos los nodos del piso). nivelMiniJefe/nivelJefeFinal son niveles fijos explícitos, calculados para ser superables incluso por el 'camino mínimo' que se salta todo lo opcional.",
+  "id": "pais_de_las_olas",
+  "nombre": "País de las Olas",
+  "temaVisual": "bosque_konoha",
+  "numeroPisos": 8,
+  "nodosPorPiso": {
+    "min": 1,
+    "max": 4
+  },
+  "poolTiposNodo": [
+    {
+      "tipo": "combate",
+      "peso": 45
+    },
+    {
+      "tipo": "evento",
+      "peso": 28
+    },
+    {
+      "tipo": "tienda",
+      "peso": 20
+    },
+    {
+      "tipo": "descanso",
+      "peso": 7
+    }
+  ],
+  "pisoMiniJefe": 4,
+  "miniJefeId": "haku",
+  "pisoJefeFinal": 8,
+  "jefeFinalId": "zabuza",
+  "personajesReclutablesIds": [],
+  "personajesInicialesIds": [
+    "naruto",
+    "sasuke",
+    "sakura"
+  ],
+  "nivelEnemigoBase": 1,
+  "escaladoNivelPorPiso": 0.33,
+  "nivelMiniJefe": 3,
+  "nivelJefeFinal": 4
+}

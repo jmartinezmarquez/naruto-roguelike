@@ -1,123 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect } from 'react';
+import { useGameStore } from './store/useGameStore';
+import { useAchievementsStore } from './store/useAchievementsStore';
+import MapScreen from './components/Map/MapScreen';
+import CombatScreen from './components/Combat/CombatScreen';
+import EventScreen from './components/Events/EventScreen';
+import ShopScreen from './components/Shop/ShopScreen';
+import GameOverScreen from './components/GameOver/GameOverScreen';
+import AchievementsScreen from './components/Achievements/AchievementsScreen';
+import LogroToast from './components/Achievements/LogroToast';
+import CharacterSelectScreen from './components/CharacterSelect/CharacterSelectScreen';
+import arcoPaisDeLasOlas from './data/arcs/pais-de-las-olas.json';
 
-function App() {
-  const [count, setCount] = useState(0)
+function pantallaActual(pantalla) {
+  if (pantalla === 'combate') return <CombatScreen />;
+  if (pantalla === 'evento') return <EventScreen />;
+  if (pantalla === 'tienda') return <ShopScreen />;
+  if (pantalla === 'gameover') return <GameOverScreen />;
+  if (pantalla === 'logros') return <AchievementsScreen />;
+  return <MapScreen />;
+}
+
+export default function App() {
+  const iniciarRun = useGameStore((s) => s.iniciarRun);
+  const cargarLogros = useAchievementsStore((s) => s.cargarLogros);
+  const mapa = useGameStore((s) => s.mapa);
+  const pantalla = useGameStore((s) => s.pantalla);
+
+  // Los logros de sesiones anteriores se cargan una vez al montar, antes de
+  // elegir personaje — el roster de CharacterSelectScreen depende de ellos
+  // (recompensa desbloquearPersonajeInicial).
+  useEffect(() => {
+    cargarLogros();
+  }, [cargarLogros]);
+
+  // Sin run en curso (arranque, o tras reiniciarRun desde Game Over): hay
+  // que elegir personaje antes de nada. iniciarRun ya no se llama solo.
+  if (!mapa) {
+    return (
+      <CharacterSelectScreen
+        onConfirmar={(idsElegidos) => iniciarRun(idsElegidos, arcoPaisDeLasOlas)}
+      />
+    );
+  }
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <h1 className="text-3xl font-bold text-red-500">Hola Mundo</h1>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      {pantallaActual(pantalla)}
+      <LogroToast />
     </>
-  )
+  );
 }
-
-export default App

@@ -1,0 +1,106 @@
+{
+  "_comentario": "Sistema de logros: meta-progresión entre runs (estilo Slay the Spire/Hades). Persisten en localStorage bajo una clave separada de la run en curso (useAchievementsStore) — sobreviven a un game over, la run no. Los jefes/minijefes de enemies.json ya están marcados con desbloqueablePorLogro: true y tienen rareza+curvaXp — el logro solo apunta a su id, sin duplicar datos en characters.json. Evaluados por engine/achievements.js, ver documentacion/18-sistema-de-logros.md.",
+  "logros": [
+    {
+      "id": "derrotar_haku",
+      "nombre": "El Espejo Roto",
+      "descripcion": "Derrota a Haku en cualquier run.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "haku"
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeReclutable",
+        "personajeId": "haku"
+      }
+    },
+    {
+      "id": "derrotar_zabuza",
+      "nombre": "El Demonio de la Niebla",
+      "descripcion": "Derrota a Zabuza en cualquier run.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "zabuza"
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeReclutable",
+        "personajeId": "zabuza"
+      }
+    },
+    {
+      "id": "derrotar_kabuto",
+      "nombre": "El Espía de Oto",
+      "descripcion": "Derrota a Kabuto en cualquier run.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "kabuto"
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeReclutable",
+        "personajeId": "kabuto"
+      }
+    },
+    {
+      "id": "derrotar_gaara",
+      "nombre": "El Jinchuriki de Arena",
+      "descripcion": "Derrota a Gaara en cualquier run.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "gaara"
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeReclutable",
+        "personajeId": "gaara"
+      }
+    },
+    {
+      "id": "derrotar_camino_animal",
+      "nombre": "El Camino de las Bestias",
+      "descripcion": "Derrota al Camino Animal de Pain en cualquier run.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "camino_animal_pain"
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeReclutable",
+        "personajeId": "camino_animal_pain"
+      }
+    },
+    {
+      "id": "completar_run",
+      "nombre": "Fin del Camino Ninja",
+      "descripcion": "Derrota a Pain y completa la run.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "pain_camino_deva"
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeReclutable",
+        "personajeId": "pain_camino_deva"
+      }
+    },
+    {
+      "id": "run_sin_bajas",
+      "nombre": "Equipo Intacto",
+      "descripcion": "Completa País de las Olas sin que ningún personaje caiga en combate.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "pais_de_las_olas"
+      },
+      "recompensa": {
+        "tipo": "desbloquearObjetoInicial",
+        "objetoId": "sello_chakra"
+      }
+    }
+  ],
+  "_pendienteDeImplementar": {
+    "tiposDeCondicion": [
+      "alcanzarNivel (nivel)",
+      "reclutarATodos (arcoId)",
+      "completarRunEnDificultad (dificultad) — si se añade selector de dificultad más adelante"
+    ],
+    "tiposDeRecompensa": [
+      "cosmetico (aún sin definir — título, color de UI, etc.)"
+    ]
+  }
+}

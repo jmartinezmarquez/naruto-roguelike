@@ -8,5 +8,18 @@
 - [04 - Estructura de datos (JSON)](./04-estructura-de-datos.md)
 - [05 - Roadmap](./05-roadmap.md)
 - [06 - FAQ](./06-faq.md)
+- [07 - Estructura de carpetas](./07-estructura-carpetas.md)
+- [08 - Git y GitHub](./08-git-y-github.md)
+- [09 - Motor del juego (engine)](./09-motor-engine.md)
+- [10 - Generador de mapa](./10-generador-de-mapa.md)
+- [11 - Progresión y arcos](./11-progresion-y-arcos.md)
+- [12 - Cadena de jefes (grupo de rivales)](./12-cadena-de-jefes.md)
+- [13 - UI: dirección visual, Mapa, Combate y Evento](./13-ui-mapa-y-combate.md)
+- [14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md)
+- [15 - Tienda](./15-tienda.md)
+- [16 - Testing](./16-testing.md)
+- [17 - Pantalla de Game Over](./17-game-over.md)
+- [18 - Sistema de logros](./18-sistema-de-logros.md)
+- [19 - Selección de personaje inicial y reclutar-con-reemplazo](./19-seleccion-de-personaje.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

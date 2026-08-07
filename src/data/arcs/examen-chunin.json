@@ -1,0 +1,48 @@
+{
+  "_comentario": "Segundo arco de la run. El equipo ya viene formado del arco anterior. Nivel de enemigos fijo por piso, recalibrado (ver pais-de-las-olas.json para la explicación completa).",
+  "id": "examen_chunin",
+  "nombre": "Examen Chunin",
+  "temaVisual": "bosque_de_la_muerte",
+  "numeroPisos": 10,
+  "nodosPorPiso": {
+    "min": 1,
+    "max": 4
+  },
+  "poolTiposNodo": [
+    {
+      "tipo": "combate",
+      "peso": 45
+    },
+    {
+      "tipo": "evento",
+      "peso": 28
+    },
+    {
+      "tipo": "tienda",
+      "peso": 20
+    },
+    {
+      "tipo": "descanso",
+      "peso": 7
+    }
+  ],
+  "pisoMiniJefe": 5,
+  "miniJefeId": "kabuto",
+  "pisoJefeFinal": 10,
+  "jefeFinalId": "gaara",
+  "personajesReclutablesIds": [
+    "rock_lee",
+    "neji",
+    "tenten",
+    "shikamaru",
+    "ino",
+    "choji",
+    "kiba",
+    "hinata",
+    "shino"
+  ],
+  "nivelEnemigoBase": 20,
+  "escaladoNivelPorPiso": 0.25,
+  "nivelMiniJefe": 22,
+  "nivelJefeFinal": 24
+}

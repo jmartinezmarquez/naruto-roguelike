@@ -1,60 +1,65 @@
 {
-  "_comentario": "Dos categorías: plantillasGenericas (se instancian escalando statsBaseNivel1 * escaladoNivelPorPiso, definido en el arco) para rellenar nodos de combate aleatorios, y enemigosNombrados (fijos, con más presencia narrativa, aparecen en pisos concretos según se configure).",
+  "_comentario": "Mismo esquema que un personaje jugable (statsBase, jutsu, modo opcional) para no necesitar normalización antes de pasarlo a crearLuchador. plantillasGenericas rellena nodos de combate aleatorios escalando statsBase con calcularNivelPorPiso; enemigosNombrados son fijos, con más presencia narrativa.",
   "plantillasGenericas": [
     {
       "id": "genin_rival_katon",
       "nombre": "Genin Rival",
       "tipo": "katon",
-      "statsBaseNivel1": { "hp": 20, "ataque": 5, "defensa": 4, "velocidad": 5 },
-      "jutsuGenerico": {
+      "statsBase": { "hp": 20, "ataque": 5, "defensa": 4, "velocidad": 5 },
+      "jutsu": {
         "nombre": "Jutsu de Fuego Menor",
         "danoBase": 1.1,
         "efectoEstado": { "stat": "defensa", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
-      }
+      },
+      "modos": []
     },
     {
       "id": "genin_rival_fuuton",
       "nombre": "Genin Rival",
       "tipo": "fuuton",
-      "statsBaseNivel1": { "hp": 18, "ataque": 5, "defensa": 3, "velocidad": 6 },
-      "jutsuGenerico": {
+      "statsBase": { "hp": 18, "ataque": 5, "defensa": 3, "velocidad": 6 },
+      "jutsu": {
         "nombre": "Ráfaga Cortante",
         "danoBase": 1.1,
         "efectoEstado": { "stat": "velocidad", "objetivo": "propio", "cantidad": 1, "duracionTurnos": 1 }
-      }
+      },
+      "modos": []
     },
     {
       "id": "genin_rival_raiton",
       "nombre": "Genin Rival",
       "tipo": "raiton",
-      "statsBaseNivel1": { "hp": 19, "ataque": 6, "defensa": 3, "velocidad": 5 },
-      "jutsuGenerico": {
+      "statsBase": { "hp": 19, "ataque": 6, "defensa": 3, "velocidad": 5 },
+      "jutsu": {
         "nombre": "Descarga Menor",
         "danoBase": 1.15,
         "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
-      }
+      },
+      "modos": []
     },
     {
       "id": "genin_rival_doton",
       "nombre": "Genin Rival",
       "tipo": "doton",
-      "statsBaseNivel1": { "hp": 22, "ataque": 4, "defensa": 6, "velocidad": 3 },
-      "jutsuGenerico": {
+      "statsBase": { "hp": 22, "ataque": 4, "defensa": 6, "velocidad": 3 },
+      "jutsu": {
         "nombre": "Muro de Tierra",
         "danoBase": 0.9,
         "efectoEstado": { "stat": "defensa", "objetivo": "propio", "cantidad": 2, "duracionTurnos": 2 }
-      }
+      },
+      "modos": []
     },
     {
       "id": "genin_rival_suiton",
       "nombre": "Genin Rival",
       "tipo": "suiton",
-      "statsBaseNivel1": { "hp": 20, "ataque": 5, "defensa": 5, "velocidad": 4 },
-      "jutsuGenerico": {
+      "statsBase": { "hp": 20, "ataque": 5, "defensa": 5, "velocidad": 4 },
+      "jutsu": {
         "nombre": "Latigazo de Agua",
         "danoBase": 1.1,
         "efectoEstado": { "stat": "velocidad", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
-      }
+      },
+      "modos": []
     }
   ],
   "enemigosNombrados": [
@@ -69,6 +74,7 @@
         "danoBase": 1.25,
         "efectoEstado": { "stat": "defensa", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
       },
+      "modos": [],
       "recompensa": { "xp": 60 }
     },
     {
@@ -82,6 +88,7 @@
         "danoBase": 1.15,
         "efectoEstado": { "stat": "velocidad", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
       },
+      "modos": [],
       "recompensa": { "xp": 60 }
     },
     {
@@ -95,6 +102,7 @@
         "danoBase": 1.1,
         "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
       },
+      "modos": [],
       "recompensa": { "xp": 50 }
     }
   ]
