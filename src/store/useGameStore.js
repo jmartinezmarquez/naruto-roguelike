@@ -9,18 +9,30 @@ import personajesData from '../data/characters.json';
 import configGlobal from '../data/config.json';
 import eventosData from '../data/events.json';
 import itemsData from '../data/items.json';
+import enemiesData from '../data/enemies.json';
+import achievementsData from '../data/achievements.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo, calcularNivelPorPiso } from '../engine/mapGenerator';
+import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
+import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
 
-/** Busca los datos base (fijos) de un personaje por su id en characters.json. */
+/**
+ * Busca los datos base (fijos) de un personaje por su id: primero en
+ * characters.json, y si no está, en los jefes de enemies.json marcados
+ * como desbloqueablePorLogro (mismo esquema que un personaje — ver el
+ * comentario de enemies.json). Así un jefe desbloqueado por logro se
+ * recluta exactamente igual que cualquier otro, sin duplicar sus datos.
+ */
 function encontrarPersonajeBase(id) {
   const personaje = personajesData.personajes.find((p) => p.id === id);
-  if (!personaje) throw new Error(`Personaje no encontrado en characters.json: ${id}`);
-  return personaje;
+  if (personaje) return personaje;
+  const jefeDesbloqueable = enemiesData.jefes.find((j) => j.id === id && j.desbloqueablePorLogro);
+  if (jefeDesbloqueable) return jefeDesbloqueable;
+  throw new Error(`Personaje no encontrado en characters.json ni como jefe desbloqueable por logro: ${id}`);
 }
 
 /** Datos base del personaje con sus bonificaciones permanentes ya sumadas a statsBase. */
@@ -109,8 +121,17 @@ function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) 
     (o) => o.tipo === 'pasivo' && o.precioTienda !== null,
   );
 
+  const idsDesbloqueadosPorLogro = obtenerPersonajesReclutablesDesbloqueados(
+    achievementsData.logros,
+    useAchievementsStore.getState().logrosDesbloqueados,
+  );
+  const idsReclutablesTotal = [
+    ...(arcoActualDatos.personajesReclutablesIds ?? []),
+    ...idsDesbloqueadosPorLogro,
+  ];
+
   const idsEnEquipo = new Set(equipoActual.map((p) => p.id));
-  const reclutablesDisponibles = (arcoActualDatos.personajesReclutablesIds ?? [])
+  const reclutablesDisponibles = idsReclutablesTotal
     .filter((id) => !idsEnEquipo.has(id))
     .map((id) => {
       const base = encontrarPersonajeBase(id);
@@ -136,13 +157,14 @@ export const useGameStore = create((set, get) => ({
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
   mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
-  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'gameover' — qué pantalla debe mostrar la UI ahora mismo
+  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'gameover' | 'logros' — qué pantalla debe mostrar la UI ahora mismo
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
   tiendaActual: null, // { consumibles, gratuito, reclutables, nivelReclutamiento } — oferta fijada al entrar al nodo
   avisoUltimoNodo: null, // texto breve para la UI (ej. "Equipo curado en el descanso"), no persistente
   runTerminada: false,
   runGanada: false,
+  huboDerrotaEnEsteArco: false, // para el logro "completarArcoSinDerrotas" — se resetea en iniciarRun, se marca en _aplicarDerrota
 
   // ---------- ACCIONES ----------
 
@@ -153,10 +175,15 @@ export const useGameStore = create((set, get) => ({
       .slice(0, tamanoMaximo)
       .map((id) => crearInstanciaPersonaje(id));
 
+    const inventarioInicial = obtenerObjetosInicialesDesbloqueados(
+      achievementsData.logros,
+      useAchievementsStore.getState().logrosDesbloqueados,
+    );
+
     set({
       equipo: equipoInicial,
       oro: configGlobal.economia.oroInicial,
-      inventario: [],
+      inventario: inventarioInicial,
       buffsTemporales: [],
       arcoActualId: arco.id,
       arcoActualDatos: arco,
@@ -169,6 +196,7 @@ export const useGameStore = create((set, get) => ({
       avisoUltimoNodo: null,
       runTerminada: false,
       runGanada: false,
+      huboDerrotaEnEsteArco: false,
     });
   },
 
@@ -272,6 +300,7 @@ export const useGameStore = create((set, get) => ({
     const luchadorEnemigo = crearLuchador(enemigoBase, nivelEnemigo);
     const rondas = [];
     let jugadorGanoFinal = false;
+    let logrosDesbloqueados = [];
 
     // Como máximo tantas rondas como personajes en el equipo — no puede
     // haber más, cada ronda consume a un personaje (gana o cae).
@@ -317,6 +346,10 @@ export const useGameStore = create((set, get) => ({
 
       if (jugadorGanoRonda) {
         get()._aplicarVictoria(activo.id, luchadorJugador.hpActual, enemigoBase);
+        // Se desbloquean ya (persisten y afectan a tienda/inventario desde
+        // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
+        // cuando termine la animación, para no arruinar el suspense.
+        logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase);
         jugadorGanoFinal = true;
         break;
       } else {
@@ -328,7 +361,7 @@ export const useGameStore = create((set, get) => ({
 
     get()._consumirUsoBuffsTemporales();
 
-    const resumen = { rondas, jugadorGanoFinal };
+    const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados };
     set({ ultimoResultadoCombate: resumen });
     return resumen;
   },
@@ -341,6 +374,11 @@ export const useGameStore = create((set, get) => ({
   /** Tras ver el resultado del combate final de la run, pasa a la pantalla de Game Over. */
   irAGameOver() {
     set({ pantalla: 'gameover' });
+  },
+
+  /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */
+  abrirLogros() {
+    set({ pantalla: 'logros' });
   },
 
   /** Compra uno de los consumibles ofrecidos en la tienda actual. Se puede comprar más de uno. */
@@ -442,6 +480,24 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
+  /**
+   * Interno: evalúa los logros que pueden desbloquearse al ganar un combate.
+   * Cubre "derrotar a un jefe concreto" siempre, y "completar el arco sin
+   * ninguna derrota" solo cuando el enemigo vencido era el jefe final del
+   * arco en curso (nodo.tipo === 'jefe'). Devuelve los logros recién
+   * desbloqueados (ya persistidos) para que CombatScreen los notifique
+   * cuando termine la animación — ver el comentario en `jugarCombate`.
+   */
+  _evaluarLogrosPorVictoria(enemigoBase) {
+    const { arcoActualDatos, huboDerrotaEnEsteArco } = get();
+    const esJefeFinalDelArco = enemigoBase.id === arcoActualDatos?.jefeFinalId;
+    return useAchievementsStore.getState().evaluarLogros({
+      jefeDerrotadoId: enemigoBase.id,
+      arcoCompletadoId: esJefeFinalDelArco ? arcoActualDatos.id : null,
+      arcoCompletadoSinDerrotas: esJefeFinalDelArco && !huboDerrotaEnEsteArco,
+    });
+  },
+
   /** Interno: marca al personaje como derrotado (HP a 0) y lo manda al final del orden. */
   _aplicarDerrota(idPersonaje) {
     const { equipo } = get();
@@ -457,6 +513,7 @@ export const useGameStore = create((set, get) => ({
       equipo: equipoReordenado,
       runTerminada: todosDerrotados,
       runGanada: false,
+      huboDerrotaEnEsteArco: true,
     });
   },
 

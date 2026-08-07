@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
+import { useAchievementsStore } from '../../store/useAchievementsStore';
 
 const VELOCIDAD_AUTOPLAY_MS = 900;
 const PAUSA_ENTRE_RONDAS_MS = 1400;
@@ -36,6 +37,7 @@ export default function CombatScreen() {
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const irAGameOver = useGameStore((s) => s.irAGameOver);
   const runTerminada = useGameStore((s) => s.runTerminada);
+  const notificarLogros = useAchievementsStore((s) => s.notificar);
 
   const [indiceRonda, setIndiceRonda] = useState(0);
   const [turnosRevelados, setTurnosRevelados] = useState(0);
@@ -92,6 +94,18 @@ export default function CombatScreen() {
     return { hpJugador: Math.max(0, hpJugador), hpEnemigo: Math.max(0, hpEnemigo) };
   }, [ronda, turnosRevelados]);
 
+  const combateTotalTerminado = Boolean(ronda) && rondaCompleta && (ronda.jugadorGano || !hayMasRondas);
+
+  // Los logros ya se desbloquearon (y persistieron) en el momento del
+  // combate real, pero no se notifican hasta que termina TODA la animación
+  // — si saltara antes, se arruinaría el suspense de la pelea en curso.
+  useEffect(() => {
+    if (!combateTotalTerminado) return;
+    notificarLogros(resultado?.logrosDesbloqueados ?? []);
+    // Solo debe dispararse una vez, justo al llegar a "terminado" para este
+    // resultado — combateTotalTerminado y resultado ya lo garantizan como deps.
+  }, [combateTotalTerminado, resultado, notificarLogros]);
+
   if (!resultado || !ronda || !hpEnTurnoActual) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
@@ -100,7 +114,6 @@ export default function CombatScreen() {
     );
   }
 
-  const combateTotalTerminado = rondaCompleta && (ronda.jugadorGano || !hayMasRondas);
   const eventosVisibles = ronda.historial.slice(0, turnosRevelados).flatMap((t) => t.eventos);
 
   return (

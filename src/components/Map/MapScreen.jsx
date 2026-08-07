@@ -168,6 +168,7 @@ export default function MapScreen() {
   const obtenerHpMaximo = useGameStore((s) => s.obtenerHpMaximo);
   const reordenarEquipo = useGameStore((s) => s.reordenarEquipo);
   const avisoUltimoNodo = useGameStore((s) => s.avisoUltimoNodo);
+  const abrirLogros = useGameStore((s) => s.abrirLogros);
 
   const posiciones = useMemo(() => (mapa ? calcularPosiciones(mapa) : {}), [mapa]);
   const disponibles = useMemo(() => new Set(obtenerNodosDisponibles()), [mapa, nodoActualId]);
@@ -197,7 +198,15 @@ export default function MapScreen() {
   const alturaLienzo = ALTO_POR_PISO * mapa.pisos.length;
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8">
+    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 relative">
+      <button
+        type="button"
+        onClick={abrirLogros}
+        className="absolute top-4 right-4 text-xs font-display text-pergamino-100/80 hover:text-pergamino-100 border border-pergamino-100/20 hover:border-sello-600/60 rounded-full px-3 py-1.5 transition-colors"
+      >
+        Logros
+      </button>
+
       <header className="text-center mb-6">
         <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Arco actual</p>
         <h1 className="font-display text-3xl font-bold text-pergamino-100">

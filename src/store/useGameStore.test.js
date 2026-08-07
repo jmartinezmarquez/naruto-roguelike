@@ -1,6 +1,28 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
+import { useAchievementsStore } from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
+
+const enemigoHakuDePrueba = {
+  // Mismo id que el mini-jefe real del arco de prueba (miniJefeId: 'haku'),
+  // pero con stats de juguete para poder derrotarlo en un turno.
+  id: 'haku',
+  nombre: 'Haku de Prueba',
+  tipo: 'suiton',
+  statsBase: { hp: 1, ataque: 1, defensa: 1, velocidad: 1 },
+  jutsu: { nombre: 'Golpe Débil', danoBase: 0.1, efectoEstado: null },
+  modos: [],
+};
+
+const enemigoZabuzaDePrueba = {
+  // Mismo id que el jefe final real del arco de prueba (jefeFinalId: 'zabuza').
+  id: 'zabuza',
+  nombre: 'Zabuza de Prueba',
+  tipo: 'suiton',
+  statsBase: { hp: 1, ataque: 1, defensa: 1, velocidad: 1 },
+  jutsu: { nombre: 'Golpe Débil', danoBase: 0.1, efectoEstado: null },
+  modos: [],
+};
 
 const enemigoDebilDePrueba = {
   id: 'enemigo_debil_test',
@@ -21,7 +43,11 @@ const enemigoImbatibleDePrueba = {
 };
 
 // Se reinicia la run entera antes de cada test para que no arrastren estado.
+// También los logros: viven en un store aparte que sobrevive a iniciarRun a
+// propósito (es meta-progresión entre runs), así que hay que limpiarlo aquí.
 beforeEach(() => {
+  localStorage.clear();
+  useAchievementsStore.setState({ logrosDesbloqueados: [] });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -129,6 +155,63 @@ describe('irAGameOver', () => {
     useGameStore.getState().reiniciarRun();
     expect(useGameStore.getState().mapa).toBeNull();
     expect(useGameStore.getState().pantalla).toBe('mapa');
+  });
+});
+
+describe('logros (a través de jugarCombate)', () => {
+  it('derrotar a un jefe con logro asociado lo desbloquea, aunque no sea el jefe final del arco', () => {
+    useGameStore.getState().jugarCombate(enemigoHakuDePrueba, 1);
+    expect(useAchievementsStore.getState().estaDesbloqueado('derrotar_haku')).toBe(true);
+    // Haku es el mini-jefe, no el jefe final (zabuza) — no cuenta como arco completado.
+    expect(useAchievementsStore.getState().estaDesbloqueado('run_sin_bajas')).toBe(false);
+  });
+
+  it('el resumen de combate incluye el logro recién desbloqueado, pero NO lo notifica todavía', () => {
+    const resumen = useGameStore.getState().jugarCombate(enemigoHakuDePrueba, 1);
+    expect(resumen.logrosDesbloqueados.map((l) => l.id)).toEqual(['derrotar_haku']);
+    // La notificación (toast) es responsabilidad de CombatScreen, solo tras
+    // terminar la animación — jugarCombate no debe encolarla por su cuenta.
+    expect(useAchievementsStore.getState().notificacionesPendientes).toEqual([]);
+  });
+
+  it('derrotar al jefe final del arco sin ninguna derrota previa desbloquea "run_sin_bajas"', () => {
+    useGameStore.getState().jugarCombate(enemigoZabuzaDePrueba, 1);
+    expect(useAchievementsStore.getState().estaDesbloqueado('derrotar_zabuza')).toBe(true);
+    expect(useAchievementsStore.getState().estaDesbloqueado('run_sin_bajas')).toBe(true);
+  });
+
+  it('si el equipo sufrió una derrota antes, vencer al jefe final NO desbloquea "run_sin_bajas"', () => {
+    useGameStore.setState({ huboDerrotaEnEsteArco: true }); // simula una derrota ya sufrida en este arco
+    useGameStore.getState().jugarCombate(enemigoZabuzaDePrueba, 1);
+    expect(useAchievementsStore.getState().estaDesbloqueado('run_sin_bajas')).toBe(false);
+  });
+
+  it('un personaje reclutable desbloqueado por logro aparece en la oferta de una tienda', () => {
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'haku' });
+
+    // Fija un mapa mínimo con un único nodo de tienda, para no depender del azar del generador.
+    useGameStore.setState({
+      mapa: {
+        nodos: { tienda_test: { tipo: 'tienda', piso: 2, conexiones: [], visitado: false } },
+        nodosIniciales: ['tienda_test'],
+      },
+      nodoActualId: null,
+    });
+
+    useGameStore.getState().avanzarANodo('tienda_test');
+    const { tiendaActual } = useGameStore.getState();
+    expect(tiendaActual.reclutables.some((r) => r.personajeId === 'haku')).toBe(true);
+  });
+
+  it('un objeto inicial desbloqueado por logro aparece en el inventario al empezar una run nueva', () => {
+    useAchievementsStore.getState().evaluarLogros({
+      jefeDerrotadoId: 'zabuza',
+      arcoCompletadoId: 'pais_de_las_olas',
+      arcoCompletadoSinDerrotas: true,
+    });
+
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+    expect(useGameStore.getState().inventario).toContain('sello_chakra');
   });
 });
 

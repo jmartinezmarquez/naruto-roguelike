@@ -12,12 +12,14 @@ sin mocks ni DOM.
 
 - `npm install -D vitest`
 - `vite.config.js` — bloque `test: { environment: 'node' }` (no hace falta `jsdom`: ni el motor ni
-  el store tocan el DOM).
+  el store tocan el DOM) más `setupFiles: ['./src/test-setup.js']`, un polyfill mínimo de
+  `localStorage` en memoria — Node no lo expone por defecto, y `useGameStore`
+  (`guardarRun`/`cargarRun`) y `useAchievementsStore` lo usan para persistir entre sesiones.
 - `package.json` — scripts `"test": "vitest run"`, `"test:watch": "vitest"`.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (34 tests)
+## Cobertura actual (72 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -29,10 +31,17 @@ sin mocks ni DOM.
   veces por la aleatoriedad), el último piso siempre 1 nodo `jefe`, el piso de mini-jefe siempre
   tiene exactamente un nodo `miniJefe`, todo nodo (salvo el inicial) tiene conexión entrante,
   `calcularNivelPorPiso` y `resolverEnemigoDeNodo` con niveles fijos correctos.
+- **`engine/achievements.test.js`** — qué condiciones desbloquean qué logros, no repetir un logro
+  ya desbloqueado, extraer las recompensas de personaje reclutable/objeto inicial de los logros ya
+  conseguidos.
 - **`store/useGameStore.test.js`** — `iniciarRun` crea el equipo correcto, `jugarCombate` en
   victoria y en derrota (incluida la cadena completa de rondas hasta que cae todo el equipo),
-  `reordenarEquipo`, `reiniciarRun`, y la tienda (comprar, fondos insuficientes, objeto gratuito,
-  reclutar descarta la otra opción, nivel de reclutamiento correcto, equipo lleno).
+  `reordenarEquipo`, `reiniciarRun`, la tienda (comprar, fondos insuficientes, objeto gratuito,
+  reclutar descarta la otra opción, nivel de reclutamiento correcto, equipo lleno), `irAGameOver`,
+  y la integración con logros (desbloqueo al derrotar un jefe, `completarArcoSinDerrotas` con y sin
+  derrota previa, el reclutable/objeto desbloqueados apareciendo en tienda/inventario).
+- **`store/useAchievementsStore.test.js`** — desbloqueo y persistencia en `localStorage`, no repetir
+  un logro ya conseguido, `cargarLogros()` recupera lo guardado en una sesión anterior.
 
 ## Convención para nuevos tests
 

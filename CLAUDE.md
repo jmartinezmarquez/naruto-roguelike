@@ -69,19 +69,20 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 34 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 74 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 34 tests en `engine/*.test.js` y `store/useGameStore.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas.
+- [x] Testing con Vitest — 75 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
-- [ ] Sistema de logros real — próximo paso. (esquema ya diseñado en `project-data/achievements-DISEÑO.json` — nota: este archivo vive fuera de `src/data/`, revisar si hay que moverlo a `src/data/` al implementarlo).
-- [ ] `App.jsx` real con selección de personajes iniciales (hoy arranca fijo).
+- [x] Sistema de logros completo: motor + persistencia entre runs + pantalla de Logros + notificación al desbloquear (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`. Sin la recompensa `desbloquearPersonajeInicial` (depende del punto de abajo).
+- [ ] `App.jsx` real con selección de personajes iniciales (hoy arranca fijo) — próximo paso.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía.
 - [ ] `recompensa.finDeLaRun` (Pain) no lo lee ningún código — falta marcar `runGanada: true`.
+- [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 
 ## Bugs ya resueltos (para no repetirlos)
 

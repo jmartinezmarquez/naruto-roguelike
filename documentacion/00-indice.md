@@ -19,10 +19,6 @@
 - [15 - Tienda](./15-tienda.md)
 - [16 - Testing](./16-testing.md)
 - [17 - Pantalla de Game Over](./17-game-over.md)
-
-## Diseños pendientes de implementar
-
-- `project-data/achievements-DISEÑO.json` (fuera de `src/data/` a propósito, no se importa desde
-  ningún código todavía) — esquema propuesto para el sistema de logros/meta-progresión entre runs.
+- [18 - Sistema de logros](./18-sistema-de-logros.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

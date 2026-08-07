@@ -6,5 +6,6 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
     environment: 'node', // el motor y el store no tocan el DOM, no hace falta jsdom
+    setupFiles: ['./src/test-setup.js'],
   },
 })

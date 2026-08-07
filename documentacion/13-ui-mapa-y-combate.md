@@ -8,16 +8,19 @@
 
 ## Navegación entre pantallas
 
-El store tiene un campo `pantalla` (`'mapa' | 'combate' | 'evento' | 'tienda' | 'gameover'`), que `App.jsx` usa para decidir qué componente renderizar. `avanzarANodo` cambia de pantalla según el tipo de nodo:
+El store tiene un campo `pantalla` (`'mapa' | 'combate' | 'evento' | 'tienda' | 'gameover' | 'logros'`), que `App.jsx` usa para decidir qué componente renderizar. `avanzarANodo` cambia de pantalla según el tipo de nodo:
 - `combate`/`miniJefe`/`jefe` → `'combate'`.
 - `evento` → `'evento'` (elige un evento al azar del pool del arco actual, filtrado por `arcoId`).
 - `descanso` → se resuelve automáticamente (cura y revive a todo el equipo), sin cambiar de pantalla — solo deja un aviso breve en el mapa.
 - `tienda` → `'tienda'` (ver [15 - Tienda](./15-tienda.md)).
 - `reclutamiento` → sin pantalla propia (ya no existe como nodo — ver [14](./14-reclutamiento-y-rareza.md)).
 
-`volverAlMapa()` vuelve a `'mapa'` desde combate/evento/tienda. Si el combate termina con
+`volverAlMapa()` vuelve a `'mapa'` desde combate/evento/tienda/logros. Si el combate termina con
 `runTerminada: true`, el jugador pasa en su lugar a `'gameover'` vía `irAGameOver()` — ver
-[17 - Pantalla de Game Over](./17-game-over.md).
+[17 - Pantalla de Game Over](./17-game-over.md). El botón "Logros" del mapa abre `'logros'` vía
+`abrirLogros()` — ver [18 - Sistema de logros](./18-sistema-de-logros.md). `LogroToast` (la
+notificación de logro desbloqueado) se monta aparte en `App.jsx`, fuera de este enrutado por
+pantalla, para que aparezca sin importar cuál esté activa.
 
 ## `components/Map/MapScreen.jsx`
 

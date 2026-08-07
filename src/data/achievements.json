@@ -1,6 +1,5 @@
-
 {
-  "_comentario": "DISEÑO, NO IMPLEMENTADO TODAVÍA. Esquema propuesto para un sistema de logros que desbloquea contenido permanente entre runs (meta-progresión, estilo Slay the Spire/Hades). Cuando se implemente: persistencia en localStorage bajo una clave separada de la run en curso (los logros sobreviven a un game over, la run no). Los jefes/minijefes de enemies.json ya están marcados con desbloqueablePorLogro: true y tienen rareza+curvaXp — el logro solo necesita apuntar a su id, sin duplicar datos en characters.json.",
+  "_comentario": "Sistema de logros: meta-progresión entre runs (estilo Slay the Spire/Hades). Persisten en localStorage bajo una clave separada de la run en curso (useAchievementsStore) — sobreviven a un game over, la run no. Los jefes/minijefes de enemies.json ya están marcados con desbloqueablePorLogro: true y tienen rareza+curvaXp — el logro solo apunta a su id, sin duplicar datos en characters.json. Evaluados por engine/achievements.js, ver documentacion/18-sistema-de-logros.md.",
   "logros": [
     {
       "id": "derrotar_haku",
@@ -12,8 +11,7 @@
       },
       "recompensa": {
         "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "haku",
-        "fuente": "enemies.json"
+        "personajeId": "haku"
       }
     },
     {
@@ -26,8 +24,7 @@
       },
       "recompensa": {
         "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "zabuza",
-        "fuente": "enemies.json"
+        "personajeId": "zabuza"
       }
     },
     {
@@ -40,8 +37,7 @@
       },
       "recompensa": {
         "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "kabuto",
-        "fuente": "enemies.json"
+        "personajeId": "kabuto"
       }
     },
     {
@@ -54,8 +50,7 @@
       },
       "recompensa": {
         "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "gaara",
-        "fuente": "enemies.json"
+        "personajeId": "gaara"
       }
     },
     {
@@ -68,8 +63,7 @@
       },
       "recompensa": {
         "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "camino_animal_pain",
-        "fuente": "enemies.json"
+        "personajeId": "camino_animal_pain"
       }
     },
     {
@@ -82,8 +76,7 @@
       },
       "recompensa": {
         "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "pain_camino_deva",
-        "fuente": "enemies.json"
+        "personajeId": "pain_camino_deva"
       }
     },
     {
@@ -100,18 +93,15 @@
       }
     }
   ],
-  "_tiposDeCondicionPropuestos": [
-    "derrotarJefe (jefeId)",
-    "completarArcoSinDerrotas (arcoId)",
-    "alcanzarNivel (nivel)",
-    "reclutarATodos (arcoId)",
-    "completarRunEnDificultad (dificultad) — si se añade selector de dificultad más adelante"
-  ],
-  "_tiposDeRecompensaPropuestos": [
-    "desbloquearPersonajeInicial (personajeId) — aparece como opción al elegir equipo inicial",
-    "desbloquearObjetoInicial (objetoId) — empiezas la run con ese objeto ya en inventario",
-    "desbloquearPersonajeReclutable (personajeId, fuente) — el personaje pasa a estar disponible en la pool de reclutamiento de tienda de cualquier arco futuro. fuente indica si el personajeBase vive en characters.json o en enemies.json (jefes desbloqueados)",
-    "cosmetico (aún sin definir — título, color de UI, etc.)"
-  ],
-  "_notaReclutamientoDeJefes": "Un jefe desbloqueado por logro se recluta igual que cualquier otro (coste en oro según su rareza en config.economia.precioReclutamientoPorRareza — raro 70 / legendario 120), simplemente aparece en la pool de la tienda de cualquier run futura. No lleva ninguna bonificación de stats especial; su fuerza ya viene dada por su rareza y stats base altos."
+  "_pendienteDeImplementar": {
+    "tiposDeCondicion": [
+      "alcanzarNivel (nivel)",
+      "reclutarATodos (arcoId)",
+      "completarRunEnDificultad (dificultad) — si se añade selector de dificultad más adelante"
+    ],
+    "tiposDeRecompensa": [
+      "desbloquearPersonajeInicial (personajeId) — necesita la pantalla de selección de personajes iniciales en App.jsx, todavía no existe",
+      "cosmetico (aún sin definir — título, color de UI, etc.)"
+    ]
+  }
 }

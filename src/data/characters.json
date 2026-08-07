@@ -19,7 +19,7 @@
       "jutsu": {
         "nombre": "Rasengan",
         "descripcion": "Esfera giratoria de chakra que daña y desestabiliza al rival.",
-        "danoBase": 1.3,
+        "danoBase": 5,
         "efectoEstado": {
           "stat": "defensa",
           "objetivo": "enemigo",
