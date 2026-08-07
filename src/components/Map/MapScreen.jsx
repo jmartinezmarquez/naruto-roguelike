@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import personajesData from '../../data/characters.json';
 import typesData from '../../data/types.json';
@@ -64,6 +64,24 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
   const icono = ICONO_NODO[nodo.tipo] ?? '?';
   const esJefe = nodo.tipo === 'jefe';
 
+  // Cuatro estados visuales bien diferenciados, sin solaparse: aquí ahora,
+  // ya visitado (greyed out, no se puede repetir), disponible para elegir, o
+  // todavía fuera de alcance (más adelante en el mapa).
+  let estadoClases;
+  let title;
+  if (esActual) {
+    estadoClases = 'cursor-not-allowed shadow-lg shadow-black/40';
+    title = 'Estás aquí';
+  } else if (visitado) {
+    estadoClases = 'cursor-not-allowed opacity-50 grayscale';
+    title = 'Visitado';
+  } else if (disponible) {
+    estadoClases = 'cursor-pointer hover:scale-110 shadow-lg shadow-black/40';
+  } else {
+    estadoClases = 'cursor-not-allowed opacity-30 grayscale';
+    title = 'Este nodo no es alcanzable desde tu posición actual';
+  }
+
   return (
     <button
       type="button"
@@ -74,13 +92,12 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
         'transition-transform duration-200',
         esJefe ? 'w-14 h-14 border-double border-4' : 'rounded-full w-12 h-12',
         estilo,
-        disponible ? 'cursor-pointer hover:scale-110 shadow-lg shadow-black/40' : 'cursor-not-allowed opacity-30 grayscale',
+        estadoClases,
         esActual && 'ring-2 ring-sello-500 ring-offset-2 ring-offset-tinta-950 scale-110',
-        visitado && !esActual && 'opacity-70 border-pergamino-100/20',
       ].filter(Boolean).join(' ')}
       style={{ left: posicion.x - RADIO_NODO, top: posicion.y - RADIO_NODO }}
-      title={disponible ? undefined : 'Este nodo no es alcanzable desde tu posición actual'}
-      aria-label={`Nodo de tipo ${ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}${disponible ? ', disponible' : ', no disponible'}`}
+      title={title}
+      aria-label={`Nodo de tipo ${ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}${visitado ? ', visitado' : disponible ? ', disponible' : ', no disponible'}`}
     >
       {icono}
     </button>
@@ -267,6 +284,65 @@ function RuedaChakra() {
   );
 }
 
+/** ¿Hay algún elemento en pantalla completa ahora mismo? Cross-browser mínimo (solo se necesita Chrome/Firefox/Safari modernos). */
+function hayPantallaCompleta() {
+  return Boolean(document.fullscreenElement);
+}
+
+/**
+ * Menú de iconos junto al mapa, estilo Pokelike: Logros, Pantalla completa
+ * (Fullscreen API del navegador) y Reiniciar Run (con confirmación nativa,
+ * porque borra el progreso de la run actual sin posibilidad de deshacerlo).
+ * "Ajustes" se queda fuera a propósito — no hay ninguna opción real que
+ * poner ahí todavía.
+ */
+function MenuIconos({ abrirLogros, reiniciarRun }) {
+  const [pantallaCompleta, setPantallaCompleta] = useState(false);
+
+  useEffect(() => {
+    const actualizar = () => setPantallaCompleta(hayPantallaCompleta());
+    document.addEventListener('fullscreenchange', actualizar);
+    return () => document.removeEventListener('fullscreenchange', actualizar);
+  }, []);
+
+  function alternarPantallaCompleta() {
+    if (hayPantallaCompleta()) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen();
+    }
+  }
+
+  function manejarReiniciar() {
+    if (window.confirm('¿Seguro que quieres reiniciar la run? Perderás todo el progreso actual.')) {
+      reiniciarRun();
+    }
+  }
+
+  const botonClase = 'w-9 h-9 flex items-center justify-center rounded-full border border-pergamino-100/20 '
+    + 'text-pergamino-100/80 hover:text-pergamino-100 hover:border-sello-600/60 transition-colors';
+
+  return (
+    <div className="absolute top-4 right-4 flex gap-2">
+      <button type="button" onClick={abrirLogros} className={botonClase} title="Logros" aria-label="Logros">
+        🏆
+      </button>
+      <button
+        type="button"
+        onClick={alternarPantallaCompleta}
+        className={botonClase}
+        title={pantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
+        aria-label="Pantalla completa"
+      >
+        ⛶
+      </button>
+      <button type="button" onClick={manejarReiniciar} className={botonClase} title="Reiniciar run" aria-label="Reiniciar run">
+        ⟲
+      </button>
+    </div>
+  );
+}
+
 export default function MapScreen() {
   const mapa = useGameStore((s) => s.mapa);
   const nodoActualId = useGameStore((s) => s.nodoActualId);
@@ -276,25 +352,11 @@ export default function MapScreen() {
   const equipo = useGameStore((s) => s.equipo);
   const obtenerHpMaximo = useGameStore((s) => s.obtenerHpMaximo);
   const reordenarEquipo = useGameStore((s) => s.reordenarEquipo);
-  const avisoUltimoNodo = useGameStore((s) => s.avisoUltimoNodo);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
+  const reiniciarRun = useGameStore((s) => s.reiniciarRun);
 
   const posiciones = useMemo(() => (mapa ? calcularPosiciones(mapa) : {}), [mapa]);
   const disponibles = useMemo(() => new Set(obtenerNodosDisponibles()), [mapa, nodoActualId]);
-
-  // TEMPORAL: mientras no existan pantallas de Tienda/Reclutamiento, avisamos
-  // en vez de dejar el clic sin ningún efecto visible.
-  const [avisoNodoSinPantalla, setAvisoNodoSinPantalla] = useState(null);
-  const tiposConPantalla = new Set(['combate', 'miniJefe', 'jefe', 'evento', 'tienda']);
-
-  function manejarClicNodo(nodoId) {
-    const nodo = mapa.nodos[nodoId];
-    if (!tiposConPantalla.has(nodo.tipo)) {
-      setAvisoNodoSinPantalla(nodo.tipo);
-      setTimeout(() => setAvisoNodoSinPantalla(null), 2500);
-    }
-    avanzarANodo(nodoId);
-  }
 
   if (!mapa) {
     return (
@@ -308,29 +370,13 @@ export default function MapScreen() {
 
   return (
     <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 relative">
-      <button
-        type="button"
-        onClick={abrirLogros}
-        className="absolute top-4 right-4 text-xs font-display text-pergamino-100/80 hover:text-pergamino-100 border border-pergamino-100/20 hover:border-sello-600/60 rounded-full px-3 py-1.5 transition-colors"
-      >
-        Logros
-      </button>
+      <MenuIconos abrirLogros={abrirLogros} reiniciarRun={reiniciarRun} />
 
       <header className="text-center mb-6">
         <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Arco actual</p>
         <h1 className="font-display text-3xl font-bold text-pergamino-100">
           {arcoActualDatos?.nombre}
         </h1>
-        {avisoNodoSinPantalla && (
-          <p className="mt-2 text-xs text-raiton bg-tinta-800 border border-raiton/30 rounded-full inline-block px-3 py-1">
-            El nodo "{ETIQUETA_NODO[avisoNodoSinPantalla]}" todavía no tiene pantalla propia (próximamente)
-          </p>
-        )}
-        {avisoUltimoNodo && (
-          <p className="mt-2 text-xs text-fuuton bg-tinta-800 border border-fuuton/30 rounded-full inline-block px-3 py-1">
-            {avisoUltimoNodo}
-          </p>
-        )}
       </header>
 
       <div className="flex justify-center items-start gap-6 max-w-4xl mx-auto">
@@ -344,15 +390,47 @@ export default function MapScreen() {
                   const origen = posiciones[nodo.id];
                   const destino = posiciones[destinoId];
                   if (!origen || !destino) return null;
+
+                  // Cuatro estados de camino, en orden de prioridad:
+                  // 1) recorrido de verdad (rojo sello) — solo hay un nodo
+                  //    visitado por piso, así que si origen Y destino están
+                  //    visitados, esta es LA arista que se tomó entre ellos.
+                  // 2) elegible ahora mismo desde donde estás (pergamino sólido).
+                  // 3) descartado — origen ya visitado (piso ya superado) pero
+                  //    esta rama en concreto no se tomó: ya no se puede volver.
+                  // 4) todavía fuera de alcance, más adelante en el mapa (punteado).
                   const recorrido = nodo.visitado && mapa.nodos[destinoId]?.visitado;
+                  const disponibleAhora = !recorrido && nodo.id === nodoActualId && disponibles.has(destinoId);
+                  const descartado = !recorrido && !disponibleAhora && nodo.visitado;
+
+                  let stroke = 'var(--color-pergamino-100)';
+                  let strokeOpacity = 0.15;
+                  let strokeWidth = 1.5;
+                  let strokeDasharray;
+
+                  if (recorrido) {
+                    stroke = 'var(--color-sello-500)';
+                    strokeOpacity = 0.8;
+                    strokeWidth = 2.5;
+                  } else if (disponibleAhora) {
+                    strokeOpacity = 0.9;
+                    strokeWidth = 2;
+                  } else if (descartado) {
+                    stroke = 'var(--color-tinta-950)';
+                    strokeOpacity = 0.7;
+                  } else {
+                    strokeDasharray = '4 4';
+                  }
+
                   return (
                     <path
                       key={`${nodo.id}-${destinoId}`}
                       d={`M ${origen.x} ${origen.y} C ${origen.x} ${(origen.y + destino.y) / 2}, ${destino.x} ${(origen.y + destino.y) / 2}, ${destino.x} ${destino.y}`}
                       fill="none"
-                      stroke={recorrido ? 'var(--color-sello-500)' : 'var(--color-pergamino-100)'}
-                      strokeOpacity={recorrido ? 0.8 : 0.15}
-                      strokeWidth={recorrido ? 2.5 : 1.5}
+                      stroke={stroke}
+                      strokeOpacity={strokeOpacity}
+                      strokeWidth={strokeWidth}
+                      strokeDasharray={strokeDasharray}
                     />
                   );
                 }),
@@ -367,7 +445,7 @@ export default function MapScreen() {
                 disponible={disponibles.has(nodo.id)}
                 visitado={nodo.visitado}
                 esActual={nodo.id === nodoActualId}
-                onClick={manejarClicNodo}
+                onClick={avanzarANodo}
               />
             ))}
           </div>

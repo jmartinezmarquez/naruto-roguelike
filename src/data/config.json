@@ -9,7 +9,7 @@
     "oroInicial": 50,
     "oroPorCombateGanado": { "min": 10, "max": 20 },
     "oroPorEventoPositivo": { "min": 5, "max": 15 },
-    "precioReclutamientoPorRareza": { "comun": 40, "raro": 70, "legendario": 120 }
+    "precioReclutamientoPorRareza": { "inicial": 40, "comun": 40, "raro": 70, "legendario": 120 }
   },
   "combate": {
     "turnosMaximos": 20,

@@ -123,7 +123,37 @@ export function generarMapa(arco) {
     });
   }
 
+  garantizarDescansoEnAlgunCamino(nodos, pisos);
+
   return { arcoId: arco.id, pisos, nodos, nodosIniciales: pisos[0] };
+}
+
+/**
+ * Garantiza que exista AL MENOS UN camino completo (desde algún nodo
+ * inicial hasta el jefe final) que pase por un nodo de `descanso`, para que
+ * el jugador siempre tenga la opción de curar a todo el equipo antes de
+ * llegar al jefe, sin depender del todo del azar del sorteo de tipos de
+ * nodo. Traza un camino concreto (la primera conexión en cada paso) y, si
+ * no contiene ya ningún `descanso`, convierte a `descanso` uno de sus nodos
+ * de combate/evento (nunca el piso 1 — ver la regla de más arriba — ni
+ * tienda/miniJefe/jefe, que son nodos con un propósito ya fijado).
+ */
+function garantizarDescansoEnAlgunCamino(nodos, pisos) {
+  const camino = [];
+  let actualId = pisos[0][0];
+  while (actualId) {
+    camino.push(actualId);
+    actualId = nodos[actualId].conexiones[0] ?? null;
+  }
+
+  const yaTieneDescanso = camino.some((id) => nodos[id].tipo === 'descanso');
+  if (yaTieneDescanso) return;
+
+  const candidatoId = camino.find((id) => {
+    const nodo = nodos[id];
+    return nodo.piso > 1 && (nodo.tipo === 'combate' || nodo.tipo === 'evento');
+  });
+  if (candidatoId) nodos[candidatoId].tipo = 'descanso';
 }
 
 /**

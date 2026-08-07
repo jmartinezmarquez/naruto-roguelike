@@ -8,6 +8,7 @@ import ShopScreen from './components/Shop/ShopScreen';
 import GameOverScreen from './components/GameOver/GameOverScreen';
 import AchievementsScreen from './components/Achievements/AchievementsScreen';
 import LogroToast from './components/Achievements/LogroToast';
+import AvisoToast from './components/Map/AvisoToast';
 import CharacterSelectScreen from './components/CharacterSelect/CharacterSelectScreen';
 import arcoPaisDeLasOlas from './data/arcs/pais-de-las-olas.json';
 
@@ -47,6 +48,7 @@ export default function App() {
     <>
       {pantallaActual(pantalla)}
       <LogroToast />
+      <AvisoToast />
     </>
   );
 }

@@ -15,6 +15,11 @@ Genera un grafo de nodos por pisos a partir de la config de un arco (cualquiera 
 - El piso `pisoMiniJefe` fuerza a que uno de sus nodos sea de tipo `miniJefe`.
 - Cada nodo se conecta con 1-2 nodos del piso siguiente (por proximidad de índice), y se garantiza
   que ningún nodo se quede sin conexión entrante.
+- **`garantizarDescansoEnAlgunCamino`**: al final, traza un camino concreto desde un nodo inicial
+  hasta el jefe (la primera conexión en cada paso) y, si no pasa por ningún `descanso`, convierte a
+  `descanso` uno de sus nodos de `combate`/`evento` (nunca el piso 1 ni tienda/miniJefe/jefe). El
+  jugador siempre tiene la opción de curar a todo el equipo antes de llegar al jefe en AL MENOS un
+  camino — no se garantiza en todos los caminos posibles, solo en ese uno trazado.
 
 Devuelve `{ arcoId, pisos, nodos, nodosIniciales }`.
 

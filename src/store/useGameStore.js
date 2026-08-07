@@ -125,9 +125,17 @@ function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) 
     achievementsData.logros,
     useAchievementsStore.getState().logrosDesbloqueados,
   );
+  // Los "inicial" (Naruto/Sasuke/Sakura) que NO se eligieron al empezar la
+  // run también se pueden reclutar en cualquier tienda — si no, en el primer
+  // arco (sin personajesReclutablesIds propio) sería imposible formar un
+  // equipo de 3 sin haber desbloqueado ya algún logro en una run anterior.
+  const idsInicialesNoElegidos = personajesData.personajes
+    .filter((p) => p.rareza === 'inicial')
+    .map((p) => p.id);
   const idsReclutablesTotal = [
     ...(arcoActualDatos.personajesReclutablesIds ?? []),
     ...idsDesbloqueadosPorLogro,
+    ...idsInicialesNoElegidos,
   ];
 
   const idsEnEquipo = new Set(equipoActual.map((p) => p.id));
@@ -323,6 +331,10 @@ export const useGameStore = create((set, get) => ({
     const rondas = [];
     let jugadorGanoFinal = false;
     let logrosDesbloqueados = [];
+    // Quiénes ya estaban caídos ANTES de este combate (no curados desde
+    // entonces) — esos no ganan XP al ganar. Quien caiga DURANTE este mismo
+    // combate (rondas encadenadas) sí ganó su XP, ya que participó.
+    const idsYaDerrotadosAntesDelCombate = new Set(get().equipo.filter((p) => p.derrotado).map((p) => p.id));
 
     // Como máximo tantas rondas como personajes en el equipo — no puede
     // haber más, cada ronda consume a un personaje (gana o cae).
@@ -367,7 +379,7 @@ export const useGameStore = create((set, get) => ({
       });
 
       if (jugadorGanoRonda) {
-        get()._aplicarVictoria(activo.id, luchadorJugador.hpActual, enemigoBase);
+        get()._aplicarVictoria(activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate);
         // Se desbloquean ya (persisten y afectan a tienda/inventario desde
         // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
         // cuando termine la animación, para no arruinar el suspense.
@@ -474,8 +486,16 @@ export const useGameStore = create((set, get) => ({
     set({ buffsTemporales: actualizados });
   },
 
-  /** Interno: aplica XP, recompensas y persiste el HP final tras ganar un combate. */
-  _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase) {
+  /**
+   * Interno: aplica XP, recompensas y persiste el HP final tras ganar un
+   * combate. `idsYaDerrotadosAntesDelCombate`: quiénes ya estaban caídos
+   * antes de que este combate empezara — esos se saltan por completo (nada
+   * de XP hasta que se curen). Un personaje que cae DURANTE este mismo
+   * combate (rondas encadenadas y luego gana otro compañero) sí gana su XP
+   * de banquillo por haber participado, pero su HP se queda a 0 — ganar XP
+   * no debe "revivirlo" de regalo si sube de nivel.
+   */
+  _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase, idsYaDerrotadosAntesDelCombate) {
     const { equipo, oro, inventario } = get();
     const xpGanada = enemigoBase.recompensa?.xp ?? 20;
     const porcentajeBanquillo = configGlobal.progresion.porcentajeXpBanquillo;
@@ -484,14 +504,15 @@ export const useGameStore = create((set, get) => ({
         configGlobal.economia.oroPorCombateGanado.max) / 2,
     );
 
-    // El personaje activo gana la XP completa y su HP final persistido. El
-    // resto del equipo vivo gana un porcentaje de XP (no participó en el
-    // combate, así que su HP no cambia).
     const equipoActualizado = equipo.map((p) => {
-      if (p.derrotado) return p;
+      if (idsYaDerrotadosAntesDelCombate.has(p.id)) return p;
+
       const xpParaEste = p.id === idPersonaje ? xpGanada : Math.round(xpGanada * porcentajeBanquillo);
       const conXp = aplicarXpYActualizarHp(p, xpParaEste);
-      return p.id === idPersonaje ? { ...conXp, hpActual: hpFinalActivo } : conXp;
+
+      if (p.id === idPersonaje) return { ...conXp, hpActual: hpFinalActivo };
+      if (p.derrotado) return { ...conXp, hpActual: 0 }; // cayó en este combate: gana XP, sigue a 0 HP
+      return conXp; // vivo y no participó: gana su XP de banquillo, HP sin cambios
     });
 
     const objetoGanado = enemigoBase.recompensa?.objetoGarantizado;
@@ -581,7 +602,7 @@ export const useGameStore = create((set, get) => ({
           const curado = Math.min(hpMax, p.hpActual + Math.round(hpMax * efecto.cantidad));
           return { ...p, hpActual: curado };
         });
-        set({ equipo: equipoActualizado });
+        set({ equipo: equipoActualizado, avisoUltimoNodo: 'El equipo se ha recuperado.' });
         break;
       }
 

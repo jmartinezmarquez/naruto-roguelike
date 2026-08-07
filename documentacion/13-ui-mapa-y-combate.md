@@ -17,21 +17,37 @@ El store tiene un campo `pantalla` (`'mapa' | 'combate' | 'evento' | 'tienda' | 
 
 `volverAlMapa()` vuelve a `'mapa'` desde combate/evento/tienda/logros. Si el combate termina con
 `runTerminada: true`, el jugador pasa en su lugar a `'gameover'` vía `irAGameOver()` — ver
-[17 - Pantalla de Game Over](./17-game-over.md). El botón "Logros" del mapa abre `'logros'` vía
-`abrirLogros()` — ver [18 - Sistema de logros](./18-sistema-de-logros.md). `LogroToast` (la
-notificación de logro desbloqueado) se monta aparte en `App.jsx`, fuera de este enrutado por
-pantalla, para que aparezca sin importar cuál esté activa.
+[17 - Pantalla de Game Over](./17-game-over.md). `LogroToast` (notificación de logro desbloqueado)
+y `AvisoToast` (avisos breves: curación en descanso o evento, etc.) se montan aparte en `App.jsx`,
+fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté activa.
 
 ## `components/Map/MapScreen.jsx`
 
 - Lee `mapa`, `nodoActualId`, `arcoActualDatos`, `equipo` del store; usa `avanzarANodo` y `obtenerNodosDisponibles`.
-- Layout: pisos apilados de abajo (nivel 1) hacia arriba (jefe), como si se escalara un pergamino. Conexiones dibujadas con `<path>` curvos (SVG), no líneas rectas de diagrama de flujo — el camino ya recorrido se resalta en rojo sello, el resto queda tenue.
-- Nodos: círculo con glifo kanji por tipo (combate/evento/reclutamiento/tienda/descanso), color según tipo; el nodo de jefe usa un cuadrado con borde doble en vez de círculo, para diferenciarlo sin depender de un asset externo.
-- Nodos no alcanzables desde la posición actual aparecen atenuados y no son clicables.
+- Layout: pisos apilados de abajo (nivel 1) hacia arriba (jefe), como si se escalara un pergamino.
+  Conexiones dibujadas con `<path>` curvos (SVG), con 4 estados visuales bien diferenciados en vez
+  de solo "recorrido/resto":
+  - **Recorrido de verdad**: rojo sello sólido. Como solo hay un nodo visitado por piso, si origen
+    y destino de una arista están ambos visitados, esa es exactamente la arista que se tomó — sin
+    ambigüedad.
+  - **Elegible ahora** (sale del nodo actual): pergamino sólido y opaco.
+  - **Descartado** (sale de un nodo ya visitado, pero no es la rama que se tomó): negro sólido
+    (`tinta-950`) — simboliza que ya no se puede volver atrás a por esa rama.
+  - **Todavía fuera de alcance** (más adelante en el mapa, ninguno de los dos extremos visitado ni
+    es el nodo actual): línea de puntos, muy tenue.
+- Nodos: círculo con glifo kanji por tipo (combate/evento/tienda/descanso), color según tipo; el
+  nodo de jefe usa un cuadrado con borde doble en vez de círculo, para diferenciarlo sin depender de
+  un asset externo. 4 estados igual de diferenciados que las aristas: nodo actual (anillo sello),
+  visitado (greyed out + escala de grises, `title="Visitado"`), disponible (brillante, clicable),
+  fuera de alcance (muy tenue + escala de grises, no clicable).
 - **Tira de HP del equipo**: muestra cada personaje con nivel, barra de HP real (vía el selector `obtenerHpMaximo` del store) y si está derrotado — necesario ahora que el HP persiste entre combates, para que el jugador sepa cuándo curarse. Cada entrada envuelta en `PersonajeHoverCard` (ver más abajo).
-- Aviso temporal para nodos sin pantalla implementada todavía (reclutamiento, que ya no existe como nodo), y aviso de "equipo curado" tras un nodo de descanso.
 - **`RuedaChakra`**: pictograma del ciclo de ventajas de chakra, debajo de la leyenda del mapa —
   ver [19 - Selección de personaje](./19-seleccion-de-personaje.md).
+- **`MenuIconos`**: esquina superior derecha, estilo Pokelike — Logros (🏆), Pantalla completa (⛶,
+  Fullscreen API del navegador) y Reiniciar Run (⟲, con `window.confirm` porque borra la run actual
+  sin posibilidad de deshacerlo). Sin "Ajustes" todavía — no hay ninguna opción real que poner ahí.
+- El viejo aviso "este nodo no tiene pantalla propia todavía" se quitó — ya no existe ningún tipo de
+  nodo sin pantalla o resolución propia (descanso se auto-resuelve, el resto tiene pantalla).
 
 ## `components/Combat/CombatScreen.jsx`
 

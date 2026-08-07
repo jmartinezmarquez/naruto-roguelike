@@ -107,6 +107,39 @@ describe('jugarCombate — un personaje muere', () => {
   });
 });
 
+describe('_aplicarVictoria — XP de personajes caídos', () => {
+  it('un personaje ya caído ANTES de este combate no gana XP hasta curarse', () => {
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p) => (p.id === 'sasuke' ? { ...p, derrotado: true, hpActual: 0 } : p)),
+    }));
+    const idsYaDerrotadosAntes = new Set(['sasuke']);
+    const naruto = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+
+    useGameStore.getState()._aplicarVictoria(naruto.id, naruto.hpActual, enemigoDebilDePrueba, idsYaDerrotadosAntes);
+
+    const sasuke = useGameStore.getState().equipo.find((p) => p.id === 'sasuke');
+    expect(sasuke.xpActual).toBe(0);
+    expect(sasuke.hpActual).toBe(0);
+  });
+
+  it('un personaje que cae DURANTE este mismo combate sí gana su XP de banquillo, pero se queda a 0 HP', () => {
+    // Simula que sasuke acaba de caer en una ronda anterior de ESTE combate
+    // (rondas encadenadas) — no estaba derrotado antes de que empezara.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p) => (p.id === 'sasuke' ? { ...p, derrotado: true, hpActual: 0 } : p)),
+    }));
+    const idsYaDerrotadosAntes = new Set(); // nadie estaba caído antes de que empezara el combate
+    const naruto = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+
+    useGameStore.getState()._aplicarVictoria(naruto.id, naruto.hpActual, enemigoDebilDePrueba, idsYaDerrotadosAntes);
+
+    const sasuke = useGameStore.getState().equipo.find((p) => p.id === 'sasuke');
+    expect(sasuke.xpActual).toBeGreaterThan(0); // ganó XP por haber participado en este combate
+    expect(sasuke.hpActual).toBe(0); // pero sigue a 0 HP — subir de nivel no lo revive de regalo
+    expect(sasuke.derrotado).toBe(true);
+  });
+});
+
 describe('_aplicarDerrota (a través de jugarCombate)', () => {
   it('los personajes derrotados quedan al final del orden del equipo', () => {
     // Solo se enfrenta el enemigo débil (gana el activo), así que forzamos
@@ -202,6 +235,25 @@ describe('logros (a través de jugarCombate)', () => {
     useGameStore.getState().avanzarANodo('tienda_test');
     const { tiendaActual } = useGameStore.getState();
     expect(tiendaActual.reclutables.some((r) => r.personajeId === 'haku')).toBe(true);
+  });
+
+  it('los "inicial" no elegidos al empezar la run se pueden reclutar en cualquier tienda, incluso en el primer arco', () => {
+    // Equipo de 1 solo personaje (como arranca una run real) y el arco de
+    // prueba no tiene personajesReclutablesIds propio, así que la única
+    // fuente posible para la oferta son los otros "inicial" no elegidos.
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.filter((p) => p.id === 'naruto') }));
+    useGameStore.setState({
+      mapa: {
+        nodos: { tienda_test: { tipo: 'tienda', piso: 2, conexiones: [], visitado: false } },
+        nodosIniciales: ['tienda_test'],
+      },
+      nodoActualId: null,
+    });
+
+    useGameStore.getState().avanzarANodo('tienda_test');
+    const { tiendaActual } = useGameStore.getState();
+    const idsOfrecidos = tiendaActual.reclutables.map((r) => r.personajeId).sort();
+    expect(idsOfrecidos).toEqual(['sakura', 'sasuke']);
   });
 
   it('un objeto inicial desbloqueado por logro aparece en el inventario al empezar una run nueva', () => {

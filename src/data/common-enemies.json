@@ -5,11 +5,16 @@
       "id": "genin_rival_katon",
       "nombre": "Genin Rival",
       "tipo": "katon",
-      "statsBase": { "hp": 20, "ataque": 5, "defensa": 4, "velocidad": 5 },
+      "statsBase": {
+        "hp": 20,
+        "ataque": 5,
+        "defensa": 4,
+        "velocidad": 5
+      },
       "jutsu": {
         "nombre": "Jutsu de Fuego Menor",
         "danoBase": 1.1,
-        "efectoEstado": { "stat": "defensa", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
+        "efectoEstado": null
       },
       "modos": []
     },
@@ -17,11 +22,16 @@
       "id": "genin_rival_fuuton",
       "nombre": "Genin Rival",
       "tipo": "fuuton",
-      "statsBase": { "hp": 18, "ataque": 5, "defensa": 3, "velocidad": 6 },
+      "statsBase": {
+        "hp": 18,
+        "ataque": 5,
+        "defensa": 3,
+        "velocidad": 6
+      },
       "jutsu": {
         "nombre": "Ráfaga Cortante",
         "danoBase": 1.1,
-        "efectoEstado": { "stat": "velocidad", "objetivo": "propio", "cantidad": 1, "duracionTurnos": 1 }
+        "efectoEstado": null
       },
       "modos": []
     },
@@ -29,11 +39,16 @@
       "id": "genin_rival_raiton",
       "nombre": "Genin Rival",
       "tipo": "raiton",
-      "statsBase": { "hp": 19, "ataque": 6, "defensa": 3, "velocidad": 5 },
+      "statsBase": {
+        "hp": 19,
+        "ataque": 6,
+        "defensa": 3,
+        "velocidad": 5
+      },
       "jutsu": {
         "nombre": "Descarga Menor",
         "danoBase": 1.15,
-        "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
+        "efectoEstado": null
       },
       "modos": []
     },
@@ -41,11 +56,16 @@
       "id": "genin_rival_doton",
       "nombre": "Genin Rival",
       "tipo": "doton",
-      "statsBase": { "hp": 22, "ataque": 4, "defensa": 6, "velocidad": 3 },
+      "statsBase": {
+        "hp": 22,
+        "ataque": 4,
+        "defensa": 6,
+        "velocidad": 3
+      },
       "jutsu": {
         "nombre": "Muro de Tierra",
         "danoBase": 0.9,
-        "efectoEstado": { "stat": "defensa", "objetivo": "propio", "cantidad": 2, "duracionTurnos": 2 }
+        "efectoEstado": null
       },
       "modos": []
     },
@@ -53,11 +73,16 @@
       "id": "genin_rival_suiton",
       "nombre": "Genin Rival",
       "tipo": "suiton",
-      "statsBase": { "hp": 20, "ataque": 5, "defensa": 5, "velocidad": 4 },
+      "statsBase": {
+        "hp": 20,
+        "ataque": 5,
+        "defensa": 5,
+        "velocidad": 4
+      },
       "jutsu": {
         "nombre": "Latigazo de Agua",
         "danoBase": 1.1,
-        "efectoEstado": { "stat": "velocidad", "objetivo": "enemigo", "cantidad": -1, "duracionTurnos": 1 }
+        "efectoEstado": null
       },
       "modos": []
     }
@@ -67,43 +92,64 @@
       "id": "zaku",
       "nombre": "Zaku Abumi",
       "tipo": "fuuton",
-      "statsBase": { "hp": 42, "ataque": 10, "defensa": 6, "velocidad": 7 },
+      "statsBase": {
+        "hp": 42,
+        "ataque": 10,
+        "defensa": 6,
+        "velocidad": 7
+      },
       "jutsu": {
         "nombre": "Slicing Sound Wave",
         "descripcion": "Ondas de aire comprimido lanzadas desde los brazos.",
         "danoBase": 1.25,
-        "efectoEstado": { "stat": "defensa", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
+        "efectoEstado": null
       },
       "modos": [],
-      "recompensa": { "xp": 60 }
+      "recompensa": {
+        "xp": 60
+      }
     },
     {
       "id": "dosu",
       "nombre": "Dosu Kinuta",
       "tipo": "raiton",
-      "statsBase": { "hp": 45, "ataque": 9, "defensa": 8, "velocidad": 6 },
+      "statsBase": {
+        "hp": 45,
+        "ataque": 9,
+        "defensa": 8,
+        "velocidad": 6
+      },
       "jutsu": {
         "nombre": "Vibración Sónica",
         "descripcion": "Un brazalete emite un sonido que desorienta al rival.",
         "danoBase": 1.15,
-        "efectoEstado": { "stat": "velocidad", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
+        "efectoEstado": null
       },
       "modos": [],
-      "recompensa": { "xp": 60 }
+      "recompensa": {
+        "xp": 60
+      }
     },
     {
       "id": "kin",
       "nombre": "Kin Tsuchi",
       "tipo": "doton",
-      "statsBase": { "hp": 38, "ataque": 8, "defensa": 6, "velocidad": 8 },
+      "statsBase": {
+        "hp": 38,
+        "ataque": 8,
+        "defensa": 6,
+        "velocidad": 8
+      },
       "jutsu": {
         "nombre": "Senbon Ilusorio",
         "descripcion": "Agujas lanzadas con precisión para debilitar la concentración del rival.",
         "danoBase": 1.1,
-        "efectoEstado": { "stat": "ataque", "objetivo": "enemigo", "cantidad": -2, "duracionTurnos": 2 }
+        "efectoEstado": null
       },
       "modos": [],
-      "recompensa": { "xp": 50 }
+      "recompensa": {
+        "xp": 50
+      }
     }
   ]
 }
