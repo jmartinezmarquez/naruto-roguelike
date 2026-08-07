@@ -14,6 +14,9 @@ explorar el código a ciegas, comprueba si el documento correspondiente ya expli
 - React (Vite) + Zustand (estado global) + Tailwind CSS v4 (vía `@tailwindcss/vite`, sin `tailwind.config.js`)
 - Vitest para testing (`npm test`), `environment: 'node'` — el motor y el store no tocan el DOM.
 - Sistema operativo de desarrollo: **Windows**. Comandos de terminal en CMD/PowerShell, no sintaxis Unix.
+- **No probar la UI con chromium-cli/Playwright ni herramientas headless similares.** El usuario
+  prefiere probar manualmente él mismo. Si quieres verificar visualmente un cambio, pídeselo en
+  vez de lanzar un navegador headless.
 
 ## Estructura de carpetas
 
@@ -74,8 +77,8 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
 - [x] Testing con Vitest — 34 tests en `engine/*.test.js` y `store/useGameStore.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas.
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
-- [ ] Pantalla de Game Over dedicada — próximo paso. Hoy `runTerminada` solo muestra un mensaje sin navegación dentro de `CombatScreen`.
-- [ ] Sistema de logros real (esquema ya diseñado en `project-data/achievements-DISEÑO.json` — nota: este archivo vive fuera de `src/data/`, revisar si hay que moverlo a `src/data/` al implementarlo).
+- [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
+- [ ] Sistema de logros real — próximo paso. (esquema ya diseñado en `project-data/achievements-DISEÑO.json` — nota: este archivo vive fuera de `src/data/`, revisar si hay que moverlo a `src/data/` al implementarlo).
 - [ ] `App.jsx` real con selección de personajes iniciales (hoy arranca fijo).
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía.
 - [ ] `recompensa.finDeLaRun` (Pain) no lo lee ningún código — falta marcar `runGanada: true`.

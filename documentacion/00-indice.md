@@ -18,6 +18,7 @@
 - [14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md)
 - [15 - Tienda](./15-tienda.md)
 - [16 - Testing](./16-testing.md)
+- [17 - Pantalla de Game Over](./17-game-over.md)
 
 ## Diseños pendientes de implementar
 

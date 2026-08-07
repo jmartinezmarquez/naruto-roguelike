@@ -113,6 +113,25 @@ describe('reiniciarRun', () => {
   });
 });
 
+describe('irAGameOver', () => {
+  it('cambia la pantalla a "gameover" tras la derrota de toda la run', () => {
+    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+    expect(useGameStore.getState().runTerminada).toBe(true);
+
+    useGameStore.getState().irAGameOver();
+    expect(useGameStore.getState().pantalla).toBe('gameover');
+  });
+
+  it('reiniciarRun tras un game over deja el equipo listo para una run nueva', () => {
+    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+    useGameStore.getState().irAGameOver();
+
+    useGameStore.getState().reiniciarRun();
+    expect(useGameStore.getState().mapa).toBeNull();
+    expect(useGameStore.getState().pantalla).toBe('mapa');
+  });
+});
+
 describe('tienda', () => {
   function fijarTiendaDePrueba() {
     useGameStore.setState({

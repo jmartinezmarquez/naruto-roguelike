@@ -34,7 +34,7 @@ function BarraLuchador({ nombre, nivel, hp, hpMaximo, modoActivoNombre, alineaci
 export default function CombatScreen() {
   const resultado = useGameStore((s) => s.ultimoResultadoCombate);
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
-  const reiniciarRun = useGameStore((s) => s.reiniciarRun);
+  const irAGameOver = useGameStore((s) => s.irAGameOver);
   const runTerminada = useGameStore((s) => s.runTerminada);
 
   const [indiceRonda, setIndiceRonda] = useState(0);
@@ -181,10 +181,10 @@ export default function CombatScreen() {
                 </p>
                 <button
                   type="button"
-                  onClick={reiniciarRun}
+                  onClick={irAGameOver}
                   className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
                 >
-                  Nueva Run
+                  Ver resultado
                 </button>
               </div>
             ) : (

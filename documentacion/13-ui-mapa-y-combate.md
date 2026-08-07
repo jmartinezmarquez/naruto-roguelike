@@ -8,13 +8,16 @@
 
 ## Navegación entre pantallas
 
-El store tiene un campo `pantalla` (`'mapa' | 'combate' | 'evento'`), que `App.jsx` usa para decidir qué componente renderizar. `avanzarANodo` cambia de pantalla según el tipo de nodo:
+El store tiene un campo `pantalla` (`'mapa' | 'combate' | 'evento' | 'tienda' | 'gameover'`), que `App.jsx` usa para decidir qué componente renderizar. `avanzarANodo` cambia de pantalla según el tipo de nodo:
 - `combate`/`miniJefe`/`jefe` → `'combate'`.
 - `evento` → `'evento'` (elige un evento al azar del pool del arco actual, filtrado por `arcoId`).
 - `descanso` → se resuelve automáticamente (cura y revive a todo el equipo), sin cambiar de pantalla — solo deja un aviso breve en el mapa.
-- `tienda`/`reclutamiento` → sin pantalla propia todavía.
+- `tienda` → `'tienda'` (ver [15 - Tienda](./15-tienda.md)).
+- `reclutamiento` → sin pantalla propia (ya no existe como nodo — ver [14](./14-reclutamiento-y-rareza.md)).
 
-`volverAlMapa()` vuelve a `'mapa'` desde combate o evento.
+`volverAlMapa()` vuelve a `'mapa'` desde combate/evento/tienda. Si el combate termina con
+`runTerminada: true`, el jugador pasa en su lugar a `'gameover'` vía `irAGameOver()` — ver
+[17 - Pantalla de Game Over](./17-game-over.md).
 
 ## `components/Map/MapScreen.jsx`
 
@@ -30,7 +33,7 @@ El store tiene un campo `pantalla` (`'mapa' | 'combate' | 'evento'`), que `App.j
 - Lee `ultimoResultadoCombate` del store (resumen enriquecido: nombres, HP máximo, modo activo).
 - Reproduce `historial` turno a turno con auto-avance (900ms/turno), reconstruyendo el HP de cada lado restando el daño acumulado de los turnos ya revelados. Botón "Saltar animación".
 - Barras de HP con color según % restante (`fuuton` >50%, `raiton` 20-50%, `sello` <20%).
-- Al completarse: banner de Victoria/Derrota y botón "Continuar" → `volverAlMapa()`. Si `runTerminada` es `true`, mensaje de fin de run en su lugar (sin pantalla de Game Over dedicada todavía).
+- Al completarse: banner de Victoria/Derrota y botón "Continuar" → `volverAlMapa()`. Si `runTerminada` es `true`, el botón dice "Ver resultado" y navega a `GameOverScreen` en su lugar (ver [17](./17-game-over.md)).
 
 ## `components/Event/EventScreen.jsx` (nuevo)
 

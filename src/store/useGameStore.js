@@ -136,7 +136,7 @@ export const useGameStore = create((set, get) => ({
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
   mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
-  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' — qué pantalla debe mostrar la UI ahora mismo
+  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'gameover' — qué pantalla debe mostrar la UI ahora mismo
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
   tiendaActual: null, // { consumibles, gratuito, reclutables, nivelReclutamiento } — oferta fijada al entrar al nodo
@@ -336,6 +336,11 @@ export const useGameStore = create((set, get) => ({
   /** Vuelve del resultado de combate/evento/tienda al mapa. */
   volverAlMapa() {
     set({ pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null, tiendaActual: null });
+  },
+
+  /** Tras ver el resultado del combate final de la run, pasa a la pantalla de Game Over. */
+  irAGameOver() {
+    set({ pantalla: 'gameover' });
   },
 
   /** Compra uno de los consumibles ofrecidos en la tienda actual. Se puede comprar más de uno. */

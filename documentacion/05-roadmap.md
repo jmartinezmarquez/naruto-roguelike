@@ -25,6 +25,7 @@
 - [x] Pantalla de Evento: 12 eventos canónicos, pistas automáticas por elección, sin combate.
 - [x] Pantalla de Tienda: consumibles, objeto gratuito, reclutamiento exclusivo — ver [15](./15-tienda.md).
 - [x] Nodo de descanso auto-resuelto (cura y revive a todo el equipo).
+- [x] Pantalla de Game Over dedicada, con el estado final del equipo — ver [17](./17-game-over.md).
 
 **Diseño preparado, sin implementar**
 - [x] Sistema de logros/meta-progresión (`achievements-DISEÑO.json`).
@@ -36,11 +37,10 @@
 
 ## Próximos pasos (en orden sugerido)
 
-1. **Pantalla de Game Over dedicada** (hoy es un mensaje dentro de `CombatScreen`).
-2. **Sistema de logros real** (esquema ya diseñado).
-3. **Flujo real de `App.jsx`** — selección de personajes iniciales → mapa → ... (hoy arranca fijo con Naruto/Sasuke/Sakura).
-4. **Conectar `guardarRun`/`cargarRun`** a un hook de autoguardado tras cada nodo.
-5. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en [11](./11-progresion-y-arcos.md)).
+1. **Sistema de logros real** (esquema ya diseñado).
+2. **Flujo real de `App.jsx`** — selección de personajes iniciales → mapa → ... (hoy arranca fijo con Naruto/Sasuke/Sakura).
+3. **Conectar `guardarRun`/`cargarRun`** a un hook de autoguardado tras cada nodo.
+4. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en [11](./11-progresion-y-arcos.md)).
 
 ## Backlog (post-MVP)
 
