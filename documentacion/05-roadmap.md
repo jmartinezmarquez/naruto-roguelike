@@ -47,15 +47,16 @@
 - [x] Reclutamiento vía tienda y jerarquía de rareza (ver [14](./14-reclutamiento-y-rareza.md)) — esto ya se implementó, este punto queda como referencia histórica del diseño previo.
 
 **Calidad**
-- [x] Testing con Vitest: 86 tests sobre motor y store — ver [16](./16-testing.md).
+- [x] Testing con Vitest: 87 tests sobre motor y store — ver [16](./16-testing.md).
 
 **Bugfixing y ajustes de diseño (ronda completa)**
 - [x] Selección de personaje: ficha completa siempre visible (no hover), la run arranca al tocar
   una tarjeta — ver [19](./19-seleccion-de-personaje.md).
 - [x] Líneas del mapa con 4 estados (recorrido, elegible ahora, descartado en negro, fuera de
   alcance con puntos) y nodos visitados en greyed out con `title="Visitado"` — ver [13](./13-ui-mapa-y-combate.md).
-- [x] Nodo de descanso garantizado en al menos un camino completo hasta el jefe —
-  `garantizarDescansoEnAlgunCamino` en `mapGenerator.js`, ver [10](./10-generador-de-mapa.md).
+- [x] Nodo de descanso garantizado en el piso inmediatamente anterior al jefe final (no en
+  cualquier punto de un camino trazado — ese primer intento no se parecía al patrón real de un
+  Pokelike) — `garantizarDescansoAntesDelJefe` en `mapGenerator.js`, ver [10](./10-generador-de-mapa.md).
 - [x] Daño del jutsu: se muestra el poder base (`jutsu.danoBase`) en vez de un daño estimado
   calculado, estilo Pokémon — ver [19](./19-seleccion-de-personaje.md).
 - [x] Menú de iconos (Logros, Pantalla completa, Reiniciar Run) junto al mapa — `MenuIconos` en
@@ -63,6 +64,9 @@
 - [x] Diagnosticado (no es un bug de código): en País de las Olas solo aparecen reclutables los
   jefes ya desbloqueados por logro — el arco no tiene roster propio a propósito, y el roster real
   vive en el arco 2, inalcanzable hasta encadenar arcos (punto 1 de abajo) — ver [15](./15-tienda.md).
+  **Actualización**: los "inicial" no elegidos al empezar la run también se pueden reclutar en
+  cualquier tienda, incluida la del primer arco — así siempre se puede formar equipo de 3 aunque
+  no haya ningún logro desbloqueado todavía.
 - [x] Efectos de estado de jutsu desactivados para el MVP (`efectoEstado: null` en todos los datos)
   — el motor sigue soportándolos tal cual si se rellenan en el futuro — ver [09](./09-motor-engine.md).
 - [x] Toast de curación (nodo de descanso y eventos de curación) que se desvanece solo, en vez del
@@ -70,6 +74,8 @@
 - [x] XP: un personaje que cae DURANTE el combate actual (rondas encadenadas) sí gana su XP de esa
   victoria; uno que ya estaba caído de un combate anterior no gana nada hasta curarse — ver
   [09](./09-motor-engine.md).
+- [x] El mapa cabe siempre en el viewport sin scroll (escalado con `ResizeObserver`, estilo
+  Pokelike) — ver [13](./13-ui-mapa-y-combate.md).
 
 ## Próximos pasos (en orden sugerido)
 

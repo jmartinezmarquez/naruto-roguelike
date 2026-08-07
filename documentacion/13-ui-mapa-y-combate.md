@@ -40,6 +40,15 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
   un asset externo. 4 estados igual de diferenciados que las aristas: nodo actual (anillo sello),
   visitado (greyed out + escala de grises, `title="Visitado"`), disponible (brillante, clicable),
   fuera de alcance (muy tenue + escala de grises, no clicable).
+- **Cabe siempre en el viewport, sin scroll** (estilo Pokelike: su `<svg>` escala nativamente vía
+  `viewBox` + `width:100%;height:100%`). Como aquí los nodos son `<button>` de verdad superpuestos
+  al SVG (no vive todo dentro del propio SVG), no se puede usar ese truco nativo directamente —
+  en su lugar, `MapScreen` mide con `ResizeObserver` el espacio disponible del contenedor central
+  (columna entre el panel de equipo y la leyenda) y aplica un `transform: scale(...)` al bloque
+  entero SVG+nodos, calculado como `Math.min(anchoDisponible / ANCHO, altoDisponible / alturaLienzo)`.
+  El wrapper exterior se dimensiona ya al tamaño escalado (`ANCHO*escala`/`alturaLienzo*escala`) para
+  que el layout no deje hueco en blanco. La página entera es `h-screen overflow-hidden` (ya no
+  `min-h-screen`) — todo el contenido tiene que caber, en vez de crecer y scrollear.
 - **Tira de HP del equipo**: muestra cada personaje con nivel, barra de HP real (vía el selector `obtenerHpMaximo` del store) y si está derrotado — necesario ahora que el HP persiste entre combates, para que el jugador sepa cuándo curarse. Cada entrada envuelta en `PersonajeHoverCard` (ver más abajo).
 - **`RuedaChakra`**: pictograma del ciclo de ventajas de chakra, debajo de la leyenda del mapa —
   ver [19 - Selección de personaje](./19-seleccion-de-personaje.md).

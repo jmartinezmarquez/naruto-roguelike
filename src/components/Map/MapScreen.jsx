@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import personajesData from '../../data/characters.json';
 import typesData from '../../data/types.json';
@@ -357,6 +357,31 @@ export default function MapScreen() {
 
   const posiciones = useMemo(() => (mapa ? calcularPosiciones(mapa) : {}), [mapa]);
   const disponibles = useMemo(() => new Set(obtenerNodosDisponibles()), [mapa, nodoActualId]);
+  const alturaLienzo = mapa ? ALTO_POR_PISO * mapa.pisos.length : 0;
+
+  // Escala el lienzo (SVG + nodos) para que quepa en el espacio disponible
+  // sin scroll, como el mapa de Pokelike (viewBox que se ajusta al
+  // contenedor) — pero manteniendo los nodos como <button> normales del DOM
+  // en vez de moverlos dentro del SVG, así que se escala todo el bloque con
+  // un transform en vez de depender del escalado nativo de un viewBox.
+  const contenedorRef = useRef(null);
+  const [escala, setEscala] = useState(1);
+
+  useLayoutEffect(() => {
+    const contenedor = contenedorRef.current;
+    if (!contenedor || !mapa) return undefined;
+
+    function recalcular() {
+      const { clientWidth, clientHeight } = contenedor;
+      if (clientWidth === 0 || clientHeight === 0) return;
+      setEscala(Math.min(clientWidth / ANCHO, clientHeight / alturaLienzo));
+    }
+
+    recalcular();
+    const observer = new ResizeObserver(recalcular);
+    observer.observe(contenedor);
+    return () => observer.disconnect();
+  }, [mapa, alturaLienzo]);
 
   if (!mapa) {
     return (
@@ -366,88 +391,91 @@ export default function MapScreen() {
     );
   }
 
-  const alturaLienzo = ALTO_POR_PISO * mapa.pisos.length;
-
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 relative">
+    <div className="h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
       <MenuIconos abrirLogros={abrirLogros} reiniciarRun={reiniciarRun} />
 
-      <header className="text-center mb-6">
+      <header className="text-center mb-2 shrink-0">
         <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Arco actual</p>
         <h1 className="font-display text-3xl font-bold text-pergamino-100">
           {arcoActualDatos?.nombre}
         </h1>
       </header>
 
-      <div className="flex justify-center items-start gap-6 max-w-4xl mx-auto">
+      <div className="flex-1 min-h-0 flex justify-center items-start gap-6 max-w-4xl mx-auto w-full">
         <PanelEquipo equipo={equipo} obtenerHpMaximo={obtenerHpMaximo} reordenarEquipo={reordenarEquipo} />
 
-        <div className="overflow-x-auto">
-          <div className="relative mx-auto" style={{ width: ANCHO, height: alturaLienzo }}>
-            <svg className="absolute inset-0 pointer-events-none" width={ANCHO} height={alturaLienzo}>
-              {Object.values(mapa.nodos).flatMap((nodo) =>
-                nodo.conexiones.map((destinoId) => {
-                  const origen = posiciones[nodo.id];
-                  const destino = posiciones[destinoId];
-                  if (!origen || !destino) return null;
+        <div ref={contenedorRef} className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden">
+          <div style={{ width: ANCHO * escala, height: alturaLienzo * escala }}>
+            <div
+              className="relative"
+              style={{ width: ANCHO, height: alturaLienzo, transform: `scale(${escala})`, transformOrigin: 'top left' }}
+            >
+              <svg className="absolute inset-0 pointer-events-none" width={ANCHO} height={alturaLienzo}>
+                {Object.values(mapa.nodos).flatMap((nodo) =>
+                  nodo.conexiones.map((destinoId) => {
+                    const origen = posiciones[nodo.id];
+                    const destino = posiciones[destinoId];
+                    if (!origen || !destino) return null;
 
-                  // Cuatro estados de camino, en orden de prioridad:
-                  // 1) recorrido de verdad (rojo sello) — solo hay un nodo
-                  //    visitado por piso, así que si origen Y destino están
-                  //    visitados, esta es LA arista que se tomó entre ellos.
-                  // 2) elegible ahora mismo desde donde estás (pergamino sólido).
-                  // 3) descartado — origen ya visitado (piso ya superado) pero
-                  //    esta rama en concreto no se tomó: ya no se puede volver.
-                  // 4) todavía fuera de alcance, más adelante en el mapa (punteado).
-                  const recorrido = nodo.visitado && mapa.nodos[destinoId]?.visitado;
-                  const disponibleAhora = !recorrido && nodo.id === nodoActualId && disponibles.has(destinoId);
-                  const descartado = !recorrido && !disponibleAhora && nodo.visitado;
+                    // Cuatro estados de camino, en orden de prioridad:
+                    // 1) recorrido de verdad (rojo sello) — solo hay un nodo
+                    //    visitado por piso, así que si origen Y destino están
+                    //    visitados, esta es LA arista que se tomó entre ellos.
+                    // 2) elegible ahora mismo desde donde estás (pergamino sólido).
+                    // 3) descartado — origen ya visitado (piso ya superado) pero
+                    //    esta rama en concreto no se tomó: ya no se puede volver.
+                    // 4) todavía fuera de alcance, más adelante en el mapa (punteado).
+                    const recorrido = nodo.visitado && mapa.nodos[destinoId]?.visitado;
+                    const disponibleAhora = !recorrido && nodo.id === nodoActualId && disponibles.has(destinoId);
+                    const descartado = !recorrido && !disponibleAhora && nodo.visitado;
 
-                  let stroke = 'var(--color-pergamino-100)';
-                  let strokeOpacity = 0.15;
-                  let strokeWidth = 1.5;
-                  let strokeDasharray;
+                    let stroke = 'var(--color-pergamino-100)';
+                    let strokeOpacity = 0.15;
+                    let strokeWidth = 1.5;
+                    let strokeDasharray;
 
-                  if (recorrido) {
-                    stroke = 'var(--color-sello-500)';
-                    strokeOpacity = 0.8;
-                    strokeWidth = 2.5;
-                  } else if (disponibleAhora) {
-                    strokeOpacity = 0.9;
-                    strokeWidth = 2;
-                  } else if (descartado) {
-                    stroke = 'var(--color-tinta-950)';
-                    strokeOpacity = 0.7;
-                  } else {
-                    strokeDasharray = '4 4';
-                  }
+                    if (recorrido) {
+                      stroke = 'var(--color-sello-500)';
+                      strokeOpacity = 0.8;
+                      strokeWidth = 2.5;
+                    } else if (disponibleAhora) {
+                      strokeOpacity = 0.9;
+                      strokeWidth = 2;
+                    } else if (descartado) {
+                      stroke = 'var(--color-tinta-950)';
+                      strokeOpacity = 0.7;
+                    } else {
+                      strokeDasharray = '4 4';
+                    }
 
-                  return (
-                    <path
-                      key={`${nodo.id}-${destinoId}`}
-                      d={`M ${origen.x} ${origen.y} C ${origen.x} ${(origen.y + destino.y) / 2}, ${destino.x} ${(origen.y + destino.y) / 2}, ${destino.x} ${destino.y}`}
-                      fill="none"
-                      stroke={stroke}
-                      strokeOpacity={strokeOpacity}
-                      strokeWidth={strokeWidth}
-                      strokeDasharray={strokeDasharray}
-                    />
-                  );
-                }),
-              )}
-            </svg>
+                    return (
+                      <path
+                        key={`${nodo.id}-${destinoId}`}
+                        d={`M ${origen.x} ${origen.y} C ${origen.x} ${(origen.y + destino.y) / 2}, ${destino.x} ${(origen.y + destino.y) / 2}, ${destino.x} ${destino.y}`}
+                        fill="none"
+                        stroke={stroke}
+                        strokeOpacity={strokeOpacity}
+                        strokeWidth={strokeWidth}
+                        strokeDasharray={strokeDasharray}
+                      />
+                    );
+                  }),
+                )}
+              </svg>
 
-            {Object.values(mapa.nodos).map((nodo) => (
-              <NodoMapa
-                key={nodo.id}
-                nodo={nodo}
-                posicion={posiciones[nodo.id]}
-                disponible={disponibles.has(nodo.id)}
-                visitado={nodo.visitado}
-                esActual={nodo.id === nodoActualId}
-                onClick={avanzarANodo}
-              />
-            ))}
+              {Object.values(mapa.nodos).map((nodo) => (
+                <NodoMapa
+                  key={nodo.id}
+                  nodo={nodo}
+                  posicion={posiciones[nodo.id]}
+                  disponible={disponibles.has(nodo.id)}
+                  visitado={nodo.visitado}
+                  esActual={nodo.id === nodoActualId}
+                  onClick={avanzarANodo}
+                />
+              ))}
+            </div>
           </div>
         </div>
 

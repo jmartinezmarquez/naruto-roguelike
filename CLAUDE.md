@@ -49,7 +49,8 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   de combate.
 - **Sistema de tipos**: 5 naturalezas de chakra (katon, fuuton, raiton, doton, suiton), tabla en `src/data/types.json`.
 - **Generación de mapa**: forma de diamante por piso (`anchoDelPiso`), piso 1 nunca tiene
-  `descanso` ni `tienda`, máximo 2 nodos de `tienda` por piso.
+  `descanso` ni `tienda`, máximo 2 nodos de `tienda` por piso, y el piso inmediatamente anterior al
+  jefe final siempre tiene un nodo de `descanso` (`garantizarDescansoAntesDelJefe`).
 
 ## Convenciones de Git
 
@@ -82,7 +83,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - [x] `App.jsx` real: `CharacterSelectScreen` (elige 1 personaje inicial, roster = "inicial" + desbloqueados por logro; el resto del equipo se completa reclutando) sustituye al arranque fijo con Naruto/Sasuke/Sakura — ver `documentacion/19-seleccion-de-personaje.md`.
 - [x] Reclutar con el equipo lleno deja elegir a quién reemplazar (`ShopScreen.jsx` → `ElegirReemplazo`, `reclutarPersonaje(id, nivel, idAReemplazar)`) — ver `documentacion/19-seleccion-de-personaje.md`.
 - [x] Tarjeta de hover con stats/tipo/jutsu/HP en todo sitio donde se muestra un personaje (`components/common/PersonajeHoverCard.jsx` / `FichaPersonaje`), y pictograma del ciclo de ventaja de chakra en el mapa (`RuedaChakra`).
-- [x] Ronda de bugfixing/ajustes de diseño (ver `documentacion/05-roadmap.md`, sección "Hecho — Bugfixing"): nivel de reclutamiento equilibrado con el equipo, líneas del mapa con 4 estados, nodo de descanso garantizado en al menos un camino, XP de caídos, efectos de estado desactivados, menú de iconos, toast de curación, selección de personaje con ficha completa.
+- [x] Ronda de bugfixing/ajustes de diseño (ver `documentacion/05-roadmap.md`, sección "Hecho — Bugfixing"): nivel de reclutamiento equilibrado con el equipo, líneas del mapa con 4 estados, nodo de descanso garantizado en el piso anterior al jefe, XP de caídos, efectos de estado desactivados, menú de iconos, toast de curación, selección de personaje con ficha completa, mapa escalado con `ResizeObserver` para caber sin scroll.
 - [x] Los "inicial" (Naruto/Sasuke/Sakura) no elegidos al empezar la run se pueden reclutar en
   cualquier tienda, incluida la del primer arco (que no tiene `personajesReclutablesIds` propio) —
   así siempre se puede formar un equipo de 3 aunque no se haya desbloqueado ningún logro todavía.

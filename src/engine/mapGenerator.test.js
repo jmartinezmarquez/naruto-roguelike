@@ -67,20 +67,14 @@ describe('generarMapa', () => {
     expect(mapa.nodosIniciales).toEqual(mapa.pisos[0]);
   });
 
-  it('al menos un camino completo hasta el jefe pasa por un nodo de descanso', () => {
+  it('el piso inmediatamente anterior al jefe final siempre tiene un nodo de descanso', () => {
     // Se repite varias veces por la aleatoriedad del sorteo de tipos —
-    // mismo motivo que el test del piso 1. Traza el camino "primera
-    // conexión en cada paso", igual que garantizarDescansoEnAlgunCamino.
+    // mismo motivo que el test del piso 1.
     for (let i = 0; i < 30; i++) {
       const mapa = generarMapa(arcoDePrueba);
-      const camino = [];
-      let actualId = mapa.nodosIniciales[0];
-      while (actualId) {
-        camino.push(actualId);
-        actualId = mapa.nodos[actualId].conexiones[0] ?? null;
-      }
-      const tiposDelCamino = camino.map((id) => mapa.nodos[id].tipo);
-      expect(tiposDelCamino).toContain('descanso');
+      const pisoPrevio = mapa.pisos[arcoDePrueba.pisoJefeFinal - 2];
+      const tiposDelPiso = pisoPrevio.map((id) => mapa.nodos[id].tipo);
+      expect(tiposDelPiso).toContain('descanso');
     }
   });
 });
