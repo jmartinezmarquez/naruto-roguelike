@@ -19,15 +19,20 @@ nodo es de tipo `tienda`.
 ## Precio y stats por rareza
 
 Reutiliza el diseño ya preparado en `config.economia.precioReclutamientoPorRareza`
-(`comun: 40, raro: 70, legendario: 120`) y `characters.json[].rareza` — nada nuevo que diseñar,
-ya estaba listo desde la sesión de reclutamiento/rareza (ver
-[14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md)).
+(`inicial: 40, comun: 40, raro: 70, legendario: 120`) y `characters.json[].rareza` — nada nuevo que
+diseñar, ya estaba listo desde la sesión de reclutamiento/rareza (ver
+[14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md)). `inicial` se añadió al mismo precio
+que `comun` cuando los "inicial" no elegidos empezaron a poder reclutarse (ver más abajo).
 
 ## Nivel de reclutamiento
 
-El personaje reclutado en tienda entra al nivel del piso donde está la tienda
-(`calcularNivelPorPiso(nodo.piso, arco)`), igual que un reclutamiento tardío de recompensa de
-jefe — no entra indefenso si es tarde en la run.
+El personaje reclutado entra al nivel del miembro más fuerte del equipo actual
+(`Math.max(...equipo.map(p => p.nivel))`, calculado en `avanzarANodo` al entrar al nodo) — **no**
+al nivel del piso (`calcularNivelPorPiso`), que se usó al principio y daba reclutas muy por debajo
+del resto del equipo nada más empezar la run a jugarse en serio (p. ej. nivel 2 con el equipo ya en
+nivel 8). Si además reemplaza a alguien (equipo lleno), suma `config.equipo.bonusNivelAlReemplazar`
+— reemplazar da una ventaja real, no es solo lateral a rellenar un hueco vacío. Ver
+[19 - Selección de personaje](./19-seleccion-de-personaje.md).
 
 ## Acciones del store
 
@@ -50,6 +55,24 @@ reemplazado sale de la run tal cual estaba, no hay banquillo aparte donde guarda
 En `ShopScreen.jsx`, pulsar "Reclutar" con el equipo lleno abre un panel `ElegirReemplazo` con los
 3 miembros actuales (cada uno con su tarjeta de hover, igual que en cualquier otro sitio donde se
 muestra un personaje) para elegir a quién sacar, o cancelar sin cobrar nada.
+
+## Quién puede aparecer para reclutar en el primer arco
+
+`pais_de_las_olas.personajesReclutablesIds` está vacío a propósito (ver
+[19 - Selección de personaje](./19-seleccion-de-personaje.md)) — el primer arco no tiene ningún
+recluta "normal" propio. `generarOfertaTienda` construye el pool de reclutables con tres fuentes:
+
+1. `arcoActualDatos.personajesReclutablesIds` (vacío en País de las Olas).
+2. Personajes desbloqueados por logro (`desbloquearPersonajeReclutable`) — p. ej. Haku o Zabuza si
+   ya se derrotaron en una run anterior.
+3. **Los personajes `rareza: 'inicial'` que NO se eligieron al empezar la run** (Naruto, Sasuke,
+   Sakura menos el elegido). Sin esto, un jugador que nunca ha desbloqueado ningún logro no podría
+   formar un equipo de 3 hasta llegar al segundo arco — con esto, siempre hay 2 candidatos válidos
+   para completar el equipo aunque sea la primerísima run.
+
+El resto del roster "normal" (Rock Lee, Neji, etc.) vive en `examen_chunin.personajesReclutablesIds`,
+inalcanzable hoy porque los arcos todavía no están encadenados en una sola run (`App.jsx` solo
+arranca `pais_de_las_olas`, ver el punto de encadenar arcos en [05 - Roadmap](./05-roadmap.md)).
 
 ## Dirección visual
 

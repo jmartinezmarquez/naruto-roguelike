@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"console.log\\(typeof localStorage\\)\")",
-      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('src/data/achievements.json','utf8'\\)\\); console.log\\('valid json'\\)\")"
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('src/data/achievements.json','utf8'\\)\\); console.log\\('valid json'\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('src/data/characters.json','utf8'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('src/data/enemies.json','utf8'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('src/data/common-enemies.json','utf8'\\)\\); console.log\\('valid json x3'\\)\")"
     ]
   }
 }

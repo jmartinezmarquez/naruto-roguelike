@@ -123,7 +123,32 @@ export function generarMapa(arco) {
     });
   }
 
+  garantizarDescansoAntesDelJefe(nodos, pisos, arco);
+
   return { arcoId: arco.id, pisos, nodos, nodosIniciales: pisos[0] };
+}
+
+/**
+ * Garantiza que el piso inmediatamente ANTERIOR al jefe final tenga un nodo
+ * de tipo `descanso` — igual que el Centro Pokémon justo antes del gimnasio
+ * en un Pokelike — para que el jugador siempre pueda curar a todo el equipo
+ * antes de la pelea que más importa, sin depender del azar del sorteo de
+ * tipos de nodo. Si ese piso solo tiene un nodo y ya está reservado para
+ * `miniJefe`, no se fuerza nada (un nodo no puede ser dos tipos a la vez).
+ */
+function garantizarDescansoAntesDelJefe(nodos, pisos, arco) {
+  const indicePisoPrevio = arco.pisoJefeFinal - 2; // pisos[] es 0-index; el piso N vive en pisos[N-1]
+  const idsPisoPrevio = pisos[indicePisoPrevio];
+  if (!idsPisoPrevio) return; // arco de un solo piso (no debería pasar, pero por seguridad)
+
+  const yaTieneDescanso = idsPisoPrevio.some((id) => nodos[id].tipo === 'descanso');
+  if (yaTieneDescanso) return;
+
+  const candidatos = idsPisoPrevio.filter((id) => nodos[id].tipo !== 'miniJefe');
+  if (candidatos.length === 0) return;
+
+  const idElegido = candidatos[numeroAleatorioEntre(0, candidatos.length - 1)];
+  nodos[idElegido].tipo = 'descanso';
 }
 
 /**

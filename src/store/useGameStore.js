@@ -11,14 +11,24 @@ import eventosData from '../data/events.json';
 import itemsData from '../data/items.json';
 import enemiesData from '../data/enemies.json';
 import achievementsData from '../data/achievements.json';
+import arcoPaisDeLasOlas from '../data/arcs/pais-de-las-olas.json';
+import arcoExamenChunin from '../data/arcs/examen-chunin.json';
+import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
+import { calcularBonificacionDeObjetoEquipado } from '../engine/items';
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
+
+// Orden fijo de los 3 arcos del MVP: al derrotar al jefe final de uno, la
+// run continúa automáticamente con el siguiente en vez de terminar ahí. El
+// último (Pain) lleva `recompensa.finDeLaRun: true` en enemies.json — esa es
+// la señal real de "esto ya es el final", no "ser el último de esta lista".
+const ORDEN_ARCOS = [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain];
 
 /**
  * Busca los datos base (fijos) de un personaje por su id: primero en
@@ -35,17 +45,25 @@ function encontrarPersonajeBase(id) {
   throw new Error(`Personaje no encontrado en characters.json ni como jefe desbloqueable por logro: ${id}`);
 }
 
-/** Datos base del personaje con sus bonificaciones permanentes ya sumadas a statsBase. */
+/**
+ * Datos base del personaje con sus bonificaciones permanentes (evento
+ * `mejoraPermanenteAleatoria`) Y la bonificación del objeto que lleve
+ * equipado (`objetoEquipadoId`, ver `equiparObjeto`) ya sumadas a statsBase.
+ * El objeto equipado es "de verdad" — se relee de `itemsData` cada vez, no
+ * se hornea en la instancia, así que equipar/desequipar/reemplazar se nota
+ * al instante sin tener que tocar nada más.
+ */
 function personajeBaseConBonificaciones(instancia) {
   const base = encontrarPersonajeBase(instancia.id);
   const b = instancia.bonificaciones ?? { ataque: 0, defensa: 0, velocidad: 0, hp: 0 };
+  const eq = calcularBonificacionDeObjetoEquipado(instancia.objetoEquipadoId, itemsData.objetos);
   return {
     ...base,
     statsBase: {
-      hp: base.statsBase.hp + b.hp,
-      ataque: base.statsBase.ataque + b.ataque,
-      defensa: base.statsBase.defensa + b.defensa,
-      velocidad: base.statsBase.velocidad + b.velocidad,
+      hp: base.statsBase.hp + b.hp + eq.hp,
+      ataque: base.statsBase.ataque + b.ataque + eq.ataque,
+      defensa: base.statsBase.defensa + b.defensa + eq.defensa,
+      velocidad: base.statsBase.velocidad + b.velocidad + eq.velocidad,
     },
   };
 }
@@ -64,9 +82,21 @@ function crearInstanciaPersonaje(id, nivel = 1) {
     derrotado: false,
     hpActual: 0, // se rellena justo debajo, necesita el resto de campos ya puestos
     bonificaciones: { ataque: 0, defensa: 0, velocidad: 0, hp: 0 },
+    objetoEquipadoId: null, // id de items.json equipado, o null — ver equiparObjeto/desequiparObjeto
   };
   instanciaBase.hpActual = calcularHpMaximo(instanciaBase);
   return instanciaBase;
+}
+
+/** Convierte el formato de porcentaje de items.json ("40porciento") a la fracción 0.4. */
+function porcentajeDesdeTexto(cantidadTexto) {
+  return parseInt(cantidadTexto, 10) / 100;
+}
+
+/** Objeto equipado por una instancia, o null si no lleva nada (o el id no se encuentra). */
+function objetoEquipadoDe(instancia) {
+  if (!instancia.objetoEquipadoId) return null;
+  return itemsData.objetos.find((o) => o.id === instancia.objetoEquipadoId) ?? null;
 }
 
 /**
@@ -107,7 +137,7 @@ function elegirVariosAlAzar(array, n) {
 
 /**
  * Genera la oferta de un nodo de tienda, al estilo Slay the Spire: 2
- * consumibles comprables, 1 objeto pasivo gratuito, y 2 personajes
+ * consumibles comprables, 1 objeto equipable gratuito, y 2 personajes
  * reclutables entre los que solo se puede elegir uno (al reclutar uno se
  * descarta el otro). nivelReclutamiento: nivel al que entraría el reclutado,
  * el del piso donde está la tienda (igual que un reclutamiento de recompensa
@@ -117,17 +147,25 @@ function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) 
   const consumiblesDisponibles = itemsData.objetos.filter(
     (o) => o.tipo === 'consumible' && o.precioTienda !== null,
   );
-  const pasivosDisponibles = itemsData.objetos.filter(
-    (o) => o.tipo === 'pasivo' && o.precioTienda !== null,
+  const equipablesDisponibles = itemsData.objetos.filter(
+    (o) => o.tipo === 'equipable' && o.precioTienda !== null,
   );
 
   const idsDesbloqueadosPorLogro = obtenerPersonajesReclutablesDesbloqueados(
     achievementsData.logros,
     useAchievementsStore.getState().logrosDesbloqueados,
   );
+  // Los "inicial" (Naruto/Sasuke/Sakura) que NO se eligieron al empezar la
+  // run también se pueden reclutar en cualquier tienda — si no, en el primer
+  // arco (sin personajesReclutablesIds propio) sería imposible formar un
+  // equipo de 3 sin haber desbloqueado ya algún logro en una run anterior.
+  const idsInicialesNoElegidos = personajesData.personajes
+    .filter((p) => p.rareza === 'inicial')
+    .map((p) => p.id);
   const idsReclutablesTotal = [
     ...(arcoActualDatos.personajesReclutablesIds ?? []),
     ...idsDesbloqueadosPorLogro,
+    ...idsInicialesNoElegidos,
   ];
 
   const idsEnEquipo = new Set(equipoActual.map((p) => p.id));
@@ -141,7 +179,7 @@ function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) 
 
   return {
     consumibles: elegirVariosAlAzar(consumiblesDisponibles, 2).map((o) => o.id),
-    gratuito: elegirVariosAlAzar(pasivosDisponibles, 1)[0]?.id ?? null,
+    gratuito: elegirVariosAlAzar(equipablesDisponibles, 1)[0]?.id ?? null,
     reclutables: elegirVariosAlAzar(reclutablesDisponibles, 2),
     nivelReclutamiento,
   };
@@ -151,7 +189,7 @@ export const useGameStore = create((set, get) => ({
   // ---------- ESTADO ----------
   equipo: [], // instancias { id, nivel, xpActual, derrotado, hpActual, bonificaciones }, en orden de posición
   oro: 0,
-  inventario: [], // array de ids de items (pasivos obtenidos + consumibles sin usar)
+  inventario: [], // ids de items sin asignar: equipables sueltos + consumibles sin usar (los equipados viven en equipo[].objetoEquipadoId, no aquí)
   buffsTemporales: [], // [{ multiplicadores: {stat: x}, combatesRestantes }] — de eventos tipo "boost 3 combates"
   arcoActualId: null,
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
@@ -169,7 +207,7 @@ export const useGameStore = create((set, get) => ({
   // ---------- ACCIONES ----------
 
   /** Arranca una run nueva con hasta 3 personajes iniciales (config.equipo.tamanoMaximo). */
-  iniciarRun(personajesInicialesIds, arco) {
+  iniciarRun(personajesInicialesIds, arco = ORDEN_ARCOS[0]) {
     const tamanoMaximo = configGlobal.equipo.tamanoMaximo;
     const equipoInicial = personajesInicialesIds
       .slice(0, tamanoMaximo)
@@ -270,10 +308,12 @@ export const useGameStore = create((set, get) => ({
    * dejarle el sitio); sin ese id, no hace nada y devuelve false para que
    * la UI pueda pedírselo al jugador. Reemplazar da además
    * `bonusNivelAlReemplazar` de más — así reemplazar a alguien es mejor que
-   * simplemente rellenar un hueco vacío, no solo lateral.
+   * simplemente rellenar un hueco vacío, no solo lateral. Si el reemplazado
+   * llevaba algo equipado, el objeto vuelve al inventario — no desaparece
+   * con él.
    */
   reclutarPersonaje(id, nivelInicial = 1, idAReemplazar = null) {
-    const { equipo } = get();
+    const { equipo, inventario } = get();
     if (equipo.some((p) => p.id === id)) return false; // ya está en el equipo
 
     if (equipo.length < configGlobal.equipo.tamanoMaximo) {
@@ -285,11 +325,16 @@ export const useGameStore = create((set, get) => ({
     const indiceAReemplazar = equipo.findIndex((p) => p.id === idAReemplazar);
     if (indiceAReemplazar === -1) return false;
 
+    const reemplazado = equipo[indiceAReemplazar];
+    const inventarioActualizado = reemplazado.objetoEquipadoId
+      ? [...inventario, reemplazado.objetoEquipadoId]
+      : inventario;
+
     const nivelConBonus = nivelInicial + configGlobal.equipo.bonusNivelAlReemplazar;
     const nuevaInstancia = crearInstanciaPersonaje(id, nivelConBonus);
     const equipoActualizado = [...equipo];
     equipoActualizado[indiceAReemplazar] = nuevaInstancia;
-    set({ equipo: equipoActualizado });
+    set({ equipo: equipoActualizado, inventario: inventarioActualizado });
     return true;
   },
 
@@ -300,6 +345,82 @@ export const useGameStore = create((set, get) => ({
       .map((id) => equipo.find((p) => p.id === id))
       .filter(Boolean);
     set({ equipo: reordenado });
+  },
+
+  /**
+   * Equipa un objeto del inventario a un personaje del equipo — un hueco
+   * por personaje. Si ese personaje ya llevaba algo puesto, vuelve al
+   * inventario (se reemplaza, no se pierde). El objeto sale del inventario
+   * mientras esté equipado.
+   */
+  equiparObjeto(itemId, idPersonaje) {
+    const { inventario, equipo } = get();
+    if (!inventario.includes(itemId)) return false;
+    const item = itemsData.objetos.find((o) => o.id === itemId);
+    if (!item || item.tipo !== 'equipable') return false;
+    const indice = equipo.findIndex((p) => p.id === idPersonaje);
+    if (indice === -1) return false;
+
+    const anterior = equipo[indice].objetoEquipadoId;
+    // Quita solo UNA copia del itemId (no todas, por si hay más de una).
+    const posicionEnInventario = inventario.indexOf(itemId);
+    const inventarioActualizado = [
+      ...inventario.slice(0, posicionEnInventario),
+      ...inventario.slice(posicionEnInventario + 1),
+      ...(anterior ? [anterior] : []), // lo que llevaba antes vuelve al inventario
+    ];
+
+    const equipoActualizado = [...equipo];
+    equipoActualizado[indice] = { ...equipo[indice], objetoEquipadoId: itemId };
+    set({ equipo: equipoActualizado, inventario: inventarioActualizado });
+    return true;
+  },
+
+  /** Desequipa el objeto de un personaje, si lleva alguno — vuelve al inventario. */
+  desequiparObjeto(idPersonaje) {
+    const { equipo, inventario } = get();
+    const indice = equipo.findIndex((p) => p.id === idPersonaje);
+    if (indice === -1 || !equipo[indice].objetoEquipadoId) return false;
+
+    const equipoActualizado = [...equipo];
+    const itemId = equipo[indice].objetoEquipadoId;
+    equipoActualizado[indice] = { ...equipo[indice], objetoEquipadoId: null };
+    set({ equipo: equipoActualizado, inventario: [...inventario, itemId] });
+    return true;
+  },
+
+  /**
+   * Usa un objeto consumible del inventario sobre un personaje del equipo y
+   * gasta 1 copia. Hoy solo hay un efecto de consumible implementado:
+   * `curarPersonaje` (restaura un % de HP — también revive si estaba
+   * derrotado, a ese % de su HP máximo, no a HP completo).
+   */
+  usarConsumible(itemId, idPersonaje) {
+    const { inventario, equipo } = get();
+    if (!inventario.includes(itemId)) return false;
+    const item = itemsData.objetos.find((o) => o.id === itemId);
+    if (!item || item.tipo !== 'consumible') return false;
+    const indice = equipo.findIndex((p) => p.id === idPersonaje);
+    if (indice === -1) return false;
+    if (item.efecto.tipo !== 'curarPersonaje') return false; // ningún otro efecto de consumible implementado todavía
+
+    const objetivo = equipo[indice];
+    const hpMax = calcularHpMaximo(objetivo);
+    const curado = Math.min(
+      hpMax,
+      objetivo.hpActual + Math.round(hpMax * porcentajeDesdeTexto(item.efecto.cantidad)),
+    );
+    const equipoActualizado = [...equipo];
+    equipoActualizado[indice] = { ...objetivo, derrotado: false, hpActual: curado };
+
+    const posicionEnInventario = inventario.indexOf(itemId);
+    const inventarioActualizado = [
+      ...inventario.slice(0, posicionEnInventario),
+      ...inventario.slice(posicionEnInventario + 1),
+    ];
+
+    set({ equipo: equipoActualizado, inventario: inventarioActualizado });
+    return true;
   },
 
   /** El personaje en posición 1 vivo. null si todo el equipo está derrotado. */
@@ -323,6 +444,11 @@ export const useGameStore = create((set, get) => ({
     const rondas = [];
     let jugadorGanoFinal = false;
     let logrosDesbloqueados = [];
+    let arcoCompletado = false;
+    // Quiénes ya estaban caídos ANTES de este combate (no curados desde
+    // entonces) — esos no ganan XP al ganar. Quien caiga DURANTE este mismo
+    // combate (rondas encadenadas) sí ganó su XP, ya que participó.
+    const idsYaDerrotadosAntesDelCombate = new Set(get().equipo.filter((p) => p.derrotado).map((p) => p.id));
 
     // Como máximo tantas rondas como personajes en el equipo — no puede
     // haber más, cada ronda consume a un personaje (gana o cae).
@@ -367,11 +493,30 @@ export const useGameStore = create((set, get) => ({
       });
 
       if (jugadorGanoRonda) {
-        get()._aplicarVictoria(activo.id, luchadorJugador.hpActual, enemigoBase);
+        get()._aplicarVictoria(activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate);
         // Se desbloquean ya (persisten y afectan a tienda/inventario desde
         // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
         // cuando termine la animación, para no arruinar el suspense.
         logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase);
+
+        // ¿Este enemigo era el jefe final del arco en curso? Si además lleva
+        // recompensa.finDeLaRun (solo Pain la tiene), la run entera se ha
+        // ganado aquí mismo — se marca ya, antes de que la UI decida a qué
+        // pantalla ir tras la animación de combate.
+        const arcoEnCurso = get().arcoActualDatos;
+        arcoCompletado = enemigoBase.id === arcoEnCurso?.jefeFinalId;
+        if (arcoCompletado) {
+          // Estilo Slay the Spire: superar el jefe de un acto cura a todo el
+          // equipo por completo (y revive a quien hubiera caído), de regalo
+          // antes de pasar al siguiente arco — no hace falta ir a buscar un
+          // nodo de descanso justo después de la pelea más dura del arco.
+          get()._curarEquipoCompleto();
+          set({ avisoUltimoNodo: 'Equipo curado por completo al superar el arco.' });
+        }
+        if (arcoCompletado && enemigoBase.recompensa?.finDeLaRun) {
+          set({ runTerminada: true, runGanada: true });
+        }
+
         jugadorGanoFinal = true;
         break;
       } else {
@@ -383,7 +528,7 @@ export const useGameStore = create((set, get) => ({
 
     get()._consumirUsoBuffsTemporales();
 
-    const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados };
+    const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado };
     set({ ultimoResultadoCombate: resumen });
     return resumen;
   },
@@ -391,6 +536,34 @@ export const useGameStore = create((set, get) => ({
   /** Vuelve del resultado de combate/evento/tienda al mapa. */
   volverAlMapa() {
     set({ pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null, tiendaActual: null });
+  },
+
+  /**
+   * Tras derrotar al jefe final de un arco que NO era el último de la run,
+   * genera el mapa del siguiente arco y continúa — el equipo, oro,
+   * inventario y buffs se mantienen tal cual, solo cambia el arco. Si por
+   * lo que sea no hay un siguiente arco conocido (arco fuera de
+   * `ORDEN_ARCOS`, p. ej. en tests), no hace nada y devuelve false.
+   */
+  avanzarSiguienteArco() {
+    const { arcoActualId } = get();
+    const indiceActual = ORDEN_ARCOS.findIndex((a) => a.id === arcoActualId);
+    const siguienteArco = indiceActual === -1 ? null : ORDEN_ARCOS[indiceActual + 1];
+    if (!siguienteArco) return false;
+
+    set({
+      arcoActualId: siguienteArco.id,
+      arcoActualDatos: siguienteArco,
+      mapa: generarMapa(siguienteArco),
+      nodoActualId: null,
+      pantalla: 'mapa',
+      ultimoResultadoCombate: null,
+      eventoActual: null,
+      tiendaActual: null,
+      avisoUltimoNodo: null,
+      huboDerrotaEnEsteArco: false,
+    });
+    return true;
   },
 
   /** Tras ver el resultado del combate final de la run, pasa a la pantalla de Game Over. */
@@ -421,7 +594,7 @@ export const useGameStore = create((set, get) => ({
     return true;
   },
 
-  /** Reclama el objeto pasivo gratuito de la tienda actual (una sola vez por visita). */
+  /** Reclama el objeto equipable gratuito de la tienda actual (una sola vez por visita). */
   reclamarObjetoGratuitoTienda() {
     const { tiendaActual, inventario } = get();
     if (!tiendaActual || !tiendaActual.gratuito) return false;
@@ -474,8 +647,16 @@ export const useGameStore = create((set, get) => ({
     set({ buffsTemporales: actualizados });
   },
 
-  /** Interno: aplica XP, recompensas y persiste el HP final tras ganar un combate. */
-  _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase) {
+  /**
+   * Interno: aplica XP, recompensas y persiste el HP final tras ganar un
+   * combate. `idsYaDerrotadosAntesDelCombate`: quiénes ya estaban caídos
+   * antes de que este combate empezara — esos se saltan por completo (nada
+   * de XP hasta que se curen). Un personaje que cae DURANTE este mismo
+   * combate (rondas encadenadas y luego gana otro compañero) sí gana su XP
+   * de banquillo por haber participado, pero su HP se queda a 0 — ganar XP
+   * no debe "revivirlo" de regalo si sube de nivel.
+   */
+  _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase, idsYaDerrotadosAntesDelCombate) {
     const { equipo, oro, inventario } = get();
     const xpGanada = enemigoBase.recompensa?.xp ?? 20;
     const porcentajeBanquillo = configGlobal.progresion.porcentajeXpBanquillo;
@@ -484,14 +665,29 @@ export const useGameStore = create((set, get) => ({
         configGlobal.economia.oroPorCombateGanado.max) / 2,
     );
 
-    // El personaje activo gana la XP completa y su HP final persistido. El
-    // resto del equipo vivo gana un porcentaje de XP (no participó en el
-    // combate, así que su HP no cambia).
     const equipoActualizado = equipo.map((p) => {
-      if (p.derrotado) return p;
+      if (idsYaDerrotadosAntesDelCombate.has(p.id)) return p;
+
       const xpParaEste = p.id === idPersonaje ? xpGanada : Math.round(xpGanada * porcentajeBanquillo);
       const conXp = aplicarXpYActualizarHp(p, xpParaEste);
-      return p.id === idPersonaje ? { ...conXp, hpActual: hpFinalActivo } : conXp;
+
+      if (p.id === idPersonaje) {
+        const conHp = { ...conXp, hpActual: hpFinalActivo };
+        // Semilla del Sabio Ermitaño (curacionPostCombate): cura un % extra
+        // a quien la lleve equipada, justo tras ganar el combate.
+        const itemEquipado = objetoEquipadoDe(conHp);
+        if (itemEquipado?.efecto?.tipo === 'curacionPostCombate') {
+          const hpMax = calcularHpMaximo(conHp);
+          const curado = Math.min(
+            hpMax,
+            conHp.hpActual + Math.round(hpMax * porcentajeDesdeTexto(itemEquipado.efecto.cantidad)),
+          );
+          return { ...conHp, hpActual: curado };
+        }
+        return conHp;
+      }
+      if (p.derrotado) return { ...conXp, hpActual: 0 }; // cayó en este combate: gana XP, sigue a 0 HP
+      return conXp; // vivo y no participó: gana su XP de banquillo, HP sin cambios
     });
 
     const objetoGanado = enemigoBase.recompensa?.objetoGarantizado;
@@ -522,9 +718,30 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
-  /** Interno: marca al personaje como derrotado (HP a 0) y lo manda al final del orden. */
+  /**
+   * Interno: marca al personaje como derrotado (HP a 0) y lo manda al final
+   * del orden — SALVO que lleve equipado un objeto `revivirUnaVez`, en cuyo
+   * caso revive con `hpAlRevivir` HP en su lugar y el objeto se consume (no
+   * vuelve al inventario, "se consume al activarse"). El bucle de
+   * `jugarCombate` lo vuelve a poner como activo automáticamente — sigue
+   * siendo el mismo personaje, solo que sobrevivió por los pelos.
+   */
   _aplicarDerrota(idPersonaje) {
     const { equipo } = get();
+    const instancia = equipo.find((p) => p.id === idPersonaje);
+    const itemEquipado = instancia && objetoEquipadoDe(instancia);
+
+    if (itemEquipado?.efecto?.tipo === 'revivirUnaVez') {
+      set({
+        equipo: equipo.map((p) => (
+          p.id === idPersonaje
+            ? { ...p, hpActual: itemEquipado.efecto.hpAlRevivir, objetoEquipadoId: null }
+            : p
+        )),
+      });
+      return;
+    }
+
     const actualizado = equipo.map((p) =>
       p.id === idPersonaje ? { ...p, derrotado: true, hpActual: 0 } : p,
     );
@@ -581,7 +798,7 @@ export const useGameStore = create((set, get) => ({
           const curado = Math.min(hpMax, p.hpActual + Math.round(hpMax * efecto.cantidad));
           return { ...p, hpActual: curado };
         });
-        set({ equipo: equipoActualizado });
+        set({ equipo: equipoActualizado, avisoUltimoNodo: 'El equipo se ha recuperado.' });
         break;
       }
 

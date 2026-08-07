@@ -47,47 +47,79 @@
 - [x] Reclutamiento vía tienda y jerarquía de rareza (ver [14](./14-reclutamiento-y-rareza.md)) — esto ya se implementó, este punto queda como referencia histórica del diseño previo.
 
 **Calidad**
-- [x] Testing con Vitest: 81 tests sobre motor y store — ver [16](./16-testing.md).
+- [x] Testing con Vitest: 93 tests sobre motor y store — ver [16](./16-testing.md).
+
+**Bugfixing y ajustes de diseño (ronda completa)**
+- [x] Selección de personaje: ficha completa siempre visible (no hover), la run arranca al tocar
+  una tarjeta — ver [19](./19-seleccion-de-personaje.md).
+- [x] Líneas del mapa con 4 estados (recorrido, elegible ahora, descartado en negro, fuera de
+  alcance con puntos) y nodos visitados en greyed out con `title="Visitado"` — ver [13](./13-ui-mapa-y-combate.md).
+- [x] Nodo de descanso garantizado en el piso inmediatamente anterior al jefe final (no en
+  cualquier punto de un camino trazado — ese primer intento no se parecía al patrón real de un
+  Pokelike) — `garantizarDescansoAntesDelJefe` en `mapGenerator.js`, ver [10](./10-generador-de-mapa.md).
+- [x] Daño del jutsu: se muestra el poder base (`jutsu.danoBase`) en vez de un daño estimado
+  calculado, estilo Pokémon — ver [19](./19-seleccion-de-personaje.md).
+- [x] Menú de iconos (Logros, Pantalla completa, Reiniciar Run) junto al mapa — `MenuIconos` en
+  `MapScreen.jsx`. Sin "Ajustes" todavía, no hay ninguna opción real que poner ahí.
+- [x] Diagnosticado (no es un bug de código): en País de las Olas solo aparecen reclutables los
+  jefes ya desbloqueados por logro — el arco no tiene roster propio a propósito, y el roster real
+  vive en el arco 2, inalcanzable hasta encadenar arcos (punto 1 de abajo) — ver [15](./15-tienda.md).
+  **Actualización**: los "inicial" no elegidos al empezar la run también se pueden reclutar en
+  cualquier tienda, incluida la del primer arco — así siempre se puede formar equipo de 3 aunque
+  no haya ningún logro desbloqueado todavía.
+- [x] Efectos de estado de jutsu desactivados para el MVP (`efectoEstado: null` en todos los datos)
+  — el motor sigue soportándolos tal cual si se rellenan en el futuro — ver [09](./09-motor-engine.md).
+- [x] Toast de curación (nodo de descanso y eventos de curación) que se desvanece solo, en vez del
+  placeholder de texto fijo — `AvisoToast.jsx`.
+- [x] XP: un personaje que cae DURANTE el combate actual (rondas encadenadas) sí gana su XP de esa
+  victoria; uno que ya estaba caído de un combate anterior no gana nada hasta curarse — ver
+  [09](./09-motor-engine.md).
+- [x] El mapa cabe siempre en el viewport sin scroll (escalado con `ResizeObserver`, estilo
+  Pokelike) — ver [13](./13-ui-mapa-y-combate.md).
+
+**Arcos encadenados**
+- [x] Los 3 arcos se juegan en una sola run: al derrotar al jefe final de uno (Zabuza → Gaara →
+  Pain), la run continúa automáticamente con el siguiente en vez de terminar ahí. Derrotar a Pain
+  (único con `recompensa.finDeLaRun: true`) marca la run como ganada de verdad —
+  `GameOverScreen` ahora distingue victoria de derrota. Ver [20](./20-arcos-encadenados.md).
+  **Sin implementar a propósito**: el evento narrativo de transición entre arcos (hoy es un botón
+  directo "Continuar al siguiente arco", sin pausa) — queda anotado como posible mejora ahí mismo.
+- [x] Al derrotar al jefe final de un arco, todo el equipo se cura y revive por completo (estilo
+  Slay the Spire) antes de continuar — reutiliza `_curarEquipoCompleto`, mismo mecanismo que el
+  nodo de descanso. Ver [20](./20-arcos-encadenados.md).
+
+**Objetos y oro visibles, hover en nodos**
+- [x] `PanelObjetos` (`MapScreen.jsx`) debajo del panel de equipo: oro + inventario agrupado por
+  id con "×N", hover por objeto con descripción y efecto exacto en números (`ItemHoverCard`).
+- [x] `LeyendaMapa` (fija, siempre visible) sustituida por hover en cada nodo del mapa: qué es y
+  qué beneficio da, más su estado actual (visitado/aquí/fuera de alcance).
+- [x] Extraída la mecánica de hover a `components/common/HoverTooltip.jsx` (antes vivía duplicada
+  dentro de `PersonajeHoverCard`) — la reutilizan `PersonajeHoverCard`, `ItemHoverCard` y el hover
+  de nodo. Ver [13](./13-ui-mapa-y-combate.md).
+
+**Objetos equipables y consumibles (aplicación real de efectos)**
+- [x] El hueco de la sesión anterior (ningún objeto aplicaba su efecto de verdad) está resuelto —
+  se descartó el diseño original de "pasivo de todo el equipo" a favor de un sistema de equipo:
+  cada objeto no-consumible se asigna a un personaje concreto (`equiparObjeto`/`desequiparObjeto`),
+  solo beneficia a quien lo lleve puesto, y vuelve al inventario si lo desequipas o reemplazas a
+  ese personaje. `revivirUnaVez` y `curacionPostCombate` ya se disparan de verdad en combate; los
+  consumibles se usan desde `PanelObjetos` (`usarConsumible`). Ver [21](./21-objetos-equipables.md).
 
 ## Próximos pasos (en orden sugerido)
 
-1. **Bugfixing y ajustes de diseño puntuales** — a definir según lo que salga jugando (sin lista cerrada todavía).
-  - La seleccion de personaje debe tener el card completo y no solo el nombre + hover. Ademas deberia empezar la run en cuanto elegimos personaje. 
-  - El camino hecho en rojo está bien, pero los caminos a elegir desde el nodo en el que estamos deberian aparecer con una linea continua, mientras los caminos no accesibles deberian aparecer con una linea de puntos. Los caminos que dejamos atras y no hemos elegido deberian aparecer con una linea continua negra, simbolizando que ya no puedes volver. Los nodos ya visitados podrian tener en greyed out con un onHover "Visitado". 
-  - Los nodos antes del jefe final deberian contener al menos en un path un nodo de descanso, para que el usuario siempre tenga la posibilidad de curar a todo el equipo.
-  - El daño mostrado del jutsu es raro, creo que mejor seguir la formula de pokemon en la que enseñamos el daño base del jutsu pero el usuario confia en que los calculos esten bien hechos. 
-  - Donde esta el boton de logros podriamos tener un pequeño menu basado en iconos como pokelike. Logros, ajustes, pantalla completa, reiniciar run, etc. 
-  - En la tienda solo aparecen para reclutar Haku y Zabuza, no aparecen ninguno de los otros ninjas de la hoja, esto es un bug. 
-  - De momento, prefiero eliminar para el MVP los efectos de estado de todos los jutsus, añaden complejidad a los calculos y no creo que tenga sentido en todos los personajes. Dejalo apuntado como future improvement y haz que la arquitectura lo soporte en un futuro. 
-  - El nodo de descanso y los eventos de curacion deberían enseñar un toast diciendo que el equipo se ha recuperado correctamente en lugar del placeholder actual
-  - Los personajes caidos no deben recibir experiencia en proximos combates hasta que vuelvan a curarse. En el combate actual SI recibiran experiencia. 
-2. **Encadenar los 3 arcos en una sola run** (objetivo principal de la próxima sesión): al derrotar
-   al jefe final de un arco (nodo `jefe` — Zabuza, luego Gaara, luego Pain), generar el mapa del
-   siguiente arco automáticamente y continuar, en vez de terminar la run ahí. Hoy `App.jsx` solo
-   arranca `pais_de_las_olas` y no hay ninguna transición entre arcos implementada.
-   - De paso, considerar un **evento especial tras el jefe de cada arco** (antes de pasar al
-     siguiente) — una pausa narrativa/de transición entre actos, no solo saltar directo al mapa
-     siguiente. Encaja con el pedido de abajo de pensar mecánicas al estilo Slay the Spire.
-3. **Nodo de "reclutar" dedicado en el mapa** — ahora que la run empieza con 1 solo personaje (ver
+1. **Ajuste de nodos, "reclutar" dedicado en el mapa y cambio en la Tienda** — ahora que la run empieza con 1 solo personaje (ver
    [19](./19-seleccion-de-personaje.md)), reclutar ya no es un extra de la tienda, es una necesidad
-   central del run. Falta decidir en la propia sesión: ¿nodo propio con su propia oferta, o dar más
-   peso al reclutamiento dentro de la tienda existente? ¿Coste distinto al de tienda?
+   central del run. (ver [ReclutarLayout](./Reclutar-layout.png)) Asimismo, me gustaría hacer una Tienda parecida al evento Item de Pokeclicker. Que aparezcan tres cards en pantalla, con 3 objetos aleatorios, tanto consumibles o equipables, que el usuario puede comprar. Pero ya no habrá reclutamientos en Tienda ni objetos gratuitos. Solo los mini-bosses soltaran objetos gratuitos. Layout en (ver [LayoutTienda](./Tienda-layout.png))
 
-4. **Nodo de "Combate en cadena"**  — En Pokelike tenemos encuentros salvajes (1 solo enemigo), entrenadores (enemigos con mas de 1 encuentro uno detras de otro) y entrenadores de elite (Rival, con un equipo mas fuerte y mas combates en cadena). Nuestro mini-boss (Haku p.e) sería de este tercer tipo, y un combate con Genin Ninja sería el primer tipo. Para combates contra personajes nombrados (Zaku, Dosu, Rin, etc) quizá estaría bien añadirle uno o dos genin estandar para simbolizar un combate más largo. 
+3. **Nodo de "Combate en cadena"**  — En Pokelike tenemos encuentros salvajes (1 solo enemigo), entrenadores (enemigos con mas de 1 encuentro uno detras de otro) y entrenadores de elite (Rival, con un equipo mas fuerte y mas combates en cadena). Nuestro mini-boss (Haku p.e) sería de este tercer tipo, y un combate con Genin Ninja sería el primer tipo. Para combates contra personajes nombrados (Zaku, Dosu, Rin, etc) quizá estaría bien añadirle uno o dos genin estandar para simbolizar un combate más largo. 
 
-5. **Tarjeta de Objetos y Oro** debajo del panel de equipo en `MapScreen.jsx` — muestra el
-   inventario actual y el oro, con **hover en cada objeto** revelando su descripción y su efecto
-   exacto (qué cura, qué bonificación da, etc.), mismo patrón que `PersonajeHoverCard` pero para
-   `items.json`.  - Creo que podemos prescindir de la leyenda de nodos para dar sitio al inventario (oro + objetos). En su lugar, hacer hover en un nodo deberia decirte lo que es, y el beneficio que te da, como en Pokelike. Por ejemplo:
-  Tienda - Compra objetos, Combate aleatorio - + 1 Nivel, Mini-boss - Recompensa adicional, etc. 
+4. **Ampliar el roster de enemigos nombrados y logros** — No hace falta cubrir todos los ninjas del manga pero que no se sienta que siempre te van a salir los mismos enemigos al clicar en un Combate del tipo Entrenador. Añadiendo variedad en cada arco. Además añadir logros para la "completion" de los arcos. No todos los logros tienen por qué desbloquear personajes u objetos permanentes, otros simplemente son por coleccionismo. También pueden afectar al oro inicial, de manera que empieces las siguientes runs con más oro, etc. El sistema de logros de Pokelike lo hace bastante bien, dando un balance entre desbloqueos tempranos e incrementales y logros dificiles de conseguir para jugadores mas coleccionistas.
 
-6. **Ampliar el roster de enemigos nombrados y logros** — No hace falta cubrir todos los ninjas del manga pero que no se sienta que siempre te van a salir los mismos enemigos al clicar en un Combate del tipo Entrenador. Añadiendo variedad en cada arco. Además añadir logros para la "completion" de los arcos. No todos los logros tienen por qué desbloquear personajes u objetos permanentes, otros simplemente son por coleccionismo. También pueden afectar al oro inicial, de manera que empieces las siguientes runs con más oro, etc. El sistema de logros de Pokelike lo hace bastante bien, dando un balance entre desbloqueos tempranos e incrementales y logros dificiles de conseguir para jugadores mas coleccionistas.
+5. **Cambiar los textos a ingles** — El codigo no lo voy a compartir con nadie, pero pretendo sacar el juego como aplicacion web y el ingles es un idioma que alcanza a mucha más gente. Hay que traducir todos los textos de cara a usuario. Es mejor hacer 2 versiones y un selector de lenguaje? Cual es el approach mas rapido? Todo el contenido de despues tiene que estar tambien en ingles.
 
-7. **Cambiar los textos a ingles** — El codigo no lo voy a compartir con nadie, pero pretendo sacar el juego como aplicacion web y el ingles es un idioma que alcanza a mucha más gente. Hay que traducir todos los textos de cara a usuario. Es mejor hacer 2 versiones y un selector de lenguaje? Cual es el approach mas rapido? Todo el contenido de despues tiene que estar tambien en ingles.
+6. **Añadir background e imagen para la columna central** — Siguiendo el estilo Pokelike, existe un background generico para toda la app y la columna donde se encuentra el piso tiene un tema dependiendo del acto. Encuentra una imagen para cada acto y usala. Utiliza tambien la fuente de naruto que se encuentra en Assets para darle un toque más personal. 
 
-8. **Añadir background e imagen para la columna central** — Siguiendo el estilo Pokelike, existe un background generico para toda la app y la columna donde se encuentra el piso tiene un tema dependiendo del acto. Encuentra una imagen para cada acto y usala. Utiliza tambien la fuente de naruto que se encuentra en Assets para darle un toque más personal. 
-
-9. **Actualizar sprites de los nodos** — Siguiendo el estilo Pokelike, cada nodo debería tener un sprite facilmente reconocible. 
+7. **Actualizar sprites de los nodos** — Siguiendo el estilo Pokelike, cada nodo debería tener un sprite facilmente reconocible. 
 - Encuentro aleatorio - Equivalente a Pokemon Salvaje - Sprite pixel art ninja renegado con un sprite de ninja estandar 
 - Encuentro con enemigo nombrado - Equivalente a entrenador pokemon - Sprite del personaje enemigo en concreto
 - Mini-boss - Equivalente a entrenador rival - Sprite del personaje en concreto
@@ -97,11 +129,11 @@
 - Reclutar ninja - Equivalente a capturar pokemon - Pergamino de contrato con un simbolo '+'
 - Jefe final - Equivalente a lider de gimnasio - Sprite del personaje en concreto
 
-10. **Cambiar estructura del combate** — Siguiendo el estilo Pokelike, el combate es automatico. Se me ha ocurrido que como retoque final, podríamos hacer que los personajes ataquen con un ataque basico (animacion kunai) y un ataque potente que se carga al hacer o recibir daño. Este se utilizaria automaticamente al cargarse por completo. Cada ataque tendria un tiempo de carga distinto dependiendo de su poder y lo haria mucho más profundo. Como lo ves? Algo parecido a lo que hace Pokemon GO
+8. **Cambiar estructura del combate** — Siguiendo el estilo Pokelike, el combate es automatico. Se me ha ocurrido que como retoque final, podríamos hacer que los personajes ataquen con un ataque basico (animacion kunai) y un ataque potente que se carga al hacer o recibir daño. Este se utilizaria automaticamente al cargarse por completo. Cada ataque tendria un tiempo de carga distinto dependiendo de su poder y lo haria mucho más profundo. Como lo ves? Algo parecido a lo que hace Pokemon GO
 
-11. **Actualizar interfaz de combate** — Siguiendo el estilo Pokelike, todo el equipo deberia aparecer en la pantalla de combate aunque solo el primero de cada bando este peleando. El sprite de los personajes debería aparecer y el sistema de logs se debería intercambiar por una animacion en la que los ninjas lanzan un kunai al enemigo. Al impactar, la barra de salud baja. No es necesario ver el numero de daño ya que la HP se ve. Para los personajes caidos, la card debería apagarse, tal y como hace pokelike. Para darle más viveza, añadir un efecto agitado cada vez que un personaje recibe un golpe. 
+9. **Actualizar interfaz de combate** — Siguiendo el estilo Pokelike, todo el equipo deberia aparecer en la pantalla de combate aunque solo el primero de cada bando este peleando. El sprite de los personajes debería aparecer y el sistema de logs se debería intercambiar por una animacion en la que los ninjas lanzan un kunai al enemigo. Al impactar, la barra de salud baja. No es necesario ver el numero de daño ya que la HP se ve. Para los personajes caidos, la card debería apagarse, tal y como hace pokelike. Para darle más viveza, añadir un efecto agitado cada vez que un personaje recibe un golpe. 
 
-12. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
+10. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
    personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en
    [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en un
    arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`).
@@ -118,9 +150,6 @@
 Ideas nuevas pensadas para encajar con el formato Pokelike/Slay the Spire, marcadas aparte por ser
 más grandes de lo que cabe en una sesión de bugfixing/ajuste:
 
-- **Fila de reliquias visible** (estilo Slay the Spire): los objetos pasivos ya existen en el
-  inventario, pero no hay ninguna vista dedicada tipo "iconos de reliquia siempre visibles" — hoy
-  solo se ven al abrir la futura tarjeta de Objetos y Oro (punto 4 de arriba).
 - **Vista previa del jefe antes de entrar al nodo**: hover sobre el nodo `jefe`/`miniJefe` en el
   mapa mostrando su ficha completa (reutilizando `PersonajeHoverCard`), para decidir con
   información si conviene ir a curarse antes.
@@ -128,7 +157,8 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
   con mejor recompensa o uno seguro con menos, al estilo "elite fight" de Slay the Spire.
 - **Modificadores de dificultad entre runs** ("ascensión"): ligado a la condición de logro ya
   propuesta pero sin implementar `completarRunEnDificultad` en `achievements.json`.
-- Interpretar `recompensa.finDeLaRun` (Pain) para marcar `runGanada: true`.
+- **Evento narrativo de transición entre arcos** (ver [20](./20-arcos-encadenados.md)) — hoy es
+  instantáneo, un botón directo al mapa del siguiente arco.
 - Modo Nuzlocke.
 - Sistema de cuentas / guardado remoto.
 - Arte propio (sustituir placeholders).

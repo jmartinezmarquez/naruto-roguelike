@@ -8,6 +8,7 @@ function nombrePersonaje(id) {
 export default function GameOverScreen() {
   const equipo = useGameStore((s) => s.equipo);
   const oro = useGameStore((s) => s.oro);
+  const runGanada = useGameStore((s) => s.runGanada);
   const arcoActualDatos = useGameStore((s) => s.arcoActualDatos);
   const mapa = useGameStore((s) => s.mapa);
   const nodoActualId = useGameStore((s) => s.nodoActualId);
@@ -19,10 +20,18 @@ export default function GameOverScreen() {
   return (
     <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
       <div className="max-w-md w-full text-center">
-        <p className="font-display text-4xl font-bold text-sello-500 mb-2">Game Over</p>
+        <p className={`font-display text-4xl font-bold mb-2 ${runGanada ? 'text-fuuton' : 'text-sello-500'}`}>
+          {runGanada ? 'Victoria' : 'Game Over'}
+        </p>
         <p className="text-pergamino-200/80 text-sm mb-6">
-          Todo tu equipo ha caído
-          {arcoActualDatos && pisoAlcanzado ? ` en ${arcoActualDatos.nombre}, piso ${pisoAlcanzado} de ${arcoActualDatos.numeroPisos}` : ''}.
+          {runGanada
+            ? 'Has derrotado a Pain y completado los 3 arcos. Konoha está a salvo.'
+            : (
+              <>
+                Todo tu equipo ha caído
+                {arcoActualDatos && pisoAlcanzado ? ` en ${arcoActualDatos.nombre}, piso ${pisoAlcanzado} de ${arcoActualDatos.numeroPisos}` : ''}.
+              </>
+            )}
         </p>
 
         <div className="bg-tinta-900 border border-pergamino-100/10 rounded-lg p-4 mb-6">
@@ -40,7 +49,9 @@ export default function GameOverScreen() {
                     <p className="text-xs text-pergamino-200/50">Nv. {p.nivel}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-sello-500">Caído</p>
+                    <p className={`text-xs ${p.derrotado ? 'text-sello-500' : 'text-fuuton'}`}>
+                      {p.derrotado ? 'Caído' : 'En pie'}
+                    </p>
                     <p className="text-xs text-pergamino-200/60">{p.hpActual} / {hpMaximo} HP</p>
                   </div>
                 </div>

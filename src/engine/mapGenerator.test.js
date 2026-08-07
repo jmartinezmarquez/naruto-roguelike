@@ -66,6 +66,17 @@ describe('generarMapa', () => {
     const mapa = generarMapa(arcoDePrueba);
     expect(mapa.nodosIniciales).toEqual(mapa.pisos[0]);
   });
+
+  it('el piso inmediatamente anterior al jefe final siempre tiene un nodo de descanso', () => {
+    // Se repite varias veces por la aleatoriedad del sorteo de tipos —
+    // mismo motivo que el test del piso 1.
+    for (let i = 0; i < 30; i++) {
+      const mapa = generarMapa(arcoDePrueba);
+      const pisoPrevio = mapa.pisos[arcoDePrueba.pisoJefeFinal - 2];
+      const tiposDelPiso = pisoPrevio.map((id) => mapa.nodos[id].tipo);
+      expect(tiposDelPiso).toContain('descanso');
+    }
+  });
 });
 
 describe('calcularNivelPorPiso', () => {

@@ -10,8 +10,7 @@ El MVP tiene **3 arcos**, jugados en una única run continua de nivel 1 a 100 (`
 
 ## Historia del sistema de nivel de enemigo (importante para no repetir el error)
 
-Este sistema pasó por 3 versiones. Documentado para que quien lo toque en el futuro no repita el
-mismo ciclo de errores.
+Este sistema pasó por 3 versiones. Documentado para que quien lo toque en el futuro no repita el mismo ciclo de errores.
 
 **v1 — Fórmula aditiva por piso, mal calibrada.** `nivel = nivelEnemigoBase + (piso-1)*escaladoNivelPorPiso`.
 El bug: se calibró contando **todos los nodos de todos los pisos** como si el jugador los

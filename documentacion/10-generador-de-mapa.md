@@ -15,6 +15,14 @@ Genera un grafo de nodos por pisos a partir de la config de un arco (cualquiera 
 - El piso `pisoMiniJefe` fuerza a que uno de sus nodos sea de tipo `miniJefe`.
 - Cada nodo se conecta con 1-2 nodos del piso siguiente (por proximidad de índice), y se garantiza
   que ningún nodo se quede sin conexión entrante.
+- **`garantizarDescansoAntesDelJefe`**: el piso INMEDIATAMENTE ANTERIOR al jefe final
+  (`pisos[arco.pisoJefeFinal - 2]`, ya que `pisos` es 0-index) siempre tiene al menos un nodo de
+  tipo `descanso` — igual que el Centro Pokémon justo antes del gimnasio en un Pokelike. Si ese
+  piso ya tiene uno (por el sorteo normal), no toca nada; si no, convierte uno de sus nodos a
+  `descanso` (cualquiera menos `miniJefe`, que no se puede reemplazar). Primer intento descartado:
+  trazar un único camino concreto desde el inicio y forzar un descanso en algún punto de ese
+  camino — funcionaba, pero no se correspondía con el patrón real de un Pokelike (el descanso está
+  siempre pegado al jefe, no en cualquier punto del recorrido).
 
 Devuelve `{ arcoId, pisos, nodos, nodosIniciales }`.
 

@@ -29,7 +29,13 @@ Dos categorías, mismo esquema que un personaje (`statsBase`, `jutsu`, `modos: [
 
 ## `items.json`
 
-Array `objetos`, cada uno con `tipo` (`pasivo`/`consumible`), `rareza`, `precioTienda` (`null` si no es comprable) y `efecto`.
+Array `objetos`, cada uno con `tipo` (`equipable`/`consumible`), `rareza`, `precioTienda` (`null` si no es comprable) y `efecto`. Tipos de `efecto`: `curarPersonaje` (consumible), `revivirUnaVez`, `buffEquipable`, `curacionPostCombate`, `buffYDebuffEquipable` (equipables).
+
+Los `equipable` se asignan a un personaje concreto del equipo (un hueco por personaje,
+`instancia.objetoEquipadoId`) y solo benefician a quien los lleve puesto — ver
+[21 - Objetos equipables](./21-objetos-equipables.md) para el porqué de este diseño (se descartó un
+modelo de "pasivo de todo el equipo") y cómo se aplican de verdad los efectos (antes de esa sesión,
+ningún efecto se aplicaba, solo se guardaba el id en el inventario).
 
 ## `events.json`
 

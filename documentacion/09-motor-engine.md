@@ -16,7 +16,7 @@
 - `obtenerEficacia(tipoAtacante, tipoDefensor)` — lee la matriz de `types.json`.
 - `crearLuchador(personajeBase, nivel, hpActualInicial, multiplicadoresExtra)` — instancia de combate. **`hpActualInicial`** (nuevo): si se pasa, el luchador empieza con ese HP en vez de a HP completo — es lo que permite que el HP persista entre combates. **`multiplicadoresExtra`** (nuevo): multiplicadores aplicados después del modo, para los buffs temporales de eventos ("+20% ataque, 3 combates"). El modo activo se sigue calculando internamente con `obtenerModoActivo`.
 - `calcularDano(atacante, defensor, jutsu)` — fórmula: `ataqueEfectivo * jutsu.danoBase * eficacia - defensaEfectiva * 0.5`, mínimo 1.
-- `aplicarEfectoEstado` / `reducirDuracionModificadores` — buffs/debuffs temporales con contador de turnos.
+- `aplicarEfectoEstado` / `reducirDuracionModificadores` — buffs/debuffs temporales con contador de turnos. **Desactivado para el MVP**: todos los `jutsu.efectoEstado` de `characters.json`/`enemies.json`/`common-enemies.json` están a `null` — añadían complejidad de cálculo y no tenían sentido narrativo en todos los personajes. El motor sigue soportándolos tal cual (`aplicarEfectoEstado` ya es null-safe, `if (!efecto) return`) por si se rellenan de nuevo más adelante — no hace falta tocar `engine/` para reactivarlos, solo los datos.
 - `resolverTurno(luchador1, luchador2)` — resuelve un turno completo (orden por velocidad, ambos ataques, reduce duración de efectos). Usada internamente por `resolverCombateCompleto`.
 - `resolverCombateCompleto(luchador1, luchador2)` — encadena turnos automáticamente hasta que uno caiga o se alcance `config.combate.turnosMaximos` (empate resuelto por % de HP restante).
 
@@ -36,7 +36,7 @@ Store de Zustand. Es el "pegamento" entre el motor puro (`engine/`) y la UI: dec
 
 **Acciones principales:**
 - `iniciarRun(personajesInicialesIds, arco)`
-- `reclutarPersonaje(id, nivelInicial)` / `reordenarEquipo(nuevoOrdenIds)`
+- `reclutarPersonaje(id, nivelInicial, idAReemplazar)` / `reordenarEquipo(nuevoOrdenIds)` — ver [19](./19-seleccion-de-personaje.md) para el reemplazo con equipo lleno.
 - `avanzarANodo(nodoId)` — resuelve combate, evento, o descanso automático según el tipo de nodo (ver `13-ui-mapa-y-combate.md`).
 - `jugarCombate(enemigoBase, nivelEnemigo)` — construye los luchadores con `crearLuchador` (pasando `hpActual` persistido y los buffs temporales activos), resuelve con `resolverCombateCompleto`, aplica XP/oro/objeto (`_aplicarVictoria`) o derrota (`_aplicarDerrota`), y consume 1 uso de los buffs temporales.
 - `resolverEventoEleccion(indiceEleccion)` — intérprete de efectos de evento (ver más abajo).
@@ -51,6 +51,8 @@ Store de Zustand. Es el "pegamento" entre el motor puro (`engine/`) y la UI: dec
 ### Decisión de diseño: qué pasa al perder un combate
 
 El personaje activo derrotado pasa al final del orden del equipo (no muere permanentemente — no hay Nuzlocke en el MVP) y no puede volver a luchar hasta curarse en un nodo de descanso. El siguiente personaje vivo sube a posición 1 automáticamente. Si los 3 caen, la run termina (`runTerminada: true`).
+
+**XP de un personaje caído**: no gana XP en ningún combate mientras siga derrotado de un combate ANTERIOR (hasta curarse). Si cae DURANTE el combate actual (rondas encadenadas y luego gana un compañero), sí cuenta la XP de banquillo de esa victoria — participó, aunque perdiera — pero su HP se queda a 0 (ganar XP no lo "revive" de regalo si sube de nivel). `jugarCombate` toma una foto de quién estaba ya derrotado ANTES de empezar (`idsYaDerrotadosAntesDelCombate`) para poder distinguir los dos casos en `_aplicarVictoria`.
 
 ### Decisión de diseño: activación de modo/transformación (regla única, sin excepciones)
 

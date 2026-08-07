@@ -23,9 +23,14 @@ la llamada automática a `iniciarRun(['naruto', 'sasuke', 'sakura'], arco)` que 
   `engine/achievements.js` → `obtenerPersonajesInicialesDesbloqueados`. Ningún logro usa ese tipo
   de recompensa todavía en `achievements.json` (queda para cuando se diseñe uno), pero el mecanismo
   ya funciona end-to-end si se añade.
-- Selección genérica sobre `numeroPersonajesInicialesAElegir` (hoy 1, se comporta como radio:
-  elegir otro cambia la selección en vez de acumular). Si algún día se sube ese número, el mismo
-  código soporta elegir varios sin tocarlo.
+- **Con `numeroPersonajesInicialesAElegir === 1` (el caso de hoy), tocar una tarjeta arranca la run
+  al instante** — no hay botón de confirmación aparte para una sola elección. Si algún día ese
+  número sube, el mismo flujo pasa a acumular selección hasta completarlo y confirmar entonces, sin
+  rediseñar la pantalla (la rama de código ya existe, solo no se ejercita con el valor actual).
+- Cada tarjeta muestra la ficha completa del personaje directamente (`FichaPersonaje`, ver más
+  abajo) — nombre, tipo, stats, jutsu con su poder — sin esconder nada detrás de un hover. Es la
+  pantalla donde el jugador decide con qué personaje empezar toda la run, tiene que ver la
+  información de un vistazo, no descubrirla pasando el ratón por cada tarjeta.
 - `App.jsx` pasa `onConfirmar={(ids) => iniciarRun(ids, arcoPaisDeLasOlas)}` — la pantalla no llama
   a `iniciarRun` directamente, así se mantiene desacoplada del store de la run.
 - Los logros deben estar cargados ANTES de montar esta pantalla (el roster depende de ellos) —
@@ -57,30 +62,34 @@ vía normal de crecer el equipo, así que hacía falta un flujo real:
   se abre un panel `ElegirReemplazo` con los 3 miembros actuales (con su tarjeta de hover igual que
   en cualquier otro sitio) para elegir a quién sacar. Cancelar vuelve a la oferta sin cobrar nada.
 
-## Tarjeta de hover (`components/common/PersonajeHoverCard.jsx`)
+## `components/common/PersonajeHoverCard.jsx`: `FichaPersonaje` + hover
 
-Envuelve cualquier trigger (un botón, un icono...) y muestra al pasar el ratén una tarjeta de
-detalle — tipo de chakra, stats (ataque/defensa/velocidad/HP), HP actual/máximo si se pasa, y el
-jutsu con su descripción — igual que la tarjeta de un Pokelike. Usa un "named group" de Tailwind
-(`group/hover`) para no chocar con otros `group` que ya tenga el elemento envuelto, y CSS puro
-(`opacity`/`scale` en hover) en vez de JS de posicionamiento.
+El contenido de la ficha (tipo de chakra, stats ATQ/DEF/VEL/HP, barra de HP actual/máximo si se
+pasa, y el jutsu con su poder y descripción) vive en un componente propio, **`FichaPersonaje`**,
+separado del wrapper que la muestra en hover. Así la misma ficha se puede mostrar siempre visible
+(`CharacterSelectScreen`) o escondida detrás de un hover (mapa, combate, tienda) sin duplicar el
+JSX de la ficha en dos sitios:
 
-- Si se pasa `nivel`, las stats se calculan escaladas a ese nivel con el motor puro
+- **`FichaPersonaje({ id, nivel, hpActual, hpMaximo, className })`** — el contenido puro, sin
+  posicionamiento. Si se pasa `nivel`, las stats se calculan escaladas a ese nivel con el motor puro
   (`engine/combat.js` → `crearLuchador`); si no, se muestran las stats base (nivel 1) — útil en
-  sitios donde solo hay una oferta de tienda sin instancia de run todavía.
-- **Daño de referencia del jutsu**: junto a la descripción se muestra "~XX dmg", calculado con
-  `engine/combat.js` → `calcularDano(luchador, luchador, jutsu)` — el propio luchador como rival de
-  referencia (mismo tipo y stats), así el número sale del mismo cálculo real que usa el motor en
-  combate, no de un valor inventado aparte. `jutsu.danoBase` en los datos es un multiplicador
-  (p. ej. `1.3`), no un número de daño por sí solo — mostrar solo ese multiplicador no le decía
-  nada al jugador sobre cuánto pega realmente el jutsu.
-- Busca primero en `characters.json` y si no está, en los jefes de `enemies.json` — así funciona
-  igual para el equipo del jugador que para los enemigos de un combate. Si el id no aparece en
-  ninguno (enemigos comunes sin ficha completa), no rompe: simplemente no envuelve nada y devuelve
-  el trigger tal cual, sin tooltip.
-- Integrado en: `MapScreen.jsx` (panel de equipo), `CombatScreen.jsx` (las dos barras de luchador),
-  `ShopScreen.jsx` (tarjetas de reclutamiento y el panel de elegir a quién reemplazar), y
-  `CharacterSelectScreen.jsx` (cada candidato del roster).
+  sitios donde solo hay una oferta de tienda sin instancia de run todavía. Busca primero en
+  `characters.json` y si no está, en los jefes de `enemies.json` — así funciona igual para el
+  equipo del jugador que para los enemigos de un combate. Si el id no aparece en ninguno (enemigos
+  comunes sin ficha completa), devuelve `null`.
+- **`PersonajeHoverCard` (export por defecto)** — envuelve cualquier trigger (un botón, un
+  icono...) y muestra `FichaPersonaje` al pasar el ratón, posicionada con un "named group" de
+  Tailwind (`group/hover`, para no chocar con otros `group` que ya tenga el elemento envuelto) y
+  CSS puro (`opacity`/`scale`) en vez de JS de posicionamiento. Si `FichaPersonaje` no encuentra el
+  id, no envuelve nada: devuelve el trigger tal cual, sin tooltip.
+- **Poder del jutsu**: se muestra `jutsu.danoBase` tal cual (p. ej. "Poder 1.3"), no un daño
+  estimado calculado contra un rival de referencia (así se hizo en un primer intento, pero el
+  número salía "raro" — dependía de a quién se comparara). Igual que en Pokémon: se enseña el poder
+  base del movimiento y el jugador confía en que el motor calcula bien el daño real en combate.
+- Integrado en: `MapScreen.jsx` (panel de equipo, hover), `CombatScreen.jsx` (las dos barras de
+  luchador, hover), `ShopScreen.jsx` (tarjetas de reclutamiento y el panel de elegir a quién
+  reemplazar, hover), y `CharacterSelectScreen.jsx` (cada candidato del roster, **siempre visible,
+  sin hover** — ver más arriba).
 
 ## Pictograma de ventaja de chakra (`RuedaChakra`, dentro de `MapScreen.jsx`)
 
