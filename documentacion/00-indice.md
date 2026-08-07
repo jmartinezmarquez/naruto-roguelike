@@ -16,6 +16,8 @@
 - [12 - Cadena de jefes (grupo de rivales)](./12-cadena-de-jefes.md)
 - [13 - UI: dirección visual, Mapa, Combate y Evento](./13-ui-mapa-y-combate.md)
 - [14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md)
+- [15 - Tienda](./15-tienda.md)
+- [16 - Testing](./16-testing.md)
 
 ## Diseños pendientes de implementar
 

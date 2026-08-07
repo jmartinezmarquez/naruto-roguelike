@@ -2,55 +2,70 @@
 
 El MVP tiene **3 arcos**, jugados en una única run continua de nivel 1 a 100 (`config.progresion.nivelMaximo`).
 
-| Arco | Archivo | Pisos | Nivel inicial | Mini-jefe | Jefe final (nivel) |
-|---|---|---|---|---|---|
-| País de las Olas | `arcs/pais-de-las-olas.json` | 8 | ~3 | Haku | **Zabuza (15)** |
-| Examen Chunin | `arcs/examen-chunin.json` | 10 | ~16 | Kabuto | **Gaara (55)** |
-| Invasión de Pain *(licencia creativa)* | `arcs/invasion-de-pain.json` | 12 | ~56 | Camino Animal de Pain | **Pain, Camino Deva (100)** |
+| Arco | Archivo | Pisos | Mini-jefe (nivel fijo) | Jefe final (nivel fijo) |
+|---|---|---|---|---|
+| País de las Olas | `arcs/pais-de-las-olas.json` | 8 | Haku (3) | **Zabuza (4)** |
+| Examen Chunin | `arcs/examen-chunin.json` | 10 | Kabuto (22) | **Gaara (24)** |
+| Invasión de Pain *(licencia creativa)* | `arcs/invasion-de-pain.json` | 12 | Camino Animal de Pain (48) | **Pain, Camino Deva (49)** |
 
-## Por qué esta curva
+## Historia del sistema de nivel de enemigo (importante para no repetir el error)
 
-El escalado (`escaladoNivelPorPiso`) se acelera arco a arco (1.7 → 4.3 → 4.0): cuantos más pisos lleva recorridos el jugador, más rápido debe subir el poder de los rivales para que el tramo final de cada arco se sienta intenso, en vez de una progresión plana. Fórmula en `engine/mapGenerator.js → calcularNivelPorPiso`: `nivel = nivelEnemigoBase + (piso - 1) * escaladoNivelPorPiso`.
+Este sistema pasó por 3 versiones. Documentado para que quien lo toque en el futuro no repita el
+mismo ciclo de errores.
 
-## Resolución de una inconsistencia anterior
+**v1 — Fórmula aditiva por piso, mal calibrada.** `nivel = nivelEnemigoBase + (piso-1)*escaladoNivelPorPiso`.
+El bug: se calibró contando **todos los nodos de todos los pisos** como si el jugador los
+recorriera todos. En la realidad, un roguelike recorre **un único camino** (un nodo por piso, no
+todos) — el número real de combates es mucho menor de lo que parecía mirando el mapa entero.
+Resultado: llegabas a Zabuza (calibrado para nivel 15) siendo nivel 3. Imposible de ganar.
 
-El roster reclutable (Rock Lee, Neji, Tenten, Shikamaru, Ino, Choji, Kiba, Hinata, Shino) estaba antes en el arco de País de las Olas, donde no aparecen en el canon. Al crear el arco de Examen Chunin, se movió `personajesReclutablesIds` allí — es literalmente donde esos personajes aparecen en el manga. País de las Olas se queda solo con el equipo inicial (Naruto, Sasuke, Sakura).
+**v2 — Escalado dinámico según el nivel del jugador.** `nivel enemigo = nivel jugador + ajuste`.
+Soluciona el crash inmediato, pero **rompe el sentido de subir de nivel**: si el rival siempre
+escala contigo, nunca estás más preparado en términos relativos por mucho que subas (el
+"problema de Oblivion"). Se descartó tras feedback directo: *"si el sistema de niveles pierde el
+sentido porque siempre vas a tener combates más difíciles"*.
 
-## Personajes nuevos para el arco 3
+**v3 (actual) — Fórmula fija, recalibrada con el número REAL de combates.** Se volvió al sistema
+fijo por piso, pero esta vez el cálculo usa combates de un único camino (`(pisos-1) * peso_combate
+/ peso_total`), no la suma de todos los nodos. Los mini-jefes/jefes tienen un **nivel fijo
+explícito** (`arco.nivelMiniJefe` / `arco.nivelJefeFinal`), calculado para que el "camino mínimo"
+(un jugador que se salta todo lo opcional) siempre pueda ganarles, con solo +1 de margen sobre el
+nivel que ese camino mínimo alcanza de forma garantizada. Ver la simulación completa más abajo.
 
-Como el roster de los 12 personajes del Examen Chunin ya estaría reclutado antes de llegar a la Invasión de Pain, se añadieron **Sai** y **Yamato** como reclutables de ese arco (`personajesReclutablesIds` en `invasion-de-pain.json`), para que el tramo final de la run también tenga algo nuevo que reclutar, no solo enemigos más difíciles.
+`engine/mapGenerator.js`:
+- `calcularNivelPorPiso(piso, arco)` — combates normales, escalado aditivo fijo.
+- `resolverEnemigoDeNodo(nodo, arco)` — combate normal usa `calcularNivelPorPiso`; mini-jefe/jefe
+  usan `arco.nivelMiniJefe`/`arco.nivelJefeFinal` directamente, sin fórmula.
 
 ## Curva de XP (corregida — la original era matemáticamente inviable)
 
-La curva original (`crecimiento: 1.12`, exponencial) necesitaba **24,8 millones de XP** para llegar a nivel 100. Toda la run genera, como mucho, ~5.082 XP (calculado sumando la recompensa de cada combate esperado en los 3 arcos). Corregida a `crecimiento: 1.015` (bases 17-24 según personaje) — cumulativo a nivel 100 ≈ 5.158 XP, ajustado al presupuesto real.
+La curva original (`crecimiento: 1.12`, exponencial) necesitaba **24,8 millones de XP** para
+llegar a nivel 100. Toda la run genera, como mucho, ~5.000 XP. Corregida a `crecimiento: 1.015`
+(bases 17-24 según personaje).
 
-**Validación por simulación** (usando los propios JSON del proyecto, no cálculo a mano):
+## Reparto de XP con el banquillo
 
-| Escenario | País de las Olas (obj. 15) | Examen Chunin (obj. 55) | Invasión de Pain (obj. 100) |
-|---|---|---|---|
-| Personaje fijo en posición 1 (100% XP) | 26 | 56 | 97 |
-| Personaje en banquillo todo el rato (40% XP) | — | — | 56 |
-| Sai (recluta tardío, arco 3) | — | — | 100 activo / 81 en banquillo (modo pide 75, alcanzable en ambos casos) |
+Con combate 1vs1, solo el personaje activo (posición 1) ganaba XP. `config.progresion.porcentajeXpBanquillo`
+(actualmente **0.6**, subido desde 0.4 tras detectar que dejaba a los personajes en banco
+peligrosamente atrás — un one-shot de Zabuza en playtest venía de aquí) da al resto del equipo
+vivo ese % de la XP de cada combate ganado, aunque no haya participado.
 
-## Reparto de XP con el banquillo (nuevo)
+## Balance de jefes/minijefes: ratios fijos, no valores absolutos
 
-Con combate 1vs1, solo el personaje activo (posición 1) ganaba XP — los otros 2 casi nunca subían de nivel salvo reordenación manual constante. Se añadió `config.progresion.porcentajeXpBanquillo` (0.4): el resto del equipo vivo gana un 40% de la XP de cada combate ganado, aunque no haya participado. Implementado en `useGameStore._aplicarVictoria`. Inspirado en que Pokelike describe su combate como dependiente "del posicionamiento del equipo", no de un único luchador aislado.
-
-Las `statsBase` de los jefes se calculan como un múltiplo fijo de un personaje medio
-(hp41/ataque9/defensa7/velocidad8), no como valores absolutos:
+Las `statsBase` de los jefes son un múltiplo fijo de un personaje medio (hp41/ataque9/defensa7/velocidad8):
 - **Mini-jefe**: ×1.8 hp, ×1.3 ataque/defensa, ×1.2 velocidad.
 - **Jefe final**: ×2.2 hp, ×1.5 ataque, ×1.4 defensa, ×1.2 velocidad.
 
-Como jugador y enemigo se escalan con la misma fórmula de nivel (`calcularStatsPorNivel`), este
-ratio se mantiene constante en cualquier punto de la run. Antes de esta corrección, las stats de
-Gaara/Pain estaban puestas como si ya fueran "finales" y el escalado por nivel las multiplicaba
-otra vez encima — a nivel 55, Gaara llegaba a ~1574 HP frente a ~200 HP de un personaje jugador,
-un enemigo prácticamente imbatible en 1 vs 1.
+Como jugador y enemigo se escalan con la misma fórmula de nivel, el ratio se mantiene constante en
+cualquier nivel. (Bug histórico ya corregido: antes las stats de los jefes estaban puestas como si
+ya fueran "finales" y el escalado por nivel las multiplicaba otra vez encima.)
+
+> Feedback de playtest pendiente de ajustar: con la cadena de rondas (ver `09-motor-engine.md`),
+> si el personaje activo cae, el siguiente entra contra el mismo jefe — si ese segundo personaje
+> viene del banquillo (más atrasado en nivel), el salto de dificultad percibido puede sentirse
+> mayor que el margen de diseño (+1) sugiere. Pendiente de más playtest.
 
 ## Niveles de transformación por personaje
-
-Ajustados para que cada tier de transformación caiga dentro del rango de niveles donde el
-personaje realmente puede estar jugando (según su arco de reclutamiento):
 
 | Personaje | Tier 1 | Tier 2 |
 |---|---|---|
@@ -69,20 +84,20 @@ personaje realmente puede estar jugando (según su arco de reclutamiento):
 | Sai | 75 (único tier) | — |
 | Yamato | 80 (único tier) | — |
 
-## Fix relacionado: nivel inicial al reclutar
+## Nivel inicial al reclutar
 
-Se detectó que `reclutarPersonaje` siempre creaba al personaje a nivel 1, sin importar el punto
-de la run. Un reclutamiento tardío (ej. Shino a mitad del Examen Chunin) entraría indefenso
-frente a rivales ya de nivel ~35. `reclutarPersonaje(id, nivelInicial)` acepta ahora el nivel del
-piso donde se recluta — pendiente de que el flujo de nodos (aún sin construir) se lo pase.
-
-- **Zabuza Momochi** — jefe final de País de las Olas.
-- **Kabuto Yakushi** — mini-jefe de Examen Chunin (piso 5).
-- **Camino Animal de Pain** — mini-jefe de Invasión de Pain (piso 6).
-- **Pain (Camino Deva)** — jefe final de la run completa. Su recompensa incluye `finDeLaRun: true` en `recompensa`, un campo nuevo que el store deberá interpretar para marcar la run como completada con éxito (`runGanada: true`), no solo terminada.
-
-> Nota: `recompensa.finDeLaRun` es un campo nuevo, todavía no leído por ningún código — pendiente de conectar en `useGameStore.js` cuando se implemente el flujo completo de "victoria de la run" (distinto de `runTerminada`, que hoy solo cubre la derrota).
+`reclutarPersonaje(id, nivelInicial)` acepta el nivel al que entra el personaje — usado tanto por
+recompensas de jefe como por el reclutamiento de tienda (`calcularNivelPorPiso` del nodo), para
+que un reclutamiento tardío en la run no entre indefenso.
 
 ## Jefes como reclutables (rareza, curvaXp)
 
-Cada jefe/mini-jefe en `enemies.json` tiene ahora `rareza` (`raro` para mini-jefes, `legendario` para jefes finales) y `curvaXp`, además de `desbloqueablePorLogro: true`. Detalle completo del diseño en [14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md).
+Cada jefe/mini-jefe en `enemies.json` tiene `rareza` (`raro` mini-jefes, `legendario` jefes
+finales), `curvaXp` y `desbloqueablePorLogro: true`. Detalle completo en
+[14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md).
+
+## Pendiente
+
+`recompensa.finDeLaRun` (en Pain) todavía no lo lee ningún código — falta conectar en
+`useGameStore.js` para marcar `runGanada: true` al completar la run (hoy `runTerminada` solo
+cubre la derrota).

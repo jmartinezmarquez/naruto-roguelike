@@ -175,7 +175,7 @@ export default function MapScreen() {
   // TEMPORAL: mientras no existan pantallas de Tienda/Reclutamiento, avisamos
   // en vez de dejar el clic sin ningún efecto visible.
   const [avisoNodoSinPantalla, setAvisoNodoSinPantalla] = useState(null);
-  const tiposConPantalla = new Set(['combate', 'miniJefe', 'jefe', 'evento']);
+  const tiposConPantalla = new Set(['combate', 'miniJefe', 'jefe', 'evento', 'tienda']);
 
   function manejarClicNodo(nodoId) {
     const nodo = mapa.nodos[nodoId];

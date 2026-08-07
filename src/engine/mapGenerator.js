@@ -56,11 +56,10 @@ export function generarMapa(arco) {
       ? 1
       : anchoDelPiso(piso, numeroPisosNormales, arco.nodosPorPiso.min, arco.nodosPorPiso.max);
 
-    // El primer piso nunca debe ofrecer un nodo de descanso: empezar la run
-    // "curando" algo que ya está a HP completo es un desperdicio, no una
-    // opción real — desventaja sin motivo.
+    // El primer piso nunca debe ofrecer descanso (curar algo que ya está a
+    // HP completo no es una opción real) ni tienda (no tienes oro todavía).
     const poolDeEstePiso = piso === 1
-      ? arco.poolTiposNodo.filter((t) => t.tipo !== 'descanso')
+      ? arco.poolTiposNodo.filter((t) => t.tipo !== 'descanso' && t.tipo !== 'tienda')
       : arco.poolTiposNodo;
 
     const idsPiso = [];
@@ -70,6 +69,20 @@ export function generarMapa(arco) {
       nodos[id] = { id, piso, tipo, conexiones: [], visitado: false, completado: false };
       idsPiso.push(id);
     }
+
+    // Máximo 2 nodos de tienda por piso: si el sorteo por peso pone más,
+    // los que sobran se reasignan a otro tipo (sin tienda en el pool).
+    const poolSinTienda = poolDeEstePiso.filter((t) => t.tipo !== 'tienda');
+    let tiendasEnEstePiso = 0;
+    idsPiso.forEach((id) => {
+      if (nodos[id].tipo === 'tienda') {
+        tiendasEnEstePiso += 1;
+        if (tiendasEnEstePiso > 2 && poolSinTienda.length > 0) {
+          nodos[id].tipo = elegirTipoPorPeso(poolSinTienda);
+        }
+      }
+    });
+
     pisos.push(idsPiso);
   }
 

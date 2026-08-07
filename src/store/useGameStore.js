@@ -12,7 +12,7 @@ import itemsData from '../data/items.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp } from '../engine/leveling';
-import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
+import { generarMapa, resolverEnemigoDeNodo, calcularNivelPorPiso } from '../engine/mapGenerator';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
 
@@ -82,6 +82,50 @@ function combinarMultiplicadoresTemporales(buffsTemporales) {
   return combinado;
 }
 
+/** Elige n elementos distintos al azar de un array, sin repetir. */
+function elegirVariosAlAzar(array, n) {
+  const copia = [...array];
+  const elegidos = [];
+  while (copia.length > 0 && elegidos.length < n) {
+    const indice = Math.floor(Math.random() * copia.length);
+    elegidos.push(copia.splice(indice, 1)[0]);
+  }
+  return elegidos;
+}
+
+/**
+ * Genera la oferta de un nodo de tienda, al estilo Slay the Spire: 2
+ * consumibles comprables, 1 objeto pasivo gratuito, y 2 personajes
+ * reclutables entre los que solo se puede elegir uno (al reclutar uno se
+ * descarta el otro). nivelReclutamiento: nivel al que entraría el reclutado,
+ * el del piso donde está la tienda (igual que un reclutamiento de recompensa
+ * de jefe — no entra indefenso si es tarde en la run).
+ */
+function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) {
+  const consumiblesDisponibles = itemsData.objetos.filter(
+    (o) => o.tipo === 'consumible' && o.precioTienda !== null,
+  );
+  const pasivosDisponibles = itemsData.objetos.filter(
+    (o) => o.tipo === 'pasivo' && o.precioTienda !== null,
+  );
+
+  const idsEnEquipo = new Set(equipoActual.map((p) => p.id));
+  const reclutablesDisponibles = (arcoActualDatos.personajesReclutablesIds ?? [])
+    .filter((id) => !idsEnEquipo.has(id))
+    .map((id) => {
+      const base = encontrarPersonajeBase(id);
+      const precio = configGlobal.economia.precioReclutamientoPorRareza[base.rareza] ?? 50;
+      return { personajeId: id, nombre: base.nombre, rareza: base.rareza, precio };
+    });
+
+  return {
+    consumibles: elegirVariosAlAzar(consumiblesDisponibles, 2).map((o) => o.id),
+    gratuito: elegirVariosAlAzar(pasivosDisponibles, 1)[0]?.id ?? null,
+    reclutables: elegirVariosAlAzar(reclutablesDisponibles, 2),
+    nivelReclutamiento,
+  };
+}
+
 export const useGameStore = create((set, get) => ({
   // ---------- ESTADO ----------
   equipo: [], // instancias { id, nivel, xpActual, derrotado, hpActual, bonificaciones }, en orden de posición
@@ -95,6 +139,7 @@ export const useGameStore = create((set, get) => ({
   pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' — qué pantalla debe mostrar la UI ahora mismo
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
+  tiendaActual: null, // { consumibles, gratuito, reclutables, nivelReclutamiento } — oferta fijada al entrar al nodo
   avisoUltimoNodo: null, // texto breve para la UI (ej. "Equipo curado en el descanso"), no persistente
   runTerminada: false,
   runGanada: false,
@@ -120,6 +165,7 @@ export const useGameStore = create((set, get) => ({
       pantalla: 'mapa',
       ultimoResultadoCombate: null,
       eventoActual: null,
+      tiendaActual: null,
       avisoUltimoNodo: null,
       runTerminada: false,
       runGanada: false,
@@ -164,7 +210,14 @@ export const useGameStore = create((set, get) => ({
       return null;
     }
 
-    // tienda/reclutamiento: sin pantalla propia todavía.
+    if (nodo.tipo === 'tienda') {
+      const nivelReclutamiento = calcularNivelPorPiso(nodo.piso, arcoActualDatos);
+      const oferta = generarOfertaTienda(get().equipo, arcoActualDatos, nivelReclutamiento);
+      set({ tiendaActual: oferta, pantalla: 'tienda' });
+      return null;
+    }
+
+    // reclutamiento: sin pantalla propia todavía (ya no existe como nodo — ver 14-reclutamiento-y-rareza.md).
     return null;
   },
 
@@ -280,9 +333,60 @@ export const useGameStore = create((set, get) => ({
     return resumen;
   },
 
-  /** Vuelve del resultado de combate/evento al mapa. */
+  /** Vuelve del resultado de combate/evento/tienda al mapa. */
   volverAlMapa() {
-    set({ pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null });
+    set({ pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null, tiendaActual: null });
+  },
+
+  /** Compra uno de los consumibles ofrecidos en la tienda actual. Se puede comprar más de uno. */
+  comprarConsumibleTienda(itemId) {
+    const { tiendaActual, oro, inventario } = get();
+    if (!tiendaActual || !tiendaActual.consumibles.includes(itemId)) return false;
+    const item = itemsData.objetos.find((o) => o.id === itemId);
+    if (!item || oro < item.precioTienda) return false;
+
+    set({
+      oro: oro - item.precioTienda,
+      inventario: [...inventario, item.id],
+      tiendaActual: {
+        ...tiendaActual,
+        consumibles: tiendaActual.consumibles.filter((id) => id !== itemId),
+      },
+    });
+    return true;
+  },
+
+  /** Reclama el objeto pasivo gratuito de la tienda actual (una sola vez por visita). */
+  reclamarObjetoGratuitoTienda() {
+    const { tiendaActual, inventario } = get();
+    if (!tiendaActual || !tiendaActual.gratuito) return false;
+
+    set({
+      inventario: [...inventario, tiendaActual.gratuito],
+      tiendaActual: { ...tiendaActual, gratuito: null },
+    });
+    return true;
+  },
+
+  /**
+   * Recluta a uno de los dos personajes ofrecidos en la tienda actual. Al
+   * reclutar uno, el otro se descarta automáticamente (solo se puede elegir
+   * uno de los dos, como pedía el diseño).
+   */
+  reclutarDeTienda(personajeId) {
+    const { tiendaActual, oro } = get();
+    if (!tiendaActual) return false;
+    const opcion = tiendaActual.reclutables.find((r) => r.personajeId === personajeId);
+    if (!opcion || oro < opcion.precio) return false;
+
+    const reclutado = get().reclutarPersonaje(personajeId, tiendaActual.nivelReclutamiento);
+    if (!reclutado) return false; // equipo lleno, no se cobra
+
+    set({
+      oro: oro - opcion.precio,
+      tiendaActual: { ...tiendaActual, reclutables: [] }, // se descarta la otra opción
+    });
+    return true;
   },
 
   /**
@@ -291,7 +395,7 @@ export const useGameStore = create((set, get) => ({
    * run nueva automáticamente, sin duplicar esa lógica aquí.
    */
   reiniciarRun() {
-    set({ mapa: null, pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null });
+    set({ mapa: null, pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null, tiendaActual: null });
   },
 
   /** Interno: reduce en 1 los combates restantes de cada buff temporal y elimina los agotados. */

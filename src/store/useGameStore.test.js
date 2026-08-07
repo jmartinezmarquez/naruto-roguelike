@@ -112,3 +112,72 @@ describe('reiniciarRun', () => {
     expect(useGameStore.getState().mapa).toBeNull();
   });
 });
+
+describe('tienda', () => {
+  function fijarTiendaDePrueba() {
+    useGameStore.setState({
+      oro: 1000,
+      tiendaActual: {
+        consumibles: ['pildora_soldado'],
+        gratuito: 'sello_chakra',
+        reclutables: [
+          { personajeId: 'rock_lee', nombre: 'Rock Lee', rareza: 'comun', precio: 40 },
+          { personajeId: 'neji', nombre: 'Neji Hyuga', rareza: 'comun', precio: 40 },
+        ],
+        nivelReclutamiento: 10,
+      },
+    });
+  }
+
+  it('comprarConsumibleTienda descuenta el oro y añade el objeto al inventario', () => {
+    fijarTiendaDePrueba();
+    const oroAntes = useGameStore.getState().oro;
+    const exito = useGameStore.getState().comprarConsumibleTienda('pildora_soldado');
+    expect(exito).toBe(true);
+    expect(useGameStore.getState().inventario).toContain('pildora_soldado');
+    expect(useGameStore.getState().oro).toBeLessThan(oroAntes);
+  });
+
+  it('comprarConsumibleTienda falla si no hay oro suficiente', () => {
+    fijarTiendaDePrueba();
+    useGameStore.setState({ oro: 0 });
+    const exito = useGameStore.getState().comprarConsumibleTienda('pildora_soldado');
+    expect(exito).toBe(false);
+    expect(useGameStore.getState().inventario).not.toContain('pildora_soldado');
+  });
+
+  it('reclamarObjetoGratuitoTienda añade el objeto sin coste', () => {
+    fijarTiendaDePrueba();
+    useGameStore.setState({ oro: 0 });
+    const exito = useGameStore.getState().reclamarObjetoGratuitoTienda();
+    expect(exito).toBe(true);
+    expect(useGameStore.getState().inventario).toContain('sello_chakra');
+    expect(useGameStore.getState().oro).toBe(0); // no cobra nada
+  });
+
+  it('reclutarDeTienda añade al personaje elegido y descarta la otra opción', () => {
+    fijarTiendaDePrueba();
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.slice(0, 2) })); // dejar hueco
+    const exito = useGameStore.getState().reclutarDeTienda('rock_lee');
+    expect(exito).toBe(true);
+    const { equipo, tiendaActual } = useGameStore.getState();
+    expect(equipo.map((p) => p.id)).toContain('rock_lee');
+    expect(equipo.map((p) => p.id)).not.toContain('neji'); // la otra opción se descarta
+    expect(tiendaActual.reclutables).toHaveLength(0);
+  });
+
+  it('reclutarDeTienda respeta el nivel de reclutamiento fijado en la oferta', () => {
+    fijarTiendaDePrueba();
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.slice(0, 2) })); // dejar hueco
+    useGameStore.getState().reclutarDeTienda('rock_lee');
+    const reclutado = useGameStore.getState().equipo.find((p) => p.id === 'rock_lee');
+    expect(reclutado.nivel).toBe(10);
+  });
+
+  it('reclutarDeTienda no hace nada si el equipo ya está completo', () => {
+    fijarTiendaDePrueba(); // el equipo del beforeEach ya tiene 3/3
+    const exito = useGameStore.getState().reclutarDeTienda('rock_lee');
+    expect(exito).toBe(false);
+    expect(useGameStore.getState().equipo.map((p) => p.id)).not.toContain('rock_lee');
+  });
+});
