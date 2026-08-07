@@ -23,5 +23,8 @@
 - [19 - Selección de personaje inicial y reclutar-con-reemplazo](./19-seleccion-de-personaje.md)
 - [20 - Arcos encadenados en una sola run](./20-arcos-encadenados.md)
 - [21 - Objetos equipables y consumibles](./21-objetos-equipables.md)
+- [22 - Diseño de tarjeta de personaje](./22-diseño-tarjeta-de-personaje.md)
+- [23 - Diseño de tarjeta de inventario](./23-diseño-tarjeta-de-inventario.md)
+- [24 - Diseño de tarjeta de equipar objeto](./24-diseño-tarjeta-equipar-objeto.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.
