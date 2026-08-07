@@ -11,6 +11,9 @@ import eventosData from '../data/events.json';
 import itemsData from '../data/items.json';
 import enemiesData from '../data/enemies.json';
 import achievementsData from '../data/achievements.json';
+import arcoPaisDeLasOlas from '../data/arcs/pais-de-las-olas.json';
+import arcoExamenChunin from '../data/arcs/examen-chunin.json';
+import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp } from '../engine/leveling';
@@ -19,6 +22,12 @@ import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbl
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
+
+// Orden fijo de los 3 arcos del MVP: al derrotar al jefe final de uno, la
+// run continúa automáticamente con el siguiente en vez de terminar ahí. El
+// último (Pain) lleva `recompensa.finDeLaRun: true` en enemies.json — esa es
+// la señal real de "esto ya es el final", no "ser el último de esta lista".
+const ORDEN_ARCOS = [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain];
 
 /**
  * Busca los datos base (fijos) de un personaje por su id: primero en
@@ -177,7 +186,7 @@ export const useGameStore = create((set, get) => ({
   // ---------- ACCIONES ----------
 
   /** Arranca una run nueva con hasta 3 personajes iniciales (config.equipo.tamanoMaximo). */
-  iniciarRun(personajesInicialesIds, arco) {
+  iniciarRun(personajesInicialesIds, arco = ORDEN_ARCOS[0]) {
     const tamanoMaximo = configGlobal.equipo.tamanoMaximo;
     const equipoInicial = personajesInicialesIds
       .slice(0, tamanoMaximo)
@@ -331,6 +340,7 @@ export const useGameStore = create((set, get) => ({
     const rondas = [];
     let jugadorGanoFinal = false;
     let logrosDesbloqueados = [];
+    let arcoCompletado = false;
     // Quiénes ya estaban caídos ANTES de este combate (no curados desde
     // entonces) — esos no ganan XP al ganar. Quien caiga DURANTE este mismo
     // combate (rondas encadenadas) sí ganó su XP, ya que participó.
@@ -384,6 +394,25 @@ export const useGameStore = create((set, get) => ({
         // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
         // cuando termine la animación, para no arruinar el suspense.
         logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase);
+
+        // ¿Este enemigo era el jefe final del arco en curso? Si además lleva
+        // recompensa.finDeLaRun (solo Pain la tiene), la run entera se ha
+        // ganado aquí mismo — se marca ya, antes de que la UI decida a qué
+        // pantalla ir tras la animación de combate.
+        const arcoEnCurso = get().arcoActualDatos;
+        arcoCompletado = enemigoBase.id === arcoEnCurso?.jefeFinalId;
+        if (arcoCompletado) {
+          // Estilo Slay the Spire: superar el jefe de un acto cura a todo el
+          // equipo por completo (y revive a quien hubiera caído), de regalo
+          // antes de pasar al siguiente arco — no hace falta ir a buscar un
+          // nodo de descanso justo después de la pelea más dura del arco.
+          get()._curarEquipoCompleto();
+          set({ avisoUltimoNodo: 'Equipo curado por completo al superar el arco.' });
+        }
+        if (arcoCompletado && enemigoBase.recompensa?.finDeLaRun) {
+          set({ runTerminada: true, runGanada: true });
+        }
+
         jugadorGanoFinal = true;
         break;
       } else {
@@ -395,7 +424,7 @@ export const useGameStore = create((set, get) => ({
 
     get()._consumirUsoBuffsTemporales();
 
-    const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados };
+    const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado };
     set({ ultimoResultadoCombate: resumen });
     return resumen;
   },
@@ -403,6 +432,34 @@ export const useGameStore = create((set, get) => ({
   /** Vuelve del resultado de combate/evento/tienda al mapa. */
   volverAlMapa() {
     set({ pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null, tiendaActual: null });
+  },
+
+  /**
+   * Tras derrotar al jefe final de un arco que NO era el último de la run,
+   * genera el mapa del siguiente arco y continúa — el equipo, oro,
+   * inventario y buffs se mantienen tal cual, solo cambia el arco. Si por
+   * lo que sea no hay un siguiente arco conocido (arco fuera de
+   * `ORDEN_ARCOS`, p. ej. en tests), no hace nada y devuelve false.
+   */
+  avanzarSiguienteArco() {
+    const { arcoActualId } = get();
+    const indiceActual = ORDEN_ARCOS.findIndex((a) => a.id === arcoActualId);
+    const siguienteArco = indiceActual === -1 ? null : ORDEN_ARCOS[indiceActual + 1];
+    if (!siguienteArco) return false;
+
+    set({
+      arcoActualId: siguienteArco.id,
+      arcoActualDatos: siguienteArco,
+      mapa: generarMapa(siguienteArco),
+      nodoActualId: null,
+      pantalla: 'mapa',
+      ultimoResultadoCombate: null,
+      eventoActual: null,
+      tiendaActual: null,
+      avisoUltimoNodo: null,
+      huboDerrotaEnEsteArco: false,
+    });
+    return true;
   },
 
   /** Tras ver el resultado del combate final de la run, pasa a la pantalla de Game Over. */

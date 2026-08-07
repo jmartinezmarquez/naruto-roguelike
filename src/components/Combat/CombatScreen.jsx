@@ -43,7 +43,10 @@ export default function CombatScreen() {
   const resultado = useGameStore((s) => s.ultimoResultadoCombate);
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const irAGameOver = useGameStore((s) => s.irAGameOver);
+  const avanzarSiguienteArco = useGameStore((s) => s.avanzarSiguienteArco);
   const runTerminada = useGameStore((s) => s.runTerminada);
+  const runGanada = useGameStore((s) => s.runGanada);
+  const arcoActualDatos = useGameStore((s) => s.arcoActualDatos);
   const notificarLogros = useAchievementsStore((s) => s.notificar);
 
   const [indiceRonda, setIndiceRonda] = useState(0);
@@ -199,7 +202,9 @@ export default function CombatScreen() {
             {runTerminada ? (
               <div>
                 <p className="text-pergamino-200/80 text-sm mb-4">
-                  Todo tu equipo ha caído. La run ha terminado.
+                  {runGanada
+                    ? '¡Has completado la run entera! Konoha está a salvo.'
+                    : 'Todo tu equipo ha caído. La run ha terminado.'}
                 </p>
                 <button
                   type="button"
@@ -207,6 +212,19 @@ export default function CombatScreen() {
                   className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
                 >
                   Ver resultado
+                </button>
+              </div>
+            ) : resultado.arcoCompletado ? (
+              <div>
+                <p className="text-pergamino-200/80 text-sm mb-4">
+                  Has superado {arcoActualDatos?.nombre}. Un nuevo arco comienza.
+                </p>
+                <button
+                  type="button"
+                  onClick={avanzarSiguienteArco}
+                  className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
+                >
+                  Continuar al siguiente arco
                 </button>
               </div>
             ) : (

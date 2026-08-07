@@ -92,6 +92,85 @@ describe('jugarCombate — victoria', () => {
   });
 });
 
+describe('encadenar arcos', () => {
+  it('derrotar al jefe final del arco marca arcoCompletado en el resumen, sin terminar la run', () => {
+    const resumen = useGameStore.getState().jugarCombate(enemigoZabuzaDePrueba, 1);
+    expect(resumen.arcoCompletado).toBe(true);
+    expect(useGameStore.getState().runTerminada).toBe(false);
+    expect(useGameStore.getState().runGanada).toBe(false);
+  });
+
+  it('derrotar a un enemigo con recompensa.finDeLaRun marca la run como terminada y ganada', () => {
+    // El arco de prueba es pais_de_las_olas de verdad; se sustituye jefeFinalId
+    // por un id de prueba para poder controlar la recompensa sin tocar datos reales.
+    useGameStore.setState((estado) => ({
+      arcoActualDatos: { ...estado.arcoActualDatos, jefeFinalId: 'pain_test' },
+    }));
+    const enemigoFinalDePrueba = {
+      id: 'pain_test',
+      nombre: 'Pain de Prueba',
+      tipo: 'raiton',
+      statsBase: { hp: 1, ataque: 1, defensa: 1, velocidad: 1 },
+      jutsu: { nombre: 'Golpe Débil', danoBase: 0.1, efectoEstado: null },
+      modos: [],
+      recompensa: { xp: 10, finDeLaRun: true },
+    };
+
+    const resumen = useGameStore.getState().jugarCombate(enemigoFinalDePrueba, 1);
+    expect(resumen.arcoCompletado).toBe(true);
+    expect(useGameStore.getState().runTerminada).toBe(true);
+    expect(useGameStore.getState().runGanada).toBe(true);
+  });
+
+  it('derrotar al jefe final de un arco cura y revive a todo el equipo (estilo Slay the Spire)', () => {
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 1 ? { ...p, derrotado: true, hpActual: 0 } : { ...p, hpActual: 1 })),
+    }));
+
+    useGameStore.getState().jugarCombate(enemigoZabuzaDePrueba, 1);
+
+    const { equipo, obtenerHpMaximo } = useGameStore.getState();
+    equipo.forEach((p) => {
+      expect(p.derrotado).toBe(false);
+      expect(p.hpActual).toBe(obtenerHpMaximo(p.id));
+    });
+  });
+
+  it('avanzarSiguienteArco pasa al siguiente arco de la secuencia manteniendo equipo y oro', () => {
+    useGameStore.getState().jugarCombate(enemigoZabuzaDePrueba, 1);
+    const oroAntes = useGameStore.getState().oro;
+    const idsEquipoAntes = useGameStore.getState().equipo.map((p) => p.id);
+
+    const avanzo = useGameStore.getState().avanzarSiguienteArco();
+    expect(avanzo).toBe(true);
+
+    const { arcoActualId, mapa, nodoActualId, oro, equipo, huboDerrotaEnEsteArco, pantalla } = useGameStore.getState();
+    expect(arcoActualId).toBe('examen_chunin');
+    expect(mapa.arcoId).toBe('examen_chunin');
+    expect(nodoActualId).toBeNull();
+    expect(pantalla).toBe('mapa');
+    expect(oro).toBe(oroAntes);
+    expect(equipo.map((p) => p.id)).toEqual(idsEquipoAntes);
+    expect(huboDerrotaEnEsteArco).toBe(false);
+  });
+
+  it('avanzarSiguienteArco no hace nada si el arco actual no está en la secuencia conocida', () => {
+    useGameStore.setState((estado) => ({
+      arcoActualId: 'arco_inventado',
+      arcoActualDatos: { ...estado.arcoActualDatos, id: 'arco_inventado' },
+    }));
+    const avanzo = useGameStore.getState().avanzarSiguienteArco();
+    expect(avanzo).toBe(false);
+    expect(useGameStore.getState().arcoActualId).toBe('arco_inventado');
+  });
+
+  it('avanzarSiguienteArco no hace nada si el arco actual ya es el último de la secuencia', () => {
+    useGameStore.setState({ arcoActualId: 'invasion_de_pain' });
+    const avanzo = useGameStore.getState().avanzarSiguienteArco();
+    expect(avanzo).toBe(false);
+  });
+});
+
 describe('jugarCombate — un personaje muere', () => {
   it('un rival imposible de vencer acaba derrotando a todo el equipo (rondas encadenadas)', () => {
     useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);

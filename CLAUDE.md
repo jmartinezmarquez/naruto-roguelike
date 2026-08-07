@@ -70,13 +70,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 87 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 93 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 87 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 93 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -88,9 +88,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   cualquier tienda, incluida la del primer arco (que no tiene `personajesReclutablesIds` propio) —
   así siempre se puede formar un equipo de 3 aunque no se haya desbloqueado ningún logro todavía.
   Ver `documentacion/15-tienda.md`.
-- [ ] **Encadenar los 3 arcos en una sola run** — próximo paso principal, ver `documentacion/05-roadmap.md`. Hoy `App.jsx` solo arranca `pais_de_las_olas`.
+- [x] Los 3 arcos se juegan en una sola run: al derrotar al jefe final de uno, continúa
+  automáticamente con el siguiente (`avanzarSiguienteArco`, `ORDEN_ARCOS` en `useGameStore.js`).
+  Derrotar a Pain (`recompensa.finDeLaRun: true`) marca la run como ganada de verdad —
+  `GameOverScreen` ya distingue victoria de derrota. Ver `documentacion/20-arcos-encadenados.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
-- [ ] `recompensa.finDeLaRun` (Pain) no lo lee ningún código — falta marcar `runGanada: true`.
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 
 ## Bugs ya resueltos (para no repetirlos)

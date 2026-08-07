@@ -10,16 +10,25 @@ propia pantalla de combate, sin mostrar el estado final del equipo ni navegar a 
 
 1. `jugarCombate` (store) detecta que no queda ningún personaje vivo y pone `runTerminada: true`.
    `CombatScreen` sigue mostrando la animación de la última ronda con normalidad — esto no cambió.
-2. Al terminar la animación, si `runTerminada` es `true`, el botón dice **"Ver resultado"** en vez
-   de "Continuar" y llama a la nueva acción del store `irAGameOver()`, que solo cambia
-   `pantalla: 'gameover'`. `App.jsx` renderiza `<GameOverScreen />` cuando la pantalla es esa.
-3. `GameOverScreen` lee `equipo`, `oro`, `arcoActualDatos`, `mapa`/`nodoActualId` (para el piso
-   alcanzado) y `obtenerHpMaximo` del store, y muestra:
-   - Arco y piso donde cayó el equipo (`"en {arco.nombre}, piso X de Y"`).
-   - Una tarjeta por personaje: nombre, nivel, "Caído", HP (siempre 0 / máximo en este punto).
+2. Al terminar la animación, `CombatScreen` decide entre 3 botones según el resultado:
+   `runTerminada` (derrota total O victoria real sobre Pain) → **"Ver resultado"** → `irAGameOver()`
+   → `pantalla: 'gameover'`; `resultado.arcoCompletado` sin `runTerminada` (jefe de un arco
+   intermedio) → **"Continuar al siguiente arco"** → `avanzarSiguienteArco()`; cualquier otro
+   combate → **"Continuar"** → `volverAlMapa()` de siempre. `App.jsx` renderiza `<GameOverScreen />`
+   cuando la pantalla es `'gameover'`. Ver [20 - Arcos encadenados](./20-arcos-encadenados.md).
+3. `GameOverScreen` lee `equipo`, `oro`, `runGanada`, `arcoActualDatos`, `mapa`/`nodoActualId` (para
+   el piso alcanzado) y `obtenerHpMaximo` del store, y muestra:
+   - Arco y piso donde cayó el equipo (`"en {arco.nombre}, piso X de Y"`) — solo si `runGanada` es
+     `false`; si es `true` (venció a Pain), muestra un mensaje de victoria en su lugar.
+   - Una tarjeta por personaje: nombre, nivel, "Caído"/"En pie" (ya no siempre "Caído" — con
+     `runGanada` puede haber supervivientes), HP.
    - Oro acumulado en la run.
    - Botón **"Nueva Run"** → `reiniciarRun()` (sin cambios: pone `mapa: null`, lo que hace que el
      `useEffect` de `App.jsx` arranque una run nueva automáticamente).
+
+**`runTerminada` ya no significa "derrota"**, significa "la run se acabó" — puede ser por derrota
+(`runGanada: false`, cuando cae todo el equipo) o por victoria real (`runGanada: true`, al derrotar
+a Pain en el tercer arco) — ver [20 - Arcos encadenados](./20-arcos-encadenados.md).
 
 ## Decisiones de diseño
 

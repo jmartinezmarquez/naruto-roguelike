@@ -63,7 +63,11 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 - Lee `ultimoResultadoCombate` del store (resumen enriquecido: nombres, HP máximo, modo activo).
 - Reproduce `historial` turno a turno con auto-avance (900ms/turno), reconstruyendo el HP de cada lado restando el daño acumulado de los turnos ya revelados. Botón "Saltar animación".
 - Barras de HP con color según % restante (`fuuton` >50%, `raiton` 20-50%, `sello` <20%). Cada `BarraLuchador` envuelta en `PersonajeHoverCard` (jugador se abre hacia la derecha, enemigo hacia la izquierda, para no salirse de la pantalla).
-- Al completarse: banner de Victoria/Derrota y botón "Continuar" → `volverAlMapa()`. Si `runTerminada` es `true`, el botón dice "Ver resultado" y navega a `GameOverScreen` en su lugar (ver [17](./17-game-over.md)).
+- Al completarse: banner de Victoria/Derrota y uno de 3 botones según el resultado — "Continuar"
+  (`volverAlMapa()`, combate normal), "Continuar al siguiente arco" (`avanzarSiguienteArco()`, se
+  ganó el jefe final de un arco intermedio) o "Ver resultado" (`irAGameOver()`, la run terminó — por
+  derrota o por vencer a Pain) → `GameOverScreen` (ver [17](./17-game-over.md) y
+  [20](./20-arcos-encadenados.md)).
 
 ## `components/Event/EventScreen.jsx` (nuevo)
 

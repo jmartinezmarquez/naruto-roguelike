@@ -47,7 +47,7 @@
 - [x] Reclutamiento vía tienda y jerarquía de rareza (ver [14](./14-reclutamiento-y-rareza.md)) — esto ya se implementó, este punto queda como referencia histórica del diseño previo.
 
 **Calidad**
-- [x] Testing con Vitest: 87 tests sobre motor y store — ver [16](./16-testing.md).
+- [x] Testing con Vitest: 93 tests sobre motor y store — ver [16](./16-testing.md).
 
 **Bugfixing y ajustes de diseño (ronda completa)**
 - [x] Selección de personaje: ficha completa siempre visible (no hover), la run arranca al tocar
@@ -77,35 +77,36 @@
 - [x] El mapa cabe siempre en el viewport sin scroll (escalado con `ResizeObserver`, estilo
   Pokelike) — ver [13](./13-ui-mapa-y-combate.md).
 
+**Arcos encadenados**
+- [x] Los 3 arcos se juegan en una sola run: al derrotar al jefe final de uno (Zabuza → Gaara →
+  Pain), la run continúa automáticamente con el siguiente en vez de terminar ahí. Derrotar a Pain
+  (único con `recompensa.finDeLaRun: true`) marca la run como ganada de verdad —
+  `GameOverScreen` ahora distingue victoria de derrota. Ver [20](./20-arcos-encadenados.md).
+  **Sin implementar a propósito**: el evento narrativo de transición entre arcos (hoy es un botón
+  directo "Continuar al siguiente arco", sin pausa) — queda anotado como posible mejora ahí mismo.
+
 ## Próximos pasos (en orden sugerido)
 
-1. **Encadenar los 3 arcos en una sola run** (objetivo principal de la próxima sesión): al derrotar
-   al jefe final de un arco (nodo `jefe` — Zabuza, luego Gaara, luego Pain), generar el mapa del
-   siguiente arco automáticamente y continuar, en vez de terminar la run ahí. Hoy `App.jsx` solo
-   arranca `pais_de_las_olas` y no hay ninguna transición entre arcos implementada.
-   - De paso, considerar un **evento especial tras el jefe de cada arco** (antes de pasar al
-     siguiente) — una pausa narrativa/de transición entre actos, no solo saltar directo al mapa
-     siguiente. Encaja con el pedido de abajo de pensar mecánicas al estilo Slay the Spire.
-2. **Nodo de "reclutar" dedicado en el mapa** — ahora que la run empieza con 1 solo personaje (ver
+1. **Nodo de "reclutar" dedicado en el mapa** — ahora que la run empieza con 1 solo personaje (ver
    [19](./19-seleccion-de-personaje.md)), reclutar ya no es un extra de la tienda, es una necesidad
    central del run. Falta decidir en la propia sesión: ¿nodo propio con su propia oferta, o dar más
    peso al reclutamiento dentro de la tienda existente? ¿Coste distinto al de tienda?
 
-3. **Nodo de "Combate en cadena"**  — En Pokelike tenemos encuentros salvajes (1 solo enemigo), entrenadores (enemigos con mas de 1 encuentro uno detras de otro) y entrenadores de elite (Rival, con un equipo mas fuerte y mas combates en cadena). Nuestro mini-boss (Haku p.e) sería de este tercer tipo, y un combate con Genin Ninja sería el primer tipo. Para combates contra personajes nombrados (Zaku, Dosu, Rin, etc) quizá estaría bien añadirle uno o dos genin estandar para simbolizar un combate más largo. 
+2. **Nodo de "Combate en cadena"**  — En Pokelike tenemos encuentros salvajes (1 solo enemigo), entrenadores (enemigos con mas de 1 encuentro uno detras de otro) y entrenadores de elite (Rival, con un equipo mas fuerte y mas combates en cadena). Nuestro mini-boss (Haku p.e) sería de este tercer tipo, y un combate con Genin Ninja sería el primer tipo. Para combates contra personajes nombrados (Zaku, Dosu, Rin, etc) quizá estaría bien añadirle uno o dos genin estandar para simbolizar un combate más largo. 
 
-4. **Tarjeta de Objetos y Oro** debajo del panel de equipo en `MapScreen.jsx` — muestra el
+3. **Tarjeta de Objetos y Oro** debajo del panel de equipo en `MapScreen.jsx` — muestra el
    inventario actual y el oro, con **hover en cada objeto** revelando su descripción y su efecto
    exacto (qué cura, qué bonificación da, etc.), mismo patrón que `PersonajeHoverCard` pero para
    `items.json`.  - Creo que podemos prescindir de la leyenda de nodos para dar sitio al inventario (oro + objetos). En su lugar, hacer hover en un nodo deberia decirte lo que es, y el beneficio que te da, como en Pokelike. Por ejemplo:
   Tienda - Compra objetos, Combate aleatorio - + 1 Nivel, Mini-boss - Recompensa adicional, etc. 
 
-5. **Ampliar el roster de enemigos nombrados y logros** — No hace falta cubrir todos los ninjas del manga pero que no se sienta que siempre te van a salir los mismos enemigos al clicar en un Combate del tipo Entrenador. Añadiendo variedad en cada arco. Además añadir logros para la "completion" de los arcos. No todos los logros tienen por qué desbloquear personajes u objetos permanentes, otros simplemente son por coleccionismo. También pueden afectar al oro inicial, de manera que empieces las siguientes runs con más oro, etc. El sistema de logros de Pokelike lo hace bastante bien, dando un balance entre desbloqueos tempranos e incrementales y logros dificiles de conseguir para jugadores mas coleccionistas.
+4. **Ampliar el roster de enemigos nombrados y logros** — No hace falta cubrir todos los ninjas del manga pero que no se sienta que siempre te van a salir los mismos enemigos al clicar en un Combate del tipo Entrenador. Añadiendo variedad en cada arco. Además añadir logros para la "completion" de los arcos. No todos los logros tienen por qué desbloquear personajes u objetos permanentes, otros simplemente son por coleccionismo. También pueden afectar al oro inicial, de manera que empieces las siguientes runs con más oro, etc. El sistema de logros de Pokelike lo hace bastante bien, dando un balance entre desbloqueos tempranos e incrementales y logros dificiles de conseguir para jugadores mas coleccionistas.
 
-6. **Cambiar los textos a ingles** — El codigo no lo voy a compartir con nadie, pero pretendo sacar el juego como aplicacion web y el ingles es un idioma que alcanza a mucha más gente. Hay que traducir todos los textos de cara a usuario. Es mejor hacer 2 versiones y un selector de lenguaje? Cual es el approach mas rapido? Todo el contenido de despues tiene que estar tambien en ingles.
+5. **Cambiar los textos a ingles** — El codigo no lo voy a compartir con nadie, pero pretendo sacar el juego como aplicacion web y el ingles es un idioma que alcanza a mucha más gente. Hay que traducir todos los textos de cara a usuario. Es mejor hacer 2 versiones y un selector de lenguaje? Cual es el approach mas rapido? Todo el contenido de despues tiene que estar tambien en ingles.
 
-7. **Añadir background e imagen para la columna central** — Siguiendo el estilo Pokelike, existe un background generico para toda la app y la columna donde se encuentra el piso tiene un tema dependiendo del acto. Encuentra una imagen para cada acto y usala. Utiliza tambien la fuente de naruto que se encuentra en Assets para darle un toque más personal. 
+6. **Añadir background e imagen para la columna central** — Siguiendo el estilo Pokelike, existe un background generico para toda la app y la columna donde se encuentra el piso tiene un tema dependiendo del acto. Encuentra una imagen para cada acto y usala. Utiliza tambien la fuente de naruto que se encuentra en Assets para darle un toque más personal. 
 
-8. **Actualizar sprites de los nodos** — Siguiendo el estilo Pokelike, cada nodo debería tener un sprite facilmente reconocible. 
+7. **Actualizar sprites de los nodos** — Siguiendo el estilo Pokelike, cada nodo debería tener un sprite facilmente reconocible. 
 - Encuentro aleatorio - Equivalente a Pokemon Salvaje - Sprite pixel art ninja renegado con un sprite de ninja estandar 
 - Encuentro con enemigo nombrado - Equivalente a entrenador pokemon - Sprite del personaje enemigo en concreto
 - Mini-boss - Equivalente a entrenador rival - Sprite del personaje en concreto
@@ -115,11 +116,11 @@
 - Reclutar ninja - Equivalente a capturar pokemon - Pergamino de contrato con un simbolo '+'
 - Jefe final - Equivalente a lider de gimnasio - Sprite del personaje en concreto
 
-9. **Cambiar estructura del combate** — Siguiendo el estilo Pokelike, el combate es automatico. Se me ha ocurrido que como retoque final, podríamos hacer que los personajes ataquen con un ataque basico (animacion kunai) y un ataque potente que se carga al hacer o recibir daño. Este se utilizaria automaticamente al cargarse por completo. Cada ataque tendria un tiempo de carga distinto dependiendo de su poder y lo haria mucho más profundo. Como lo ves? Algo parecido a lo que hace Pokemon GO
+8. **Cambiar estructura del combate** — Siguiendo el estilo Pokelike, el combate es automatico. Se me ha ocurrido que como retoque final, podríamos hacer que los personajes ataquen con un ataque basico (animacion kunai) y un ataque potente que se carga al hacer o recibir daño. Este se utilizaria automaticamente al cargarse por completo. Cada ataque tendria un tiempo de carga distinto dependiendo de su poder y lo haria mucho más profundo. Como lo ves? Algo parecido a lo que hace Pokemon GO
 
-10. **Actualizar interfaz de combate** — Siguiendo el estilo Pokelike, todo el equipo deberia aparecer en la pantalla de combate aunque solo el primero de cada bando este peleando. El sprite de los personajes debería aparecer y el sistema de logs se debería intercambiar por una animacion en la que los ninjas lanzan un kunai al enemigo. Al impactar, la barra de salud baja. No es necesario ver el numero de daño ya que la HP se ve. Para los personajes caidos, la card debería apagarse, tal y como hace pokelike. Para darle más viveza, añadir un efecto agitado cada vez que un personaje recibe un golpe. 
+9. **Actualizar interfaz de combate** — Siguiendo el estilo Pokelike, todo el equipo deberia aparecer en la pantalla de combate aunque solo el primero de cada bando este peleando. El sprite de los personajes debería aparecer y el sistema de logs se debería intercambiar por una animacion en la que los ninjas lanzan un kunai al enemigo. Al impactar, la barra de salud baja. No es necesario ver el numero de daño ya que la HP se ve. Para los personajes caidos, la card debería apagarse, tal y como hace pokelike. Para darle más viveza, añadir un efecto agitado cada vez que un personaje recibe un golpe. 
 
-11. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
+10. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
    personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en
    [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en un
    arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`).
@@ -138,7 +139,7 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
 
 - **Fila de reliquias visible** (estilo Slay the Spire): los objetos pasivos ya existen en el
   inventario, pero no hay ninguna vista dedicada tipo "iconos de reliquia siempre visibles" — hoy
-  solo se ven al abrir la futura tarjeta de Objetos y Oro (punto 4 de arriba).
+  solo se ven al abrir la futura tarjeta de Objetos y Oro (punto 3 de arriba).
 - **Vista previa del jefe antes de entrar al nodo**: hover sobre el nodo `jefe`/`miniJefe` en el
   mapa mostrando su ficha completa (reutilizando `PersonajeHoverCard`), para decidir con
   información si conviene ir a curarse antes.
@@ -146,7 +147,8 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
   con mejor recompensa o uno seguro con menos, al estilo "elite fight" de Slay the Spire.
 - **Modificadores de dificultad entre runs** ("ascensión"): ligado a la condición de logro ya
   propuesta pero sin implementar `completarRunEnDificultad` en `achievements.json`.
-- Interpretar `recompensa.finDeLaRun` (Pain) para marcar `runGanada: true`.
+- **Evento narrativo de transición entre arcos** (ver [20](./20-arcos-encadenados.md)) — hoy es
+  instantáneo, un botón directo al mapa del siguiente arco.
 - Modo Nuzlocke.
 - Sistema de cuentas / guardado remoto.
 - Arte propio (sustituir placeholders).
