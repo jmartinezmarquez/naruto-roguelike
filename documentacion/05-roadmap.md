@@ -122,33 +122,74 @@
   `esEntrenador: true, geninAntes: N` en `common-enemies.json`. Zaku/Dosu = 2 genins, Kin = 1.
 - [x] `cadenaEnemigos` en el store rastrea la posición dentro de la cadena; `continuarCadena()`
   avanza al siguiente combate. Los buffs temporales no se gastan hasta el último combate.
-- [x] `CombatScreen` muestra "COMBATE X/N" en cabecera y botón "Siguiente combate" entre peleas.
+- [x] El avance entre combates de la cadena es **automático** (1,6 s de delay, sin botón):
+  `CombatScreen` muestra "COMBATE X/N" y un texto pulsante "Siguiente enemigo...".
   Ver [26](./26-combate-en-cadena.md).
+- [x] Icono de nodo entrenador distinto en el mapa (`★` rojo-naranja, color katon) para
+  diferenciarlo visualmente del combate aleatorio antes de entrar.
+
+**Visual / tipografía**
+- [x] Fuente pixel art GBA (`PressStart2P`) aplicada a todo el texto del juego —
+  registrada en `index.css` como `--font-body` y `--font-display`. `font-display: swap`
+  para evitar FOIT (texto invisible mientras carga la fuente).
+- [x] Fuente `NJNaruto` aplicada con `font-naruto` en los titulares de impacto:
+  "Elige a tu ninja", "VICTORIA / GAME OVER", nombre del arco en el mapa.
+- [x] Background de app: `game-background-dark-theme.png` (paisaje nocturno de Konoha) como
+  fondo fijo via `backgroundAttachment: fixed` en el wrapper de `App.jsx`. El wrapper
+  envuelve ahora también la pantalla de selección de personaje (antes era un early-return
+  sin fondo, lo que causaba pantalla completamente negra).
+- [x] Rueda de chakra rediseñada: panel oscuro `bg-tinta-900`, emoji en vez de abreviaturas
+  de texto (via `foreignObject` SVG para compatibilidad cross-browser), bordes de color
+  por elemento, flechas más finas.
+- [x] Pantalla de Reclutar: badge de tipo con texto ("KATON") sustituido por emoji (🔥⚡🌪️🪨💧)
+  coherente con el resto del juego.
 
 ## Próximos pasos (en orden sugerido)
 
-5. **Cambiar los textos a ingles** — El codigo no lo voy a compartir con nadie, pero pretendo sacar el juego como aplicacion web y el ingles es un idioma que alcanza a mucha más gente. Hay que traducir todos los textos de cara a usuario. Es mejor hacer 2 versiones y un selector de lenguaje? Cual es el approach mas rapido? Todo el contenido de despues tiene que estar tambien en ingles.
+5. **Cambiar los textos a inglés** — El código no lo voy a compartir con nadie, pero pretendo
+   sacar el juego como aplicación web y el inglés alcanza a mucha más gente. Hay que traducir
+   todos los textos de cara a usuario. ¿Mejor hacer 2 versiones con selector de idioma, o
+   reescribir directamente en inglés? Todo el contenido posterior tiene que estar también
+   en inglés.
 
-6. **Añadir background e imagen para la columna central** — Siguiendo el estilo Pokelike, existe un background generico para toda la app y la columna donde se encuentra el piso tiene un tema dependiendo del acto. Encuentra una imagen para cada acto y usala. Utiliza tambien la fuente de naruto que se encuentra en Assets para darle un toque más personal. 
+6. **Sprites de nodos en el mapa** — Siguiendo el estilo Pokelike, cada nodo debería tener
+   un sprite fácilmente reconocible (asset `sprite-nodos-mapa.png` ya existe).
+   Tipos pendientes:
+   - Combate aleatorio → ninja renegado genérico
+   - Combate entrenador → sprite del personaje concreto
+   - Mini-jefe → sprite del personaje concreto
+   - Tienda → mercader ambulante
+   - Descanso → clínica con cruz verde
+   - Evento → interrogante
+   - Reclutar → pergamino con `+`
+   - Jefe final → sprite del jefe concreto
 
-7. **Actualizar sprites de los nodos** — Siguiendo el estilo Pokelike, cada nodo debería tener un sprite facilmente reconocible. 
-- Encuentro aleatorio - Equivalente a Pokemon Salvaje - Sprite pixel art ninja renegado con un sprite de ninja estandar 
-- Encuentro con enemigo nombrado - Equivalente a entrenador pokemon - Sprite del personaje enemigo en concreto
-- Mini-boss - Equivalente a entrenador rival - Sprite del personaje en concreto
-- Tienda - Sprite pixel art de mercader ambulante
-- Descanso - Equivalente a centro pokemon - Sprite de tienda medica con cruz verde
-- Evento - Sprite de interrogante 
-- Reclutar ninja - Equivalente a capturar pokemon - Pergamino de contrato con un simbolo '+'
-- Jefe final - Equivalente a lider de gimnasio - Sprite del personaje en concreto
+7. **Cambiar estructura del combate** — Se me ha ocurrido que como retoque final, los
+   personajes atacarían con un ataque básico (animación kunai) y un ataque potente que se carga
+   al hacer o recibir daño, activándose automáticamente al llenarse la barra. Cada ataque tendría
+   un tiempo de carga distinto según su poder, similar a Pokémon GO.
+   (Leer MVP [26](./26-sistema-de-jutsus-automaticos.md))
 
-8. **Cambiar estructura del combate** — Siguiendo el estilo Pokelike, el combate es automatico. Se me ha ocurrido que como retoque final, podríamos hacer que los personajes ataquen con un ataque basico (animacion kunai) y un ataque potente que se carga al hacer o recibir daño. Este se utilizaria automaticamente al cargarse por completo. Cada ataque tendria un tiempo de carga distinto dependiendo de su poder y lo haria mucho más profundo. Como lo ves? Algo parecido a lo que hace Pokemon GO (Leer MVP [26](./26-sistema-de-jutsus-automaticos.md)) 
+8. **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
+   el primero esté peleando. Sprites de los personajes visibles. Los logs de texto se sustituyen
+   por una animación: el ninja lanza un kunai al enemigo y al impactar la barra de HP baja.
+   Personajes caídos → card apagada (estilo Pokelike). Efecto de sacudida al recibir golpe.
 
-9. **Actualizar interfaz de combate** — Siguiendo el estilo Pokelike, todo el equipo deberia aparecer en la pantalla de combate aunque solo el primero de cada bando este peleando. El sprite de los personajes debería aparecer y el sistema de logs se debería intercambiar por una animacion en la que los ninjas lanzan un kunai al enemigo. Al impactar, la barra de salud baja. No es necesario ver el numero de daño ya que la HP se ve. Para los personajes caidos, la card debería apagarse, tal y como hace pokelike. Para darle más viveza, añadir un efecto agitado cada vez que un personaje recibe un golpe. 
+9. **Sprites de nodos en el mapa** — `sprite-nodos-mapa.png` ya existe en assets.
+   Ver detalle de tipos en punto 6 arriba.
 
-10. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
-   personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en
-   [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en un
-   arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`). (Leer MVP [27](./27-sistema-de-balance.md))
+10. **Fondo de columna central del mapa** — `map-column-backgrounds.png` ya existe (sprite sheet
+    4 columnas × 520 × 960 px): col 1 = genérico, col 2 = País de las Olas, col 3 = Examen
+    Chunin, col 4 = Invasión de Pain. Se implementó con `background-size: 400% auto` +
+    `background-position-x` por arco, pero se retiró hasta que los sprites de nodo y la UI
+    estén terminados (el contraste con el fondo no quedaba bien con el estilo actual).
+    Reactivar junto con los sprites (punto 9).
+
+11. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
+    personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en
+    [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en
+    un arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`).
+    (Leer MVP [27](./27-sistema-de-balance.md))
 
 ### Descartado
 

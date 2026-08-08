@@ -64,10 +64,9 @@ export default function CharacterSelectScreen({ onConfirmar }) {
   }
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
       <div className="max-w-2xl w-full text-center">
-        <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Nueva run</p>
-        <h1 className="font-display text-3xl font-bold text-pergamino-100 mb-2">Elige a tu ninja</h1>
+        <h1 className="font-naruto text-4xl text-pergamino-100 mb-2">Elige a tu ninja</h1>
         <p className="text-sm text-pergamino-200/60 mb-8">
           El resto del equipo se completa reclutando durante la aventura.
         </p>

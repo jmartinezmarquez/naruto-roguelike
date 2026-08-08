@@ -528,12 +528,12 @@ export default function MapScreen() {
   }
 
   return (
-    <div className="h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
+    <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
       <MenuIconos abrirLogros={abrirLogros} reiniciarRun={reiniciarRun} />
 
       <header className="text-center mb-2 shrink-0">
         <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Arco actual</p>
-        <h1 className="font-display text-3xl font-bold text-pergamino-100">
+        <h1 className="font-naruto text-3xl text-pergamino-100 tracking-wide">
           {arcoActualDatos?.nombre}
         </h1>
       </header>
@@ -555,8 +555,11 @@ export default function MapScreen() {
           />
         </div>
 
-        <div ref={contenedorRef} className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden">
-          <div style={{ width: ANCHO * escala, height: alturaLienzo * escala }}>
+        <div
+          ref={contenedorRef}
+          className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden rounded-2xl bg-tinta-950/100"
+        >
+          <div style={{ width: ANCHO * escala, height: alturaLienzo * escala, position: 'relative', zIndex: 1 }}>
             <div
               className="relative"
               style={{ width: ANCHO, height: alturaLienzo, transform: `scale(${escala})`, transformOrigin: 'top left' }}

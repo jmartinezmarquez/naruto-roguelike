@@ -37,7 +37,7 @@ export default function AchievementsScreen() {
   const conseguidos = logrosDesbloqueados.length;
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8">
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8">
       <div className="max-w-xl mx-auto">
         <header className="text-center mb-6">
           <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Meta-progresión</p>

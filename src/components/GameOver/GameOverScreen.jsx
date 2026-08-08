@@ -18,9 +18,9 @@ export default function GameOverScreen() {
   const pisoAlcanzado = nodoActualId !== null ? mapa?.nodos[nodoActualId]?.piso : null;
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
       <div className="max-w-md w-full text-center">
-        <p className={`font-display text-4xl font-bold mb-2 ${runGanada ? 'text-fuuton' : 'text-sello-500'}`}>
+        <p className={`font-naruto text-5xl mb-2 ${runGanada ? 'text-fuuton' : 'text-sello-500'}`}>
           {runGanada ? 'Victoria' : 'Game Over'}
         </p>
         <p className="text-pergamino-200/80 text-sm mb-6">

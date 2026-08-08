@@ -40,7 +40,7 @@ export default function EventScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 flex items-center justify-center">
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex items-center justify-center">
       <div className="max-w-md w-full bg-tinta-900 border border-pergamino-100/10 rounded-lg p-6">
         <p className="text-raiton text-xs tracking-[0.3em] uppercase mb-2 text-center">Evento</p>
         <h1 className="font-display text-2xl font-bold text-center mb-4">{evento.titulo}</h1>

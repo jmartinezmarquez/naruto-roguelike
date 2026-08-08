@@ -145,7 +145,7 @@ export default function CombatScreen() {
   const eventosVisibles = ronda.historial.slice(0, turnosRevelados).flatMap((t) => t.eventos);
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 flex flex-col">
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col">
       <div className="max-w-xl mx-auto w-full">
         {cadenaEnemigos && cadenaEnemigos.enemigos.length > 1 && (
           <p className="text-center text-xs text-sello-500/70 mb-1 font-display uppercase tracking-widest">
@@ -218,7 +218,7 @@ export default function CombatScreen() {
 
         {combateTotalTerminado && (
           <div className="mt-6 text-center">
-            <p className={`font-display text-3xl font-bold mb-4 ${resultado.jugadorGanoFinal ? 'text-fuuton' : 'text-sello-500'}`}>
+            <p className={`font-naruto text-4xl mb-4 ${resultado.jugadorGanoFinal ? 'text-fuuton' : 'text-sello-500'}`}>
               {resultado.jugadorGanoFinal ? 'Victoria' : 'Derrota'}
             </p>
 

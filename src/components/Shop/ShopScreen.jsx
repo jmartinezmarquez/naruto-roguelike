@@ -84,7 +84,7 @@ export default function ShopScreen() {
   const ambientacion = AMBIENTACION_POR_ARCO[arcoActualDatos?.id] ?? 'Un mercader os ofrece sus mercancías.';
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body flex flex-col items-center justify-center px-4 py-8">
       {/* Cabecera */}
       <header className="text-center mb-8">
         <h1 className="font-display text-3xl font-bold text-pergamino-100 mb-1">

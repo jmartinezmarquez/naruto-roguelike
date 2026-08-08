@@ -13,6 +13,7 @@ import LogroToast from './components/Achievements/LogroToast';
 import AvisoToast from './components/Map/AvisoToast';
 import CharacterSelectScreen from './components/CharacterSelect/CharacterSelectScreen';
 import arcoPaisDeLasOlas from './data/arcs/pais-de-las-olas.json';
+import gameBgDark from './assets/game-background-dark-theme.png';
 
 function pantallaActual(pantalla) {
   if (pantalla === 'combate') return <CombatScreen />;
@@ -38,21 +39,27 @@ export default function App() {
     cargarLogros();
   }, [cargarLogros]);
 
-  // Sin run en curso (arranque, o tras reiniciarRun desde Game Over): hay
-  // que elegir personaje antes de nada. iniciarRun ya no se llama solo.
-  if (!mapa) {
-    return (
-      <CharacterSelectScreen
-        onConfirmar={(idsElegidos) => iniciarRun(idsElegidos, arcoPaisDeLasOlas)}
-      />
-    );
-  }
-
   return (
-    <>
-      {pantallaActual(pantalla)}
-      <LogroToast />
-      <AvisoToast />
-    </>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundImage: `url(${gameBgDark})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      {!mapa ? (
+        <CharacterSelectScreen
+          onConfirmar={(idsElegidos) => iniciarRun(idsElegidos, arcoPaisDeLasOlas)}
+        />
+      ) : (
+        <>
+          {pantallaActual(pantalla)}
+          <LogroToast />
+          <AvisoToast />
+        </>
+      )}
+    </div>
   );
 }
