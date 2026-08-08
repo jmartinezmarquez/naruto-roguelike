@@ -10,6 +10,7 @@ import configGlobal from '../data/config.json';
 import eventosData from '../data/events.json';
 import itemsData from '../data/items.json';
 import enemiesData from '../data/enemies.json';
+import commonEnemiesData from '../data/common-enemies.json';
 import achievementsData from '../data/achievements.json';
 import arcoPaisDeLasOlas from '../data/arcs/pais-de-las-olas.json';
 import arcoExamenChunin from '../data/arcs/examen-chunin.json';
@@ -136,6 +137,20 @@ function elegirVariosAlAzar(array, n) {
 }
 
 /**
+ * Para un enemigo de tipo entrenador, construye la cadena completa de combates
+ * del nodo: N genins aleatorios seguidos del propio entrenador. El nivel de
+ * los genins es el mismo que el del entrenador (mismo piso).
+ */
+function generarCadenaEntrenador(namedEnemy, nivel) {
+  const geninAntes = namedEnemy.geninAntes ?? 1;
+  const genins = elegirVariosAlAzar(commonEnemiesData.plantillasGenericas, geninAntes);
+  return [
+    ...genins.map((g) => ({ enemigoBase: g, nivel })),
+    { enemigoBase: namedEnemy, nivel },
+  ];
+}
+
+/**
  * Genera la oferta de un nodo de tienda: 3 objetos aleatorios (consumibles
  * o equipables) que el jugador puede comprar individualmente. Sin reclutar,
  * sin objeto gratuito — esos mecanismos viven ahora en los nodos de reclutar
@@ -197,6 +212,7 @@ export const useGameStore = create((set, get) => ({
   tiendaActual: null, // { items: [{id, precio}] } — oferta de 3 objetos al entrar al nodo de tienda
   reclutarActual: null, // { personajes: [{personajeId, nombre, rareza}], nivelReclutamiento } — oferta del nodo de reclutar
   recompensaMiniJefe: null, // { item: id } — objeto aleatorio tras derrotar al mini-jefe
+  cadenaEnemigos: null, // { enemigos: [{enemigoBase, nivel}], indiceActual: 0 } — combate de entrenador con genins previos
   avisoUltimoNodo: null, // texto breve para la UI (ej. "Equipo curado en el descanso"), no persistente
   runTerminada: false,
   runGanada: false,
@@ -231,6 +247,7 @@ export const useGameStore = create((set, get) => ({
       tiendaActual: null,
       reclutarActual: null,
       recompensaMiniJefe: null,
+      cadenaEnemigos: null,
       avisoUltimoNodo: null,
       runTerminada: false,
       runGanada: false,
@@ -256,7 +273,15 @@ export const useGameStore = create((set, get) => ({
 
     const infoEnemigo = resolverEnemigoDeNodo(nodo, arcoActualDatos);
     if (infoEnemigo) {
-      const resultado = get().jugarCombate(infoEnemigo.enemigoBase, infoEnemigo.nivel);
+      let resultado;
+      if (infoEnemigo.enemigoBase.esEntrenador) {
+        const cadena = generarCadenaEntrenador(infoEnemigo.enemigoBase, infoEnemigo.nivel);
+        set({ cadenaEnemigos: { enemigos: cadena, indiceActual: 0 } });
+        resultado = get().jugarCombate(cadena[0].enemigoBase, cadena[0].nivel, false);
+      } else {
+        set({ cadenaEnemigos: null });
+        resultado = get().jugarCombate(infoEnemigo.enemigoBase, infoEnemigo.nivel, true);
+      }
       set({ pantalla: 'combate' });
       return resultado;
     }
@@ -440,7 +465,7 @@ export const useGameStore = create((set, get) => ({
    * y los buffs temporales activos se aplican y se consumen 1 uso al final,
    * independientemente de cuántas rondas haya habido.
    */
-  jugarCombate(enemigoBase, nivelEnemigo) {
+  jugarCombate(enemigoBase, nivelEnemigo, consumirBuffs = true) {
     const luchadorEnemigo = crearLuchador(enemigoBase, nivelEnemigo);
     const rondas = [];
     let jugadorGanoFinal = false;
@@ -527,7 +552,7 @@ export const useGameStore = create((set, get) => ({
       }
     }
 
-    get()._consumirUsoBuffsTemporales();
+    if (consumirBuffs) get()._consumirUsoBuffsTemporales();
 
     const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado };
     set({ ultimoResultadoCombate: resumen });
@@ -543,7 +568,22 @@ export const useGameStore = create((set, get) => ({
       tiendaActual: null,
       reclutarActual: null,
       recompensaMiniJefe: null,
+      cadenaEnemigos: null,
     });
+  },
+
+  /**
+   * Avanza al siguiente combate dentro de una cadena de entrenador.
+   * Si es el último de la cadena, consume los buffs (se diferió hasta ahora).
+   */
+  continuarCadena() {
+    const { cadenaEnemigos } = get();
+    if (!cadenaEnemigos) return;
+    const nuevoIndice = cadenaEnemigos.indiceActual + 1;
+    const esUltimo = nuevoIndice === cadenaEnemigos.enemigos.length - 1;
+    const siguiente = cadenaEnemigos.enemigos[nuevoIndice];
+    set({ cadenaEnemigos: { ...cadenaEnemigos, indiceActual: nuevoIndice } });
+    get().jugarCombate(siguiente.enemigoBase, siguiente.nivel, esUltimo);
   },
 
   /**
@@ -570,6 +610,7 @@ export const useGameStore = create((set, get) => ({
       tiendaActual: null,
       reclutarActual: null,
       recompensaMiniJefe: null,
+      cadenaEnemigos: null,
       avisoUltimoNodo: null,
       huboDerrotaEnEsteArco: false,
     });

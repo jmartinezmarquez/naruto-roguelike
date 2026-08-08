@@ -105,6 +105,8 @@
         "efectoEstado": null
       },
       "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2,
       "recompensa": {
         "xp": 60
       }
@@ -126,6 +128,8 @@
         "efectoEstado": null
       },
       "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2,
       "recompensa": {
         "xp": 60
       }
@@ -147,6 +151,8 @@
         "efectoEstado": null
       },
       "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 1,
       "recompensa": {
         "xp": 50
       }

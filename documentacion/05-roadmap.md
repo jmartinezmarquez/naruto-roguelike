@@ -117,10 +117,15 @@
 - [x] Fichas de personaje (hover en todo el juego) rediseñadas: fondo oscuro, emoji de tipo junto
   al nombre (🔥⚡🌪️🪨💧), sin badge de tipo, sin tipo en el jutsu — más compactas.
 
+**Combate en cadena (entrenadores)**
+- [x] Nodos de combate con enemigo nombrado (Zaku, Dosu, Kin) encadenan N genins previos:
+  `esEntrenador: true, geninAntes: N` en `common-enemies.json`. Zaku/Dosu = 2 genins, Kin = 1.
+- [x] `cadenaEnemigos` en el store rastrea la posición dentro de la cadena; `continuarCadena()`
+  avanza al siguiente combate. Los buffs temporales no se gastan hasta el último combate.
+- [x] `CombatScreen` muestra "COMBATE X/N" en cabecera y botón "Siguiente combate" entre peleas.
+  Ver [26](./26-combate-en-cadena.md).
+
 ## Próximos pasos (en orden sugerido)
-
-3. **Nodo de "Combate en cadena"**  — En Pokelike tenemos encuentros salvajes (1 solo enemigo), entrenadores (enemigos con mas de 1 encuentro uno detras de otro) y entrenadores de elite (Rival, con un equipo mas fuerte y mas combates en cadena). Nuestro mini-boss (Haku p.e) sería de este tercer tipo, y un combate con Genin Ninja sería el primer tipo. Para combates contra personajes nombrados (Zaku, Dosu, Rin, etc) quizá estaría bien añadirle uno o dos genin estandar para simbolizar un combate más largo. 
-
 
 5. **Cambiar los textos a ingles** — El codigo no lo voy a compartir con nadie, pero pretendo sacar el juego como aplicacion web y el ingles es un idioma que alcanza a mucha más gente. Hay que traducir todos los textos de cara a usuario. Es mejor hacer 2 versiones y un selector de lenguaje? Cual es el approach mas rapido? Todo el contenido de despues tiene que estar tambien en ingles.
 

@@ -22,6 +22,7 @@ function nombreObjeto(id) {
 // visible por algo que solo hace falta consultar de vez en cuando.
 const ICONO_NODO = {
   combate: '⚔',
+  combateEntrenador: '★',
   evento: '?',
   tienda: '¥',
   reclutar: '✚',
@@ -32,6 +33,7 @@ const ICONO_NODO = {
 
 const ETIQUETA_NODO = {
   combate: 'Combate',
+  combateEntrenador: 'Elite',
   evento: 'Evento',
   tienda: 'Tienda',
   reclutar: 'Reclutar',
@@ -42,6 +44,7 @@ const ETIQUETA_NODO = {
 
 const INFO_NODO = {
   combate: 'Enemigo aleatorio — gana XP y oro al vencer.',
+  combateEntrenador: 'Ninja nombrado con escolta de genins — combate encadenado.',
   evento: 'Elección narrativa: cura, oro, mejoras... sin combate.',
   tienda: 'Compra objetos con oro.',
   reclutar: 'Elige a uno de 3 ninjas para añadir a tu equipo, gratis.',
@@ -52,6 +55,7 @@ const INFO_NODO = {
 
 const COLOR_NODO = {
   combate: 'bg-tinta-800 border-pergamino-200/40 text-pergamino-100',
+  combateEntrenador: 'bg-tinta-800 border-katon/60 text-katon',
   evento: 'bg-tinta-800 border-raiton/50 text-raiton',
   tienda: 'bg-tinta-800 border-doton/50 text-doton',
   reclutar: 'bg-tinta-800 border-fuuton/60 text-fuuton',
@@ -82,8 +86,9 @@ function calcularPosiciones(mapa) {
 }
 
 function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
-  const estilo = COLOR_NODO[nodo.tipo] ?? COLOR_NODO.combate;
-  const icono = ICONO_NODO[nodo.tipo] ?? '?';
+  const tipoEfectivo = nodo.tipo === 'combate' && nodo.subtipo === 'entrenador' ? 'combateEntrenador' : nodo.tipo;
+  const estilo = COLOR_NODO[tipoEfectivo] ?? COLOR_NODO.combate;
+  const icono = ICONO_NODO[tipoEfectivo] ?? '?';
   const esJefe = nodo.tipo === 'jefe';
 
   // Cuatro estados visuales bien diferenciados, sin solaparse: aquí ahora,
@@ -106,8 +111,8 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
 
   const contenidoTooltip = (
     <div className="bg-pergamino-100 text-tinta-950 rounded-lg border-2 border-sello-600 shadow-xl p-2.5 w-44 text-left">
-      <p className="font-display font-bold text-xs">{ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}</p>
-      <p className="text-[10px] opacity-70 mt-0.5">{INFO_NODO[nodo.tipo] ?? ''}</p>
+      <p className="font-display font-bold text-xs">{ETIQUETA_NODO[tipoEfectivo] ?? nodo.tipo}</p>
+      <p className="text-[10px] opacity-70 mt-0.5">{INFO_NODO[tipoEfectivo] ?? ''}</p>
       {estadoTexto && (
         <p className="text-[10px] text-sello-600 font-display mt-1 pt-1 border-t border-tinta-950/10">
           {estadoTexto}
@@ -131,7 +136,7 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
             estadoClases,
             esActual && 'ring-2 ring-sello-500 ring-offset-2 ring-offset-tinta-950 scale-110',
           ].filter(Boolean).join(' ')}
-          aria-label={`Nodo de tipo ${ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}${visitado ? ', visitado' : disponible ? ', disponible' : ', no disponible'}`}
+          aria-label={`Nodo de tipo ${ETIQUETA_NODO[tipoEfectivo] ?? nodo.tipo}${visitado ? ', visitado' : disponible ? ', disponible' : ', no disponible'}`}
         >
           {icono}
         </button>
@@ -303,8 +308,12 @@ function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }
 
 const ORDEN_CICLO_CHAKRA = typesData.elementos; // ['katon', 'fuuton', 'raiton', 'doton', 'suiton'] — ya en orden de ventaja del ciclo
 const CENTRO_RUEDA = 55;
-const RADIO_RUEDA = 42;
-const RADIO_NODO_CHAKRA = 12;
+const RADIO_RUEDA = 40;
+const RADIO_NODO_CHAKRA = 13;
+
+const EMOJI_CHAKRA = {
+  katon: '🔥', fuuton: '🌪️', raiton: '⚡', doton: '🪨', suiton: '💧',
+};
 
 /** Posición del punto i-ésimo de un pentágono, empezando arriba y en sentido horario. */
 function puntoRuedaChakra(indice, total) {
@@ -328,10 +337,10 @@ function RuedaChakra() {
 
   return (
     <div className="w-40 shrink-0">
-      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm tracking-wide">VENTAJA DE CHAKRA</p>
-        <p className="text-[9px] opacity-60 mt-1 mb-2 leading-snug">
-          Cada flecha apunta al elemento contra el que es fuerte.
+      <div className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-3">
+        <p className="font-display font-bold text-xs text-pergamino-100 tracking-wide">CHAKRA</p>
+        <p className="text-[9px] text-pergamino-200/50 mt-0.5 mb-2 leading-snug">
+          → es fuerte contra
         </p>
         <svg viewBox="0 0 110 110" className="w-full">
           <defs>
@@ -353,45 +362,51 @@ function RuedaChakra() {
           {ORDEN_CICLO_CHAKRA.map((tipo, i) => {
             const origen = puntos[i];
             const destino = puntos[(i + 1) % total];
-            // Curva ligera hacia el centro para que las 5 flechas no se solapen entre sí.
-            const puntoMedioX = (origen.x + destino.x) / 2;
-            const puntoMedioY = (origen.y + destino.y) / 2;
-            const controlX = puntoMedioX + (CENTRO_RUEDA - puntoMedioX) * 0.3;
-            const controlY = puntoMedioY + (CENTRO_RUEDA - puntoMedioY) * 0.3;
-            // Recorta el final de la curva justo al borde del círculo destino
-            // (tangente = dirección control→destino) — si la flecha termina
-            // en el centro del círculo, el círculo (dibujado encima) la tapa
-            // por completo y no se ve ninguna punta.
+            const pmx = (origen.x + destino.x) / 2;
+            const pmy = (origen.y + destino.y) / 2;
+            const controlX = pmx + (CENTRO_RUEDA - pmx) * 0.3;
+            const controlY = pmy + (CENTRO_RUEDA - pmy) * 0.3;
             const dx = destino.x - controlX;
             const dy = destino.y - controlY;
-            const distancia = Math.hypot(dx, dy) || 1;
-            const finX = destino.x - (dx / distancia) * RADIO_NODO_CHAKRA;
-            const finY = destino.y - (dy / distancia) * RADIO_NODO_CHAKRA;
+            const dist = Math.hypot(dx, dy) || 1;
+            const finX = destino.x - (dx / dist) * RADIO_NODO_CHAKRA;
+            const finY = destino.y - (dy / dist) * RADIO_NODO_CHAKRA;
             return (
               <path
                 key={tipo}
                 d={`M ${origen.x} ${origen.y} Q ${controlX} ${controlY} ${finX} ${finY}`}
                 fill="none"
                 stroke={`var(--color-${tipo})`}
-                strokeWidth="2"
-                opacity="0.85"
+                strokeWidth="1.5"
+                opacity="0.75"
                 markerEnd={`url(#flecha-chakra-${tipo})`}
               />
             );
           })}
           {ORDEN_CICLO_CHAKRA.map((tipo, i) => (
             <g key={tipo}>
-              <circle cx={puntos[i].x} cy={puntos[i].y} r={RADIO_NODO_CHAKRA} fill={`var(--color-${tipo})`} />
-              <text
-                x={puntos[i].x}
-                y={puntos[i].y + 3}
-                textAnchor="middle"
-                fontSize="8"
-                fontWeight="bold"
-                fill="var(--color-pergamino-100)"
+              <circle
+                cx={puntos[i].x}
+                cy={puntos[i].y}
+                r={RADIO_NODO_CHAKRA}
+                fill="var(--color-tinta-800)"
+                stroke={`var(--color-${tipo})`}
+                strokeWidth="2"
+              />
+              <foreignObject
+                x={puntos[i].x - RADIO_NODO_CHAKRA}
+                y={puntos[i].y - RADIO_NODO_CHAKRA}
+                width={RADIO_NODO_CHAKRA * 2}
+                height={RADIO_NODO_CHAKRA * 2}
               >
-                {tipo.slice(0, 3).toUpperCase()}
-              </text>
+                <div style={{
+                  width: '100%', height: '100%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '11px', lineHeight: 1,
+                }}>
+                  {EMOJI_CHAKRA[tipo]}
+                </div>
+              </foreignObject>
             </g>
           ))}
         </svg>

@@ -13,12 +13,12 @@ function encontrarBase(id) {
   );
 }
 
-const COLOR_TIPO = {
-  katon: 'bg-katon',
-  fuuton: 'bg-fuuton',
-  raiton: 'bg-raiton',
-  doton: 'bg-doton',
-  suiton: 'bg-suiton',
+const EMOJI_TIPO = {
+  katon: '🔥',
+  fuuton: '🌪️',
+  raiton: '⚡',
+  doton: '🪨',
+  suiton: '💧',
 };
 
 const RAREZA_COLOR = {
@@ -49,7 +49,7 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
 
   const { ataque, defensa, velocidad, hp } = luchador.statsBase;
   const maxStat = Math.max(ataque, defensa, velocidad, hp);
-  const colorTipo = COLOR_TIPO[base.tipo] ?? 'bg-tinta-700';
+  const emojiTipo = EMOJI_TIPO[base.tipo] ?? '◆';
 
   return (
     <button
@@ -64,19 +64,14 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
     >
       {/* Nombre y rareza */}
       <div className="mb-3">
-        <p className="font-display text-base text-pergamino-100 leading-tight">{base.nombre}</p>
+        <p className="font-display text-base text-pergamino-100 leading-tight">{emojiTipo} {base.nombre}</p>
         <p className={`text-[10px] uppercase tracking-wider mt-0.5 ${RAREZA_COLOR[opcion.rareza] ?? ''}`}>
           {opcion.rareza}
         </p>
       </div>
 
-      {/* Nivel y tipo */}
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-[11px] text-pergamino-200/60 font-display">Nv. {nivel}</span>
-        <span className={`text-[10px] uppercase tracking-wide text-pergamino-100 rounded-full px-2 py-0.5 ${colorTipo}`}>
-          {base.tipo}
-        </span>
-      </div>
+      {/* Nivel */}
+      <p className="text-[11px] text-pergamino-200/60 font-display mb-3">Nv. {nivel}</p>
 
       {/* Barra de HP */}
       <div className="mb-3">
@@ -98,9 +93,6 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
       <div className="border-t border-pergamino-100/10 pt-2 mt-auto">
         <div className="flex items-center justify-between gap-1">
           <p className="text-[11px] font-display text-pergamino-100 truncate">{base.jutsu.nombre}</p>
-          <span className={`text-[10px] uppercase tracking-wide text-pergamino-100 rounded-full px-1.5 py-0.5 shrink-0 ${colorTipo}`}>
-            {base.tipo}
-          </span>
           <span className="text-[10px] text-pergamino-200/60 shrink-0">{base.jutsu.danoBase} PWR</span>
         </div>
       </div>

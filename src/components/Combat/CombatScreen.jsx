@@ -46,6 +46,8 @@ export default function CombatScreen() {
   const avanzarSiguienteArco = useGameStore((s) => s.avanzarSiguienteArco);
   const irARecompensaMiniJefe = useGameStore((s) => s.irARecompensaMiniJefe);
   const recompensaMiniJefe = useGameStore((s) => s.recompensaMiniJefe);
+  const cadenaEnemigos = useGameStore((s) => s.cadenaEnemigos);
+  const continuarCadena = useGameStore((s) => s.continuarCadena);
   const runTerminada = useGameStore((s) => s.runTerminada);
   const runGanada = useGameStore((s) => s.runGanada);
   const arcoActualDatos = useGameStore((s) => s.arcoActualDatos);
@@ -118,6 +120,20 @@ export default function CombatScreen() {
     // resultado — combateTotalTerminado y resultado ya lo garantizan como deps.
   }, [combateTotalTerminado, resultado, notificarLogros]);
 
+  // Auto-avance entre peleas de una cadena de entrenador: si ganamos y hay
+  // más enemigos, esperamos un momento y pasamos al siguiente sin botón.
+  const hayMasEnCadena = cadenaEnemigos
+    ? cadenaEnemigos.indiceActual < cadenaEnemigos.enemigos.length - 1
+    : false;
+  useEffect(() => {
+    if (!combateTotalTerminado) return undefined;
+    if (!resultado?.jugadorGanoFinal) return undefined;
+    if (!hayMasEnCadena) return undefined;
+    if (runTerminada || resultado.arcoCompletado || recompensaMiniJefe) return undefined;
+    const t = setTimeout(continuarCadena, 1600);
+    return () => clearTimeout(t);
+  }, [combateTotalTerminado, resultado, hayMasEnCadena, runTerminada, recompensaMiniJefe, continuarCadena]);
+
   if (!resultado || !ronda || !hpEnTurnoActual) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
@@ -131,6 +147,11 @@ export default function CombatScreen() {
   return (
     <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 flex flex-col">
       <div className="max-w-xl mx-auto w-full">
+        {cadenaEnemigos && cadenaEnemigos.enemigos.length > 1 && (
+          <p className="text-center text-xs text-sello-500/70 mb-1 font-display uppercase tracking-widest">
+            Combate {cadenaEnemigos.indiceActual + 1} / {cadenaEnemigos.enemigos.length}
+          </p>
+        )}
         {resultado.rondas.length > 1 && (
           <p className="text-center text-xs text-pergamino-200/50 mb-3">
             Ronda {indiceRonda + 1} de {resultado.rondas.length}
@@ -242,6 +263,10 @@ export default function CombatScreen() {
                   Ver recompensa
                 </button>
               </div>
+            ) : hayMasEnCadena ? (
+              <p className="text-pergamino-200/60 text-sm animate-pulse">
+                Siguiente enemigo ({cadenaEnemigos.indiceActual + 2} / {cadenaEnemigos.enemigos.length})...
+              </p>
             ) : (
               <button
                 type="button"

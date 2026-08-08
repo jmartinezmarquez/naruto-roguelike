@@ -27,5 +27,6 @@
 - [23 - Diseño de tarjeta de inventario](./23-diseño-tarjeta-de-inventario.md)
 - [24 - Diseño de tarjeta de equipar objeto](./24-diseño-tarjeta-equipar-objeto.md)
 - [25 - Nodo de reclutar](./25-nodo-reclutar.md)
+- [26 - Combate en cadena (entrenadores)](./26-combate-en-cadena.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

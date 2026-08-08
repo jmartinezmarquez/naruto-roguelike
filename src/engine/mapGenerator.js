@@ -66,7 +66,8 @@ export function generarMapa(arco) {
     for (let i = 0; i < numNodos; i++) {
       const id = generarIdNodo();
       const tipo = esUltimoPiso ? 'jefe' : elegirTipoPorPeso(poolDeEstePiso);
-      nodos[id] = { id, piso, tipo, conexiones: [], visitado: false, completado: false };
+      const subtipo = tipo === 'combate' ? (Math.random() < 0.2 ? 'entrenador' : 'aleatorio') : undefined;
+      nodos[id] = { id, piso, tipo, ...(subtipo !== undefined && { subtipo }), conexiones: [], visitado: false, completado: false };
       idsPiso.push(id);
     }
 
@@ -189,7 +190,7 @@ export function resolverEnemigoDeNodo(nodo, arco) {
 
   if (nodo.tipo === 'combate') {
     const { plantillasGenericas, enemigosNombrados } = commonEnemiesData;
-    const usarNombrado = enemigosNombrados.length > 0 && Math.random() < 0.2;
+    const usarNombrado = nodo.subtipo === 'entrenador' && enemigosNombrados.length > 0;
 
     const enemigoBase = usarNombrado
       ? enemigosNombrados[numeroAleatorioEntre(0, enemigosNombrados.length - 1)]
