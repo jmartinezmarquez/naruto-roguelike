@@ -198,5 +198,5 @@ export function resolverEnemigoDeNodo(nodo, arco) {
     return { enemigoBase, nivel: calcularNivelPorPiso(nodo.piso, arco) };
   }
 
-  return null; // evento, tienda, descanso, reclutamiento
+  return null; // evento, tienda, descanso, reclutar
 }

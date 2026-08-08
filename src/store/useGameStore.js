@@ -136,29 +136,28 @@ function elegirVariosAlAzar(array, n) {
 }
 
 /**
- * Genera la oferta de un nodo de tienda, al estilo Slay the Spire: 2
- * consumibles comprables, 1 objeto equipable gratuito, y 2 personajes
- * reclutables entre los que solo se puede elegir uno (al reclutar uno se
- * descarta el otro). nivelReclutamiento: nivel al que entraría el reclutado,
- * el del piso donde está la tienda (igual que un reclutamiento de recompensa
- * de jefe — no entra indefenso si es tarde en la run).
+ * Genera la oferta de un nodo de tienda: 3 objetos aleatorios (consumibles
+ * o equipables) que el jugador puede comprar individualmente. Sin reclutar,
+ * sin objeto gratuito — esos mecanismos viven ahora en los nodos de reclutar
+ * y en la recompensa del mini-jefe respectivamente.
  */
-function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) {
-  const consumiblesDisponibles = itemsData.objetos.filter(
-    (o) => o.tipo === 'consumible' && o.precioTienda !== null,
-  );
-  const equipablesDisponibles = itemsData.objetos.filter(
-    (o) => o.tipo === 'equipable' && o.precioTienda !== null,
-  );
+function generarOfertaTienda() {
+  const pool = itemsData.objetos.filter((o) => o.precioTienda !== null);
+  return {
+    items: elegirVariosAlAzar(pool, 3).map((o) => ({ id: o.id, precio: o.precioTienda })),
+  };
+}
 
+/**
+ * Genera la oferta del nodo de reclutar: hasta 3 personajes disponibles
+ * (pool del arco + desbloqueados por logro + iniciales no elegidos), sin
+ * coste para el jugador — elegir uno es la acción principal de este nodo.
+ */
+function generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento) {
   const idsDesbloqueadosPorLogro = obtenerPersonajesReclutablesDesbloqueados(
     achievementsData.logros,
     useAchievementsStore.getState().logrosDesbloqueados,
   );
-  // Los "inicial" (Naruto/Sasuke/Sakura) que NO se eligieron al empezar la
-  // run también se pueden reclutar en cualquier tienda — si no, en el primer
-  // arco (sin personajesReclutablesIds propio) sería imposible formar un
-  // equipo de 3 sin haber desbloqueado ya algún logro en una run anterior.
   const idsInicialesNoElegidos = personajesData.personajes
     .filter((p) => p.rareza === 'inicial')
     .map((p) => p.id);
@@ -169,18 +168,15 @@ function generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento) 
   ];
 
   const idsEnEquipo = new Set(equipoActual.map((p) => p.id));
-  const reclutablesDisponibles = idsReclutablesTotal
+  const disponibles = idsReclutablesTotal
     .filter((id) => !idsEnEquipo.has(id))
     .map((id) => {
       const base = encontrarPersonajeBase(id);
-      const precio = configGlobal.economia.precioReclutamientoPorRareza[base.rareza] ?? 50;
-      return { personajeId: id, nombre: base.nombre, rareza: base.rareza, precio };
+      return { personajeId: id, nombre: base.nombre, rareza: base.rareza };
     });
 
   return {
-    consumibles: elegirVariosAlAzar(consumiblesDisponibles, 2).map((o) => o.id),
-    gratuito: elegirVariosAlAzar(equipablesDisponibles, 1)[0]?.id ?? null,
-    reclutables: elegirVariosAlAzar(reclutablesDisponibles, 2),
+    personajes: elegirVariosAlAzar(disponibles, 3),
     nivelReclutamiento,
   };
 }
@@ -195,10 +191,12 @@ export const useGameStore = create((set, get) => ({
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
   mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
-  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'gameover' | 'logros' — qué pantalla debe mostrar la UI ahora mismo
+  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros'
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
-  tiendaActual: null, // { consumibles, gratuito, reclutables, nivelReclutamiento } — oferta fijada al entrar al nodo
+  tiendaActual: null, // { items: [{id, precio}] } — oferta de 3 objetos al entrar al nodo de tienda
+  reclutarActual: null, // { personajes: [{personajeId, nombre, rareza}], nivelReclutamiento } — oferta del nodo de reclutar
+  recompensaMiniJefe: null, // { item: id } — objeto aleatorio tras derrotar al mini-jefe
   avisoUltimoNodo: null, // texto breve para la UI (ej. "Equipo curado en el descanso"), no persistente
   runTerminada: false,
   runGanada: false,
@@ -231,6 +229,8 @@ export const useGameStore = create((set, get) => ({
       ultimoResultadoCombate: null,
       eventoActual: null,
       tiendaActual: null,
+      reclutarActual: null,
+      recompensaMiniJefe: null,
       avisoUltimoNodo: null,
       runTerminada: false,
       runGanada: false,
@@ -277,17 +277,18 @@ export const useGameStore = create((set, get) => ({
     }
 
     if (nodo.tipo === 'tienda') {
-      const equipoActual = get().equipo;
-      // Nivel equilibrado con el equipo (el del más fuerte), no con el piso
-      // — antes usaba calcularNivelPorPiso y el reclutado podía entrar muy
-      // por debajo del resto (p. ej. nivel 2 con el equipo ya en nivel 8).
-      const nivelReclutamiento = Math.max(1, ...equipoActual.map((p) => p.nivel));
-      const oferta = generarOfertaTienda(equipoActual, arcoActualDatos, nivelReclutamiento);
-      set({ tiendaActual: oferta, pantalla: 'tienda' });
+      set({ tiendaActual: generarOfertaTienda(), pantalla: 'tienda' });
       return null;
     }
 
-    // reclutamiento: sin pantalla propia todavía (ya no existe como nodo — ver 14-reclutamiento-y-rareza.md).
+    if (nodo.tipo === 'reclutar') {
+      const equipoActual = get().equipo;
+      const nivelReclutamiento = Math.max(1, ...equipoActual.map((p) => p.nivel));
+      const oferta = generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento);
+      set({ reclutarActual: oferta, pantalla: 'reclutar' });
+      return null;
+    }
+
     return null;
   },
 
@@ -533,9 +534,16 @@ export const useGameStore = create((set, get) => ({
     return resumen;
   },
 
-  /** Vuelve del resultado de combate/evento/tienda al mapa. */
+  /** Vuelve al mapa desde cualquier pantalla secundaria (combate, evento, tienda, reclutar, recompensa). */
   volverAlMapa() {
-    set({ pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null, tiendaActual: null });
+    set({
+      pantalla: 'mapa',
+      ultimoResultadoCombate: null,
+      eventoActual: null,
+      tiendaActual: null,
+      reclutarActual: null,
+      recompensaMiniJefe: null,
+    });
   },
 
   /**
@@ -560,6 +568,8 @@ export const useGameStore = create((set, get) => ({
       ultimoResultadoCombate: null,
       eventoActual: null,
       tiendaActual: null,
+      reclutarActual: null,
+      recompensaMiniJefe: null,
       avisoUltimoNodo: null,
       huboDerrotaEnEsteArco: false,
     });
@@ -576,57 +586,55 @@ export const useGameStore = create((set, get) => ({
     set({ pantalla: 'logros' });
   },
 
-  /** Compra uno de los consumibles ofrecidos en la tienda actual. Se puede comprar más de uno. */
-  comprarConsumibleTienda(itemId) {
+  /** Compra uno de los objetos ofrecidos en la tienda actual (consumible o equipable). */
+  comprarItemTienda(itemId) {
     const { tiendaActual, oro, inventario } = get();
-    if (!tiendaActual || !tiendaActual.consumibles.includes(itemId)) return false;
-    const item = itemsData.objetos.find((o) => o.id === itemId);
-    if (!item || oro < item.precioTienda) return false;
+    if (!tiendaActual) return false;
+    const entrada = tiendaActual.items.find((i) => i.id === itemId);
+    if (!entrada || oro < entrada.precio) return false;
 
     set({
-      oro: oro - item.precioTienda,
-      inventario: [...inventario, item.id],
+      oro: oro - entrada.precio,
+      inventario: [...inventario, itemId],
       tiendaActual: {
         ...tiendaActual,
-        consumibles: tiendaActual.consumibles.filter((id) => id !== itemId),
+        items: tiendaActual.items.filter((i) => i.id !== itemId),
       },
     });
     return true;
   },
 
-  /** Reclama el objeto equipable gratuito de la tienda actual (una sola vez por visita). */
-  reclamarObjetoGratuitoTienda() {
-    const { tiendaActual, inventario } = get();
-    if (!tiendaActual || !tiendaActual.gratuito) return false;
+  /**
+   * Recluta al personaje elegido en el nodo de reclutar (sin coste). Si el
+   * equipo ya está completo, `idAReemplazar` indica a quién reemplaza — sin
+   * ese id la acción no hace nada (la UI debe pedírselo primero al jugador).
+   */
+  elegirReclutaDeNodo(personajeId, idAReemplazar = null) {
+    const { reclutarActual } = get();
+    if (!reclutarActual) return false;
+    const opcion = reclutarActual.personajes.find((p) => p.personajeId === personajeId);
+    if (!opcion) return false;
 
-    set({
-      inventario: [...inventario, tiendaActual.gratuito],
-      tiendaActual: { ...tiendaActual, gratuito: null },
-    });
-    return true;
+    return get().reclutarPersonaje(personajeId, reclutarActual.nivelReclutamiento, idAReemplazar);
   },
 
-  /**
-   * Recluta a uno de los dos personajes ofrecidos en la tienda actual. Al
-   * reclutar uno, el otro se descarta automáticamente (solo se puede elegir
-   * uno de los dos, como pedía el diseño). Si el equipo ya está completo,
-   * `idAReemplazar` indica a quién saca del equipo para dejarle el sitio —
-   * ver `reclutarPersonaje`.
-   */
-  reclutarDeTienda(personajeId, idAReemplazar = null) {
-    const { tiendaActual, oro } = get();
-    if (!tiendaActual) return false;
-    const opcion = tiendaActual.reclutables.find((r) => r.personajeId === personajeId);
-    if (!opcion || oro < opcion.precio) return false;
+  /** Navega a la pantalla de recompensa del mini-jefe (llamado desde CombatScreen al pulsar Continuar). */
+  irARecompensaMiniJefe() {
+    set({ pantalla: 'recompensaMiniJefe' });
+  },
 
-    const reclutado = get().reclutarPersonaje(personajeId, tiendaActual.nivelReclutamiento, idAReemplazar);
-    if (!reclutado) return false; // equipo lleno y sin idAReemplazar (o no válido), no se cobra
+  /** Recoge el objeto de recompensa del mini-jefe y vuelve al mapa. */
+  reclamarRecompensaMiniJefe() {
+    const { inventario, recompensaMiniJefe } = get();
+    if (recompensaMiniJefe?.item) {
+      set({ inventario: [...inventario, recompensaMiniJefe.item] });
+    }
+    get().volverAlMapa();
+  },
 
-    set({
-      oro: oro - opcion.precio,
-      tiendaActual: { ...tiendaActual, reclutables: [] }, // se descarta la otra opción
-    });
-    return true;
+  /** Salta la recompensa del mini-jefe sin coger nada. */
+  saltarRecompensaMiniJefe() {
+    get().volverAlMapa();
   },
 
   /**
@@ -635,7 +643,15 @@ export const useGameStore = create((set, get) => ({
    * run nueva automáticamente, sin duplicar esa lógica aquí.
    */
   reiniciarRun() {
-    set({ mapa: null, pantalla: 'mapa', ultimoResultadoCombate: null, eventoActual: null, tiendaActual: null });
+    set({
+      mapa: null,
+      pantalla: 'mapa',
+      ultimoResultadoCombate: null,
+      eventoActual: null,
+      tiendaActual: null,
+      reclutarActual: null,
+      recompensaMiniJefe: null,
+    });
   },
 
   /** Interno: reduce en 1 los combates restantes de cada buff temporal y elimina los agotados. */
@@ -691,12 +707,27 @@ export const useGameStore = create((set, get) => ({
     });
 
     const objetoGanado = enemigoBase.recompensa?.objetoGarantizado;
-    const inventarioActualizado = objetoGanado ? [...inventario, objetoGanado] : inventario;
+    const esMiniJefe = enemigoBase.id === get().arcoActualDatos?.miniJefeId;
+
+    let inventarioActualizado = inventario;
+    let recompensaNueva = null;
+
+    if (objetoGanado) {
+      if (esMiniJefe) {
+        // Mini-jefe: mostrar pantalla de recompensa con el objeto garantizado del jefe.
+        recompensaNueva = { item: objetoGanado };
+      } else {
+        // Jefe final: se auto-añade al inventario (la transición de arco ya
+        // es bastante pantalla, no añadir otra de recompensa encima).
+        inventarioActualizado = [...inventario, objetoGanado];
+      }
+    }
 
     set({
       equipo: equipoActualizado,
       oro: oro + oroGanado,
       inventario: inventarioActualizado,
+      ...(recompensaNueva ? { recompensaMiniJefe: recompensaNueva } : {}),
     });
   },
 

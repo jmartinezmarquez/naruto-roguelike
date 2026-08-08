@@ -24,6 +24,7 @@ const ICONO_NODO = {
   combate: '⚔',
   evento: '?',
   tienda: '¥',
+  reclutar: '✚',
   descanso: '♨',
   miniJefe: '☠',
   jefe: '危',
@@ -33,6 +34,7 @@ const ETIQUETA_NODO = {
   combate: 'Combate',
   evento: 'Evento',
   tienda: 'Tienda',
+  reclutar: 'Reclutar',
   descanso: 'Descanso',
   miniJefe: 'Mini-jefe',
   jefe: 'Jefe',
@@ -41,9 +43,10 @@ const ETIQUETA_NODO = {
 const INFO_NODO = {
   combate: 'Enemigo aleatorio — gana XP y oro al vencer.',
   evento: 'Elección narrativa: cura, oro, mejoras... sin combate.',
-  tienda: 'Compra objetos y recluta (o reemplaza) personajes.',
+  tienda: 'Compra objetos con oro.',
+  reclutar: 'Elige a uno de 3 ninjas para añadir a tu equipo, gratis.',
   descanso: 'Cura y revive a todo el equipo por completo.',
-  miniJefe: 'Combate más duro, con recompensa adicional garantizada.',
+  miniJefe: 'Combate más duro, con recompensa de objeto garantizada.',
   jefe: 'El jefe final del arco — superarlo cura a todo el equipo.',
 };
 
@@ -51,6 +54,7 @@ const COLOR_NODO = {
   combate: 'bg-tinta-800 border-pergamino-200/40 text-pergamino-100',
   evento: 'bg-tinta-800 border-raiton/50 text-raiton',
   tienda: 'bg-tinta-800 border-doton/50 text-doton',
+  reclutar: 'bg-tinta-800 border-fuuton/60 text-fuuton',
   descanso: 'bg-tinta-800 border-suiton/50 text-suiton',
   miniJefe: 'bg-sello-600/20 border-sello-500 text-sello-500',
   jefe: 'bg-sello-600 border-sello-500 text-pergamino-100',

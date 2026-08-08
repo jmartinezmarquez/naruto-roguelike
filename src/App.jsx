@@ -5,6 +5,8 @@ import MapScreen from './components/Map/MapScreen';
 import CombatScreen from './components/Combat/CombatScreen';
 import EventScreen from './components/Events/EventScreen';
 import ShopScreen from './components/Shop/ShopScreen';
+import RecruitScreen from './components/Recruit/RecruitScreen';
+import ItemRewardScreen from './components/Reward/ItemRewardScreen';
 import GameOverScreen from './components/GameOver/GameOverScreen';
 import AchievementsScreen from './components/Achievements/AchievementsScreen';
 import LogroToast from './components/Achievements/LogroToast';
@@ -16,6 +18,8 @@ function pantallaActual(pantalla) {
   if (pantalla === 'combate') return <CombatScreen />;
   if (pantalla === 'evento') return <EventScreen />;
   if (pantalla === 'tienda') return <ShopScreen />;
+  if (pantalla === 'reclutar') return <RecruitScreen />;
+  if (pantalla === 'recompensaMiniJefe') return <ItemRewardScreen />;
   if (pantalla === 'gameover') return <GameOverScreen />;
   if (pantalla === 'logros') return <AchievementsScreen />;
   return <MapScreen />;

@@ -11,15 +11,19 @@
   "poolTiposNodo": [
     {
       "tipo": "combate",
-      "peso": 45
+      "peso": 40
     },
     {
       "tipo": "evento",
-      "peso": 28
+      "peso": 22
+    },
+    {
+      "tipo": "reclutar",
+      "peso": 16
     },
     {
       "tipo": "tienda",
-      "peso": 20
+      "peso": 15
     },
     {
       "tipo": "descanso",

@@ -44,6 +44,8 @@ export default function CombatScreen() {
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const irAGameOver = useGameStore((s) => s.irAGameOver);
   const avanzarSiguienteArco = useGameStore((s) => s.avanzarSiguienteArco);
+  const irARecompensaMiniJefe = useGameStore((s) => s.irARecompensaMiniJefe);
+  const recompensaMiniJefe = useGameStore((s) => s.recompensaMiniJefe);
   const runTerminada = useGameStore((s) => s.runTerminada);
   const runGanada = useGameStore((s) => s.runGanada);
   const arcoActualDatos = useGameStore((s) => s.arcoActualDatos);
@@ -225,6 +227,19 @@ export default function CombatScreen() {
                   className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
                 >
                   Continuar al siguiente arco
+                </button>
+              </div>
+            ) : recompensaMiniJefe ? (
+              <div>
+                <p className="text-pergamino-200/80 text-sm mb-4">
+                  ¡Has derrotado al mini-jefe! Hay una recompensa esperándote.
+                </p>
+                <button
+                  type="button"
+                  onClick={irARecompensaMiniJefe}
+                  className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
+                >
+                  Ver recompensa
                 </button>
               </div>
             ) : (
