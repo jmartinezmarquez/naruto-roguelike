@@ -6,7 +6,6 @@ import PersonajeHoverCard from '../common/PersonajeHoverCard';
 const VELOCIDAD_AUTOPLAY_MS = 900;
 const PAUSA_ENTRE_RONDAS_MS = 1400;
 
-/** Color de la barra de HP según el % restante. */
 function colorBarraHp(porcentaje) {
   if (porcentaje > 0.5) return 'bg-fuuton';
   if (porcentaje > 0.2) return 'bg-raiton';
@@ -15,15 +14,12 @@ function colorBarraHp(porcentaje) {
 
 function BarraLuchador({ id, nombre, nivel, hp, hpMaximo, modoActivoNombre, alineacion }) {
   const porcentaje = Math.max(0, hp / hpMaximo);
-  // El jugador (izquierda) abre el tooltip hacia la derecha (hacia el centro
-  // de la pantalla) y el enemigo (derecha) hacia la izquierda, para que
-  // ninguno de los dos se salga de la pantalla.
   const posicionTooltip = alineacion === 'derecha' ? 'izquierda' : 'derecha';
   return (
     <PersonajeHoverCard id={id} nivel={nivel} hpActual={hp} hpMaximo={hpMaximo} posicion={posicionTooltip}>
       <div className={alineacion === 'derecha' ? 'text-right' : 'text-left'}>
         <p className="font-display text-lg text-pergamino-100">{nombre}</p>
-        <p className="text-xs text-pergamino-200/60">Nv. {nivel}</p>
+        <p className="text-xs text-pergamino-200/60">Lv. {nivel}</p>
         {modoActivoNombre && (
           <p className="text-xs text-sello-500 uppercase tracking-wide">{modoActivoNombre}</p>
         )}
@@ -57,8 +53,6 @@ export default function CombatScreen() {
   const [turnosRevelados, setTurnosRevelados] = useState(0);
   const [resultadoPrevio, setResultadoPrevio] = useState(resultado);
 
-  // Reseteo al cambiar de combate: ajustar estado durante el render (no en
-  // un efecto) es el patrón recomendado por React para esto.
   if (resultado !== resultadoPrevio) {
     setResultadoPrevio(resultado);
     setIndiceRonda(0);
@@ -68,21 +62,14 @@ export default function CombatScreen() {
   const ronda = resultado?.rondas[indiceRonda] ?? null;
   const rondaCompleta = ronda ? turnosRevelados >= ronda.historial.length : false;
   const hayMasRondas = resultado ? indiceRonda < resultado.rondas.length - 1 : false;
-  // Derivado, no es estado propio: "estamos entre dos personajes" se deduce
-  // directamente de los valores de arriba, no hace falta guardarlo aparte.
   const transicionRonda = rondaCompleta && ronda && !ronda.jugadorGano && hayMasRondas;
 
-  // Avance automático de turnos dentro de la ronda actual.
   useEffect(() => {
     if (!ronda || rondaCompleta) return undefined;
     const temporizador = setTimeout(() => setTurnosRevelados((n) => n + 1), VELOCIDAD_AUTOPLAY_MS);
     return () => clearTimeout(temporizador);
   }, [ronda, turnosRevelados, rondaCompleta]);
 
-  // Al completar una ronda perdida con más rondas por delante: pausa breve
-  // mostrando "X ha caído" y luego pasa a la siguiente ronda automáticamente.
-  // Solo se hace setState dentro del callback async del timeout, nunca
-  // síncronamente en el cuerpo del efecto.
   useEffect(() => {
     if (!transicionRonda) return undefined;
     const temporizador = setTimeout(() => {
@@ -92,8 +79,6 @@ export default function CombatScreen() {
     return () => clearTimeout(temporizador);
   }, [transicionRonda]);
 
-  // HP en el turno revelado actualmente de la ronda, partiendo del HP con el
-  // que se entró a la ronda (NO del máximo — el HP persiste entre combates).
   const hpEnTurnoActual = useMemo(() => {
     if (!ronda) return null;
     let hpJugador = ronda.jugador.hpInicial;
@@ -110,18 +95,11 @@ export default function CombatScreen() {
 
   const combateTotalTerminado = Boolean(ronda) && rondaCompleta && (ronda.jugadorGano || !hayMasRondas);
 
-  // Los logros ya se desbloquearon (y persistieron) en el momento del
-  // combate real, pero no se notifican hasta que termina TODA la animación
-  // — si saltara antes, se arruinaría el suspense de la pelea en curso.
   useEffect(() => {
     if (!combateTotalTerminado) return;
     notificarLogros(resultado?.logrosDesbloqueados ?? []);
-    // Solo debe dispararse una vez, justo al llegar a "terminado" para este
-    // resultado — combateTotalTerminado y resultado ya lo garantizan como deps.
   }, [combateTotalTerminado, resultado, notificarLogros]);
 
-  // Auto-avance entre peleas de una cadena de entrenador: si ganamos y hay
-  // más enemigos, esperamos un momento y pasamos al siguiente sin botón.
   const hayMasEnCadena = cadenaEnemigos
     ? cadenaEnemigos.indiceActual < cadenaEnemigos.enemigos.length - 1
     : false;
@@ -137,7 +115,7 @@ export default function CombatScreen() {
   if (!resultado || !ronda || !hpEnTurnoActual) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
-        No hay ningún combate en curso.
+        No combat in progress.
       </div>
     );
   }
@@ -149,12 +127,12 @@ export default function CombatScreen() {
       <div className="max-w-xl mx-auto w-full">
         {cadenaEnemigos && cadenaEnemigos.enemigos.length > 1 && (
           <p className="text-center text-xs text-sello-500/70 mb-1 font-display uppercase tracking-widest">
-            Combate {cadenaEnemigos.indiceActual + 1} / {cadenaEnemigos.enemigos.length}
+            Battle {cadenaEnemigos.indiceActual + 1} / {cadenaEnemigos.enemigos.length}
           </p>
         )}
         {resultado.rondas.length > 1 && (
           <p className="text-center text-xs text-pergamino-200/50 mb-3">
-            Ronda {indiceRonda + 1} de {resultado.rondas.length}
+            Round {indiceRonda + 1} of {resultado.rondas.length}
           </p>
         )}
 
@@ -182,7 +160,7 @@ export default function CombatScreen() {
 
         <div className="bg-tinta-900 border border-pergamino-100/10 rounded-lg p-4 h-56 overflow-y-auto flex flex-col gap-2">
           {eventosVisibles.length === 0 && !transicionRonda && (
-            <p className="text-pergamino-200/50 text-sm italic">El combate está a punto de empezar...</p>
+            <p className="text-pergamino-200/50 text-sm italic">Combat is about to begin...</p>
           )}
           {eventosVisibles.map((evento, i) => {
             const esJugador = evento.atacanteId === ronda.jugador.id;
@@ -190,18 +168,18 @@ export default function CombatScreen() {
             return (
               <p key={i} className="text-sm">
                 <span className={esJugador ? 'text-fuuton' : 'text-sello-500'}>{nombreAtacante}</span>
-                {' usa '}
+                {' uses '}
                 <span className="text-pergamino-100">{evento.jutsuNombre}</span>
                 {' — '}
-                <span className="text-pergamino-200/80">{evento.dano} de daño</span>
-                {evento.eficacia > 1 && <span className="text-fuuton"> (¡eficaz!)</span>}
-                {evento.eficacia < 1 && <span className="text-pergamino-200/50"> (poco eficaz)</span>}
+                <span className="text-pergamino-200/80">{evento.dano} damage</span>
+                {evento.eficacia > 1 && <span className="text-fuuton"> (effective!)</span>}
+                {evento.eficacia < 1 && <span className="text-pergamino-200/50"> (not very effective)</span>}
               </p>
             );
           })}
           {transicionRonda && (
             <p className="text-sello-500 text-sm font-display mt-auto">
-              {ronda.jugador.nombre} ha caído — {resultado.rondas[indiceRonda + 1]?.jugador.nombre} entra en combate...
+              {ronda.jugador.nombre} has fallen — {resultado.rondas[indiceRonda + 1]?.jugador.nombre} enters combat...
             </p>
           )}
         </div>
@@ -212,60 +190,60 @@ export default function CombatScreen() {
             onClick={() => setTurnosRevelados(ronda.historial.length)}
             className="mt-4 text-xs text-pergamino-200/60 underline hover:text-pergamino-100"
           >
-            Saltar animación
+            Skip animation
           </button>
         )}
 
         {combateTotalTerminado && (
           <div className="mt-6 text-center">
             <p className={`font-naruto text-4xl mb-4 ${resultado.jugadorGanoFinal ? 'text-fuuton' : 'text-sello-500'}`}>
-              {resultado.jugadorGanoFinal ? 'Victoria' : 'Derrota'}
+              {resultado.jugadorGanoFinal ? 'Victory' : 'Defeat'}
             </p>
 
             {runTerminada ? (
               <div>
                 <p className="text-pergamino-200/80 text-sm mb-4">
                   {runGanada
-                    ? '¡Has completado la run entera! Konoha está a salvo.'
-                    : 'Todo tu equipo ha caído. La run ha terminado.'}
+                    ? 'You completed the entire run! Konoha is safe.'
+                    : 'Your entire team has fallen. The run is over.'}
                 </p>
                 <button
                   type="button"
                   onClick={irAGameOver}
                   className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
                 >
-                  Ver resultado
+                  See results
                 </button>
               </div>
             ) : resultado.arcoCompletado ? (
               <div>
                 <p className="text-pergamino-200/80 text-sm mb-4">
-                  Has superado {arcoActualDatos?.nombre}. Un nuevo arco comienza.
+                  You have beaten {arcoActualDatos?.nombre}. A new arc begins.
                 </p>
                 <button
                   type="button"
                   onClick={avanzarSiguienteArco}
                   className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
                 >
-                  Continuar al siguiente arco
+                  Continue to next arc
                 </button>
               </div>
             ) : recompensaMiniJefe ? (
               <div>
                 <p className="text-pergamino-200/80 text-sm mb-4">
-                  ¡Has derrotado al mini-jefe! Hay una recompensa esperándote.
+                  You defeated the mini-boss! A reward awaits you.
                 </p>
                 <button
                   type="button"
                   onClick={irARecompensaMiniJefe}
                   className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
                 >
-                  Ver recompensa
+                  Claim reward
                 </button>
               </div>
             ) : hayMasEnCadena ? (
               <p className="text-pergamino-200/60 text-sm animate-pulse">
-                Siguiente enemigo ({cadenaEnemigos.indiceActual + 2} / {cadenaEnemigos.enemigos.length})...
+                Next enemy ({cadenaEnemigos.indiceActual + 2} / {cadenaEnemigos.enemigos.length})...
               </p>
             ) : (
               <button
@@ -273,7 +251,7 @@ export default function CombatScreen() {
                 onClick={volverAlMapa}
                 className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
               >
-                Continuar
+                Continue
               </button>
             )}
           </div>

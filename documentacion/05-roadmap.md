@@ -144,15 +144,18 @@
 - [x] Pantalla de Reclutar: badge de tipo con texto ("KATON") sustituido por emoji (🔥⚡🌪️🪨💧)
   coherente con el resto del juego.
 
+**Traducción al inglés**
+- [x] Todos los textos de cara al usuario reescritos directamente en inglés (una sola versión, sin
+  i18n): datos JSON (`characters`, `enemies`, `common-enemies`, `events`, `items`, `achievements`,
+  `types`, `arcs/*`), todos los componentes React (`MapScreen`, `CombatScreen`, `EventScreen`,
+  `ShopScreen`, `RecruitScreen`, `CharacterSelectScreen`, `GameOverScreen`, `AchievementsScreen`,
+  `ItemRewardScreen`, `PersonajeHoverCard`, `ItemHoverCard`, `LogroToast`) y el store
+  (`avisoUltimoNodo`). Las claves JSON internas (ids de arco, `rareza`, `efecto.tipo`, etc.) se
+  mantienen en español porque son claves lógicas, no texto de display.
+
 ## Próximos pasos (en orden sugerido)
 
-5. **Cambiar los textos a inglés** — El código no lo voy a compartir con nadie, pero pretendo
-   sacar el juego como aplicación web y el inglés alcanza a mucha más gente. Hay que traducir
-   todos los textos de cara a usuario. ¿Mejor hacer 2 versiones con selector de idioma, o
-   reescribir directamente en inglés? Todo el contenido posterior tiene que estar también
-   en inglés.
-
-6. **Sprites de nodos en el mapa** — Siguiendo el estilo Pokelike, cada nodo debería tener
+5. **Sprites de nodos en el mapa** — Siguiendo el estilo Pokelike, cada nodo debería tener
    un sprite fácilmente reconocible (asset `sprite-nodos-mapa.png` ya existe).
    Tipos pendientes:
    - Combate aleatorio → ninja renegado genérico
@@ -164,28 +167,25 @@
    - Reclutar → pergamino con `+`
    - Jefe final → sprite del jefe concreto
 
-7. **Cambiar estructura del combate** — Se me ha ocurrido que como retoque final, los
+6. **Cambiar estructura del combate** — Se me ha ocurrido que como retoque final, los
    personajes atacarían con un ataque básico (animación kunai) y un ataque potente que se carga
    al hacer o recibir daño, activándose automáticamente al llenarse la barra. Cada ataque tendría
    un tiempo de carga distinto según su poder, similar a Pokémon GO.
    (Leer MVP [26](./26-sistema-de-jutsus-automaticos.md))
 
-8. **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
+7. **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
    el primero esté peleando. Sprites de los personajes visibles. Los logs de texto se sustituyen
    por una animación: el ninja lanza un kunai al enemigo y al impactar la barra de HP baja.
    Personajes caídos → card apagada (estilo Pokelike). Efecto de sacudida al recibir golpe.
 
-9. **Sprites de nodos en el mapa** — `sprite-nodos-mapa.png` ya existe en assets.
-   Ver detalle de tipos en punto 6 arriba.
-
-10. **Fondo de columna central del mapa** — `map-column-backgrounds.png` ya existe (sprite sheet
+8. **Fondo de columna central del mapa** — `map-column-backgrounds.png` ya existe (sprite sheet
     4 columnas × 520 × 960 px): col 1 = genérico, col 2 = País de las Olas, col 3 = Examen
     Chunin, col 4 = Invasión de Pain. Se implementó con `background-size: 400% auto` +
     `background-position-x` por arco, pero se retiró hasta que los sprites de nodo y la UI
     estén terminados (el contraste con el fondo no quedaba bien con el estilo actual).
-    Reactivar junto con los sprites (punto 9).
+    Reactivar junto con los sprites (punto 5).
 
-11. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
+9. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
     personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en
     [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en
     un arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`).

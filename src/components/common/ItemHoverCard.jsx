@@ -5,33 +5,33 @@ function encontrarObjeto(id) {
   return itemsData.objetos.find((o) => o.id === id) ?? null;
 }
 
-const NOMBRE_STAT = {
-  ataque: 'ATQ',
+const STAT_NAME = {
+  ataque: 'ATK',
   defensa: 'DEF',
-  velocidad: 'VEL',
+  velocidad: 'SPD',
   hp: 'HP',
-  todas: 'todas las stats',
+  todas: 'all stats',
 };
 
-/**
- * Texto preciso del efecto de un objeto — la descripción en prosa de
- * `items.json` ya explica QUÉ hace ("aumenta el ataque"), pero no CUÁNTO. El
- * pedido era ver el efecto exacto (cuánto cura, cuánta bonificación da), así
- * que esto complementa la descripción con el número real de `item.efecto`.
- */
+const RAREZA_LABEL = {
+  comun: 'Common',
+  raro: 'Rare',
+  legendario: 'Legendary',
+};
+
 function textoEfecto(efecto) {
   switch (efecto.tipo) {
     case 'curarPersonaje':
-      return `Restaura ${efecto.cantidad.replace('porciento', '%')} de HP al personaje elegido.`;
+      return `Restores ${efecto.cantidad.replace('porciento', '%')} HP to the chosen character.`;
     case 'revivirUnaVez':
-      return `Si quien lo lleva cae, revive con ${efecto.hpAlRevivir} HP. Se consume al activarse.`;
+      return `If the carrier falls, revives with ${efecto.hpAlRevivir} HP. Consumed on activation.`;
     case 'buffEquipable':
-      return `+${efecto.cantidad} ${NOMBRE_STAT[efecto.stat] ?? efecto.stat} para quien lo lleve equipado.`;
+      return `+${efecto.cantidad} ${STAT_NAME[efecto.stat] ?? efecto.stat} for whoever has it equipped.`;
     case 'curacionPostCombate':
-      return `Cura un ${efecto.cantidad.replace('porciento', '%')} de HP a quien lo lleva tras cada combate ganado.`;
+      return `Heals ${efecto.cantidad.replace('porciento', '%')} HP to the carrier after each won battle.`;
     case 'buffYDebuffEquipable':
-      return `+${efecto.buff.cantidad} ${NOMBRE_STAT[efecto.buff.stat] ?? efecto.buff.stat}, `
-        + `${efecto.debuff.cantidad} ${NOMBRE_STAT[efecto.debuff.stat] ?? efecto.debuff.stat} para quien lo lleve equipado.`;
+      return `+${efecto.buff.cantidad} ${STAT_NAME[efecto.buff.stat] ?? efecto.buff.stat}, `
+        + `${efecto.debuff.cantidad} ${STAT_NAME[efecto.debuff.stat] ?? efecto.debuff.stat} for whoever has it equipped.`;
     default:
       return '';
   }
@@ -48,11 +48,6 @@ const COLOR_RAREZA = {
   legendario: 'text-sello-500',
 };
 
-/**
- * Ficha de un objeto (`items.json`): tipo, rareza, descripción y el efecto
- * exacto en números. `equipadoEnNombre` (opcional): si el objeto ya está
- * equipado por alguien, muestra en quién.
- */
 export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
   const objeto = encontrarObjeto(id);
   if (!objeto) return null;
@@ -64,11 +59,11 @@ export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
         <span
           className={`text-[10px] uppercase tracking-wide text-pergamino-100 rounded-full px-2 py-0.5 shrink-0 ${COLOR_TIPO_OBJETO[objeto.tipo] ?? 'bg-tinta-800'}`}
         >
-          {objeto.tipo}
+          {objeto.tipo === 'consumible' ? 'Consumable' : 'Equippable'}
         </span>
       </div>
       <p className={`text-[10px] uppercase tracking-wide mt-0.5 ${COLOR_RAREZA[objeto.rareza] ?? ''}`}>
-        {objeto.rareza}
+        {RAREZA_LABEL[objeto.rareza] ?? objeto.rareza}
       </p>
       <p className="text-[10px] opacity-70 mt-1.5">{objeto.descripcion}</p>
       {objeto.efecto && (
@@ -77,13 +72,12 @@ export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
         </p>
       )}
       {equipadoEnNombre && (
-        <p className="text-[10px] text-suiton font-display mt-1">Equipado en {equipadoEnNombre}</p>
+        <p className="text-[10px] text-suiton font-display mt-1">Equipped on {equipadoEnNombre}</p>
       )}
     </div>
   );
 }
 
-/** Envuelve cualquier trigger y muestra la `FichaObjeto` completa al hacer hover — mismo patrón que `PersonajeHoverCard`. */
 export default function ItemHoverCard({ id, equipadoEnNombre, posicion = 'derecha', className = 'inline-block', children }) {
   if (!encontrarObjeto(id)) return children;
 

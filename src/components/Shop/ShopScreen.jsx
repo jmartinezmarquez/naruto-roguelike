@@ -1,10 +1,10 @@
 import { useGameStore } from '../../store/useGameStore';
 import itemsData from '../../data/items.json';
 
-const AMBIENTACION_POR_ARCO = {
-  pais_de_las_olas: 'Un mercader ambulante ha montado su puesto junto al camino.',
-  examen_chunin: 'Un comerciante furtivo vende sus existencias entre los árboles del Bosque de la Muerte.',
-  invasion_de_pain: 'Entre los escombros de Konoha, un superviviente sigue intentando vender lo poco que le queda.',
+const SHOP_FLAVOR = {
+  pais_de_las_olas: 'A traveling merchant has set up shop by the roadside.',
+  examen_chunin: 'A shady trader sells his wares among the trees of the Forest of Death.',
+  invasion_de_pain: 'Among the ruins of Konoha, a survivor is still trying to sell what little he has left.',
 };
 
 const EMOJI_TIPO = {
@@ -13,8 +13,8 @@ const EMOJI_TIPO = {
 };
 
 const TIPO_ETIQUETA = {
-  consumible: { texto: 'Consumible', clase: 'bg-fuuton/20 text-fuuton border-fuuton/40' },
-  equipable: { texto: 'Equipable', clase: 'bg-raiton/20 text-raiton border-raiton/40' },
+  consumible: { texto: 'Consumable', clase: 'bg-fuuton/20 text-fuuton border-fuuton/40' },
+  equipable: { texto: 'Equippable', clase: 'bg-raiton/20 text-raiton border-raiton/40' },
 };
 
 function TarjetaItem({ entrada, oro, onComprar }) {
@@ -31,36 +31,31 @@ function TarjetaItem({ entrada, oro, onComprar }) {
         ? 'border-pergamino-100/20 hover:border-pergamino-100/50 cursor-pointer hover:bg-tinta-800'
         : 'border-pergamino-100/10 opacity-50'}
     `}>
-      {/* Icono */}
       <div className="text-4xl text-center mb-3">{EMOJI_TIPO[item.tipo] ?? '📦'}</div>
 
-      {/* Nombre */}
       <p className="font-display text-base text-pergamino-100 text-center leading-tight mb-2">
         {item.nombre}
       </p>
 
-      {/* Descripción */}
       <p className="text-xs text-pergamino-200/60 text-center flex-1 leading-relaxed mb-4">
         {item.descripcion}
       </p>
 
-      {/* Etiqueta de tipo */}
       {etiqueta && (
-        <div className={`text-center mb-4`}>
+        <div className="text-center mb-4">
           <span className={`inline-block text-xs font-display uppercase tracking-wider px-2 py-0.5 border rounded-full ${etiqueta.clase}`}>
             {etiqueta.texto}
           </span>
         </div>
       )}
 
-      {/* Botón de compra */}
       <button
         type="button"
         disabled={!puedeComprar}
         onClick={onComprar}
         className="w-full py-2 text-sm font-display rounded-lg transition-colors bg-sello-600 hover:bg-sello-500 disabled:bg-tinta-800 disabled:text-pergamino-200/40 disabled:cursor-not-allowed text-pergamino-100"
       >
-        {entrada.precio} oro
+        {entrada.precio} gold
       </button>
     </div>
   );
@@ -76,30 +71,27 @@ export default function ShopScreen() {
   if (!tienda) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
-        No hay ninguna tienda abierta ahora mismo.
+        No shop is open right now.
       </div>
     );
   }
 
-  const ambientacion = AMBIENTACION_POR_ARCO[arcoActualDatos?.id] ?? 'Un mercader os ofrece sus mercancías.';
+  const flavor = SHOP_FLAVOR[arcoActualDatos?.id] ?? 'A merchant offers their wares.';
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body flex flex-col items-center justify-center px-4 py-8">
-      {/* Cabecera */}
       <header className="text-center mb-8">
         <h1 className="font-display text-3xl font-bold text-pergamino-100 mb-1">
-          ¡Puesto de comercio!
+          Trading Post!
         </h1>
         <p className="text-pergamino-200/60 text-sm font-display">
-          Compra los objetos que quieras
+          Buy whatever you need
         </p>
-        <p className="text-xs text-pergamino-200/40 italic mt-1">{ambientacion}</p>
+        <p className="text-xs text-pergamino-200/40 italic mt-1">{flavor}</p>
       </header>
 
-      {/* Oro disponible */}
-      <p className="font-display text-raiton text-lg mb-6">{oro} oro disponible</p>
+      <p className="font-display text-raiton text-lg mb-6">{oro} gold available</p>
 
-      {/* 3 cartas de objeto */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl mb-8">
         {tienda.items.length > 0 ? (
           tienda.items.map((entrada) => (
@@ -112,18 +104,17 @@ export default function ShopScreen() {
           ))
         ) : (
           <p className="col-span-3 text-center text-pergamino-200/50 text-sm py-8">
-            El mercader ya no tiene nada que ofrecer.
+            The merchant has nothing left to offer.
           </p>
         )}
       </div>
 
-      {/* Salir */}
       <button
         type="button"
         onClick={volverAlMapa}
         className="px-8 py-2.5 bg-tinta-800 hover:bg-tinta-700 border border-pergamino-100/20 rounded-full font-display text-pergamino-100 transition-colors text-sm tracking-widest"
       >
-        SALIR
+        LEAVE
       </button>
     </div>
   );

@@ -21,21 +21,21 @@ export default function GameOverScreen() {
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
       <div className="max-w-md w-full text-center">
         <p className={`font-naruto text-5xl mb-2 ${runGanada ? 'text-fuuton' : 'text-sello-500'}`}>
-          {runGanada ? 'Victoria' : 'Game Over'}
+          {runGanada ? 'Victory' : 'Game Over'}
         </p>
         <p className="text-pergamino-200/80 text-sm mb-6">
           {runGanada
-            ? 'Has derrotado a Pain y completado los 3 arcos. Konoha está a salvo.'
+            ? 'You have defeated Pain and completed all 3 arcs. Konoha is safe.'
             : (
               <>
-                Todo tu equipo ha caído
-                {arcoActualDatos && pisoAlcanzado ? ` en ${arcoActualDatos.nombre}, piso ${pisoAlcanzado} de ${arcoActualDatos.numeroPisos}` : ''}.
+                Your entire team has fallen
+                {arcoActualDatos && pisoAlcanzado ? ` in ${arcoActualDatos.nombre}, floor ${pisoAlcanzado} of ${arcoActualDatos.numeroPisos}` : ''}.
               </>
             )}
         </p>
 
         <div className="bg-tinta-900 border border-pergamino-100/10 rounded-lg p-4 mb-6">
-          <p className="font-display font-bold text-sm mb-3 tracking-wide">EQUIPO</p>
+          <p className="font-display font-bold text-sm mb-3 tracking-wide">TEAM</p>
           <div className="flex flex-col gap-2">
             {equipo.map((p) => {
               const hpMaximo = obtenerHpMaximo(p.id) ?? 1;
@@ -46,11 +46,11 @@ export default function GameOverScreen() {
                 >
                   <div className="text-left">
                     <p className="text-sm font-display">{nombrePersonaje(p.id)}</p>
-                    <p className="text-xs text-pergamino-200/50">Nv. {p.nivel}</p>
+                    <p className="text-xs text-pergamino-200/50">Lv. {p.nivel}</p>
                   </div>
                   <div className="text-right">
                     <p className={`text-xs ${p.derrotado ? 'text-sello-500' : 'text-fuuton'}`}>
-                      {p.derrotado ? 'Caído' : 'En pie'}
+                      {p.derrotado ? 'Defeated' : 'Standing'}
                     </p>
                     <p className="text-xs text-pergamino-200/60">{p.hpActual} / {hpMaximo} HP</p>
                   </div>
@@ -58,7 +58,7 @@ export default function GameOverScreen() {
               );
             })}
           </div>
-          <p className="text-xs text-pergamino-200/60 mt-3">Oro acumulado: {oro}</p>
+          <p className="text-xs text-pergamino-200/60 mt-3">Gold accumulated: {oro}</p>
         </div>
 
         <button
@@ -66,7 +66,7 @@ export default function GameOverScreen() {
           onClick={reiniciarRun}
           className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
         >
-          Nueva Run
+          New Run
         </button>
       </div>
     </div>

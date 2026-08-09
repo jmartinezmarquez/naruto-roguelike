@@ -297,7 +297,7 @@ export const useGameStore = create((set, get) => ({
     if (nodo.tipo === 'descanso') {
       // Auto-resuelto: cura y revive a todo el equipo, sin pantalla propia.
       get()._curarEquipoCompleto();
-      set({ avisoUltimoNodo: 'Equipo curado por completo en el descanso.' });
+      set({ avisoUltimoNodo: 'Team fully healed at the rest node.' });
       return null;
     }
 
@@ -537,7 +537,7 @@ export const useGameStore = create((set, get) => ({
           // antes de pasar al siguiente arco — no hace falta ir a buscar un
           // nodo de descanso justo después de la pelea más dura del arco.
           get()._curarEquipoCompleto();
-          set({ avisoUltimoNodo: 'Equipo curado por completo al superar el arco.' });
+          set({ avisoUltimoNodo: 'Team fully healed after completing the arc.' });
         }
         if (arcoCompletado && enemigoBase.recompensa?.finDeLaRun) {
           set({ runTerminada: true, runGanada: true });
@@ -870,7 +870,7 @@ export const useGameStore = create((set, get) => ({
           const curado = Math.min(hpMax, p.hpActual + Math.round(hpMax * efecto.cantidad));
           return { ...p, hpActual: curado };
         });
-        set({ equipo: equipoActualizado, avisoUltimoNodo: 'El equipo se ha recuperado.' });
+        set({ equipo: equipoActualizado, avisoUltimoNodo: 'The team has recovered.' });
         break;
       }
 

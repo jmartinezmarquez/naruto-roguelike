@@ -1,18 +1,18 @@
 {
-  "_comentario": "Eventos narrativos con 2 elecciones cada uno, al estilo Slay the Spire, tematizados por arco (campo arcoId). Ningún efecto de evento desencadena combate — ya hay suficientes combates por piso en poolTiposNodo. cantidad en curarEquipoPorcentaje es una fracción 0-1 (0.3 = 30%).",
+  "_comentario": "Narrative events with 2 choices each, Slay the Spire style, themed by arc (arcoId field). No event effect triggers combat — there are already enough combat nodes per floor in poolTiposNodo. cantidad in curarEquipoPorcentaje is a fraction 0-1 (0.3 = 30%).",
   "eventos": [
     {
       "id": "tsunade_y_jiraiya",
       "arcoId": "pais_de_las_olas",
-      "titulo": "Los Sannin en el camino",
-      "descripcion": "Tsunade y Jiraiya se cruzan en vuestro camino, de paso hacia otra misión. Se ofrecen a ayudaros un momento antes de seguir viaje.",
+      "titulo": "The Sannin on the Road",
+      "descripcion": "Tsunade and Jiraiya cross your path, passing through on another mission. They offer to help you for a moment before continuing their journey.",
       "elecciones": [
         {
-          "texto": "Pedir a Tsunade que cure al equipo",
+          "texto": "Ask Tsunade to heal the team",
           "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.4 }
         },
         {
-          "texto": "Entrenar con Jiraiya (+20% ataque, 3 combates)",
+          "texto": "Train with Jiraiya (+20% attack, 3 battles)",
           "efecto": { "tipo": "buffTemporalEquipo", "stat": "ataque", "multiplicador": 1.2, "combates": 3 }
         }
       ]
@@ -20,15 +20,15 @@
     {
       "id": "puente_de_tazuna",
       "arcoId": "pais_de_las_olas",
-      "titulo": "El puente a medio construir",
-      "descripcion": "Encontráis a Tazuna supervisando la obra. Os ofrece un momento de respiro antes de seguir.",
+      "titulo": "The Bridge Under Construction",
+      "descripcion": "You find Tazuna supervising the construction. He offers you a moment of rest before you continue.",
       "elecciones": [
         {
-          "texto": "Descansar junto al puente",
+          "texto": "Rest by the bridge",
           "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.25 }
         },
         {
-          "texto": "Seguir entrenando en el bosque",
+          "texto": "Keep training in the forest",
           "efecto": { "tipo": "ganarXpEquipo", "cantidad": 15 }
         }
       ]
@@ -36,15 +36,15 @@
     {
       "id": "mercader_de_las_olas",
       "arcoId": "pais_de_las_olas",
-      "titulo": "Mercader ambulante",
-      "descripcion": "Un comerciante nervioso, huyendo de los hombres de Gato, os ofrece parte de su mercancía a buen precio.",
+      "titulo": "Traveling Merchant",
+      "descripcion": "A nervous merchant fleeing from Gato's men offers you part of his wares at a good price.",
       "elecciones": [
         {
-          "texto": "Comprar un objeto (30 de oro)",
+          "texto": "Buy an item (30 gold)",
           "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 30 }
         },
         {
-          "texto": "Darle algo de oro por su información (-10 oro, +XP)",
+          "texto": "Give him some gold for information (-10 gold)",
           "efecto": { "tipo": "perderOro", "cantidad": 10 }
         }
       ]
@@ -52,15 +52,15 @@
     {
       "id": "pergamino_abandonado_olas",
       "arcoId": "pais_de_las_olas",
-      "titulo": "Pergamino abandonado",
-      "descripcion": "Alguien dejó caer un pergamino de técnicas a medio completar entre la maleza.",
+      "titulo": "Abandoned Scroll",
+      "descripcion": "Someone dropped an unfinished technique scroll in the underbrush.",
       "elecciones": [
         {
-          "texto": "Estudiarlo con calma",
+          "texto": "Study it carefully",
           "efecto": { "tipo": "mejoraPermanenteAleatoria" }
         },
         {
-          "texto": "Ignorarlo, no es de fiar",
+          "texto": "Ignore it — can't be trusted",
           "efecto": { "tipo": "ninguno" }
         }
       ]
@@ -69,15 +69,15 @@
     {
       "id": "anko_os_pone_a_prueba",
       "arcoId": "examen_chunin",
-      "titulo": "Anko Mitarashi os observa",
-      "descripcion": "La examinadora aparece entre los árboles del Bosque de la Muerte, evaluando vuestro nivel con una sonrisa afilada.",
+      "titulo": "Anko Mitarashi Puts You to the Test",
+      "descripcion": "The examiner appears among the trees of the Forest of Death, evaluating your level with a sharp smile.",
       "elecciones": [
         {
-          "texto": "Aceptar su entrenamiento intensivo",
+          "texto": "Accept her intensive training",
           "efecto": { "tipo": "ganarXpEquipo", "cantidad": 60 }
         },
         {
-          "texto": "Mantener la cautela y descansar",
+          "texto": "Stay cautious and rest",
           "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.3 }
         }
       ]
@@ -85,15 +85,15 @@
     {
       "id": "pergamino_robado",
       "arcoId": "examen_chunin",
-      "titulo": "Un pergamino robado",
-      "descripcion": "Encontráis los restos del campamento de otro equipo — parece que perdieron su pergamino a manos de un rival.",
+      "titulo": "A Stolen Scroll",
+      "descripcion": "You find the remains of another team's camp — it looks like they lost their scroll to a rival.",
       "elecciones": [
         {
-          "texto": "Quedaros con lo que dejaron atrás",
+          "texto": "Take what they left behind",
           "efecto": { "tipo": "ganarOro", "cantidad": 25 }
         },
         {
-          "texto": "Dejarlo, no es vuestro",
+          "texto": "Leave it — it's not yours",
           "efecto": { "tipo": "ninguno" }
         }
       ]
@@ -101,15 +101,15 @@
     {
       "id": "mercader_de_rollos",
       "arcoId": "examen_chunin",
-      "titulo": "Mercader de rollos prohibidos",
-      "descripcion": "Un ninja renegado ofrece objetos de dudosa procedencia a cambio de oro, escondido entre los árboles.",
+      "titulo": "Forbidden Scroll Merchant",
+      "descripcion": "A rogue ninja offers items of dubious origin in exchange for gold, hidden among the trees.",
       "elecciones": [
         {
-          "texto": "Comprar un objeto (35 de oro)",
+          "texto": "Buy an item (35 gold)",
           "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 35 }
         },
         {
-          "texto": "No fiarse y seguir camino",
+          "texto": "Don't trust him and move on",
           "efecto": { "tipo": "ninguno" }
         }
       ]
@@ -117,15 +117,15 @@
     {
       "id": "trampa_del_bosque",
       "arcoId": "examen_chunin",
-      "titulo": "Trampa del Bosque de la Muerte",
-      "descripcion": "Una trampa oculta os hace perder parte de vuestro equipo mientras escapáis por los árboles.",
+      "titulo": "Forest of Death Trap",
+      "descripcion": "A hidden trap causes you to lose part of your supplies while escaping through the trees.",
       "elecciones": [
         {
-          "texto": "Recuperar lo posible sobre la marcha",
+          "texto": "Recover what you can on the go",
           "efecto": { "tipo": "perderOro", "cantidad": 15 }
         },
         {
-          "texto": "Abandonarlo y seguir rápido (+XP por el esfuerzo)",
+          "texto": "Abandon it and keep moving (+XP for the effort)",
           "efecto": { "tipo": "ganarXpEquipo", "cantidad": 25 }
         }
       ]
@@ -134,15 +134,15 @@
     {
       "id": "katsuyu_os_encuentra",
       "arcoId": "invasion_de_pain",
-      "titulo": "Katsuyu, la babosa de Tsunade",
-      "descripcion": "Un fragmento de Katsuyu os localiza entre los escombros, transmitiendo la voz de Tsunade a distancia.",
+      "titulo": "Katsuyu, Tsunade's Slug",
+      "descripcion": "A fragment of Katsuyu locates you among the rubble, transmitting Tsunade's voice from a distance.",
       "elecciones": [
         {
-          "texto": "Pedir curación a través de Katsuyu",
+          "texto": "Request healing through Katsuyu",
           "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.5 }
         },
         {
-          "texto": "Pedir información de las posiciones enemigas (+XP)",
+          "texto": "Request intel on enemy positions (+XP)",
           "efecto": { "tipo": "ganarXpEquipo", "cantidad": 80 }
         }
       ]
@@ -150,15 +150,15 @@
     {
       "id": "escombros_de_konoha",
       "arcoId": "invasion_de_pain",
-      "titulo": "Escombros de Konoha",
-      "descripcion": "Entre los restos de un edificio derrumbado, algo brilla bajo los cascotes.",
+      "titulo": "Konoha Rubble",
+      "descripcion": "Among the remains of a collapsed building, something glints under the debris.",
       "elecciones": [
         {
-          "texto": "Buscar supervivientes y objetos útiles",
+          "texto": "Search for survivors and useful items",
           "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 0 }
         },
         {
-          "texto": "Asegurar la zona y avanzar con cautela",
+          "texto": "Secure the area and advance cautiously",
           "efecto": { "tipo": "buffTemporalEquipo", "stat": "defensa", "multiplicador": 1.25, "combates": 3 }
         }
       ]
@@ -166,15 +166,15 @@
     {
       "id": "fukasaku_el_sabio",
       "arcoId": "invasion_de_pain",
-      "titulo": "Fukasaku, el sabio sapo",
-      "descripcion": "El viejo sabio de Myoboku aparece un instante para ofrecer su ayuda antes de la batalla final.",
+      "titulo": "Fukasaku, the Toad Sage",
+      "descripcion": "The old sage of Myoboku appears for a moment to offer his help before the final battle.",
       "elecciones": [
         {
-          "texto": "Entrenamiento relámpago de senjutsu",
+          "texto": "Lightning-fast senjutsu training",
           "efecto": { "tipo": "mejoraPermanenteAleatoria" }
         },
         {
-          "texto": "Replegarse y curar heridas",
+          "texto": "Fall back and heal wounds",
           "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.35 }
         }
       ]
@@ -182,15 +182,15 @@
     {
       "id": "mercader_superviviente",
       "arcoId": "invasion_de_pain",
-      "titulo": "Mercader superviviente",
-      "descripcion": "Entre el caos de la invasión, un comerciante sigue intentando vender sus últimas existencias.",
+      "titulo": "Survivor Merchant",
+      "descripcion": "Amid the chaos of the invasion, a merchant keeps trying to sell his last remaining stock.",
       "elecciones": [
         {
-          "texto": "Comprar un objeto (45 de oro)",
+          "texto": "Buy an item (45 gold)",
           "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 45 }
         },
         {
-          "texto": "No hay tiempo para comprar, seguir adelante",
+          "texto": "No time to shop — keep going",
           "efecto": { "tipo": "ninguno" }
         }
       ]

@@ -32,25 +32,25 @@ const ICONO_NODO = {
 };
 
 const ETIQUETA_NODO = {
-  combate: 'Combate',
+  combate: 'Combat',
   combateEntrenador: 'Elite',
-  evento: 'Evento',
-  tienda: 'Tienda',
-  reclutar: 'Reclutar',
-  descanso: 'Descanso',
-  miniJefe: 'Mini-jefe',
-  jefe: 'Jefe',
+  evento: 'Event',
+  tienda: 'Shop',
+  reclutar: 'Recruit',
+  descanso: 'Rest',
+  miniJefe: 'Mini-Boss',
+  jefe: 'Boss',
 };
 
 const INFO_NODO = {
-  combate: 'Enemigo aleatorio — gana XP y oro al vencer.',
-  combateEntrenador: 'Ninja nombrado con escolta de genins — combate encadenado.',
-  evento: 'Elección narrativa: cura, oro, mejoras... sin combate.',
-  tienda: 'Compra objetos con oro.',
-  reclutar: 'Elige a uno de 3 ninjas para añadir a tu equipo, gratis.',
-  descanso: 'Cura y revive a todo el equipo por completo.',
-  miniJefe: 'Combate más duro, con recompensa de objeto garantizada.',
-  jefe: 'El jefe final del arco — superarlo cura a todo el equipo.',
+  combate: 'Random enemy — win XP and gold on victory.',
+  combateEntrenador: 'Named ninja with genin escort — chained combat.',
+  evento: 'Narrative choice: heal, gold, upgrades... no combat.',
+  tienda: 'Buy items with gold.',
+  reclutar: 'Choose one of 3 ninjas to add to your team, for free.',
+  descanso: 'Fully heals and revives the entire team.',
+  miniJefe: 'Tougher fight, with a guaranteed item reward.',
+  jefe: "The arc's final boss — defeating them heals the entire team.",
 };
 
 const COLOR_NODO = {
@@ -98,15 +98,15 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
   let estadoTexto;
   if (esActual) {
     estadoClases = 'cursor-not-allowed shadow-lg shadow-black/40';
-    estadoTexto = 'Estás aquí';
+    estadoTexto = 'You are here';
   } else if (visitado) {
     estadoClases = 'cursor-not-allowed opacity-50 grayscale';
-    estadoTexto = 'Visitado';
+    estadoTexto = 'Visited';
   } else if (disponible) {
     estadoClases = 'cursor-pointer hover:scale-110 shadow-lg shadow-black/40';
   } else {
     estadoClases = 'cursor-not-allowed opacity-30 grayscale';
-    estadoTexto = 'Todavía no alcanzable';
+    estadoTexto = 'Not yet reachable';
   }
 
   const contenidoTooltip = (
@@ -136,7 +136,7 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
             estadoClases,
             esActual && 'ring-2 ring-sello-500 ring-offset-2 ring-offset-tinta-950 scale-110',
           ].filter(Boolean).join(' ')}
-          aria-label={`Nodo de tipo ${ETIQUETA_NODO[tipoEfectivo] ?? nodo.tipo}${visitado ? ', visitado' : disponible ? ', disponible' : ', no disponible'}`}
+          aria-label={`${ETIQUETA_NODO[tipoEfectivo] ?? nodo.tipo} node${visitado ? ' — visited' : disponible ? ' — available' : ' — not yet reachable'}`}
         >
           {icono}
         </button>
@@ -156,7 +156,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
   return (
     <div className="w-40 shrink-0">
       <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm mb-3 tracking-wide">EQUIPO</p>
+        <p className="font-display font-bold text-sm mb-3 tracking-wide">TEAM</p>
         <div className="flex flex-col gap-2">
           {equipo.map((p, index) => {
             const hpMaximo = obtenerHpMaximo(p.id) ?? p.hpActual ?? 1;
@@ -183,12 +183,12 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                     onClick={() => ponerEnFrente(p.id)}
                     disabled={p.derrotado || esActivo}
                     className={`w-full text-left ${p.derrotado ? 'cursor-default' : 'cursor-pointer'}`}
-                    title={esActivo ? 'Este personaje está en posición 1' : 'Poner en posición 1'}
+                    title={esActivo ? 'This character is in position 1' : 'Move to position 1'}
                   >
                     <p className="text-xs font-display font-bold truncate">
                       {nombrePersonaje(p.id)} {esActivo && '★'}
                     </p>
-                    <p className="text-[10px] opacity-70">Nv. {p.nivel}{p.derrotado ? ' — caído' : ''}</p>
+                    <p className="text-[10px] opacity-70">Lv. {p.nivel}{p.derrotado ? ' — defeated' : ''}</p>
                     <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden mt-1">
                       <div
                         className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
@@ -202,10 +202,10 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                       <button
                         type="button"
                         onClick={() => desequiparObjeto(p.id)}
-                        className="text-[9px] opacity-60 hover:opacity-100 shrink-0 underline"
-                        title="Desequipar (vuelve al inventario)"
+                        className="text-[9px] opacity-60 hover:opacity-100 shrink-0 underline leading-none"
+                        title="Unequip (returns to inventory)"
                       >
-                        quitar
+                        remove
                       </button>
                     </div>
                   )}
@@ -215,7 +215,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
           })}
         </div>
         <p className="text-[9px] opacity-50 mt-3 leading-snug">
-          Toca a un personaje para ponerlo en posición 1 (el que combate).
+          Tap a character to move them to position 1 (the active fighter).
         </p>
       </div>
     </div>
@@ -249,14 +249,14 @@ function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }
   return (
     <div className="w-40 shrink-0">
       <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm tracking-wide">OBJETOS</p>
-        <p className="text-xs text-sello-600 font-display mt-0.5 mb-3">{oro} de oro</p>
+        <p className="font-display font-bold text-sm tracking-wide">ITEMS</p>
+        <p className="text-xs text-sello-600 font-display mt-0.5 mb-3">{oro} gold</p>
 
         {itemSeleccionado ? (
           <div>
             <p className="text-[10px] mb-2 leading-snug">
-              {itemSeleccionado.tipo === 'equipable' ? 'Equipar' : 'Usar'}{' '}
-              <span className="font-display font-bold">{itemSeleccionado.nombre}</span> en:
+              {itemSeleccionado.tipo === 'equipable' ? 'Equip' : 'Use'}{' '}
+              <span className="font-display font-bold">{itemSeleccionado.nombre}</span> on:
             </p>
             <div className="flex flex-col gap-1.5">
               {equipo.map((p) => (
@@ -268,7 +268,7 @@ function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }
                 >
                   {nombrePersonaje(p.id)}
                   {p.objetoEquipadoId && itemSeleccionado.tipo === 'equipable' && (
-                    <span className="opacity-60"> (cambia {nombreObjeto(p.objetoEquipadoId)})</span>
+                    <span className="opacity-60"> (replaces {nombreObjeto(p.objetoEquipadoId)})</span>
                   )}
                 </button>
               ))}
@@ -278,11 +278,11 @@ function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }
               onClick={() => setItemSeleccionadoId(null)}
               className="mt-2 text-[10px] underline opacity-60 hover:opacity-100"
             >
-              Cancelar
+              Cancel
             </button>
           </div>
         ) : idsUnicos.length === 0 ? (
-          <p className="text-[10px] opacity-50 leading-snug">Todavía no tienes ningún objeto.</p>
+          <p className="text-[10px] opacity-50 leading-snug">No items yet.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {idsUnicos.map((id) => (
@@ -340,7 +340,7 @@ function RuedaChakra() {
       <div className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-3">
         <p className="font-display font-bold text-xs text-pergamino-100 tracking-wide">CHAKRA</p>
         <p className="text-[9px] text-pergamino-200/50 mt-0.5 mb-2 leading-snug">
-          → es fuerte contra
+          → is strong against
         </p>
         <svg viewBox="0 0 110 110" className="w-full">
           <defs>
@@ -445,7 +445,7 @@ function MenuIconos({ abrirLogros, reiniciarRun }) {
   }
 
   function manejarReiniciar() {
-    if (window.confirm('¿Seguro que quieres reiniciar la run? Perderás todo el progreso actual.')) {
+    if (window.confirm('Are you sure you want to restart the run? You will lose all current progress.')) {
       reiniciarRun();
     }
   }
@@ -455,19 +455,19 @@ function MenuIconos({ abrirLogros, reiniciarRun }) {
 
   return (
     <div className="absolute top-4 right-4 flex gap-2">
-      <button type="button" onClick={abrirLogros} className={botonClase} title="Logros" aria-label="Logros">
+      <button type="button" onClick={abrirLogros} className={botonClase} title="Achievements" aria-label="Achievements">
         🏆
       </button>
       <button
         type="button"
         onClick={alternarPantallaCompleta}
         className={botonClase}
-        title={pantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
-        aria-label="Pantalla completa"
+        title={pantallaCompleta ? 'Exit fullscreen' : 'Fullscreen'}
+        aria-label="Fullscreen"
       >
         ⛶
       </button>
-      <button type="button" onClick={manejarReiniciar} className={botonClase} title="Reiniciar run" aria-label="Reiniciar run">
+      <button type="button" onClick={manejarReiniciar} className={botonClase} title="Restart run" aria-label="Restart run">
         ⟲
       </button>
     </div>
@@ -522,7 +522,7 @@ export default function MapScreen() {
   if (!mapa) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
-        No hay ninguna run en curso todavía.
+        No run in progress yet.
       </div>
     );
   }
@@ -532,7 +532,7 @@ export default function MapScreen() {
       <MenuIconos abrirLogros={abrirLogros} reiniciarRun={reiniciarRun} />
 
       <header className="text-center mb-2 shrink-0">
-        <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Arco actual</p>
+        <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Current Arc</p>
         <h1 className="font-naruto text-3xl text-pergamino-100 tracking-wide">
           {arcoActualDatos?.nombre}
         </h1>

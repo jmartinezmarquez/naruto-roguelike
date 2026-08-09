@@ -17,7 +17,7 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
       ].join(' ')}
     >
       <FichaPersonaje id={personaje.id} className="p-3" />
-      {seleccionado && <p className="text-xs text-sello-500 text-center py-1 font-display">★ Elegido</p>}
+      {seleccionado && <p className="text-xs text-sello-500 text-center py-1 font-display">★ Chosen</p>}
     </button>
   );
 }
@@ -66,9 +66,9 @@ export default function CharacterSelectScreen({ onConfirmar }) {
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
       <div className="max-w-2xl w-full text-center">
-        <h1 className="font-naruto text-4xl text-pergamino-100 mb-2">Elige a tu ninja</h1>
+        <h1 className="font-naruto text-4xl text-pergamino-100 mb-2">Choose your ninja</h1>
         <p className="text-sm text-pergamino-200/60 mb-8">
-          El resto del equipo se completa reclutando durante la aventura.
+          The rest of your team is built by recruiting during the adventure.
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

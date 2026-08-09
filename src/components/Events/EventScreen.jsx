@@ -1,29 +1,28 @@
 import { useGameStore } from '../../store/useGameStore';
 
-const NOMBRE_STAT = { ataque: 'Ataque', defensa: 'Defensa', velocidad: 'Velocidad', hp: 'HP' };
+const STAT_NAME = { ataque: 'ATK', defensa: 'DEF', velocidad: 'SPD', hp: 'HP' };
 
-/** Genera un texto legible a partir del efecto, para que un jugador novato sepa qué hace cada elección. */
 function generarPista(efecto) {
   switch (efecto.tipo) {
     case 'curarEquipoPorcentaje':
-      return `Cura un ${Math.round(efecto.cantidad * 100)}% de la vida del equipo.`;
+      return `Heals ${Math.round(efecto.cantidad * 100)}% of the team's HP.`;
     case 'buffTemporalEquipo':
-      return `${NOMBRE_STAT[efecto.stat]} +${Math.round((efecto.multiplicador - 1) * 100)}% durante ${efecto.combates} combates.`;
+      return `${STAT_NAME[efecto.stat] ?? efecto.stat} +${Math.round((efecto.multiplicador - 1) * 100)}% for ${efecto.combates} battles.`;
     case 'ganarXpEquipo':
-      return `El equipo gana ${efecto.cantidad} de experiencia.`;
+      return `The team gains ${efecto.cantidad} experience.`;
     case 'ganarOro':
-      return `Ganas ${efecto.cantidad} de oro.`;
+      return `You gain ${efecto.cantidad} gold.`;
     case 'perderOro':
-      return `Pierdes ${efecto.cantidad} de oro.`;
+      return `You lose ${efecto.cantidad} gold.`;
     case 'comprarObjetoAleatorio':
       return efecto.coste > 0
-        ? `Consigues un objeto aleatorio por ${efecto.coste} de oro.`
-        : 'Consigues un objeto aleatorio gratis.';
+        ? `Get a random item for ${efecto.coste} gold.`
+        : 'Get a random item for free.';
     case 'mejoraPermanenteAleatoria':
-      return 'Un personaje al azar gana una mejora permanente de estadística.';
+      return 'A random character gains a permanent stat upgrade.';
     case 'ninguno':
     default:
-      return 'No pasa nada.';
+      return 'Nothing happens.';
   }
 }
 
@@ -34,7 +33,7 @@ export default function EventScreen() {
   if (!evento) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
-        No hay ningún evento en curso.
+        No event in progress.
       </div>
     );
   }
@@ -42,7 +41,7 @@ export default function EventScreen() {
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex items-center justify-center">
       <div className="max-w-md w-full bg-tinta-900 border border-pergamino-100/10 rounded-lg p-6">
-        <p className="text-raiton text-xs tracking-[0.3em] uppercase mb-2 text-center">Evento</p>
+        <p className="text-raiton text-xs tracking-[0.3em] uppercase mb-2 text-center">Event</p>
         <h1 className="font-display text-2xl font-bold text-center mb-4">{evento.titulo}</h1>
         <p className="text-pergamino-200/80 text-sm text-center mb-6 leading-relaxed">
           {evento.descripcion}

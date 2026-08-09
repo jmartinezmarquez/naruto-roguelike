@@ -7,8 +7,8 @@ const EMOJI_TIPO = {
 };
 
 const TIPO_ETIQUETA = {
-  consumible: { texto: 'Objeto usable', clase: 'bg-fuuton/20 text-fuuton border border-fuuton/40' },
-  equipable: { texto: 'Objeto equipable', clase: 'bg-raiton/20 text-raiton border border-raiton/40' },
+  consumible: { texto: 'Usable Item', clase: 'bg-fuuton/20 text-fuuton border border-fuuton/40' },
+  equipable: { texto: 'Equippable Item', clase: 'bg-raiton/20 text-raiton border border-raiton/40' },
 };
 
 export default function ItemRewardScreen() {
@@ -19,7 +19,7 @@ export default function ItemRewardScreen() {
   if (!recompensa) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
-        No hay recompensa pendiente.
+        No reward pending.
       </div>
     );
   }
@@ -29,17 +29,15 @@ export default function ItemRewardScreen() {
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body flex flex-col items-center justify-center px-4 py-8">
-      {/* Cabecera */}
       <header className="text-center mb-10">
         <h1 className="font-display text-3xl font-bold text-pergamino-100 mb-1">
-          ¡Objeto encontrado!
+          Item Found!
         </h1>
         <p className="text-pergamino-200/60 text-sm font-display">
-          Recompensa por derrotar al mini-jefe
+          Reward for defeating the mini-boss
         </p>
       </header>
 
-      {/* Carta centrada */}
       {item ? (
         <div className="flex flex-col items-center bg-tinta-900 border-2 border-pergamino-100/20 rounded-xl p-8 max-w-xs w-full mb-8 text-center">
           <div className="text-6xl mb-5">{EMOJI_TIPO[item.tipo] ?? '📦'}</div>
@@ -53,25 +51,24 @@ export default function ItemRewardScreen() {
         </div>
       ) : (
         <div className="bg-tinta-900 border border-pergamino-100/20 rounded-xl p-8 max-w-xs w-full mb-8 text-center text-pergamino-200/50 text-sm">
-          Objeto desconocido
+          Unknown item
         </div>
       )}
 
-      {/* Botones */}
       <div className="flex flex-col items-center gap-3">
         <button
           type="button"
           onClick={reclamarRecompensaMiniJefe}
           className="px-8 py-2.5 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors text-sm tracking-wide"
         >
-          Recoger
+          Collect
         </button>
         <button
           type="button"
           onClick={saltarRecompensaMiniJefe}
           className="text-xs text-pergamino-200/40 hover:text-pergamino-200/70 underline transition-colors"
         >
-          Saltar
+          Skip
         </button>
       </div>
     </div>

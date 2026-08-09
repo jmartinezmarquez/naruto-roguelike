@@ -1,5 +1,5 @@
 {
-  "_comentario": "Cada personaje tiene stats base (nivel 1), un jutsu característico que inflige daño, y un array 'modos' con hasta 2 transformaciones. Cada modo se activa a partir de nivelDesbloqueo (el motor elige automáticamente el de mayor nivel desbloqueado) y multiplica stats — NUNCA cambia el jutsu, igual que las transformaciones DBZ. jutsu.efectoEstado va a null en todos: los efectos de estado (buffs/debuffs temporales) se desactivaron para el MVP por simplicidad de cálculo y balance (no todos los jutsu narrativamente tenían sentido con uno) — el motor (engine/combat.js) sigue soportándolos tal cual si algún día se rellenan de nuevo, ver documentacion/09-motor-engine.md.",
+  "_comentario": "Each character has base stats (level 1), a signature jutsu that deals damage, and a 'modos' array with up to 2 transformations. Each mode activates above its nivelDesbloqueo (the engine always picks the highest unlocked one) and multiplies stats — NEVER changes the jutsu, like DBZ transformations. jutsu.efectoEstado is null for all: status effects (temporary buffs/debuffs) were disabled for the MVP — the engine (engine/combat.js) still supports them if refilled in the future, see documentacion/09-motor-engine.md.",
   "personajes": [
     {
       "id": "naruto",
@@ -18,13 +18,13 @@
       },
       "jutsu": {
         "nombre": "Rasengan",
-        "descripcion": "Esfera giratoria de chakra que daña y desestabiliza al rival.",
+        "descripcion": "A rotating sphere of chakra that damages and destabilizes the opponent.",
         "danoBase": 5,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Manto de Chakra del Kyuubi",
+          "nombre": "Nine-Tails Chakra Cloak",
           "nivelDesbloqueo": 12,
           "multiplicadores": {
             "ataque": 1.4,
@@ -34,7 +34,7 @@
           }
         },
         {
-          "nombre": "Modo Sabio",
+          "nombre": "Sage Mode",
           "nivelDesbloqueo": 62,
           "multiplicadores": {
             "ataque": 1.8,
@@ -61,14 +61,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Gran Bola de Fuego",
-        "descripcion": "Bola de fuego que quema al rival, reduciendo su ataque por el dolor.",
+        "nombre": "Great Fireball Jutsu",
+        "descripcion": "A massive fireball that scorches the opponent, weakening their attack through the burns.",
         "danoBase": 1.35,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Marca de Maldición (Nivel 2)",
+          "nombre": "Curse Mark (Level 2)",
           "nivelDesbloqueo": 12,
           "multiplicadores": {
             "ataque": 1.5,
@@ -105,14 +105,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Golpe de Chakra Médico",
-        "descripcion": "Concentra chakra en el puño y de paso estabiliza su propia resistencia.",
+        "nombre": "Medical Chakra Strike",
+        "descripcion": "Concentrates chakra in her fist while reinforcing her own stamina.",
         "danoBase": 1.15,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Golpe de Fuerza Monstruosa",
+          "nombre": "Monstrous Strength",
           "nivelDesbloqueo": 20,
           "multiplicadores": {
             "ataque": 1.4,
@@ -122,7 +122,7 @@
           }
         },
         {
-          "nombre": "Sello de los Cien (Byakugou)",
+          "nombre": "Byakugou Seal",
           "nivelDesbloqueo": 60,
           "multiplicadores": {
             "ataque": 1.6,
@@ -149,14 +149,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Loto Inicial",
-        "descripcion": "Taijutsu puro a máxima velocidad; se arriesga a bajar su propia defensa.",
+        "nombre": "Primary Lotus",
+        "descripcion": "Pure taijutsu at maximum speed; risks lowering his own defense.",
         "danoBase": 1.4,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Puertas Internas Abiertas",
+          "nombre": "Inner Gates",
           "nivelDesbloqueo": 22,
           "multiplicadores": {
             "ataque": 1.5,
@@ -166,7 +166,7 @@
           }
         },
         {
-          "nombre": "Puerta de la Muerte",
+          "nombre": "Gate of Death",
           "nivelDesbloqueo": 70,
           "multiplicadores": {
             "ataque": 2.1,
@@ -193,14 +193,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Ocho Trigramas: 64 Palmas",
-        "descripcion": "Ataca los puntos de chakra del rival, bloqueando parte de su energía.",
+        "nombre": "Eight Trigrams: 64 Palms",
+        "descripcion": "Strikes the opponent's chakra points, blocking part of their energy.",
         "danoBase": 1.3,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Byakugan Pleno",
+          "nombre": "Full Byakugan",
           "nivelDesbloqueo": 24,
           "multiplicadores": {
             "ataque": 1.3,
@@ -210,7 +210,7 @@
           }
         },
         {
-          "nombre": "Ocho Trigramas: 128 Palmas",
+          "nombre": "Eight Trigrams: 128 Palms",
           "nivelDesbloqueo": 75,
           "multiplicadores": {
             "ataque": 1.7,
@@ -237,14 +237,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Invocación de Armas",
-        "descripcion": "Lluvia de armas arrojadizas que mejora su propia precisión.",
+        "nombre": "Weapon Summoning",
+        "descripcion": "A rain of thrown weapons that improves her own accuracy.",
         "danoBase": 1.2,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Arsenal Celestial",
+          "nombre": "Celestial Arsenal",
           "nivelDesbloqueo": 20,
           "multiplicadores": {
             "ataque": 1.3,
@@ -254,7 +254,7 @@
           }
         },
         {
-          "nombre": "Soten Hiken (Dragones Gemelos)",
+          "nombre": "Twin Rising Dragons",
           "nivelDesbloqueo": 78,
           "multiplicadores": {
             "ataque": 1.7,
@@ -281,14 +281,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Posesión de Sombras",
-        "descripcion": "Inmoviliza al rival, reduciendo drásticamente su velocidad.",
+        "nombre": "Shadow Possession Jutsu",
+        "descripcion": "Immobilizes the opponent, drastically reducing their speed.",
         "danoBase": 0.9,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Sombra Ampliada",
+          "nombre": "Extended Shadow",
           "nivelDesbloqueo": 26,
           "multiplicadores": {
             "ataque": 1.1,
@@ -298,7 +298,7 @@
           }
         },
         {
-          "nombre": "Estrangulamiento de Sombra",
+          "nombre": "Shadow Strangle",
           "nivelDesbloqueo": 80,
           "multiplicadores": {
             "ataque": 1.4,
@@ -325,14 +325,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Posesión Mental",
-        "descripcion": "Toma el control momentáneo del rival, mermando su ataque.",
+        "nombre": "Mind Transfer Jutsu",
+        "descripcion": "Takes momentary control of the opponent, weakening their attack.",
         "danoBase": 0.85,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Vínculo Mental Reforzado",
+          "nombre": "Reinforced Mind Link",
           "nivelDesbloqueo": 23,
           "multiplicadores": {
             "ataque": 1.2,
@@ -342,7 +342,7 @@
           }
         },
         {
-          "nombre": "Posesión Mental a Distancia",
+          "nombre": "Long-Range Mind Transfer",
           "nivelDesbloqueo": 72,
           "multiplicadores": {
             "ataque": 1.5,
@@ -369,14 +369,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Bala Humana",
-        "descripcion": "Se lanza como una bola gigante, ganando corpulencia y aguante.",
+        "nombre": "Human Bullet Tank",
+        "descripcion": "Launches himself as a giant ball, gaining bulk and endurance.",
         "danoBase": 1.25,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Mariposa de las Tres Alas",
+          "nombre": "Butterfly Mode",
           "nivelDesbloqueo": 28,
           "multiplicadores": {
             "ataque": 1.4,
@@ -386,7 +386,7 @@
           }
         },
         {
-          "nombre": "Mariposa Dorada del Sabio",
+          "nombre": "Sage Butterfly Mode",
           "nivelDesbloqueo": 85,
           "multiplicadores": {
             "ataque": 1.8,
@@ -413,14 +413,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Colmillo Sobre Colmillo",
-        "descripcion": "Ataque giratorio junto a Akamaru que gana velocidad con el impulso.",
+        "nombre": "Fang Over Fang",
+        "descripcion": "Spinning attack alongside Akamaru that gains speed from the momentum.",
         "danoBase": 1.3,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Transformación Bestial Doble",
+          "nombre": "Double Beast Transformation",
           "nivelDesbloqueo": 21,
           "multiplicadores": {
             "ataque": 1.4,
@@ -430,7 +430,7 @@
           }
         },
         {
-          "nombre": "Colmillo del Lobo Voraz",
+          "nombre": "Ravenous Wolf Fang",
           "nivelDesbloqueo": 74,
           "multiplicadores": {
             "ataque": 1.7,
@@ -457,14 +457,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Ocho Trigramas: Dos Palmas",
-        "descripcion": "Golpe preciso a los tenketsu que refuerza su propia defensa por concentración.",
+        "nombre": "Eight Trigrams: Two Palms",
+        "descripcion": "Precise strike to the tenketsu that reinforces her own defense through concentration.",
         "danoBase": 1.1,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Byakugan Pleno",
+          "nombre": "Full Byakugan",
           "nivelDesbloqueo": 25,
           "multiplicadores": {
             "ataque": 1.2,
@@ -474,7 +474,7 @@
           }
         },
         {
-          "nombre": "Ocho Trigramas: Vacío Celestial",
+          "nombre": "Eight Trigrams: Heavenly Void",
           "nivelDesbloqueo": 82,
           "multiplicadores": {
             "ataque": 1.6,
@@ -501,14 +501,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Enjambre de Insectos Destructores",
-        "descripcion": "Sus insectos drenan chakra del rival, mermando su ataque poco a poco.",
+        "nombre": "Destruction Bug Swarm",
+        "descripcion": "His insects drain chakra from the opponent, gradually weakening their attack.",
         "danoBase": 1,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Enjambre Total",
+          "nombre": "Full Swarm",
           "nivelDesbloqueo": 27,
           "multiplicadores": {
             "ataque": 1.2,
@@ -518,7 +518,7 @@
           }
         },
         {
-          "nombre": "Colonia Devoradora Definitiva",
+          "nombre": "Ultimate Devouring Colony",
           "nivelDesbloqueo": 79,
           "multiplicadores": {
             "ataque": 1.6,
@@ -545,14 +545,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Bestia de Tinta Súper Gigante",
-        "descripcion": "Invoca una bestia de tinta que ataca y desorienta al rival.",
+        "nombre": "Super Beast Imitation Drawing",
+        "descripcion": "Summons a giant ink beast that attacks and disorients the opponent.",
         "danoBase": 1.25,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Ejército de Tinta",
+          "nombre": "Ink Army",
           "nivelDesbloqueo": 75,
           "multiplicadores": {
             "ataque": 1.5,
@@ -579,14 +579,14 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Estilo de Madera: Muro Nacido de la Tierra",
-        "descripcion": "Levanta un muro de madera que protege y fortalece al equipo.",
+        "nombre": "Wood Style: Arbor Jutsu",
+        "descripcion": "Raises a wood wall that protects and strengthens the team.",
         "danoBase": 1.1,
         "efectoEstado": null
       },
       "modos": [
         {
-          "nombre": "Liberación Total de Estilo de Madera",
+          "nombre": "Wood Style: Full Release",
           "nivelDesbloqueo": 80,
           "multiplicadores": {
             "ataque": 1.5,

@@ -1,10 +1,10 @@
 {
-  "_comentario": "Objetos que aparecen en eventos, tienda y recompensas de combate. 'equipable' se asigna a un personaje concreto (un hueco por personaje) y solo beneficia a quien lo lleve puesto — si lo desequipas o reemplazas a ese personaje, el objeto vuelve al inventario (revivirUnaVez es la excepción: se consume al activarse, no vuelve). 'consumible' se gasta una vez usado sobre un personaje.",
+  "_comentario": "Items appearing in events, shop and combat rewards. 'equipable' is assigned to a specific character (one slot per character) and only benefits whoever carries it — if you unequip it or replace that character, the item returns to inventory (revivirUnaVez is the exception: consumed on activation, doesn't return). 'consumible' is spent once used on a character.",
   "objetos": [
     {
       "id": "pildora_soldado",
-      "nombre": "Píldora del Soldado",
-      "descripcion": "Restaura HP al instante a un personaje, a cambio de fatiga futura.",
+      "nombre": "Soldier Pill",
+      "descripcion": "Instantly restores HP to a character, at the cost of future fatigue.",
       "tipo": "consumible",
       "rareza": "comun",
       "precioTienda": 25,
@@ -12,8 +12,8 @@
     },
     {
       "id": "banda_repuesto",
-      "nombre": "Banda Ninja de Repuesto",
-      "descripcion": "Si quien la lleva equipada cae en combate, revive con 1 HP. Se consume al activarse (no vuelve al inventario).",
+      "nombre": "Spare Ninja Headband",
+      "descripcion": "If the equipped carrier falls in battle, they revive with 1 HP. Consumed on activation (does not return to inventory).",
       "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": 60,
@@ -21,8 +21,8 @@
     },
     {
       "id": "sello_chakra",
-      "nombre": "Sello de Chakra",
-      "descripcion": "Aumenta el ataque de quien lo lleve equipado.",
+      "nombre": "Chakra Seal",
+      "descripcion": "Increases the attack of whoever has it equipped.",
       "tipo": "equipable",
       "rareza": "comun",
       "precioTienda": 40,
@@ -30,8 +30,8 @@
     },
     {
       "id": "pergamino_reserva",
-      "nombre": "Pergamino de Reserva de Chakra",
-      "descripcion": "Aumenta el HP máximo de quien lo lleve equipado.",
+      "nombre": "Chakra Reserve Scroll",
+      "descripcion": "Increases the max HP of whoever has it equipped.",
       "tipo": "equipable",
       "rareza": "comun",
       "precioTienda": 40,
@@ -39,8 +39,8 @@
     },
     {
       "id": "semilla_sabio",
-      "nombre": "Semilla del Sabio Ermitaño",
-      "descripcion": "Cura un porcentaje del HP de quien lo lleve equipado, automáticamente tras cada combate ganado.",
+      "nombre": "Hermit Sage Seed",
+      "descripcion": "Heals a percentage of HP from whoever has it equipped, automatically after each won battle.",
       "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": 55,
@@ -48,8 +48,8 @@
     },
     {
       "id": "fragmento_sello_maldito",
-      "nombre": "Fragmento de Sello Maldito",
-      "descripcion": "Aumenta mucho el ataque de quien lo lleve equipado, pero reduce su defensa. Arriesgado.",
+      "nombre": "Cursed Seal Fragment",
+      "descripcion": "Greatly increases the attack of whoever has it equipped, but reduces their defense. Risky.",
       "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": 65,
@@ -57,8 +57,8 @@
     },
     {
       "id": "pergamino_viento",
-      "nombre": "Pergamino de Viento",
-      "descripcion": "Aumenta la velocidad de quien lo lleve equipado. Obtenido al derrotar a Haku.",
+      "nombre": "Wind Scroll",
+      "descripcion": "Increases the speed of whoever has it equipped. Obtained by defeating Haku.",
       "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": null,
@@ -66,8 +66,8 @@
     },
     {
       "id": "kubikiribocho_fragmento",
-      "nombre": "Fragmento de la Kubikiribōchō",
-      "descripcion": "Un trozo de la legendaria espada decapitadora. Aumenta el ataque de quien lo lleve equipado. Obtenido al derrotar a Zabuza.",
+      "nombre": "Kubikiribōchō Fragment",
+      "descripcion": "A piece of the legendary decapitating sword. Increases the attack of whoever has it equipped. Obtained by defeating Zabuza.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
@@ -75,8 +75,8 @@
     },
     {
       "id": "calabaza_arena",
-      "nombre": "Calabaza de Arena (fragmento)",
-      "descripcion": "Aumenta considerablemente la defensa de quien lo lleve equipado. Obtenido al derrotar a Gaara.",
+      "nombre": "Sand Gourd (Fragment)",
+      "descripcion": "Significantly increases the defense of whoever has it equipped. Obtained by defeating Gaara.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
@@ -84,8 +84,8 @@
     },
     {
       "id": "anillo_rinnegan_fragmento",
-      "nombre": "Fragmento del Anillo Rinnegan",
-      "descripcion": "Un fragmento del poder de los Seis Caminos. Trofeo de fin de run — aumenta todas las estadísticas de quien lo lleve equipado.",
+      "nombre": "Rinnegan Ring Fragment",
+      "descripcion": "A fragment of the Six Paths power. End-of-run trophy — increases all stats of whoever has it equipped.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,

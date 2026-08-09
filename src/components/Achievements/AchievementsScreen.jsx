@@ -17,13 +17,12 @@ function nombreObjeto(id) {
   return itemsData.objetos.find((o) => o.id === id)?.nombre ?? id;
 }
 
-/** Texto legible de qué desbloquea la recompensa de un logro, para mostrar siempre (esté conseguido o no). */
 function textoRecompensa(recompensa) {
   if (recompensa.tipo === 'desbloquearPersonajeReclutable') {
-    return `Desbloquea a ${nombrePersonajeOJefe(recompensa.personajeId)} como reclutable en cualquier tienda futura.`;
+    return `Unlocks ${nombrePersonajeOJefe(recompensa.personajeId)} as recruitable in any future shop.`;
   }
   if (recompensa.tipo === 'desbloquearObjetoInicial') {
-    return `Empiezas cualquier run futura con ${nombreObjeto(recompensa.objetoId)} en el inventario.`;
+    return `You start any future run with ${nombreObjeto(recompensa.objetoId)} in your inventory.`;
   }
   return '';
 }
@@ -40,9 +39,9 @@ export default function AchievementsScreen() {
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8">
       <div className="max-w-xl mx-auto">
         <header className="text-center mb-6">
-          <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Meta-progresión</p>
-          <h1 className="font-display text-3xl font-bold text-pergamino-100">Logros</h1>
-          <p className="text-xs text-pergamino-200/60 mt-1">{conseguidos} / {total} desbloqueados</p>
+          <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Meta-progress</p>
+          <h1 className="font-display text-3xl font-bold text-pergamino-100">Achievements</h1>
+          <p className="text-xs text-pergamino-200/60 mt-1">{conseguidos} / {total} unlocked</p>
         </header>
 
         <div className="flex flex-col gap-3">
@@ -59,7 +58,7 @@ export default function AchievementsScreen() {
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-display font-bold text-sm">{logro.nombre}</p>
                   <span className={`text-[10px] uppercase tracking-wide shrink-0 ${desbloqueado ? 'text-fuuton' : 'text-pergamino-200/40'}`}>
-                    {desbloqueado ? 'Desbloqueado' : 'Pendiente'}
+                    {desbloqueado ? 'Unlocked' : 'Locked'}
                   </span>
                 </div>
                 <p className="text-xs text-pergamino-200/70 mt-1">{logro.descripcion}</p>
@@ -75,16 +74,16 @@ export default function AchievementsScreen() {
             onClick={volverAlMapa}
             className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
           >
-            Volver al mapa
+            Back to map
           </button>
 
-          {/* TEMPORAL: solo para probar el desbloqueo de logros en desarrollo. Quitar antes de publicar. */}
+          {/* TEMP: dev only, remove before publishing */}
           <button
             type="button"
             onClick={reiniciarLogros}
             className="px-4 py-1.5 text-xs border border-dashed border-pergamino-200/30 text-pergamino-200/50 hover:text-pergamino-200/80 hover:border-pergamino-200/60 rounded-full transition-colors"
           >
-            [DEV] Reiniciar logros
+            [DEV] Reset achievements
           </button>
         </div>
       </div>

@@ -28,6 +28,13 @@ const RAREZA_COLOR = {
   legendario: 'text-sello-500',
 };
 
+const RAREZA_LABEL = {
+  comun: 'Common',
+  inicial: 'Starter',
+  raro: 'Rare',
+  legendario: 'Legendary',
+};
+
 function BarraStat({ label, valor, max }) {
   const pct = Math.min(1, valor / max);
   return (
@@ -62,18 +69,15 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
           : 'border-pergamino-100/15 hover:border-pergamino-100/40 hover:bg-tinta-800'}
       `}
     >
-      {/* Nombre y rareza */}
       <div className="mb-3">
         <p className="font-display text-base text-pergamino-100 leading-tight">{emojiTipo} {base.nombre}</p>
         <p className={`text-[10px] uppercase tracking-wider mt-0.5 ${RAREZA_COLOR[opcion.rareza] ?? ''}`}>
-          {opcion.rareza}
+          {RAREZA_LABEL[opcion.rareza] ?? opcion.rareza}
         </p>
       </div>
 
-      {/* Nivel */}
-      <p className="text-[11px] text-pergamino-200/60 font-display mb-3">Nv. {nivel}</p>
+      <p className="text-[11px] text-pergamino-200/60 font-display mb-3">Lv. {nivel}</p>
 
-      {/* Barra de HP */}
       <div className="mb-3">
         <div className="h-2 w-full bg-tinta-800 rounded-full overflow-hidden">
           <div className="h-full bg-fuuton rounded-full w-full" />
@@ -81,15 +85,13 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
         <p className="text-[10px] text-pergamino-200/50 mt-0.5">{hp * nivel} / {hp * nivel} HP</p>
       </div>
 
-      {/* Stats */}
       <div className="flex flex-col gap-1 mb-3">
-        <BarraStat label="ATQ" valor={ataque} max={maxStat} />
+        <BarraStat label="ATK" valor={ataque} max={maxStat} />
         <BarraStat label="DEF" valor={defensa} max={maxStat} />
-        <BarraStat label="VEL" valor={velocidad} max={maxStat} />
+        <BarraStat label="SPD" valor={velocidad} max={maxStat} />
         <BarraStat label="HP" valor={hp} max={maxStat} />
       </div>
 
-      {/* Jutsu */}
       <div className="border-t border-pergamino-100/10 pt-2 mt-auto">
         <div className="flex items-center justify-between gap-1">
           <p className="text-[11px] font-display text-pergamino-100 truncate">{base.jutsu.nombre}</p>
@@ -100,13 +102,12 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
   );
 }
 
-/** Panel de confirmación cuando el equipo está lleno: elige a quién reemplazar. */
 function PanelReemplazo({ nombreNuevo, equipo, onElegir, onCancelar }) {
   return (
     <div className="fixed inset-0 bg-tinta-950/80 flex items-center justify-center z-50 px-4">
       <div className="bg-tinta-900 border border-pergamino-100/20 rounded-xl p-6 max-w-sm w-full">
-        <p className="font-display text-pergamino-100 text-center mb-1">¿A quién reemplaza</p>
-        <p className="font-display text-fuuton text-center text-lg mb-4">{nombreNuevo}?</p>
+        <p className="font-display text-pergamino-100 text-center mb-1">Who does</p>
+        <p className="font-display text-fuuton text-center text-lg mb-4">{nombreNuevo} replace?</p>
         <div className="grid grid-cols-3 gap-2 mb-4">
           {equipo.map((p) => {
             const base = encontrarBase(p.id);
@@ -127,7 +128,7 @@ function PanelReemplazo({ nombreNuevo, equipo, onElegir, onCancelar }) {
           onClick={onCancelar}
           className="w-full text-xs text-pergamino-200/50 hover:text-pergamino-100 underline"
         >
-          Cancelar
+          Cancel
         </button>
       </div>
     </div>
@@ -145,7 +146,7 @@ export default function RecruitScreen() {
   if (!oferta) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
-        No hay ningún nodo de reclutamiento activo.
+        No active recruit node.
       </div>
     );
   }
@@ -154,7 +155,6 @@ export default function RecruitScreen() {
 
   function manejarClic(personajeId) {
     if (equipoLleno) {
-      // Equipo lleno: mostrar picker de reemplazo antes de confirmar
       setCandidatoId(personajeId);
     } else {
       elegirReclutaDeNodo(personajeId);
@@ -170,19 +170,17 @@ export default function RecruitScreen() {
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body flex flex-col items-center justify-center px-4 py-8">
-      {/* Cabecera */}
       <header className="text-center mb-8">
         <h1 className="font-display text-3xl font-bold text-pergamino-100 mb-1">
-          ¡Ninja disponible!
+          Ninja Available!
         </h1>
         <p className="text-pergamino-200/60 text-sm font-display">
           {equipoLleno
-            ? 'Tu equipo está completo — pulsa a uno para elegir a quién reemplaza'
-            : 'Pulsa a uno de los ninjas para añadirle a tu equipo'}
+            ? 'Your team is full — tap one to choose who they replace'
+            : 'Tap a ninja to add them to your team'}
         </p>
       </header>
 
-      {/* 3 cartas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl mb-8">
         {oferta.personajes.length > 0 ? (
           oferta.personajes.map((opcion) => (
@@ -196,21 +194,19 @@ export default function RecruitScreen() {
           ))
         ) : (
           <p className="col-span-3 text-center text-pergamino-200/50 text-sm py-8">
-            No hay ninjas disponibles para reclutar en este punto.
+            No ninjas available to recruit here.
           </p>
         )}
       </div>
 
-      {/* Saltar */}
       <button
         type="button"
         onClick={volverAlMapa}
         className="px-8 py-2.5 bg-tinta-800 hover:bg-tinta-700 border border-pergamino-100/20 rounded-full font-display text-pergamino-100 transition-colors text-sm tracking-widest"
       >
-        SALTAR (HUIR)
+        SKIP
       </button>
 
-      {/* Panel de reemplazo */}
       {candidatoId && (
         <PanelReemplazo
           nombreNuevo={encontrarBase(candidatoId)?.nombre ?? candidatoId}
