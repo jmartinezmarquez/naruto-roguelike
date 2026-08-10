@@ -102,6 +102,9 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   inventario si lo desequipas o reemplazas a ese personaje (`equiparObjeto`/`desequiparObjeto` en
   `useGameStore.js`); `revivirUnaVez` y `curacionPostCombate` ya se disparan de verdad en combate;
   consumibles se usan desde `PanelObjetos` (`usarConsumible`). Ver `documentacion/21-objetos-equipables.md`.
+- [x] Sprites de nodo en el mapa (`assets/nodes/*.png`, recortados de `sprite-nodos-mapa.png`) en
+  vez de glifos kanji. Entrenador/mini-jefe/jefe todavía reutilizan el sprite de combate + badge de
+  rango, a falta de arte por personaje — ver `documentacion/13-ui-mapa-y-combate.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 

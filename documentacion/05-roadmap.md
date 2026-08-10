@@ -153,19 +153,19 @@
   (`avisoUltimoNodo`). Las claves JSON internas (ids de arco, `rareza`, `efecto.tipo`, etc.) se
   mantienen en español porque son claves lógicas, no texto de display.
 
-## Próximos pasos (en orden sugerido)
+**Sprites de nodos en el mapa**
+- [x] Los glifos kanji provisionales de cada nodo sustituidos por los sprites reales de
+  `sprite-nodos-mapa.png`. Como la hoja del artista trae los 5 iconos juntos y etiquetados, se
+  recortaron a `assets/nodes/*.png` (media resolución) en vez de cargar la hoja de 1,4 MB entera;
+  las coordenadas del recorte quedan anotadas en [13](./13-ui-mapa-y-combate.md) por si hay que
+  rehacerlo. Cubiertos: combate, evento, tienda, descanso y reclutar.
+- [ ] **Pendiente de arte**: combate entrenador, mini-jefe y jefe final deberían llevar el sprite
+  del personaje concreto. Hoy comparten el sprite de combate y se distinguen por color de borde +
+  badge de rango (`★` / `☠` / `危`) y, en el jefe, tamaño mayor con borde doble. El asset
+  `map-sprites-idle-all-characters.png` tiene los personajes, pero en una hoja con paneles de
+  tamaño irregular: hace falta recortarlos uno a uno antes de poder mapearlos por `enemigoId`.
 
-5. **Sprites de nodos en el mapa** — Siguiendo el estilo Pokelike, cada nodo debería tener
-   un sprite fácilmente reconocible (asset `sprite-nodos-mapa.png` ya existe).
-   Tipos pendientes:
-   - Combate aleatorio → ninja renegado genérico
-   - Combate entrenador → sprite del personaje concreto
-   - Mini-jefe → sprite del personaje concreto
-   - Tienda → mercader ambulante
-   - Descanso → clínica con cruz verde
-   - Evento → interrogante
-   - Reclutar → pergamino con `+`
-   - Jefe final → sprite del jefe concreto
+## Próximos pasos (en orden sugerido)
 
 6. **Cambiar estructura del combate** — Se me ha ocurrido que como retoque final, los
    personajes atacarían con un ataque básico (animación kunai) y un ataque potente que se carga
@@ -183,7 +183,7 @@
     Chunin, col 4 = Invasión de Pain. Se implementó con `background-size: 400% auto` +
     `background-position-x` por arco, pero se retiró hasta que los sprites de nodo y la UI
     estén terminados (el contraste con el fondo no quedaba bien con el estilo actual).
-    Reactivar junto con los sprites (punto 5).
+    Los sprites de nodo ya están puestos, así que este es el momento de volver a probarlo.
 
 9. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
     personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en

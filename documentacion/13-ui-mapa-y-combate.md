@@ -35,11 +35,27 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
     (`tinta-950`) — simboliza que ya no se puede volver atrás a por esa rama.
   - **Todavía fuera de alcance** (más adelante en el mapa, ninguno de los dos extremos visitado ni
     es el nodo actual): línea de puntos, muy tenue.
-- Nodos: círculo con glifo kanji por tipo (combate/evento/tienda/descanso), color según tipo; el
-  nodo de jefe usa un cuadrado con borde doble en vez de círculo, para diferenciarlo sin depender de
-  un asset externo. 4 estados igual de diferenciados que las aristas: nodo actual (anillo sello),
-  visitado (greyed out + escala de grises), disponible (brillante, clicable), fuera de alcance (muy
-  tenue + escala de grises, no clicable).
+- Nodos: **sprite pixel art por tipo** (`SPRITE_NODO` en `MapScreen.jsx`), recortado en círculo,
+  con borde de color según tipo. Sustituye a los glifos kanji provisionales (`⚔ ? ¥ ♨ ✚ ☠ 危`), que
+  eran un apaño hasta tener arte propio. 4 estados igual de diferenciados que las aristas: nodo
+  actual (anillo sello), visitado (apagado, escala de grises al 55 % de brillo), disponible
+  (brillante, clicable), fuera de alcance (más apagado todavía, 35 % de brillo, no clicable).
+  - Los estados apagados usan **filtros (`grayscale` + `brightness`), nunca `opacity`**: en un
+    Pokelike los nodos son sprites opacos, y bajarles el alpha deja ver el fondo y las líneas del
+    mapa a través del sprite. Apagados siguen siendo opacos; la jerarquía la marca el brillo.
+  - Los sprites salen de `assets/sprite-nodos-mapa.png` (la hoja del artista trae los 5 juntos, con
+    sus etiquetas). Los recortes individuales están en `assets/nodes/*.png`, a media resolución
+    (~100 px, se pintan a 48) para no arrastrar 1,4 MB de hoja entera por 5 iconos de 48 px.
+    Coordenadas del recorte sobre la hoja original, por si hay que rehacerlo con una hoja nueva:
+    combate `(60, 27) 200×198`, evento `(60, 537) 200×197`, tienda `(60, 746) 200×197`,
+    descanso `(58, 947) 201×197`, reclutar (pergamino común) `(438, 283) 244×245`.
+  - **Reclutar va en marco cuadrado**, no circular: el pergamino no es redondo y un recorte
+    circular le cortaría las varillas de arriba y abajo.
+  - **Combate entrenador, mini-jefe y jefe comparten el sprite de combate** — la hoja no trae arte
+    por personaje todavía. Lo que los distingue es el color del borde más un badge de rango
+    (`BADGE_NODO`: `★` entrenador, `☠` mini-jefe, `危` jefe) en la esquina inferior derecha, y el
+    jefe además va más grande (56 px) con borde doble. El recorte circular se aplica a la `<img>`,
+    no al `<button>`: si lo llevara el botón con `overflow-hidden`, cortaría el badge.
 - **Hover en cada nodo** en vez de una leyenda fija (`LeyendaMapa` se quitó): pasar el ratón sobre
   cualquier nodo muestra su tipo, qué hace (`INFO_NODO`, texto tipo "Compra objetos y recluta...")
   y su estado actual (Visitado/Estás aquí/Todavía no alcanzable) — la vieja leyenda ocupaba sitio

@@ -6,6 +6,11 @@ import itemsData from '../../data/items.json';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
 import ItemHoverCard from '../common/ItemHoverCard';
 import HoverTooltip from '../common/HoverTooltip';
+import spriteCombate from '../../assets/nodes/combate.png';
+import spriteEvento from '../../assets/nodes/evento.png';
+import spriteTienda from '../../assets/nodes/tienda.png';
+import spriteDescanso from '../../assets/nodes/descanso.png';
+import spriteReclutar from '../../assets/nodes/reclutar.png';
 
 function nombrePersonaje(id) {
   return personajesData.personajes.find((p) => p.id === id)?.nombre ?? id;
@@ -15,18 +20,28 @@ function nombreObjeto(id) {
   return itemsData.objetos.find((o) => o.id === id)?.nombre ?? id;
 }
 
-// Un icono simple por tipo de nodo, en vez de depender de assets externos.
-// Los kanjis solos no son legibles para quien no lee japonés, así que cada
-// nodo lleva además su propio hover con nombre + beneficio (ver INFO_NODO) —
-// sustituye a la vieja leyenda fija del lateral, que ocupaba sitio siempre
-// visible por algo que solo hace falta consultar de vez en cuando.
-const ICONO_NODO = {
-  combate: '⚔',
+// Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
+// original del artista trae los 5 iconos juntos; los recortes viven en
+// `assets/nodes/*.png` a media resolución, 100 px para pintarse a 48).
+// Los tres nodos de combate especiales comparten de momento el sprite de
+// combate: la hoja no trae arte por personaje todavía (ver punto 5 del roadmap),
+// así que lo que los distingue es el badge de rango + el color del borde.
+const SPRITE_NODO = {
+  combate: spriteCombate,
+  combateEntrenador: spriteCombate, 
+  evento: spriteEvento,
+  tienda: spriteTienda,
+  reclutar: spriteReclutar,
+  descanso: spriteDescanso,
+  miniJefe: spriteCombate,
+  jefe: spriteCombate,
+};
+
+// Glifo de rango superpuesto al sprite, solo en los combates que no son el
+// aleatorio corriente. Cada nodo lleva además su hover con nombre + beneficio
+// (ver INFO_NODO) — sustituye a la vieja leyenda fija del lateral.
+const BADGE_NODO = {
   combateEntrenador: '★',
-  evento: '?',
-  tienda: '¥',
-  reclutar: '✚',
-  descanso: '♨',
   miniJefe: '☠',
   jefe: '危',
 };
@@ -53,15 +68,18 @@ const INFO_NODO = {
   jefe: "The arc's final boss — defeating them heals the entire team.",
 };
 
+// Solo borde y color de texto: el fondo lo tapa el sprite. El color sigue siendo
+// la pista rápida del tipo de nodo cuando el mapa está escalado y los sprites
+// se ven pequeños.
 const COLOR_NODO = {
-  combate: 'bg-tinta-800 border-pergamino-200/40 text-pergamino-100',
-  combateEntrenador: 'bg-tinta-800 border-katon/60 text-katon',
-  evento: 'bg-tinta-800 border-raiton/50 text-raiton',
-  tienda: 'bg-tinta-800 border-doton/50 text-doton',
-  reclutar: 'bg-tinta-800 border-fuuton/60 text-fuuton',
-  descanso: 'bg-tinta-800 border-suiton/50 text-suiton',
-  miniJefe: 'bg-sello-600/20 border-sello-500 text-sello-500',
-  jefe: 'bg-sello-600 border-sello-500 text-pergamino-100',
+  combate: 'border-pergamino-200/40 text-pergamino-100',
+  combateEntrenador: 'border-katon/60 text-katon',
+  evento: 'border-raiton/50 text-raiton',
+  tienda: 'border-doton/50 text-doton',
+  reclutar: 'border-fuuton/60 text-fuuton',
+  descanso: 'border-suiton/50 text-suiton',
+  miniJefe: 'border-sello-500 text-sello-500',
+  jefe: 'border-sello-500 text-pergamino-100',
 };
 
 const ANCHO = 520;
@@ -88,24 +106,34 @@ function calcularPosiciones(mapa) {
 function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
   const tipoEfectivo = nodo.tipo === 'combate' && nodo.subtipo === 'entrenador' ? 'combateEntrenador' : nodo.tipo;
   const estilo = COLOR_NODO[tipoEfectivo] ?? COLOR_NODO.combate;
-  const icono = ICONO_NODO[tipoEfectivo] ?? '?';
+  const sprite = SPRITE_NODO[tipoEfectivo] ?? SPRITE_NODO.combate;
+  const badge = BADGE_NODO[tipoEfectivo];
   const esJefe = nodo.tipo === 'jefe';
+  // El pergamino de reclutar no es circular: recortarlo en círculo le cortaría
+  // las varillas de arriba y abajo, así que ese va en marco cuadrado.
+  const esCircular = tipoEfectivo !== 'reclutar';
 
   // Cuatro estados visuales bien diferenciados, sin solaparse: aquí ahora,
-  // ya visitado (greyed out, no se puede repetir), disponible para elegir, o
-  // todavía fuera de alcance (más adelante en el mapa).
+  // ya visitado (no se puede repetir), disponible para elegir, o todavía fuera
+  // de alcance (más adelante en el mapa).
+  //
+  // Los dos estados no clicables se apagan con filtros (grayscale + brightness),
+  // NO con `opacity`: en un Pokelike los nodos son sprites opacos, y bajarles el
+  // alpha deja ver el fondo y las líneas del mapa a través del sprite, que es
+  // justo lo que rompe la ilusión de pieza dibujada. Apagados siguen siendo
+  // opacos, y la jerarquía la marca cuánto brillo les queda.
   let estadoClases;
   let estadoTexto;
   if (esActual) {
     estadoClases = 'cursor-not-allowed shadow-lg shadow-black/40';
     estadoTexto = 'You are here';
   } else if (visitado) {
-    estadoClases = 'cursor-not-allowed opacity-50 grayscale';
+    estadoClases = 'cursor-not-allowed grayscale brightness-[0.55]';
     estadoTexto = 'Visited';
   } else if (disponible) {
     estadoClases = 'cursor-pointer hover:scale-110 shadow-lg shadow-black/40';
   } else {
-    estadoClases = 'cursor-not-allowed opacity-30 grayscale';
+    estadoClases = 'cursor-not-allowed grayscale brightness-[0.35]';
     estadoTexto = 'Not yet reachable';
   }
 
@@ -129,16 +157,41 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
           disabled={!disponible}
           onClick={() => onClick(nodo.id)}
           className={[
-            'flex items-center justify-center border-2 font-display text-lg',
+            'relative block border-2 bg-tinta-900',
             'transition-transform duration-200',
-            esJefe ? 'w-14 h-14 border-double border-4' : 'rounded-full w-12 h-12',
+            esJefe ? 'w-14 h-14 border-4 border-double' : 'w-12 h-12',
+            esCircular ? 'rounded-full' : 'rounded-md',
             estilo,
             estadoClases,
             esActual && 'ring-2 ring-sello-500 ring-offset-2 ring-offset-tinta-950 scale-110',
           ].filter(Boolean).join(' ')}
           aria-label={`${ETIQUETA_NODO[tipoEfectivo] ?? nodo.tipo} node${visitado ? ' — visited' : disponible ? ' — available' : ' — not yet reachable'}`}
         >
-          {icono}
+          <img
+            src={sprite}
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+            className={[
+              'w-full h-full object-cover select-none',
+              // El recorte va en la propia imagen, no en el botón: si lo pusiera
+              // el botón con `overflow-hidden`, el badge de rango que asoma por
+              // la esquina quedaría cortado.
+              esCircular ? 'rounded-full' : 'rounded-sm',
+            ].join(' ')}
+          />
+          {badge && (
+            <span
+              className={[
+                'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full',
+                'flex items-center justify-center font-display text-[8px] leading-none',
+                'bg-tinta-950 border',
+                estilo,
+              ].join(' ')}
+            >
+              {badge}
+            </span>
+          )}
         </button>
       </HoverTooltip>
     </div>
