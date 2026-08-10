@@ -3,7 +3,7 @@
   "id": "examen_chunin",
   "nombre": "Chunin Exams",
   "temaVisual": "bosque_de_la_muerte",
-  "numeroPisos": 10,
+  "numeroPisos": 8,
   "nodosPorPiso": {
     "min": 1,
     "max": 4
@@ -30,9 +30,9 @@
       "peso": 7
     }
   ],
-  "pisoMiniJefe": 5,
+  "pisoMiniJefe": 4,
   "miniJefeId": "kabuto",
-  "pisoJefeFinal": 10,
+  "pisoJefeFinal": 8,
   "jefeFinalId": "gaara",
   "personajesReclutablesIds": [
     "rock_lee",

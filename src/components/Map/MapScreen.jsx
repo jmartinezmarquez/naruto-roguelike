@@ -11,6 +11,9 @@ import spriteEvento from '../../assets/nodes/evento.png';
 import spriteTienda from '../../assets/nodes/tienda.png';
 import spriteDescanso from '../../assets/nodes/descanso.png';
 import spriteReclutar from '../../assets/nodes/reclutar.png';
+import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
+import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
+import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
 
 function nombrePersonaje(id) {
   return personajesData.personajes.find((p) => p.id === id)?.nombre ?? id;
@@ -27,6 +30,9 @@ function nombreObjeto(id) {
 // combate: la hoja no trae arte por personaje todavía (ver punto 5 del roadmap),
 // así que lo que los distingue es el badge de rango + el color del borde.
 const SPRITE_NODO = {
+  // El nodo de salida no tiene sprite a propósito: nace visitado, así que se
+  // pinta como un disco oscuro con su tick, igual que en Pokelike.
+  inicio: null,
   combate: spriteCombate,
   combateEntrenador: spriteCombate, 
   evento: spriteEvento,
@@ -47,6 +53,7 @@ const BADGE_NODO = {
 };
 
 const ETIQUETA_NODO = {
+  inicio: 'Start',
   combate: 'Combat',
   combateEntrenador: 'Elite',
   evento: 'Event',
@@ -58,6 +65,7 @@ const ETIQUETA_NODO = {
 };
 
 const INFO_NODO = {
+  inicio: 'Where your journey through this arc begins.',
   combate: 'Random enemy — win XP and gold on victory.',
   combateEntrenador: 'Named ninja with genin escort — chained combat.',
   evento: 'Narrative choice: heal, gold, upgrades... no combat.',
@@ -72,6 +80,7 @@ const INFO_NODO = {
 // la pista rápida del tipo de nodo cuando el mapa está escalado y los sprites
 // se ven pequeños.
 const COLOR_NODO = {
+  inicio: 'border-pergamino-200/40 text-pergamino-100',
   combate: 'border-pergamino-200/40 text-pergamino-100',
   combateEntrenador: 'border-katon/60 text-katon',
   evento: 'border-raiton/50 text-raiton',
@@ -80,6 +89,17 @@ const COLOR_NODO = {
   descanso: 'border-suiton/50 text-suiton',
   miniJefe: 'border-sello-500 text-sello-500',
   jefe: 'border-sello-500 text-pergamino-100',
+};
+
+// Fondo de la columna central del mapa, uno por arco — recortado de
+// `assets/map-column-backgrounds.png` (hoja de referencia con las 4 columnas
+// etiquetadas; los recortes limpios viven en `assets/map-columns/*.png`).
+// La clave es el `id` del arco, así que un arco sin entrada simplemente se queda
+// con la columna negra en vez de romperse.
+const FONDO_COLUMNA = {
+  pais_de_las_olas: fondoColumnaOlas,
+  examen_chunin: fondoColumnaChunin,
+  invasion_de_pain: fondoColumnaPain,
 };
 
 const ANCHO = 520;
@@ -106,7 +126,9 @@ function calcularPosiciones(mapa) {
 function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
   const tipoEfectivo = nodo.tipo === 'combate' && nodo.subtipo === 'entrenador' ? 'combateEntrenador' : nodo.tipo;
   const estilo = COLOR_NODO[tipoEfectivo] ?? COLOR_NODO.combate;
-  const sprite = SPRITE_NODO[tipoEfectivo] ?? SPRITE_NODO.combate;
+  // `in` y no `??`: el nodo de inicio tiene sprite `null` a propósito, y con
+  // `??` habría caído al de combate.
+  const sprite = tipoEfectivo in SPRITE_NODO ? SPRITE_NODO[tipoEfectivo] : SPRITE_NODO.combate;
   const badge = BADGE_NODO[tipoEfectivo];
   const esJefe = nodo.tipo === 'jefe';
   // El pergamino de reclutar no es circular: recortarlo en círculo le cortaría
@@ -128,7 +150,9 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
     estadoClases = 'cursor-not-allowed shadow-lg shadow-black/40';
     estadoTexto = 'You are here';
   } else if (visitado) {
-    estadoClases = 'cursor-not-allowed grayscale brightness-[0.55]';
+    // Menos apagado que antes: encima lleva ya el velo del tick, y encadenar
+    // los dos lo dejaba casi negro.
+    estadoClases = 'cursor-not-allowed grayscale brightness-[0.8]';
     estadoTexto = 'Visited';
   } else if (disponible) {
     estadoClases = 'cursor-pointer hover:scale-110 shadow-lg shadow-black/40';
@@ -167,19 +191,38 @@ function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
           ].filter(Boolean).join(' ')}
           aria-label={`${ETIQUETA_NODO[tipoEfectivo] ?? nodo.tipo} node${visitado ? ' — visited' : disponible ? ' — available' : ' — not yet reachable'}`}
         >
-          <img
-            src={sprite}
-            alt=""
-            aria-hidden="true"
-            draggable="false"
-            className={[
-              'w-full h-full object-cover select-none',
-              // El recorte va en la propia imagen, no en el botón: si lo pusiera
-              // el botón con `overflow-hidden`, el badge de rango que asoma por
-              // la esquina quedaría cortado.
-              esCircular ? 'rounded-full' : 'rounded-sm',
-            ].join(' ')}
-          />
+          {sprite && (
+            <img
+              src={sprite}
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+              className={[
+                'w-full h-full object-cover select-none',
+                // El recorte va en la propia imagen, no en el botón: si lo pusiera
+                // el botón con `overflow-hidden`, el badge de rango que asoma por
+                // la esquina quedaría cortado.
+                esCircular ? 'rounded-full' : 'rounded-sm',
+              ].join(' ')}
+            />
+          )}
+          {/* Tick de "ya hecho", como en Pokelike: encima del sprite, con su
+              propio velo para que se lea sobre cualquier dibujo. Va también en
+              el nodo actual, porque al llegar a un nodo se resuelve al instante
+              — estar en él ya significa haberlo jugado. */}
+          {visitado && (
+            <span
+              className={[
+                'absolute inset-0 flex items-center justify-center',
+                'text-pergamino-100 font-display leading-none',
+                esActual ? 'bg-tinta-950/30' : 'bg-tinta-950/55',
+                esJefe ? 'text-lg' : 'text-base',
+                esCircular ? 'rounded-full' : 'rounded-sm',
+              ].join(' ')}
+            >
+              ✓
+            </span>
+          )}
           {badge && (
             <span
               className={[
@@ -207,10 +250,10 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
   }
 
   return (
-    <div className="w-40 shrink-0">
-      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm mb-3 tracking-wide">TEAM</p>
-        <div className="flex flex-col gap-2">
+    <div className="w-32 shrink-0">
+      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-2">
+        <p className="font-display font-bold text-[10px] mb-2 tracking-wide">TEAM</p>
+        <div className="flex flex-col gap-1.5">
           {equipo.map((p, index) => {
             const hpMaximo = obtenerHpMaximo(p.id) ?? p.hpActual ?? 1;
             const porcentaje = Math.max(0, p.hpActual / hpMaximo);
@@ -226,7 +269,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
               >
                 <div
                   className={[
-                    'w-full text-left rounded-md p-2 border transition-colors',
+                    'w-full text-left rounded-md p-1.5 border transition-colors',
                     esActivo ? 'border-sello-600 bg-sello-600/10' : 'border-tinta-950/15 bg-tinta-950/5',
                     p.derrotado ? 'opacity-40' : '',
                   ].join(' ')}
@@ -238,10 +281,10 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                     className={`w-full text-left ${p.derrotado ? 'cursor-default' : 'cursor-pointer'}`}
                     title={esActivo ? 'This character is in position 1' : 'Move to position 1'}
                   >
-                    <p className="text-xs font-display font-bold truncate">
+                    <p className="text-[10px] font-display font-bold truncate">
                       {nombrePersonaje(p.id)} {esActivo && '★'}
                     </p>
-                    <p className="text-[10px] opacity-70">Lv. {p.nivel}{p.derrotado ? ' — defeated' : ''}</p>
+                    <p className="text-[8px] opacity-70">Lv. {p.nivel}{p.derrotado ? ' — defeated' : ''}</p>
                     <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden mt-1">
                       <div
                         className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
@@ -267,8 +310,8 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
             );
           })}
         </div>
-        <p className="text-[9px] opacity-50 mt-3 leading-snug">
-          Tap a character to move them to position 1 (the active fighter).
+        <p className="text-[8px] opacity-50 mt-2 leading-snug">
+          Tap a ninja to send them to position 1.
         </p>
       </div>
     </div>
@@ -300,10 +343,10 @@ function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }
   }
 
   return (
-    <div className="w-40 shrink-0">
-      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm tracking-wide">ITEMS</p>
-        <p className="text-xs text-sello-600 font-display mt-0.5 mb-3">{oro} gold</p>
+    <div className="w-32 shrink-0">
+      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-2">
+        <p className="font-display font-bold text-[10px] tracking-wide">ITEMS</p>
+        <p className="text-[10px] text-sello-600 font-display mt-0.5 mb-2">{oro} gold</p>
 
         {itemSeleccionado ? (
           <div>
@@ -317,7 +360,7 @@ function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }
                   key={p.id}
                   type="button"
                   onClick={() => elegirPersonaje(p.id)}
-                  className="text-left text-xs bg-tinta-950/5 hover:bg-sello-600/20 border border-tinta-950/15 hover:border-sello-600/60 rounded-md px-2 py-1.5 transition-colors"
+                  className="text-left text-[10px] bg-tinta-950/5 hover:bg-sello-600/20 border border-tinta-950/15 hover:border-sello-600/60 rounded-md px-1.5 py-1 transition-colors"
                 >
                   {nombrePersonaje(p.id)}
                   {p.objetoEquipadoId && itemSeleccionado.tipo === 'equipable' && (
@@ -343,11 +386,11 @@ function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }
                 <button
                   type="button"
                   onClick={() => setItemSeleccionadoId(id)}
-                  className="w-full flex items-center justify-between gap-1 rounded-md border border-tinta-950/15 bg-tinta-950/5 hover:border-sello-600/60 px-2 py-1.5 transition-colors"
+                  className="w-full flex items-center justify-between gap-1 rounded-md border border-tinta-950/15 bg-tinta-950/5 hover:border-sello-600/60 px-1.5 py-1 transition-colors"
                 >
-                  <p className="text-xs font-display truncate">{nombreObjeto(id)}</p>
+                  <p className="text-[10px] font-display truncate">{nombreObjeto(id)}</p>
                   {conteoPorId[id] > 1 && (
-                    <span className="text-[10px] opacity-60 shrink-0">x{conteoPorId[id]}</span>
+                    <span className="text-[8px] opacity-60 shrink-0">x{conteoPorId[id]}</span>
                   )}
                 </button>
               </ItemHoverCard>
@@ -389,10 +432,10 @@ function RuedaChakra() {
   const puntos = ORDEN_CICLO_CHAKRA.map((_, i) => puntoRuedaChakra(i, total));
 
   return (
-    <div className="w-40 shrink-0">
-      <div className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-3">
-        <p className="font-display font-bold text-xs text-pergamino-100 tracking-wide">CHAKRA</p>
-        <p className="text-[9px] text-pergamino-200/50 mt-0.5 mb-2 leading-snug">
+    <div className="w-32 shrink-0">
+      <div className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-2">
+        <p className="font-display font-bold text-[10px] text-pergamino-100 tracking-wide">CHAKRA</p>
+        <p className="text-[8px] text-pergamino-200/50 mt-0.5 mb-2 leading-snug">
           → is strong against
         </p>
         <svg viewBox="0 0 110 110" className="w-full">
@@ -544,6 +587,8 @@ export default function MapScreen() {
   const abrirLogros = useGameStore((s) => s.abrirLogros);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
 
+  const fondoColumna = FONDO_COLUMNA[arcoActualDatos?.id];
+
   const posiciones = useMemo(() => (mapa ? calcularPosiciones(mapa) : {}), [mapa]);
   const disponibles = useMemo(() => new Set(obtenerNodosDisponibles()), [mapa, nodoActualId]);
   const alturaLienzo = mapa ? ALTO_POR_PISO * mapa.pisos.length : 0;
@@ -584,14 +629,14 @@ export default function MapScreen() {
     <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
       <MenuIconos abrirLogros={abrirLogros} reiniciarRun={reiniciarRun} />
 
-      <header className="text-center mb-2 shrink-0">
-        <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Current Arc</p>
-        <h1 className="font-naruto text-3xl text-pergamino-100 tracking-wide">
+      <header className="text-center mb-1 shrink-0">
+        <p className="text-sello-500 text-[9px] tracking-[0.3em] uppercase">Current Arc</p>
+        <h1 className="font-naruto text-2xl text-pergamino-100 tracking-wide">
           {arcoActualDatos?.nombre}
         </h1>
       </header>
 
-      <div className="flex-1 min-h-0 flex justify-center items-start gap-6 max-w-4xl mx-auto w-full">
+      <div className="flex-1 min-h-0 flex justify-center items-start gap-4 max-w-3xl mx-auto w-full">
         <div className="flex flex-col gap-4">
           <PanelEquipo
             equipo={equipo}
@@ -608,11 +653,42 @@ export default function MapScreen() {
           />
         </div>
 
+        {/* El contenedor de fuera solo mide el hueco disponible: no pinta nada.
+            El marco (fondo + borde) va en el div ya escalado de dentro, para que
+            abrace exactamente al mapa. Cuando el marco lo pintaba el contenedor,
+            sobraban bandas negras a los lados — el lienzo casi nunca es tan ancho
+            como el hueco, porque la escala la manda la altura. */}
         <div
           ref={contenedorRef}
-          className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden rounded-2xl bg-tinta-950/100"
+          className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden"
         >
-          <div style={{ width: ANCHO * escala, height: alturaLienzo * escala, position: 'relative', zIndex: 1 }}>
+          <div
+            className="bg-tinta-950"
+            style={{
+              width: ANCHO * escala,
+              height: alturaLienzo * escala,
+              position: 'relative',
+              zIndex: 1,
+              borderRadius: 12,
+              // Marco por `box-shadow` y no por `border`: un borde real se comería
+              // 8 px del ancho útil (box-sizing: border-box) y el lienzo escalado,
+              // que mide exactamente ANCHO*escala, se saldría por los lados.
+              boxShadow: '0 0 0 4px var(--color-tinta-950)',
+              // `100% 100%` y no `cover`: las columnas se generan a 520×960,
+              // que es exactamente el lienzo (ANCHO × ALTO_POR_PISO × 8 pisos),
+              // así que encajan sin recortar ni deformar. Si algún arco dejara
+              // de tener 8 pisos habría que regenerarlas (scripts/generar-columnas-mapa.py).
+              backgroundImage: fondoColumna ? `url(${fondoColumna})` : undefined,
+              backgroundSize: '100% 100%',
+            }}
+          >
+            {/* Velo oscuro sobre el fondo, ahora suave: con la columna de tierra
+                lisa el contraste ya lo da el propio fondo, y sólo hace falta
+                bajarle un punto de brillo para que las líneas del mapa se lean.
+                Con el paisaje completo detrás hacía falta el triple de velo. */}
+            {fondoColumna && (
+              <div className="absolute inset-0 bg-tinta-950/15" style={{ borderRadius: 12 }} />
+            )}
             <div
               className="relative"
               style={{ width: ANCHO, height: alturaLienzo, transform: `scale(${escala})`, transformOrigin: 'top left' }}

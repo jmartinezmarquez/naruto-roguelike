@@ -40,34 +40,90 @@ function anchoDelPiso(piso, numeroPisosNormales, min, max) {
 }
 
 /**
+ * Anchos de todos los pisos, con la regla de que **dos pisos seguidos nunca
+ * miden lo mismo**: el mapa tiene que ensancharse o estrecharse en cada salto,
+ * que es lo que dibuja el rombo. Sin esto, el ruido de `anchoDelPiso` repetía
+ * el mismo ancho varias veces seguidas y salían tramos rectos.
+ *
+ * El primer piso (nodo de inicio) y el del jefe miden 1 y no se tocan; los de
+ * en medio se corrigen en pasada única: si repiten el ancho del anterior, se
+ * intenta subir uno y, si no cabe en `max`, bajar uno.
+ */
+function anchosDeLosPisos(arco, numeroPisosNormales) {
+  const { min, max } = arco.nodosPorPiso;
+  const anchos = [];
+
+  for (let piso = 1; piso <= arco.numeroPisos; piso++) {
+    if (piso === 1 || piso === arco.pisoJefeFinal) {
+      anchos.push(1);
+      continue;
+    }
+    let ancho = anchoDelPiso(piso, numeroPisosNormales, min, max);
+    // El piso justo después de la salida se abre como mucho a 3: del nodo de
+    // inicio salen todas las aristas de ese piso, y con 4-5 el arranque parecía
+    // una estrella en vez del pico de un rombo.
+    if (piso === 2) ancho = Math.min(ancho, Math.max(min, 3));
+    const anterior = anchos[anchos.length - 1];
+    if (ancho === anterior) {
+      ancho = ancho + 1 <= max ? ancho + 1 : Math.max(min, ancho - 1);
+    }
+    anchos.push(ancho);
+  }
+
+  // El piso anterior al jefe también tiene que romper con el 1 del jefe, y
+  // además `garantizarDescansoAntesDelJefe` necesita sitio para un descanso
+  // que no pise al mini-jefe.
+  const indicePrevio = arco.pisoJefeFinal - 2;
+  if (indicePrevio > 0 && anchos[indicePrevio] === 1) {
+    anchos[indicePrevio] = Math.min(max, 2);
+  }
+
+  return anchos;
+}
+
+/**
  * Genera el mapa completo de un arco: nodos organizados por piso, con
- * conexiones hacia el piso siguiente. El último piso es siempre un único
- * nodo de tipo 'jefe'. El piso de mini-jefe fuerza un nodo de tipo 'miniJefe'.
+ * conexiones hacia el piso siguiente.
+ *
+ * - El piso 1 es siempre un único nodo `inicio`, que nace ya visitado: es la
+ *   casilla de salida, como en un Pokelike. No se juega, solo marca de dónde
+ *   sale el jugador y da el primer abanico de opciones.
+ * - El último piso es siempre un único nodo de tipo 'jefe'.
+ * - El piso de mini-jefe fuerza un nodo de tipo 'miniJefe'.
  */
 export function generarMapa(arco) {
   contadorId = 0;
   const nodos = {};
   const pisos = [];
   const numeroPisosNormales = arco.numeroPisos - 1; // todos menos el del jefe
+  const anchos = anchosDeLosPisos(arco, numeroPisosNormales);
 
   for (let piso = 1; piso <= arco.numeroPisos; piso++) {
     const esUltimoPiso = piso === arco.pisoJefeFinal;
-    const numNodos = esUltimoPiso
-      ? 1
-      : anchoDelPiso(piso, numeroPisosNormales, arco.nodosPorPiso.min, arco.nodosPorPiso.max);
+    const esPisoInicio = piso === 1;
+    const numNodos = anchos[piso - 1];
 
-    // El primer piso nunca debe ofrecer descanso (curar algo que ya está a
-    // HP completo no es una opción real) ni tienda (no tienes oro todavía).
-    const poolDeEstePiso = piso === 1
+    // El primer piso jugable (el 2, porque el 1 es la casilla de salida) nunca
+    // debe ofrecer descanso —curar algo que ya está a HP completo no es una
+    // opción real— ni tienda, porque todavía no hay oro.
+    const poolDeEstePiso = piso === 2
       ? arco.poolTiposNodo.filter((t) => t.tipo !== 'descanso' && t.tipo !== 'tienda')
       : arco.poolTiposNodo;
 
     const idsPiso = [];
     for (let i = 0; i < numNodos; i++) {
       const id = generarIdNodo();
-      const tipo = esUltimoPiso ? 'jefe' : elegirTipoPorPeso(poolDeEstePiso);
+      const tipo = esPisoInicio ? 'inicio' : esUltimoPiso ? 'jefe' : elegirTipoPorPeso(poolDeEstePiso);
       const subtipo = tipo === 'combate' ? (Math.random() < 0.2 ? 'entrenador' : 'aleatorio') : undefined;
-      nodos[id] = { id, piso, tipo, ...(subtipo !== undefined && { subtipo }), conexiones: [], visitado: false, completado: false };
+      nodos[id] = {
+        id,
+        piso,
+        tipo,
+        ...(subtipo !== undefined && { subtipo }),
+        conexiones: [],
+        visitado: esPisoInicio,
+        completado: esPisoInicio,
+      };
       idsPiso.push(id);
     }
 
@@ -126,7 +182,15 @@ export function generarMapa(arco) {
 
   garantizarDescansoAntesDelJefe(nodos, pisos, arco);
 
-  return { arcoId: arco.id, pisos, nodos, nodosIniciales: pisos[0] };
+  return {
+    arcoId: arco.id,
+    pisos,
+    nodos,
+    nodosIniciales: pisos[0],
+    // El nodo de salida: el store arranca la run ya plantado aquí, así que las
+    // primeras opciones reales son sus conexiones, no el piso entero.
+    nodoInicialId: pisos[0][0],
+  };
 }
 
 /**

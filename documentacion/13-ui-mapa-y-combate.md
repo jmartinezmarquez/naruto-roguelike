@@ -43,6 +43,13 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
   - Los estados apagados usan **filtros (`grayscale` + `brightness`), nunca `opacity`**: en un
     Pokelike los nodos son sprites opacos, y bajarles el alpha deja ver el fondo y las líneas del
     mapa a través del sprite. Apagados siguen siendo opacos; la jerarquía la marca el brillo.
+  - **Tick `✓` en todo nodo visitado**, superpuesto al sprite con su propio velo para que se lea
+    encima de cualquier dibujo. Va también en el nodo actual (con velo más suave, porque el anillo
+    rojo ya lo distingue): al llegar a un nodo se resuelve al instante, así que estar en él ya
+    significa haberlo jugado. El nodo `inicio` nace visitado, así que sale ticado desde el principio.
+  - **El nodo `inicio` no tiene sprite a propósito** (`SPRITE_NODO.inicio = null`): se pinta como un
+    disco oscuro con su tick. Por eso el sprite se busca con `in` y no con `??` — con `??` el `null`
+    habría caído al sprite de combate.
   - Los sprites salen de `assets/sprite-nodos-mapa.png` (la hoja del artista trae los 5 juntos, con
     sus etiquetas). Los recortes individuales están en `assets/nodes/*.png`, a media resolución
     (~100 px, se pintan a 48) para no arrastrar 1,4 MB de hoja entera por 5 iconos de 48 px.
@@ -56,12 +63,54 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
     (`BADGE_NODO`: `★` entrenador, `☠` mini-jefe, `危` jefe) en la esquina inferior derecha, y el
     jefe además va más grande (56 px) con borde doble. El recorte circular se aplica a la `<img>`,
     no al `<button>`: si lo llevara el botón con `overflow-hidden`, cortaría el badge.
+- **Fondo de la columna central, uno por arco** (`FONDO_COLUMNA`, keyed por `id` de arco): País de
+  las Olas, Examen Chunin e Invasión de Pain tienen cada uno su paisaje detrás del mapa; un arco
+  sin entrada en el mapeo se queda con la columna negra en vez de romperse.
+  - **Estructura Pokelike, no paisaje completo**: tierra lisa en el centro, donde caen los nodos, y
+    el detalle del arco (vegetación, ruinas) solo en dos bandas de 56 px en los laterales. El
+    paisaje entero de lado a lado se probó primero y los nodos se perdían encima: por eso el velo
+    tenía que ser tan opaco que ya no se distinguía un arco de otro.
+  - Se generan con `scripts/generar-columnas-mapa.py` (Python de librería estándar, sin
+    dependencias, determinista). Entrada: `assets/map-columns/originales/*.png`, que son los
+    recortes del paisaje completo. Salida: `assets/map-columns/*.png`, lo que importa `MapScreen`.
+    El color de tierra de cada arco no está a mano: lo saca del propio original, cogiendo el color
+    más repetido de la banda central **entre los píxeles poco saturados y de luminosidad media**.
+    Una mediana a secas salía azulada, porque los tres originales son escenas nocturnas con niebla
+    y agua por el medio.
+  - El tope de 56 px para las bandas no es estético: el nodo más a la izquierda que puede generar
+    el mapa cae en x ≈ 87 y mide 48 px, así que su borde llega a x ≈ 63. Más ancho y la vegetación
+    se le mete debajo.
+  - Los originales vienen de `map-column-backgrounds.png`. Ojo: ese asset es una **hoja de
+    referencia** con marcos, etiquetas ("ACTO 1", "520×960px") y una cuarta columna de fondo
+    genérico — no un sprite sheet de columnas iguales. El primer intento la posicionaba por
+    porcentajes (`background-size: 400% auto` + `background-position-x`), y por eso salían los
+    rótulos y los bordes.
+  - Se pinta con `background-size: 100% 100%`: las columnas se generan a 520×960, que es
+    exactamente el lienzo (`ANCHO` × `ALTO_POR_PISO` × 8 pisos), así que encajan sin recortar ni
+    deformar. Si algún arco dejara de tener 8 pisos, hay que regenerarlas.
+  - **El marco (fondo + `box-shadow`) lo pinta el div ya escalado, no el contenedor de fuera.** El
+    contenedor solo mide el hueco disponible. Cuando el marco lo pintaba él, sobraban bandas negras
+    a los lados: el lienzo casi nunca es tan ancho como el hueco, porque la escala la manda la
+    altura. Y el marco va por `box-shadow` y no por `border` porque un borde real se comería 8 px
+    del ancho útil (`box-sizing: border-box`) y el lienzo, que mide exactamente `ANCHO*escala`, se
+    saldría por los lados.
+  - Encima va un **velo `bg-tinta-950/15`** antes de los nodos, solo para bajar un punto de brillo
+    y que se lean las líneas. Con el paisaje completo detrás hacía falta el triple (`/45`).
+  - El velo y el fondo van en el div del lienzo, que **no lleva `overflow-hidden`**: recortaría los
+    tooltips de hover de los nodos, que se renderizan dentro de cada nodo.
 - **Hover en cada nodo** en vez de una leyenda fija (`LeyendaMapa` se quitó): pasar el ratón sobre
   cualquier nodo muestra su tipo, qué hace (`INFO_NODO`, texto tipo "Compra objetos y recluta...")
   y su estado actual (Visitado/Estás aquí/Todavía no alcanzable) — la vieja leyenda ocupaba sitio
   siempre visible para algo que solo hace falta consultar de vez en cuando. Usa `HoverTooltip`
   (`components/common/HoverTooltip.jsx`, extraído de `PersonajeHoverCard` para no repetir la
   mecánica CSS del hover en cada sitio nuevo que la necesite).
+- **Los tres arcos miden 8 pisos.** No es un número de diseño de contenido, es un límite de esta
+  pantalla: el mapa se escala para caber entero, así que cuantos más pisos, más pequeño todo. A
+  partir de 8 los nodos dejan de leerse. Si algún día se quieren arcos más largos, hace falta antes
+  otra solución de encuadre (scroll vertical, cámara que sigue al jugador...). Tiene coste de
+  balance, anotado en [11](./11-progresion-y-arcos.md).
+- **Paneles laterales compactos** (`w-32`, texto de 8-10 px): son HUD, no la pantalla. La
+  referencia es Pokelike, donde las tarjetas de equipo/objetos ocupan bastante menos que el mapa.
 - **Cabe siempre en el viewport, sin scroll** (estilo Pokelike: su `<svg>` escala nativamente vía
   `viewBox` + `width:100%;height:100%`). Como aquí los nodos son `<button>` de verdad superpuestos
   al SVG (no vive todo dentro del propio SVG), no se puede usar ese truco nativo directamente —

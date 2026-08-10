@@ -4,12 +4,24 @@
 
 Genera un grafo de nodos por pisos a partir de la config de un arco (cualquiera de los 3 del MVP):
 
-- **Forma de diamante**: `anchoDelPiso(piso, ...)` calcula el número de nodos del piso — estrecho
+- **Piso 1: un único nodo `inicio`**, que nace ya `visitado: true` y no se juega — es la casilla de
+  salida, como en un Pokelike. `generarMapa` devuelve su id en `mapa.nodoInicialId` y el store
+  arranca la run plantado ahí (`iniciarRun`, `avanzarSiguienteArco`), así que las primeras opciones
+  reales son sus conexiones, no el piso entero. En la UI se pinta como un disco oscuro con un tick.
+- **Forma de diamante**: `anchoDelPiso(piso, ...)` propone el número de nodos del piso — estrecho
   en los extremos del arco, ancho en el centro (dentro de `arco.nodosPorPiso.min/max`), con algo
   de ruido aleatorio. El último piso es siempre 1 solo nodo de tipo `jefe`.
+- **Dos pisos seguidos nunca tienen el mismo ancho** (`anchosDeLosPisos`): después de proponer los
+  anchos se corrigen en una pasada — si un piso repite el ancho del anterior, sube uno y, si no
+  cabe en `max`, baja uno. Sin esto el ruido repetía anchos y salían tramos rectos en vez de rombo.
+  Dos casos aparte: el piso justo después de la salida se abre **como mucho a 3** (del nodo de
+  inicio salen todas las aristas de ese piso, y con 4-5 el arranque parecía una estrella en vez del
+  pico de un rombo), y el piso anterior al jefe se fuerza a ≥2, tanto para romper con el 1 del jefe
+  como para que `garantizarDescansoAntesDelJefe` tenga dónde poner el descanso sin pisar al mini-jefe.
 - El tipo de cada nodo normal se elige por peso según `poolTiposNodo`.
-- **Piso 1: nunca `descanso` ni `tienda`.** Descanso no tiene sentido a HP completo; tienda no
-  tiene sentido sin oro todavía. Se filtran del pool solo para ese piso.
+- **Piso 2 (el primer piso jugable): nunca `descanso` ni `tienda`.** Descanso no tiene sentido a HP
+  completo; tienda no tiene sentido sin oro todavía. Se filtran del pool solo para ese piso. La
+  regla era del piso 1 hasta que el 1 pasó a ser la casilla de salida.
 - **Máximo 2 nodos de `tienda` por piso.** Si el sorteo por peso pone más, los nodos sobrantes se
   reasignan a otro tipo (pool sin tienda) en una pasada posterior.
 - El piso `pisoMiniJefe` fuerza a que uno de sus nodos sea de tipo `miniJefe`.

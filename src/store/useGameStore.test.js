@@ -147,7 +147,8 @@ describe('encadenar arcos', () => {
     const { arcoActualId, mapa, nodoActualId, oro, equipo, huboDerrotaEnEsteArco, pantalla } = useGameStore.getState();
     expect(arcoActualId).toBe('examen_chunin');
     expect(mapa.arcoId).toBe('examen_chunin');
-    expect(nodoActualId).toBeNull();
+    // El arco nuevo arranca plantado en su nodo de salida, no "en ninguna parte".
+    expect(nodoActualId).toBe(mapa.nodoInicialId);
     expect(pantalla).toBe('mapa');
     expect(oro).toBe(oroAntes);
     expect(equipo.map((p) => p.id)).toEqual(idsEquipoAntes);

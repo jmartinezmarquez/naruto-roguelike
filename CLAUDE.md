@@ -48,9 +48,17 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   `nivelDesbloqueo` disponible, calculado internamente por `crearLuchador` — nunca cambia a mitad
   de combate.
 - **Sistema de tipos**: 5 naturalezas de chakra (katon, fuuton, raiton, doton, suiton), tabla en `src/data/types.json`.
-- **Generación de mapa**: forma de diamante por piso (`anchoDelPiso`), piso 1 nunca tiene
-  `descanso` ni `tienda`, máximo 2 nodos de `tienda` por piso, y el piso inmediatamente anterior al
-  jefe final siempre tiene un nodo de `descanso` (`garantizarDescansoAntesDelJefe`).
+- **Los 3 arcos tienen 8 pisos** (`numeroPisos`, con `pisoMiniJefe: 4` y `pisoJefeFinal: 8`). Es un
+  límite de la pantalla de mapa, que escala el lienzo para que quepa entero sin scroll: con más de
+  8 pisos los nodos se vuelven ilegibles. No subirlo sin cambiar antes el encuadre del mapa.
+  Pendiente de recalibrar el balance de los arcos 2 y 3, que eran de 10 y 12 pisos —
+  ver `documentacion/11-progresion-y-arcos.md`.
+- **Generación de mapa**: piso 1 = un único nodo `inicio` que nace ya visitado (casilla de salida
+  estilo Pokelike; el store arranca la run en `mapa.nodoInicialId`), forma de diamante por piso
+  (`anchoDelPiso`) con la regla de que dos pisos seguidos nunca miden lo mismo (`anchosDeLosPisos`),
+  el piso 2 —primer piso jugable— nunca tiene `descanso` ni `tienda`, máximo 2 nodos de `tienda`
+  por piso, y el piso inmediatamente anterior al jefe final siempre tiene un nodo de `descanso`
+  (`garantizarDescansoAntesDelJefe`).
 
 ## Convenciones de Git
 
@@ -105,6 +113,10 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - [x] Sprites de nodo en el mapa (`assets/nodes/*.png`, recortados de `sprite-nodos-mapa.png`) en
   vez de glifos kanji. Entrenador/mini-jefe/jefe todavía reutilizan el sprite de combate + badge de
   rango, a falta de arte por personaje — ver `documentacion/13-ui-mapa-y-combate.md`.
+- [x] Fondo de columna central del mapa por arco (`FONDO_COLUMNA`, `assets/map-columns/*.png`), con
+  estructura Pokelike: tierra lisa en el centro y vegetación del arco solo en los laterales. Se
+  generan con `scripts/generar-columnas-mapa.py` a partir de `map-columns/originales/*.png` (no
+  editar los generados a mano, se pisan al regenerar) — ver `documentacion/13-ui-mapa-y-combate.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 

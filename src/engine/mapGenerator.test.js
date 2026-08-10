@@ -22,13 +22,34 @@ const arcoDePrueba = {
 };
 
 describe('generarMapa', () => {
-  it('el piso 1 nunca tiene un nodo de descanso', () => {
+  it('el piso 1 es un único nodo de inicio, que nace ya visitado', () => {
+    const mapa = generarMapa(arcoDePrueba);
+    expect(mapa.pisos[0]).toHaveLength(1);
+    const inicio = mapa.nodos[mapa.pisos[0][0]];
+    expect(inicio.tipo).toBe('inicio');
+    expect(inicio.visitado).toBe(true);
+    expect(mapa.nodoInicialId).toBe(inicio.id);
+  });
+
+  it('el primer piso jugable (el 2) nunca tiene descanso ni tienda', () => {
     // Se repite varias veces porque la generación es aleatoria — este es
-    // literalmente el bug real que se encontró jugando y se corrigió.
+    // literalmente el bug real que se encontró jugando y se corrigió. Ahora
+    // apunta al piso 2 porque el 1 es la casilla de salida, no se juega.
     for (let i = 0; i < 30; i++) {
       const mapa = generarMapa(arcoDePrueba);
-      const tiposPiso1 = mapa.pisos[0].map((id) => mapa.nodos[id].tipo);
-      expect(tiposPiso1).not.toContain('descanso');
+      const tiposPiso2 = mapa.pisos[1].map((id) => mapa.nodos[id].tipo);
+      expect(tiposPiso2).not.toContain('descanso');
+      expect(tiposPiso2).not.toContain('tienda');
+    }
+  });
+
+  it('dos pisos seguidos nunca tienen el mismo número de nodos', () => {
+    // Es lo que dibuja el rombo: si el ancho se repite, salen tramos rectos.
+    for (let i = 0; i < 30; i++) {
+      const anchos = generarMapa(arcoDePrueba).pisos.map((p) => p.length);
+      for (let p = 1; p < anchos.length; p++) {
+        expect(anchos[p]).not.toBe(anchos[p - 1]);
+      }
     }
   });
 

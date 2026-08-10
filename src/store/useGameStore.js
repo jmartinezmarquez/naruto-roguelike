@@ -231,6 +231,7 @@ export const useGameStore = create((set, get) => ({
       achievementsData.logros,
       useAchievementsStore.getState().logrosDesbloqueados,
     );
+    const mapaInicial = generarMapa(arco);
 
     set({
       equipo: equipoInicial,
@@ -239,8 +240,10 @@ export const useGameStore = create((set, get) => ({
       buffsTemporales: [],
       arcoActualId: arco.id,
       arcoActualDatos: arco,
-      mapa: generarMapa(arco),
-      nodoActualId: null,
+      mapa: mapaInicial,
+      // La run arranca plantada en el nodo de salida, que ya nace visitado
+      // (ver generarMapa): las primeras opciones son sus conexiones.
+      nodoActualId: mapaInicial.nodoInicialId,
       pantalla: 'mapa',
       ultimoResultadoCombate: null,
       eventoActual: null,
@@ -599,11 +602,12 @@ export const useGameStore = create((set, get) => ({
     const siguienteArco = indiceActual === -1 ? null : ORDEN_ARCOS[indiceActual + 1];
     if (!siguienteArco) return false;
 
+    const mapaSiguiente = generarMapa(siguienteArco);
     set({
       arcoActualId: siguienteArco.id,
       arcoActualDatos: siguienteArco,
-      mapa: generarMapa(siguienteArco),
-      nodoActualId: null,
+      mapa: mapaSiguiente,
+      nodoActualId: mapaSiguiente.nodoInicialId,
       pantalla: 'mapa',
       ultimoResultadoCombate: null,
       eventoActual: null,

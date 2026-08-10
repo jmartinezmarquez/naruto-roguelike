@@ -165,27 +165,39 @@
   `map-sprites-idle-all-characters.png` tiene los personajes, pero en una hoja con paneles de
   tamaño irregular: hace falta recortarlos uno a uno antes de poder mapearlos por `enemigoId`.
 
+**Fondo de columna central del mapa**
+- [x] Cada arco pinta su propia columna de fondo detrás del mapa (`FONDO_COLUMNA` en
+  `MapScreen.jsx`, keyed por `id` de arco). El primer intento (`background-size: 400% auto` +
+  `background-position-x` sobre la hoja entera) se retiró porque `map-column-backgrounds.png` es
+  una hoja de **referencia**, con marcos y etiquetas: al posicionarla por porcentajes salían los
+  rótulos y los bordes. Ahora las 3 columnas están recortadas a `assets/map-columns/*.png` y se
+  pintan con `cover`. El problema de contraste que motivó la retirada se resuelve con un velo
+  oscuro (`bg-tinta-950/45`) entre el fondo y los nodos. Ver [13](./13-ui-mapa-y-combate.md).
+
 ## Próximos pasos (en orden sugerido)
+5. **Actualizar interfaz y sprites de objetos** — (Leer MVP [23](./23-diseño-tarjeta-de-inventario.md))
+(Leer MVP [24](./24-diseño-tarjeta-equipar-objeto.md)) Revisar tambien los sprites en sprite-objetos-iniciales.png  
 
 6. **Cambiar estructura del combate** — Se me ha ocurrido que como retoque final, los
    personajes atacarían con un ataque básico (animación kunai) y un ataque potente que se carga
    al hacer o recibir daño, activándose automáticamente al llenarse la barra. Cada ataque tendría
    un tiempo de carga distinto según su poder, similar a Pokémon GO.
-   (Leer MVP [26](./26-sistema-de-jutsus-automaticos.md))
+   (Leer MVP [29](./29-sistema-de-jutsus-automaticos.md))
+    (Leer MVP [27](./27-sistema-de-balance.md))
+
 
 7. **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
    el primero esté peleando. Sprites de los personajes visibles. Los logs de texto se sustituyen
    por una animación: el ninja lanza un kunai al enemigo y al impactar la barra de HP baja.
    Personajes caídos → card apagada (estilo Pokelike). Efecto de sacudida al recibir golpe.
 
-8. **Fondo de columna central del mapa** — `map-column-backgrounds.png` ya existe (sprite sheet
-    4 columnas × 520 × 960 px): col 1 = genérico, col 2 = País de las Olas, col 3 = Examen
-    Chunin, col 4 = Invasión de Pain. Se implementó con `background-size: 400% auto` +
-    `background-position-x` por arco, pero se retiró hasta que los sprites de nodo y la UI
-    estén terminados (el contraste con el fondo no quedaba bien con el estilo actual).
-    Los sprites de nodo ya están puestos, así que este es el momento de volver a probarlo.
+8. **Actualizar interfaz de logros** — (Leer MVP [25](./25-diseño-pantalla-logros.md))
 
-9. **Playtest y ajuste de balance** — en particular, revisar el salto de dificultad cuando un
+
+9. **Playtest y ajuste de balance** — lo más urgente: los tres arcos pasaron a 8 pisos (antes 10 y
+    12) por legibilidad del mapa, y eso recorta los combates —y por tanto la XP— de los arcos 2 y 3
+    sin haber recalibrado `nivelEnemigoBase` ni los niveles fijos de jefe. Ver
+    [11](./11-progresion-y-arcos.md). Además, revisar el salto de dificultad cuando un
     personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en
     [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en
     un arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`).

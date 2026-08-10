@@ -36,6 +36,19 @@ nivel que ese camino mínimo alcanza de forma garantizada. Ver la simulación co
 - `resolverEnemigoDeNodo(nodo, arco)` — combate normal usa `calcularNivelPorPiso`; mini-jefe/jefe
   usan `arco.nivelMiniJefe`/`arco.nivelJefeFinal` directamente, sin fórmula.
 
+## Los 3 arcos miden 8 pisos (decisión de UI, con coste de balance)
+
+Los arcos 2 y 3 tenían 10 y 12 pisos. Se bajaron a 8, como el arco 1, porque el mapa se escala para
+caber entero en el viewport (ver [13](./13-ui-mapa-y-combate.md)) y a partir de 8 pisos los nodos
+salían demasiado pequeños para verse. `pisoMiniJefe` pasa a 4 y `pisoJefeFinal` a 8 en los tres.
+
+**Esto desbalancea a la baja los arcos 2 y 3 y está sin recalibrar.** La calibración de v3 cuenta
+los combates de un único camino como `(pisos-1) * peso_combate / peso_total`: con 8 pisos en vez de
+12, el arco 3 da ~1/3 menos de combates y por tanto bastante menos XP, mientras que
+`nivelEnemigoBase` (20 y 46) y los niveles fijos de jefe (22/24 y 48/49) siguen calculados para los
+arcos largos. Al llegar al arco 3 se irá con menos nivel del que esos números asumen. Pendiente de
+recalibrar con simulación en el playtest ([05 - roadmap](./05-roadmap.md), punto 9).
+
 ## Curva de XP (corregida — la original era matemáticamente inviable)
 
 La curva original (`crecimiento: 1.12`, exponencial) necesitaba **24,8 millones de XP** para

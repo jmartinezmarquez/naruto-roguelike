@@ -3,7 +3,7 @@
   "id": "invasion_de_pain",
   "nombre": "Pain's Invasion",
   "temaVisual": "konoha_en_ruinas",
-  "numeroPisos": 12,
+  "numeroPisos": 8,
   "nodosPorPiso": {
     "min": 2,
     "max": 5
@@ -30,9 +30,9 @@
       "peso": 10
     }
   ],
-  "pisoMiniJefe": 6,
+  "pisoMiniJefe": 4,
   "miniJefeId": "camino_animal_pain",
-  "pisoJefeFinal": 12,
+  "pisoJefeFinal": 8,
   "jefeFinalId": "pain_camino_deva",
   "personajesReclutablesIds": [
     "sai",
