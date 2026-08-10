@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/useGameStore';
 import itemsData from '../../data/items.json';
+import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 
 const EMOJI_TIPO = {
   consumible: '🧪',
@@ -40,7 +41,13 @@ export default function ItemRewardScreen() {
 
       {item ? (
         <div className="flex flex-col items-center bg-tinta-900 border-2 border-pergamino-100/20 rounded-xl p-8 max-w-xs w-full mb-8 text-center">
-          <div className="text-6xl mb-5">{EMOJI_TIPO[item.tipo] ?? '📦'}</div>
+          <div className="h-24 flex items-center justify-center mb-5">
+            {SPRITE_OBJETO[item.id] ? (
+              <img src={SPRITE_OBJETO[item.id]} alt="" aria-hidden="true" className="h-24 w-24 object-contain" />
+            ) : (
+              <span className="text-6xl">{EMOJI_TIPO[item.tipo] ?? '📦'}</span>
+            )}
+          </div>
           <p className="font-display text-xl text-pergamino-100 leading-tight mb-3">{item.nombre}</p>
           <p className="text-sm text-pergamino-200/60 leading-relaxed mb-5">{item.descripcion}</p>
           {etiqueta && (

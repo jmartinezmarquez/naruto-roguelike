@@ -105,6 +105,10 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   objeto (`ItemHoverCard`); `LeyendaMapa` sustituida por hover en cada nodo del mapa. Mecánica de
   hover extraída a `components/common/HoverTooltip.jsx` (la reutilizan `PersonajeHoverCard`,
   `ItemHoverCard` y el hover de nodo). Ver `documentacion/13-ui-mapa-y-combate.md`.
+- [x] Mochila como pantalla propia (`components/Inventory/InventoryScreen.jsx`, `pantalla: 'mochila'`):
+  lista + ficha, botón contextual Use/Equip/Unequip y elección de personaje en tarjetas. Sprites de
+  objeto en `assets/items/<id>.png`, generados con `scripts/generar-sprites-objetos.py` y usados
+  también en tienda, recompensa de mini-jefe y hovers — ver `documentacion/28-mochila.md`.
 - [x] Objetos equipables y consumibles con efecto real (ya no solo texto): un hueco de equipo por
   personaje (`instancia.objetoEquipadoId`), solo beneficia a quien lo lleve puesto y vuelve al
   inventario si lo desequipas o reemplazas a ese personaje (`equiparObjeto`/`desequiparObjeto` en

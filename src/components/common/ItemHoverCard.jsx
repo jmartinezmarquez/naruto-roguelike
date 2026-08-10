@@ -1,5 +1,6 @@
 import itemsData from '../../data/items.json';
 import HoverTooltip from './HoverTooltip';
+import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 
 function encontrarObjeto(id) {
   return itemsData.objetos.find((o) => o.id === id) ?? null;
@@ -55,7 +56,12 @@ export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
   return (
     <div className={`bg-pergamino-100 text-tinta-950 rounded-lg text-left ${className}`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="font-display font-bold text-sm">{objeto.nombre}</p>
+        <p className="font-display font-bold text-sm flex items-center gap-1.5 min-w-0">
+          {SPRITE_OBJETO[objeto.id] && (
+            <img src={SPRITE_OBJETO[objeto.id]} alt="" aria-hidden="true" className="w-6 h-6 object-contain shrink-0" />
+          )}
+          <span className="truncate">{objeto.nombre}</span>
+        </p>
         <span
           className={`text-[10px] uppercase tracking-wide text-pergamino-100 rounded-full px-2 py-0.5 shrink-0 ${COLOR_TIPO_OBJETO[objeto.tipo] ?? 'bg-tinta-800'}`}
         >

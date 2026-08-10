@@ -174,9 +174,17 @@
   pintan con `cover`. El problema de contraste que motivó la retirada se resuelve con un velo
   oscuro (`bg-tinta-950/45`) entre el fondo y los nodos. Ver [13](./13-ui-mapa-y-combate.md).
 
+**Mochila y sprites de objeto**
+- [x] Mochila como pantalla propia en dos paneles (lista + ficha), con botón contextual
+  Use/Equip/Unequip y elección de personaje en tarjetas — implementa [23](./23-diseño-tarjeta-de-inventario.md)
+  y [24](./24-diseño-tarjeta-equipar-objeto.md). Ver [28](./28-mochila.md).
+- [x] Los 10 sprites de `sprite-objetos-iniciales.png` recortados con
+  `scripts/generar-sprites-objetos.py` a `assets/items/<id>.png` (fondo transparente), y usados en
+  mochila, tienda, recompensa de mini-jefe, hover de objeto y panel del mapa.
+- [x] El panel de objetos del mapa deja de equipar: es un resumen que abre la mochila (y tocar un
+  objeto la abre con ese objeto ya seleccionado).
+
 ## Próximos pasos (en orden sugerido)
-5. **Actualizar interfaz y sprites de objetos** — (Leer MVP [23](./23-diseño-tarjeta-de-inventario.md))
-(Leer MVP [24](./24-diseño-tarjeta-equipar-objeto.md)) Revisar tambien los sprites en sprite-objetos-iniciales.png  
 
 6. **Cambiar estructura del combate** — Se me ha ocurrido que como retoque final, los
    personajes atacarían con un ataque básico (animación kunai) y un ataque potente que se carga

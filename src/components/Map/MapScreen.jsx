@@ -11,6 +11,7 @@ import spriteEvento from '../../assets/nodes/evento.png';
 import spriteTienda from '../../assets/nodes/tienda.png';
 import spriteDescanso from '../../assets/nodes/descanso.png';
 import spriteReclutar from '../../assets/nodes/reclutar.png';
+import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
 import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
 import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
@@ -319,76 +320,47 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
 }
 
 /**
- * Panel debajo del equipo: oro y objetos del inventario, agrupados por id
- * (con "xN" si hay varios) — hover en cada uno para ver su descripción y su
- * efecto exacto (`ItemHoverCard`). Tocar un objeto abre un selector de
- * personaje: "Equipar en..." para equipables, "Usar en..." para
- * consumibles — los objetos ya equipados no aparecen aquí (se ven y se
- * desequipan desde `PanelEquipo`, están "puestos", no en la mochila).
+ * Panel debajo del equipo: resumen de oro y objetos. Es solo un vistazo — tocar
+ * cualquier fila (o el propio panel) abre la mochila de verdad
+ * (`InventoryScreen`), que es donde se equipa y se usa. Antes esto llevaba
+ * dentro un selector de personaje en línea: resolvía la mecánica, pero se
+ * sentía un formulario web en vez de un inventario de RPG
+ * (ver documentacion/24-diseño-tarjeta-equipar-objeto.md).
+ *
+ * Aquí solo sale lo que está suelto en `inventario`; lo que alguien lleva
+ * puesto se ve en `PanelEquipo` y en la mochila.
  */
-function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }) {
-  const [itemSeleccionadoId, setItemSeleccionadoId] = useState(null);
-
+function PanelObjetos({ inventario, oro, abrirMochila }) {
   const conteoPorId = inventario.reduce((acc, id) => {
     acc[id] = (acc[id] ?? 0) + 1;
     return acc;
   }, {});
   const idsUnicos = Object.keys(conteoPorId);
-  const itemSeleccionado = itemsData.objetos.find((o) => o.id === itemSeleccionadoId) ?? null;
-
-  function elegirPersonaje(idPersonaje) {
-    if (itemSeleccionado.tipo === 'equipable') equiparObjeto(itemSeleccionado.id, idPersonaje);
-    else if (itemSeleccionado.tipo === 'consumible') usarConsumible(itemSeleccionado.id, idPersonaje);
-    setItemSeleccionadoId(null);
-  }
 
   return (
     <div className="w-32 shrink-0">
       <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-2">
+        {/* Cabecera informativa, no clicable: la mochila se abre tocando un
+            objeto concreto, y hacer que "ITEMS" u "oro" también la abrieran
+            solo provocaba aperturas sin querer. */}
         <p className="font-display font-bold text-[10px] tracking-wide">ITEMS</p>
         <p className="text-[10px] text-sello-600 font-display mt-0.5 mb-2">{oro} gold</p>
 
-        {itemSeleccionado ? (
-          <div>
-            <p className="text-[10px] mb-2 leading-snug">
-              {itemSeleccionado.tipo === 'equipable' ? 'Equip' : 'Use'}{' '}
-              <span className="font-display font-bold">{itemSeleccionado.nombre}</span> on:
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {equipo.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => elegirPersonaje(p.id)}
-                  className="text-left text-[10px] bg-tinta-950/5 hover:bg-sello-600/20 border border-tinta-950/15 hover:border-sello-600/60 rounded-md px-1.5 py-1 transition-colors"
-                >
-                  {nombrePersonaje(p.id)}
-                  {p.objetoEquipadoId && itemSeleccionado.tipo === 'equipable' && (
-                    <span className="opacity-60"> (replaces {nombreObjeto(p.objetoEquipadoId)})</span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setItemSeleccionadoId(null)}
-              className="mt-2 text-[10px] underline opacity-60 hover:opacity-100"
-            >
-              Cancel
-            </button>
-          </div>
-        ) : idsUnicos.length === 0 ? (
+        {idsUnicos.length === 0 ? (
           <p className="text-[10px] opacity-50 leading-snug">No items yet.</p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {idsUnicos.map((id) => (
               <ItemHoverCard key={id} id={id} className="block w-full">
                 <button
                   type="button"
-                  onClick={() => setItemSeleccionadoId(id)}
-                  className="w-full flex items-center justify-between gap-1 rounded-md border border-tinta-950/15 bg-tinta-950/5 hover:border-sello-600/60 px-1.5 py-1 transition-colors"
+                  onClick={() => abrirMochila(id)}
+                  className="w-full flex items-center gap-1.5 rounded-md border border-tinta-950/15 bg-tinta-950/5 hover:border-sello-600/60 px-1.5 py-1 transition-colors"
                 >
-                  <p className="text-[10px] font-display truncate">{nombreObjeto(id)}</p>
+                  {SPRITE_OBJETO[id] && (
+                    <img src={SPRITE_OBJETO[id]} alt="" aria-hidden="true" className="w-5 h-5 object-contain shrink-0" />
+                  )}
+                  <p className="text-[10px] font-display truncate flex-1 text-left">{nombreObjeto(id)}</p>
                   {conteoPorId[id] > 1 && (
                     <span className="text-[8px] opacity-60 shrink-0">x{conteoPorId[id]}</span>
                   )}
@@ -581,9 +553,8 @@ export default function MapScreen() {
   const reordenarEquipo = useGameStore((s) => s.reordenarEquipo);
   const inventario = useGameStore((s) => s.inventario);
   const oro = useGameStore((s) => s.oro);
-  const equiparObjeto = useGameStore((s) => s.equiparObjeto);
   const desequiparObjeto = useGameStore((s) => s.desequiparObjeto);
-  const usarConsumible = useGameStore((s) => s.usarConsumible);
+  const abrirMochila = useGameStore((s) => s.abrirMochila);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
 
@@ -644,13 +615,7 @@ export default function MapScreen() {
             reordenarEquipo={reordenarEquipo}
             desequiparObjeto={desequiparObjeto}
           />
-          <PanelObjetos
-            inventario={inventario}
-            oro={oro}
-            equipo={equipo}
-            equiparObjeto={equiparObjeto}
-            usarConsumible={usarConsumible}
-          />
+          <PanelObjetos inventario={inventario} oro={oro} abrirMochila={abrirMochila} />
         </div>
 
         {/* El contenedor de fuera solo mide el hueco disponible: no pinta nada.

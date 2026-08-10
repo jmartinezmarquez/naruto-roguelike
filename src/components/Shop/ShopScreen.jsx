@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/useGameStore';
 import itemsData from '../../data/items.json';
+import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 
 const SHOP_FLAVOR = {
   pais_de_las_olas: 'A traveling merchant has set up shop by the roadside.',
@@ -31,7 +32,13 @@ function TarjetaItem({ entrada, oro, onComprar }) {
         ? 'border-pergamino-100/20 hover:border-pergamino-100/50 cursor-pointer hover:bg-tinta-800'
         : 'border-pergamino-100/10 opacity-50'}
     `}>
-      <div className="text-4xl text-center mb-3">{EMOJI_TIPO[item.tipo] ?? '📦'}</div>
+      <div className="h-16 flex items-center justify-center mb-3">
+        {SPRITE_OBJETO[item.id] ? (
+          <img src={SPRITE_OBJETO[item.id]} alt="" aria-hidden="true" className="h-16 w-16 object-contain" />
+        ) : (
+          <span className="text-4xl">{EMOJI_TIPO[item.tipo] ?? '📦'}</span>
+        )}
+      </div>
 
       <p className="font-display text-base text-pergamino-100 text-center leading-tight mb-2">
         {item.nombre}

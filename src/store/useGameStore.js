@@ -206,7 +206,8 @@ export const useGameStore = create((set, get) => ({
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
   mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
-  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros'
+  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros' | 'mochila'
+  mochilaItemId: null, // objeto preseleccionado al abrir la mochila (ver abrirMochila)
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
   tiendaActual: null, // { items: [{id, precio}] } — oferta de 3 objetos al entrar al nodo de tienda
@@ -572,6 +573,7 @@ export const useGameStore = create((set, get) => ({
       reclutarActual: null,
       recompensaMiniJefe: null,
       cadenaEnemigos: null,
+      mochilaItemId: null,
     });
   },
 
@@ -629,6 +631,16 @@ export const useGameStore = create((set, get) => ({
   /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */
   abrirLogros() {
     set({ pantalla: 'logros' });
+  },
+
+  /**
+   * Abre la mochila (pantalla propia, no un panel dentro del mapa).
+   * `itemIdInicial` deja preseleccionado un objeto: así, tocar un objeto en el
+   * resumen del mapa lleva directo a su ficha en vez de a la lista en frío.
+   * volverAlMapa() la cierra.
+   */
+  abrirMochila(itemIdInicial = null) {
+    set({ pantalla: 'mochila', mochilaItemId: itemIdInicial });
   },
 
   /** Compra uno de los objetos ofrecidos en la tienda actual (consumible o equipable). */
