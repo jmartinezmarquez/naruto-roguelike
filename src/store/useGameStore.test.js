@@ -187,6 +187,26 @@ describe('jugarCombate — un personaje muere', () => {
   });
 });
 
+describe('jugarCombate — barra de jutsu entre rondas encadenadas', () => {
+  it('el enemigo conserva su carga de una ronda a la siguiente, como conserva el HP', () => {
+    // Un enemigo imbatible obliga a que entren los 3 personajes en cadena.
+    const resumen = useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+
+    const [primera, segunda] = resumen.rondas;
+    const cargaFinalPrimeraRonda = primera.historial
+      .flatMap((t) => t.eventos)
+      .filter((e) => e.atacanteId === primera.enemigo.id)
+      .at(-1).cargaAtacante;
+
+    expect(segunda.enemigo.cargaInicial).toBe(cargaFinalPrimeraRonda);
+  });
+
+  it('cada personaje del jugador entra a su ronda con la barra a cero', () => {
+    const resumen = useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+    resumen.rondas.forEach((ronda) => expect(ronda.jugador.cargaInicial).toBe(0));
+  });
+});
+
 describe('_aplicarVictoria — XP de personajes caídos', () => {
   it('un personaje ya caído ANTES de este combate no gana XP hasta curarse', () => {
     useGameStore.setState((estado) => ({

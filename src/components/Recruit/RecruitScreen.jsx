@@ -3,7 +3,7 @@ import { useGameStore } from '../../store/useGameStore';
 import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import configGlobal from '../../data/config.json';
-import { crearLuchador } from '../../engine/combat';
+import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 
 function encontrarBase(id) {
   return (
@@ -94,9 +94,12 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
 
       <div className="border-t border-pergamino-100/10 pt-2 mt-auto">
         <div className="flex items-center justify-between gap-1">
-          <p className="text-[11px] font-display text-pergamino-100 truncate">{base.jutsu.nombre}</p>
+          <p className="text-[11px] font-display text-pergamino-100 truncate">🌀 {base.jutsu.nombre}</p>
           <span className="text-[10px] text-pergamino-200/60 shrink-0">{base.jutsu.danoBase} PWR</span>
         </div>
+        <p className="text-[10px] text-sello-500/80">
+          every ~{turnosParaCargarJutsu(luchador)} turns
+        </p>
       </div>
     </button>
   );

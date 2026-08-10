@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
-import { crearLuchador } from '../../engine/combat';
+import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import HoverTooltip from './HoverTooltip';
 
 function encontrarBase(id) {
@@ -55,9 +55,21 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, className = '' }
 
       <div className="mt-2 pt-2 border-t border-pergamino-100/10">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-[11px] font-display font-bold text-pergamino-100">{base.jutsu.nombre}</p>
+          <p className="text-[11px] text-pergamino-200/70">{luchador.ataqueBasico.nombre}</p>
+          <p className="text-[10px] text-pergamino-200/40 font-display shrink-0">
+            Power {luchador.ataqueBasico.danoBase}
+          </p>
+        </div>
+        <div className="flex items-baseline justify-between gap-2 mt-1">
+          <p className="text-[11px] font-display font-bold text-pergamino-100">🌀 {base.jutsu.nombre}</p>
           <p className="text-[10px] text-pergamino-200/50 font-display shrink-0">Power {base.jutsu.danoBase}</p>
         </div>
+        {/* El ritmo de carga es lo que diferencia a un personaje de otro, así
+            que va en la ficha: sin esto no hay forma de saber que Rock Lee
+            lanza su jutsu el doble de a menudo que Shikamaru. */}
+        <p className="text-[10px] text-sello-500/80 mt-0.5">
+          Jutsu about every {turnosParaCargarJutsu(luchador)} turns
+        </p>
         <p className="text-[10px] text-pergamino-200/50 mt-0.5">{base.jutsu.descripcion}</p>
       </div>
     </div>

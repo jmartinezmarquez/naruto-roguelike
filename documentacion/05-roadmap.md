@@ -184,14 +184,28 @@
 - [x] El panel de objetos del mapa deja de equipar: es un resumen que abre la mochila (y tocar un
   objeto la abre con ese objeto ya seleccionado).
 
+**Jutsus automáticos (estructura del combate)**
+- [x] Cada luchador tiene ahora dos ataques: un **ataque básico** continuo y su **jutsu**, que se
+  carga al atacar y al recibir daño y se lanza solo al llenarse la barra (estilo Pokémon GO). El
+  combate sigue sin pedir ninguna decisión al jugador. Los personajes se diferencian por ritmo, no
+  solo por stats: Rock Lee dispara cada 2 turnos, Shikamaru cada 4 pero mucho más fuerte, Gaara solo
+  carga rápido si le pegan. Ver [29](./29-sistema-de-jutsus-automaticos.md).
+- [x] Daño recalibrado para que la dificultad no se moviera, medido con el nuevo
+  `scripts/simular-combates.mjs` contra el motor anterior. `turnosMaximos` 20 → 30. Corregido de
+  paso el `danoBase: 5` de Naruto (dedazo: el resto del roster estaba entre 0,85 y 1,4).
+- [x] Barra de jutsu en `CombatScreen` y ritmo de carga ("Jutsu about every N turns") en la ficha de
+  personaje y en la tarjeta de reclutar — sin eso no hay forma de saber en qué se diferencian.
+- [ ] **Fuera de alcance a propósito**: el [27](./27-sistema-de-balance.md) es ahora el punto 6 bis
+  de abajo. Solo se han dejado sus dos enganches (`multiplicadorCarga` en modos, `carga.inicial`
+  para objetos).
+
 ## Próximos pasos (en orden sugerido)
 
-6. **Cambiar estructura del combate** — Se me ha ocurrido que como retoque final, los
-   personajes atacarían con un ataque básico (animación kunai) y un ataque potente que se carga
-   al hacer o recibir daño, activándose automáticamente al llenarse la barra. Cada ataque tendría
-   un tiempo de carga distinto según su poder, similar a Pokémon GO.
-   (Leer MVP [29](./29-sistema-de-jutsus-automaticos.md))
-    (Leer MVP [27](./27-sistema-de-balance.md))
+6 bis. **Rediseño del balance** — catálogo de pasivas reutilizables (`first_jutsu_bonus`,
+   `ignore_defense`, `heal_on_kill`…), transformaciones que cambian reglas en vez de multiplicar
+   stats, objetos que definen el estilo de la run, y reparto del poder 40% objetos / 30%
+   transformaciones / 30% niveles. No se podía abordar hasta tener la barra de jutsu.
+   (Leer MVP [27](./27-sistema-de-balance.md))
 
 
 7. **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
@@ -202,9 +216,12 @@
 8. **Actualizar interfaz de logros** — (Leer MVP [25](./25-diseño-pantalla-logros.md))
 
 
-9. **Playtest y ajuste de balance** — lo más urgente: los tres arcos pasaron a 8 pisos (antes 10 y
-    12) por legibilidad del mapa, y eso recorta los combates —y por tanto la XP— de los arcos 2 y 3
-    sin haber recalibrado `nivelEnemigoBase` ni los niveles fijos de jefe. Ver
+9. **Playtest y ajuste de balance** — con `scripts/simular-combates.mjs` ya hay con qué medirlo.
+    Lo que canta hoy: los combates normales se ganan al 96-99% y los jefes 1 vs 1 al 7-21%, un salto
+    demasiado brusco; y los combates duran ~4,5 turnos, tan poco que el jutsu apenas sale una vez
+    (ver [29](./29-sistema-de-jutsus-automaticos.md)). Además, los tres arcos pasaron a 8 pisos
+    (antes 10 y 12) por legibilidad del mapa, y eso recorta los combates —y por tanto la XP— de los
+    arcos 2 y 3 sin haber recalibrado `nivelEnemigoBase` ni los niveles fijos de jefe. Ver
     [11](./11-progresion-y-arcos.md). Además, revisar el salto de dificultad cuando un
     personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en
     [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en

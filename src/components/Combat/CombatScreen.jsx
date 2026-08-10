@@ -12,8 +12,10 @@ function colorBarraHp(porcentaje) {
   return 'bg-sello-500';
 }
 
-function BarraLuchador({ id, nombre, nivel, hp, hpMaximo, modoActivoNombre, alineacion }) {
+function BarraLuchador({ id, nombre, nivel, hp, hpMaximo, carga, cargaMaxima, modoActivoNombre, alineacion }) {
   const porcentaje = Math.max(0, hp / hpMaximo);
+  const porcentajeCarga = Math.min(1, Math.max(0, carga / cargaMaxima));
+  const jutsuListo = porcentajeCarga >= 1;
   const posicionTooltip = alineacion === 'derecha' ? 'izquierda' : 'derecha';
   return (
     <PersonajeHoverCard id={id} nivel={nivel} hpActual={hp} hpMaximo={hpMaximo} posicion={posicionTooltip}>
@@ -30,6 +32,17 @@ function BarraLuchador({ id, nombre, nivel, hp, hpMaximo, modoActivoNombre, alin
           />
         </div>
         <p className="text-xs text-pergamino-200/70 mt-0.5">{Math.max(0, hp)} / {hpMaximo} HP</p>
+        {/* Barra de jutsu: sin números a propósito — lo que importa no es cuánto
+            chakra hay, sino cuánto falta para la técnica. Ver documentacion/29. */}
+        <div className="h-1.5 w-full bg-tinta-800 rounded-full overflow-hidden mt-1 border border-pergamino-100/10">
+          <div
+            className={`h-full transition-all duration-500 ${jutsuListo ? 'bg-raiton animate-pulse' : 'bg-sello-500'}`}
+            style={{ width: `${porcentajeCarga * 100}%` }}
+          />
+        </div>
+        <p className={`text-[10px] mt-0.5 ${jutsuListo ? 'text-raiton' : 'text-pergamino-200/40'}`}>
+          {jutsuListo ? 'JUTSU READY' : 'Jutsu'}
+        </p>
       </div>
     </PersonajeHoverCard>
   );
@@ -79,18 +92,36 @@ export default function CombatScreen() {
     return () => clearTimeout(temporizador);
   }, [transicionRonda]);
 
-  const hpEnTurnoActual = useMemo(() => {
+  // Reproduce el historial hasta el turno revelado para saber cómo estaban HP y
+  // barra de jutsu en ese momento. La carga no se acumula sumando: cada evento
+  // ya trae el valor resultante (cargaAtacante/cargaDefensor), porque lanzar el
+  // jutsu la pone a cero y eso no se puede reconstruir sumando incrementos.
+  const estadoEnTurnoActual = useMemo(() => {
     if (!ronda) return null;
     let hpJugador = ronda.jugador.hpInicial;
     let hpEnemigo = ronda.enemigo.hpInicial;
+    let cargaJugador = ronda.jugador.cargaInicial ?? 0;
+    let cargaEnemigo = ronda.enemigo.cargaInicial ?? 0;
 
     for (let i = 0; i < turnosRevelados; i++) {
       for (const evento of ronda.historial[i].eventos) {
-        if (evento.defensorId === ronda.jugador.id) hpJugador -= evento.dano;
-        if (evento.defensorId === ronda.enemigo.id) hpEnemigo -= evento.dano;
+        if (evento.atacanteId === ronda.jugador.id) {
+          hpEnemigo -= evento.dano;
+          cargaJugador = evento.cargaAtacante;
+          cargaEnemigo = evento.cargaDefensor;
+        } else {
+          hpJugador -= evento.dano;
+          cargaEnemigo = evento.cargaAtacante;
+          cargaJugador = evento.cargaDefensor;
+        }
       }
     }
-    return { hpJugador: Math.max(0, hpJugador), hpEnemigo: Math.max(0, hpEnemigo) };
+    return {
+      hpJugador: Math.max(0, hpJugador),
+      hpEnemigo: Math.max(0, hpEnemigo),
+      cargaJugador,
+      cargaEnemigo,
+    };
   }, [ronda, turnosRevelados]);
 
   const combateTotalTerminado = Boolean(ronda) && rondaCompleta && (ronda.jugadorGano || !hayMasRondas);
@@ -112,7 +143,7 @@ export default function CombatScreen() {
     return () => clearTimeout(t);
   }, [combateTotalTerminado, resultado, hayMasEnCadena, runTerminada, recompensaMiniJefe, continuarCadena]);
 
-  if (!resultado || !ronda || !hpEnTurnoActual) {
+  if (!resultado || !ronda || !estadoEnTurnoActual) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
         No combat in progress.
@@ -141,8 +172,10 @@ export default function CombatScreen() {
             id={ronda.jugador.id}
             nombre={ronda.jugador.nombre}
             nivel={ronda.jugador.nivel}
-            hp={hpEnTurnoActual.hpJugador}
+            hp={estadoEnTurnoActual.hpJugador}
             hpMaximo={ronda.jugador.hpMaximo}
+            carga={estadoEnTurnoActual.cargaJugador}
+            cargaMaxima={ronda.cargaMaxima}
             modoActivoNombre={ronda.jugador.modoActivoNombre}
             alineacion="izquierda"
           />
@@ -151,8 +184,10 @@ export default function CombatScreen() {
             id={ronda.enemigo.id}
             nombre={ronda.enemigo.nombre}
             nivel={ronda.enemigo.nivel}
-            hp={hpEnTurnoActual.hpEnemigo}
+            hp={estadoEnTurnoActual.hpEnemigo}
             hpMaximo={ronda.enemigo.hpMaximo}
+            carga={estadoEnTurnoActual.cargaEnemigo}
+            cargaMaxima={ronda.cargaMaxima}
             modoActivoNombre={ronda.enemigo.modoActivoNombre}
             alineacion="derecha"
           />
@@ -165,13 +200,19 @@ export default function CombatScreen() {
           {eventosVisibles.map((evento, i) => {
             const esJugador = evento.atacanteId === ronda.jugador.id;
             const nombreAtacante = esJugador ? ronda.jugador.nombre : ronda.enemigo.nombre;
+            const esJutsu = evento.tipoAtaque === 'jutsu';
             return (
-              <p key={i} className="text-sm">
+              <p key={i} className={esJutsu ? 'text-sm' : 'text-sm text-pergamino-200/60'}>
+                {esJutsu && '🌀 '}
                 <span className={esJugador ? 'text-fuuton' : 'text-sello-500'}>{nombreAtacante}</span>
                 {' uses '}
-                <span className="text-pergamino-100">{evento.jutsuNombre}</span>
+                <span className={esJutsu ? 'text-raiton font-display' : 'text-pergamino-200/80'}>
+                  {evento.jutsuNombre}
+                </span>
                 {' — '}
-                <span className="text-pergamino-200/80">{evento.dano} damage</span>
+                <span className={esJutsu ? 'text-pergamino-100' : 'text-pergamino-200/70'}>
+                  {evento.dano} damage
+                </span>
                 {evento.eficacia > 1 && <span className="text-fuuton"> (effective!)</span>}
                 {evento.eficacia < 1 && <span className="text-pergamino-200/50"> (not very effective)</span>}
               </p>

@@ -494,6 +494,13 @@ export const useGameStore = create((set, get) => ({
       const luchadorJugador = crearLuchador(personajeBase, activo.nivel, activo.hpActual, multiplicadoresBuffs);
       const hpInicialJugador = luchadorJugador.hpActual;
       const hpInicialEnemigo = luchadorEnemigo.hpActual;
+      // El enemigo es UNO solo para todo el nodo, así que arrastra su barra de
+      // jutsu de ronda en ronda igual que arrastra el HP: si tenía la barra a
+      // tope cuando cayó tu activo, el siguiente personaje se come el jutsu
+      // nada más entrar. El jugador, en cambio, entra con la carga inicial de
+      // su propio perfil (0 salvo objeto que lo cambie).
+      const cargaInicialJugador = luchadorJugador.cargaJutsu;
+      const cargaInicialEnemigo = luchadorEnemigo.cargaJutsu;
 
       const resultado = resolverCombateCompleto(luchadorJugador, luchadorEnemigo);
       const jugadorGanoRonda = resultado.ganadorId === luchadorJugador.id;
@@ -502,6 +509,7 @@ export const useGameStore = create((set, get) => ({
         historial: resultado.historial,
         turnosUsados: resultado.turnosUsados,
         jugadorGano: jugadorGanoRonda,
+        cargaMaxima: luchadorJugador.cargaMaxima,
         jugador: {
           id: luchadorJugador.id,
           nombre: luchadorJugador.nombre,
@@ -509,6 +517,7 @@ export const useGameStore = create((set, get) => ({
           hpInicial: hpInicialJugador,
           hpMaximo: luchadorJugador.hpMaximo,
           hpFinal: luchadorJugador.hpActual,
+          cargaInicial: cargaInicialJugador,
           modoActivoNombre: luchadorJugador.modoActivo?.nombre ?? null,
         },
         enemigo: {
@@ -518,6 +527,7 @@ export const useGameStore = create((set, get) => ({
           hpInicial: hpInicialEnemigo,
           hpMaximo: luchadorEnemigo.hpMaximo,
           hpFinal: luchadorEnemigo.hpActual,
+          cargaInicial: cargaInicialEnemigo,
           modoActivoNombre: luchadorEnemigo.modoActivo?.nombre ?? null,
         },
       });

@@ -19,14 +19,17 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (72 tests)
+## Cobertura actual (128 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
   primero de la lista), `aplicarMultiplicadores`.
 - **`engine/combat.test.js`** — eficacias de tipo, `crearLuchador` (HP persistido y su recorte al
   máximo), daño mínimo de 1, `resolverTurno` termina con un ganador, `resolverCombateCompleto`
-  siempre devuelve ganador y el perdedor queda a 0 HP.
+  siempre devuelve ganador y el perdedor queda a 0 HP. **Barra de jutsu**: se carga al atacar y al
+  recibir daño, topa en `cargaMaxima`, con la barra llena el siguiente ataque es el jutsu y la deja
+  a cero, el básico pega menos y no aplica `efectoEstado`, un modo con `multiplicadorCarga` acelera
+  la barra, y un luchador sin `ataqueBasico`/`carga` propios cae a los valores de `config.json`.
 - **`engine/mapGenerator.test.js`** — el piso 1 nunca tiene descanso (el bug real, repetido 30
   veces por la aleatoriedad), el último piso siempre 1 nodo `jefe`, el piso de mini-jefe siempre
   tiene exactamente un nodo `miniJefe`, todo nodo (salvo el inicial) tiene conexión entrante,
@@ -39,7 +42,9 @@ sin mocks ni DOM.
   `reordenarEquipo`, `reiniciarRun`, la tienda (comprar, fondos insuficientes, objeto gratuito,
   reclutar descarta la otra opción, nivel de reclutamiento correcto, equipo lleno), `irAGameOver`,
   y la integración con logros (desbloqueo al derrotar un jefe, `completarArcoSinDerrotas` con y sin
-  derrota previa, el reclutable/objeto desbloqueados apareciendo en tienda/inventario).
+  derrota previa, el reclutable/objeto desbloqueados apareciendo en tienda/inventario). También que
+  el enemigo **conserva su barra de jutsu** entre rondas encadenadas (igual que el HP) mientras que
+  cada personaje del jugador entra con la suya a cero.
 - **`store/useAchievementsStore.test.js`** — desbloqueo y persistencia en `localStorage`, no repetir
   un logro ya conseguido, `cargarLogros()` recupera lo guardado en una sesión anterior.
 

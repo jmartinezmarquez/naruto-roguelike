@@ -36,7 +36,10 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - **Motor agnóstico del contenido**: nada en `engine/` tiene referencias hardcodeadas a Naruto ni a
   ningún arco concreto. Todo el contenido vive en `src/data/*.json`.
 - **Combate**: automático, 1 vs 1 (personaje en posición 1 del equipo contra el enemigo del nodo),
-  sin decisiones del jugador durante la pelea. **Si el activo cae, el siguiente personaje vivo
+  sin decisiones del jugador durante la pelea. Cada luchador tiene **dos ataques**: un `ataqueBasico`
+  que lanza cada turno y su `jutsu`, que se carga (`jutsu.carga.alAtacar` / `alRecibirDano` sobre
+  `config.combate.jutsu.cargaMaxima`) y sale solo al llenarse la barra, vaciándola. La barra NO
+  dispara en el mismo turno en que se llena. Ver `documentacion/29-sistema-de-jutsus-automaticos.md`. **Si el activo cae, el siguiente personaje vivo
   entra automáticamente contra el MISMO enemigo** (que conserva el daño ya recibido) — es una
   secuencia de "rondas" dentro de un mismo combate, no combates separados. Ver `useGameStore.jugarCombate`.
 - **HP persistente entre combates**: `equipo[].hpActual` NO se resetea al ganar un combate. Solo se
@@ -78,13 +81,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 116 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 128 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 116 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 128 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -121,6 +124,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   estructura Pokelike: tierra lisa en el centro y vegetación del arco solo en los laterales. Se
   generan con `scripts/generar-columnas-mapa.py` a partir de `map-columns/originales/*.png` (no
   editar los generados a mano, se pisan al regenerar) — ver `documentacion/13-ui-mapa-y-combate.md`.
+- [x] Sistema de jutsus automáticos: `ataqueBasico` + barra de jutsu por luchador
+  (`engine/combat.js` → `ejecutarAtaque`, `turnosParaCargarJutsu`), con perfil de carga por
+  personaje en los JSON. Daño recalibrado y `turnosMaximos` 20 → 30 —
+  ver `documentacion/29-sistema-de-jutsus-automaticos.md`.
+- [x] `scripts/simular-combates.mjs`: simula los combates de los 3 arcos y saca turnos, victorias y
+  jutsus lanzados. Correrlo antes y después de cualquier cambio de balance. Se ejecuta con
+  `node scripts/simular-combates.mjs` (lleva un hook de Node para poder importar el motor, escrito
+  para Vite, sin pasar por Vitest).
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 

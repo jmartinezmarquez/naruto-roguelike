@@ -3,10 +3,15 @@ import {
   obtenerEficacia,
   crearLuchador,
   calcularDano,
+  ejecutarAtaque,
+  turnosParaCargarJutsu,
   resolverTurno,
   resolverCombateCompleto,
 } from './combat';
+import configGlobal from '../data/config.json';
 
+// Sin ataqueBasico ni jutsu.carga a propósito: así este fixture comprueba de
+// paso que los valores por defecto de config.json funcionan.
 const personajeDePrueba = {
   id: 'test_katon',
   nombre: 'Luchador de Prueba (Katon)',
@@ -55,6 +60,95 @@ describe('crearLuchador', () => {
   it('recorta el HP persistido si por alguna razón supera el máximo calculado', () => {
     const luchador = crearLuchador(personajeDePrueba, 1, 99999);
     expect(luchador.hpActual).toBe(luchador.hpMaximo);
+  });
+});
+
+describe('barra de jutsu', () => {
+  const { cargaMaxima, cargaPorDefecto, ataqueBasicoPorDefecto } = configGlobal.combate.jutsu;
+
+  // Cargador rápido: llena la barra con un solo ataque básico.
+  const cargadorRapido = {
+    ...personajeDePrueba,
+    id: 'test_rapido',
+    ataqueBasico: { nombre: 'Puñetazo', danoBase: 0.5 },
+    jutsu: { ...personajeDePrueba.jutsu, carga: { alAtacar: cargaMaxima, alRecibirDano: 0, inicial: 0 } },
+  };
+
+  it('un luchador sin ataqueBasico ni carga propios usa los valores por defecto de config', () => {
+    const luchador = crearLuchador(personajeDePrueba, 5);
+    expect(luchador.ataqueBasico).toEqual(ataqueBasicoPorDefecto);
+    expect(luchador.cargaPorAtacar).toBe(cargaPorDefecto.alAtacar);
+    expect(luchador.cargaPorRecibirDano).toBe(cargaPorDefecto.alRecibirDano);
+    expect(luchador.cargaJutsu).toBe(cargaPorDefecto.inicial);
+  });
+
+  it('el atacante carga al pegar y el defensor al recibir el golpe', () => {
+    const atacante = crearLuchador(personajeDePrueba, 5);
+    const defensor = crearLuchador(rivalDePrueba, 5);
+    ejecutarAtaque(atacante, defensor);
+    expect(atacante.cargaJutsu).toBe(atacante.cargaPorAtacar);
+    expect(defensor.cargaJutsu).toBe(defensor.cargaPorRecibirDano);
+  });
+
+  it('la barra nunca pasa de cargaMaxima', () => {
+    const atacante = crearLuchador(cargadorRapido, 5);
+    const defensor = crearLuchador(rivalDePrueba, 5);
+    ejecutarAtaque(atacante, defensor); // llena la barra
+    expect(atacante.cargaJutsu).toBe(cargaMaxima);
+  });
+
+  it('con la barra llena el siguiente ataque es el jutsu, y lo deja a cero', () => {
+    const atacante = crearLuchador(cargadorRapido, 5);
+    const defensor = crearLuchador(rivalDePrueba, 5);
+
+    const primero = ejecutarAtaque(atacante, defensor);
+    expect(primero.tipoAtaque).toBe('basico');
+    expect(primero.jutsuNombre).toBe('Puñetazo');
+
+    const segundo = ejecutarAtaque(atacante, defensor);
+    expect(segundo.tipoAtaque).toBe('jutsu');
+    expect(segundo.jutsuNombre).toBe('Golpe de Prueba');
+    expect(atacante.cargaJutsu).toBe(0);
+  });
+
+  it('el ataque básico pega menos que el jutsu del mismo luchador', () => {
+    const atacante = crearLuchador(cargadorRapido, 5);
+    const defensor = crearLuchador(rivalDePrueba, 5);
+    const basico = ejecutarAtaque(atacante, defensor);
+    const jutsu = ejecutarAtaque(atacante, defensor);
+    expect(jutsu.dano).toBeGreaterThan(basico.dano);
+  });
+
+  it('solo el jutsu aplica efectoEstado, el ataque básico no', () => {
+    const atacante = crearLuchador(cargadorRapido, 5);
+    const defensor = crearLuchador(rivalDePrueba, 5);
+
+    ejecutarAtaque(atacante, defensor);
+    expect(defensor.modificadoresTemporales).toHaveLength(0);
+
+    ejecutarAtaque(atacante, defensor);
+    expect(defensor.modificadoresTemporales).toHaveLength(1);
+  });
+
+  it('un modo con multiplicadorCarga acelera la barra', () => {
+    const conModo = {
+      ...cargadorRapido,
+      jutsu: { ...cargadorRapido.jutsu, carga: { alAtacar: 10, alRecibirDano: 5, inicial: 0 } },
+      modos: [{ nombre: 'Modo Sabio', nivelDesbloqueo: 1, multiplicadores: {}, multiplicadorCarga: 2 }],
+    };
+    const luchador = crearLuchador(conModo, 5);
+    expect(luchador.cargaPorAtacar).toBe(20);
+    expect(luchador.cargaPorRecibirDano).toBe(10);
+  });
+
+  it('turnosParaCargarJutsu refleja el ritmo del perfil de carga', () => {
+    const lento = crearLuchador(
+      { ...personajeDePrueba, jutsu: { ...personajeDePrueba.jutsu, carga: { alAtacar: 10, alRecibirDano: 10, inicial: 0 } } },
+      5,
+    );
+    const rapido = crearLuchador(cargadorRapido, 5);
+    expect(turnosParaCargarJutsu(lento)).toBe(cargaMaxima / 20);
+    expect(turnosParaCargarJutsu(rapido)).toBe(1);
   });
 });
 

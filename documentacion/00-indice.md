@@ -28,6 +28,8 @@
 - [24 - Diseño de tarjeta de equipar objeto](./24-diseño-tarjeta-equipar-objeto.md)
 - [25 - Nodo de reclutar](./25-nodo-reclutar.md)
 - [26 - Combate en cadena (entrenadores)](./26-combate-en-cadena.md)
+- [27 - Rediseño del sistema de balance (pendiente de implementar)](./27-sistema-de-balance.md)
 - [28 - Mochila (inventario y equipar)](./28-mochila.md)
+- [29 - Sistema de jutsus automáticos (ataque básico + barra de jutsu)](./29-sistema-de-jutsus-automaticos.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

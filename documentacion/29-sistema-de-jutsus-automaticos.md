@@ -1,456 +1,130 @@
-# Sistema de Jutsus Automáticos (MVP)
+# Sistema de jutsus automáticos
 
-## Objetivo
+Cada luchador tiene **dos ataques**: uno básico que lanza todos los turnos, y su **jutsu**, que se
+carga durante el combate y sale solo al llenarse la barra. El combate sigue siendo 100% automático
+— el jugador no pulsa nada, solo mira.
 
-Actualmente todos los personajes realizan un único ataque automático continuo.
+Antes de esto, "Rasengan" y "Chidori" se diferenciaban en el nombre y en un número. Los personajes
+solo se distinguían por stats. Ahora también por **ritmo**: Rock Lee lanza su técnica cada 2 turnos,
+Shikamaru cada 4 pero pegando mucho más fuerte, y Gaara solo carga rápido si le están pegando.
 
-Aunque visualmente ese ataque se llame "Rasengan", "Chidori" o "Ataque de Arena", mecánicamente todos funcionan exactamente igual.
+## Datos
 
-Quiero introducir un segundo nivel de profundidad sin perder la filosofía del juego:
-
-- El combate debe seguir siendo completamente automático.
-- El jugador no debe tener que pulsar botones durante el combate.
-- Los personajes deben sentirse diferentes entre sí.
-
----
-
-# Filosofía
-
-Cada personaje tendrá dos tipos de ataques.
-
-## Ataque básico
-
-Es el ataque automático que realiza continuamente durante el combate.
-
-No consume recursos.
-
-Es exactamente el sistema actual.
-
----
-
-## Jutsu
-
-Cada personaje tendrá un único Jutsu especial.
-
-No puede utilizarse continuamente.
-
-Debe cargarse durante el combate.
-
-Cuando esté listo se lanzará automáticamente.
-
-El jugador no tiene que tomar ninguna decisión.
-
-Simplemente observa cómo el personaje acumula chakra y utiliza su técnica especial.
-
----
-
-# Barra de Jutsu
-
-No quiero llamarla "barra de chakra".
-
-El jugador realmente no necesita conocer cuántos puntos de chakra tiene.
-
-Lo importante es saber cuándo estará preparado el siguiente Jutsu.
-
-Visualmente quiero una pequeña barra o indicador debajo de la vida.
-
-Ejemplo:
-
-```
-HP
-
-████████████
-
-Jutsu
-
-████░░░░░░░
-```
-
-Cuando llegue al máximo:
-
-```
-HP
-
-████████████
-
-Jutsu
-
-████████████
-
-↓
-
-🌀 Rasengan
-
-↓
-
-Barra vacía
-```
-
----
-
-# Cómo se carga
-
-El indicador se carga automáticamente durante el combate.
-
-Inicialmente quiero estas fuentes de carga:
-
-- Realizar ataques básicos.
-- Recibir daño.
-
-En el futuro también podrá modificarse mediante:
-
-- Transformaciones.
-- Objetos.
-- Pasivas.
-- Eventos.
-
----
-
-# Flujo del combate
-
-Ejemplo:
-
-```
-Naruto
-
-↓
-
-Ataque básico
-
-↓
-
-Ataque básico
-
-↓
-
-Recibe daño
-
-↓
-
-Ataque básico
-
-↓
-
-Jutsu preparado
-
-↓
-
-🌀 Rasengan
-
-↓
-
-Barra vuelve a cero
-
-↓
-
-Empieza a cargarse otra vez
-```
-
-No existe ninguna interacción manual.
-
----
-
-# Beneficios
-
-Este sistema añade profundidad sin aumentar la complejidad del combate.
-
-Los personajes dejan de diferenciarse únicamente por sus estadísticas.
-
-Ahora también se diferencian por:
-
-- Frecuencia de uso del Jutsu.
-- Potencia del Jutsu.
-- Forma de cargarlo.
-- Efectos especiales.
-
----
-
-# Diferenciación de personajes
-
-Cada personaje puede cargar su Jutsu de forma distinta.
-
-## Naruto
-
-Carga:
-
-- Atacando.
-- Recibiendo daño.
-
-Representa su enorme reserva de chakra.
-
----
-
-## Sasuke
-
-Carga principalmente al atacar.
-
-Su estilo es más ofensivo.
-
----
-
-## Gaara
-
-Carga principalmente al recibir daño.
-
-Cuanto más aguanta, antes utiliza su técnica especial.
-
----
-
-## Rock Lee
-
-Genera mucho chakra con los ataques básicos.
-
-Su Jutsu aparece muy frecuentemente.
-
----
-
-## Shikamaru
-
-Carga lentamente.
-
-Su Jutsu no hace mucho daño, pero aplica un efecto estratégico.
-
----
-
-## Hinata
-
-Cada golpe genera bastante chakra.
-
-Compensa un daño base inferior.
-
----
-
-## Orochimaru
-
-Carga lentamente.
-
-Su Jutsu es mucho más potente que la media.
-
----
-
-# Relación con las transformaciones
-
-Las transformaciones ya no deberían limitarse a aumentar estadísticas.
-
-Ahora también podrán modificar el sistema de Jutsus.
-
-Ejemplos:
-
-## Naruto - Modo Sabio
-
-- El indicador de Jutsu se carga un 30% más rápido.
-
----
-
-## Sasuke - Marca Maldita
-
-- El siguiente Jutsu hace más daño.
-
----
-
-## Rock Lee - Puertas Internas
-
-- Cada ataque genera mucho más chakra.
-
----
-
-## Gaara - Shukaku
-
-- Recibir daño llena más rápidamente la barra.
-
----
-
-# Relación con los objetos
-
-Los objetos también pueden interactuar con el sistema.
-
-Ejemplos:
-
-## Pergamino de Chakra
-
-Empiezas cada combate con parte del indicador lleno.
-
----
-
-## Fragmento del Rinnegan
-
-Los Jutsus ignoran parte de la defensa.
-
----
-
-## Píldora del Soldado
-
-Rellena instantáneamente el indicador de Jutsu.
-
----
-
-## Manual de Entrenamiento
-
-Los ataques generan ligeramente más chakra.
-
----
-
-# Jefes
-
-Este sistema también permitirá que los jefes resulten mucho más interesantes.
-
-Ejemplo:
-
-## Haku
-
-Carga lentamente.
-
-Cuando el indicador se llena utiliza:
-
-```
-Espejos Demoníacos de Cristal de Hielo
-```
-
----
-
-## Orochimaru
-
-Cuando el indicador se llena invoca una serpiente gigante.
-
----
-
-## Pain
-
-Cuando el indicador se llena utiliza:
-
-```
-Shinra Tensei
-```
-
-En futuras versiones este Jutsu podrá afectar a todo el equipo del jugador.
-
----
-
-# Escalabilidad futura
-
-Aunque el MVP seguirá estando centrado principalmente en combates 1 vs 1, quiero que la arquitectura permita que algunos Jutsus tengan objetivos diferentes.
-
-Ejemplos:
-
-- Uno mismo.
-- Enemigo actual.
-- Todo el equipo enemigo.
-- Todo el equipo aliado.
-- Todo el combate.
-- Siguiente enemigo.
-
-En el MVP la mayoría seguirán afectando únicamente al enemigo actual.
-
-Sin embargo, quiero dejar preparada la arquitectura para futuras campañas.
-
----
-
-# Arquitectura
-
-Cada personaje debería definir su Jutsu mediante configuración.
-
-Ejemplo conceptual:
+En `characters.json`, `enemies.json` y `common-enemies.json`, cada entrada trae:
 
 ```json
-{
-  "id": "naruto",
-
-  "jutsu": {
-    "id": "rasengan",
-
-    "charge": {
-      "onAttack": 12,
-      "onDamageTaken": 8
-    }
-  }
+"ataqueBasico": { "nombre": "Shadow Clone Rush", "danoBase": 0.9 },
+"jutsu": {
+  "nombre": "Rasengan",
+  "danoBase": 2.1,
+  "efectoEstado": null,
+  "carga": { "alAtacar": 32, "alRecibirDano": 22, "inicial": 0 }
 }
 ```
 
-El motor de combate únicamente será responsable de:
+Los globales viven en `config.json` → `combate.jutsu`: `cargaMaxima` (100), más un
+`cargaPorDefecto` y un `ataqueBasicoPorDefecto` que solo se usan si una entrada no trae los suyos.
+Hoy todos los traen; los valores por defecto son la red de seguridad para contenido nuevo, y hay un
+test que los cubre.
 
-- Aumentar la barra cuando corresponda.
-- Comprobar si está llena.
-- Ejecutar automáticamente el Jutsu.
-- Reiniciar la barra.
+`carga.inicial` es el hueco reservado para el objeto "Pergamino de Chakra" ("empiezas el combate con
+parte del indicador lleno"). Está a 0 en todos: no conviene regalar de serie lo que debería ser una
+recompensa.
 
-Toda la lógica específica del Jutsu debe estar desacoplada.
+## Reglas del motor (`engine/combat.js`)
 
----
+`ejecutarAtaque(atacante, defensor)` sustituye a la antigua `ejecutarJutsu`:
 
-# Tipos de efectos de Jutsu
+1. Barra llena → **jutsu**: daño alto, aplica `efectoEstado`, y la barra vuelve a 0. Lanzar el jutsu
+   no carga.
+2. Barra sin llenar → **ataque básico**: daño bajo, sin `efectoEstado`, y suma `carga.alAtacar`.
+3. El defensor suma `carga.alRecibirDano` siempre que reciba daño, del ataque que sea.
 
-No todos los Jutsus tienen que hacer simplemente más daño.
+**La barra no dispara en el mismo turno en que se llena.** Se llena al final del ataque básico y el
+jutsu sale en el siguiente. Si no, un mismo turno podría encadenar básico + jutsu y el indicador
+nunca se vería lleno en pantalla — que es justo lo que el sistema quiere enseñar.
 
-Quiero permitir distintos tipos de efectos.
+`crearLuchador` acepta un `multiplicadorCargaExtra`, y lee `modoActivo.multiplicadorCarga` si el modo
+lo trae. Es el enganche para "Modo Sabio carga un 30% más rápido" del documento de balance
+([27](./27-sistema-de-balance.md)); ningún dato lo define todavía, pero el motor ya lo respeta y hay
+un test que lo comprueba.
 
-Ejemplos:
+`turnosParaCargarJutsu(luchador)` estima cada cuántos turnos sale el jutsu asumiendo que en un turno
+normal se ataca una vez y se recibe una. Es solo para enseñar el ritmo en la UI — el combate no la
+usa, y quien no reciba golpes cargará más lento que eso.
 
-## Daño
+## La carga entre rondas encadenadas
 
-Rasengan
+El enemigo de un nodo es **uno solo** para todo el combate, así que arrastra su barra de ronda en
+ronda igual que arrastra el HP: si el jefe tenía la barra a tope cuando cayó tu personaje activo, el
+siguiente se come el jutsu nada más entrar. Es deliberado y le da peso a perder una ronda.
 
-Chidori
+El jugador, en cambio, entra a su ronda con `carga.inicial` (0). Cada personaje trae su propia barra.
 
----
+## UI
 
-## Debuff
+`CombatScreen` pinta una barra fina bajo la de HP, **sin números**: lo que importa no es cuánto
+chakra hay, sino cuánto falta. Al llenarse cambia a color raiton, pulsa y pone `JUTSU READY`. En el
+log, el jutsu lleva 🌀 y el nombre destacado; el ataque básico va en un tono apagado.
 
-Reducir ataque.
+El estado de las barras se reconstruye reproduciendo el historial, igual que ya se hacía con el HP,
+pero **la carga no se acumula sumando**: cada evento trae `cargaAtacante` / `cargaDefensor` ya
+resueltos, porque lanzar el jutsu la pone a cero y eso no sale de sumar incrementos.
 
-Reducir defensa.
+La ficha de personaje (`PersonajeHoverCard`, y la tarjeta de `RecruitScreen`) muestra los dos
+ataques y un "Jutsu about every N turns". Sin eso no habría forma de saber que Rock Lee lanza su
+técnica el doble de a menudo que Shikamaru, que es lo que da sentido a elegir entre uno y otro.
 
-Reducir velocidad.
+## Calibración del daño
 
----
+El cambio partía el daño en dos, así que había que evitar que la dificultad se moviera. Con `D` = el
+`danoBase` que tenía el personaje antes y `T` = turnos por jutsu:
 
-## Buff
+```
+(T-1) · básico + jutsu = T · D        con  básico = 0,6 · D
+→ jutsu = D · (0,4·T + 0,6)
+```
 
-Aumentar ataque.
+`T = ceil(100 / (alAtacar + alRecibirDano))`, porque en un turno 1 vs 1 se ataca una vez y se recibe
+una. Los que cargan lento acaban con un jutsu proporcionalmente más gordo, que es exactamente la
+fantasía buscada.
 
-Aumentar velocidad.
+Medido con `scripts/simular-combates.mjs` contra el motor anterior:
 
-Escudo temporal.
+| | antes | después |
+|---|---|---|
+| turnos, combate normal | 3,0–3,9 | 4,2–4,8 |
+| turnos, jefe | 2,9–4,1 | 4,1–5,6 |
+| victorias normales | 96–97 % | 96–99 % |
+| victorias jefe 1 vs 1 | 7–21 % | 7–21 % |
+| HP restante | 80–90 % | 79–92 % |
 
----
+Victorias y HP restante intactos. Los combates duran ~30 % más turnos porque el daño ahora es a
+golpes y un jutsu remata con exceso (daño desperdiciado). `turnosMaximos` subió de 20 a 30: el
+sistema anterior ya llegaba al tope en algún combate, y con el daño a golpes la varianza sube.
 
-## Curación
+**El primer calibrado no funcionó** y merece quedar anotado. Las cargas originales daban `T` de 3 a
+5, y el simulador cantó el problema: **0,8 jutsus por combate**, es decir que en la mayoría de peleas
+la barra no llegaba a llenarse nunca. Un sistema que no se ve no existe. Se duplicaron las cargas
+para que `T` quedara entre 2 y 4, y ahora salen 1,0–1,2 jutsus por combate, que es justo el ritmo del
+ejemplo de este documento (básico, básico, básico, jutsu).
 
-Recuperar HP.
+Sigue habiendo margen: los combates normales duran ~4,5 turnos, así que el jutsu sale una vez y poco
+más. Se verá mucho mejor cuando se alarguen los combates en el ajuste de balance
+([11](./11-progresion-y-arcos.md)) — que es el mismo sitio donde hay que mirar por qué los combates
+normales se ganan al 96 % y los jefes 1 vs 1 al 14 %.
 
----
+**Corregido de paso**: Naruto tenía `jutsu.danoBase: 5` cuando el resto del roster estaba entre 0,85
+y 1,4. Era un dedazo (le daba ~4× el daño de cualquier otro) y se ha normalizado a 1,5, que es la
+cifra que encaja con sus 9 de ataque frente a los 11 de Sasuke con 1,35.
 
-## Efectos especiales
+## Fuera de alcance
 
-Ignorar defensa.
+El [27](./27-sistema-de-balance.md) (catálogo de pasivas reutilizables, transformaciones que cambian
+reglas en vez de multiplicar stats, objetos que definen el estilo de la run, reparto 40/30/30 del
+poder) es un punto propio del roadmap. No se podía balancear hasta que la barra de jutsu existiera.
+Lo único que se ha adelantado son sus dos enganches: `multiplicadorCarga` en los modos y
+`carga.inicial` para los objetos.
 
-Primer golpe crítico.
-
-Aplicar veneno.
-
-Aplicar quemadura.
-
-Rellenar parte del siguiente indicador.
-
-Invocar una criatura temporal (futuro).
-
-Afectar a todos los enemigos (futuro).
-
----
-
-# Objetivo final
-
-Quiero que el combate siga siendo completamente automático y fácil de entender.
-
-El jugador no debe gestionar habilidades manualmente.
-
-Simplemente debe disfrutar viendo cómo cada personaje desarrolla su propio estilo de combate.
-
-Los Jutsus deben convertirse en el elemento que más personalidad aporte a cada personaje.
-
-Esto permitirá que:
-
-- Los personajes se sientan únicos.
-- Las transformaciones modifiquen el ritmo del combate en lugar de limitarse a aumentar estadísticas.
-- Los objetos puedan interactuar con el sistema de forma muy interesante.
-- Los futuros jefes tengan ataques especiales memorables.
-- La arquitectura quede preparada para campañas mucho más complejas sin necesidad de rediseñar el sistema de combate.
+Los tipos de efecto de jutsu más allá del daño (buff, curación, ignorar defensa) siguen apoyados en
+`efectoEstado`, que está desactivado en los datos para el MVP — ver [09](./09-motor-engine.md).

@@ -141,6 +141,11 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 - Lee `ultimoResultadoCombate` del store (resumen enriquecido: nombres, HP máximo, modo activo).
 - Reproduce `historial` turno a turno con auto-avance (900ms/turno), reconstruyendo el HP de cada lado restando el daño acumulado de los turnos ya revelados. Botón "Saltar animación".
 - Barras de HP con color según % restante (`fuuton` >50%, `raiton` 20-50%, `sello` <20%). Cada `BarraLuchador` envuelta en `PersonajeHoverCard` (jugador se abre hacia la derecha, enemigo hacia la izquierda, para no salirse de la pantalla).
+- **Barra de jutsu** bajo la de HP, fina y sin números: lo que importa no es cuánto chakra hay sino
+  cuánto falta. Al llenarse pulsa en color raiton con `JUTSU READY`, y en el log el jutsu sale con 🌀
+  y el nombre destacado frente al ataque básico, apagado. Ver
+  [29](./29-sistema-de-jutsus-automaticos.md). La carga no se reconstruye sumando incrementos como el
+  HP: cada evento del historial trae ya el valor resultante, porque lanzar el jutsu la pone a cero.
 - Al completarse: banner de Victoria/Derrota y uno de 3 botones según el resultado — "Continuar"
   (`volverAlMapa()`, combate normal), "Continuar al siguiente arco" (`avanzarSiguienteArco()`, se
   ganó el jefe final de un arco intermedio) o "Ver resultado" (`irAGameOver()`, la run terminó — por

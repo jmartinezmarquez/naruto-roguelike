@@ -27,8 +27,19 @@ export function obtenerEficacia(tipoAtacante, tipoDefensor) {
  * multiplicadoresExtra: multiplicadores adicionales aplicados DESPUÉS del
  * modo (ej. buffs temporales de eventos, "20% más ataque 3 combates"). Mismo
  * mecanismo que un modo, pero decidido por el store, no por el nivel.
+ *
+ * multiplicadorCargaExtra: acelera o frena la carga del jutsu. Se multiplica
+ * con el del modo activo (si lo trae). Es el enganche previsto para objetos
+ * tipo "Manual de Entrenamiento" y para modos tipo "Modo Sabio carga un 30%
+ * más rápido" — hoy ningún dato lo usa, pero el motor ya lo respeta.
  */
-export function crearLuchador(personajeBase, nivel, hpActualInicial = null, multiplicadoresExtra = null) {
+export function crearLuchador(
+  personajeBase,
+  nivel,
+  hpActualInicial = null,
+  multiplicadoresExtra = null,
+  multiplicadorCargaExtra = 1,
+) {
   const modoActivo = obtenerModoActivo(personajeBase, nivel);
   let stats = calcularStatsPorNivel(personajeBase.statsBase, nivel);
   if (modoActivo) {
@@ -39,10 +50,16 @@ export function crearLuchador(personajeBase, nivel, hpActualInicial = null, mult
   }
   const hpMaximo = stats.hp;
   const hpActual = hpActualInicial !== null ? Math.min(hpActualInicial, hpMaximo) : hpMaximo;
+
+  const configJutsu = configGlobal.combate.jutsu;
+  const carga = personajeBase.jutsu?.carga ?? configJutsu.cargaPorDefecto;
+  const multiplicadorCarga = (modoActivo?.multiplicadorCarga ?? 1) * multiplicadorCargaExtra;
+
   return {
     id: personajeBase.id,
     nombre: personajeBase.nombre,
     tipo: personajeBase.tipo,
+    ataqueBasico: personajeBase.ataqueBasico ?? configJutsu.ataqueBasicoPorDefecto,
     jutsu: personajeBase.jutsu,
     modoActivo, // null o el objeto de modo en uso, útil para que la UI lo muestre
     nivel,
@@ -50,6 +67,13 @@ export function crearLuchador(personajeBase, nivel, hpActualInicial = null, mult
     hpActual,
     statsBase: stats,
     modificadoresTemporales: [], // { stat, cantidad, turnosRestantes } — solo dura el combate
+    // Barra de jutsu. Empieza en carga.inicial (>0 = "empiezas el combate con
+    // parte del indicador lleno") y el multiplicador ya viene aplicado aquí,
+    // para que ejecutarAtaque no tenga que volver a pensarlo cada turno.
+    cargaMaxima: configJutsu.cargaMaxima,
+    cargaJutsu: Math.min(carga.inicial ?? 0, configJutsu.cargaMaxima),
+    cargaPorAtacar: carga.alAtacar * multiplicadorCarga,
+    cargaPorRecibirDano: carga.alRecibirDano * multiplicadorCarga,
   };
 }
 
@@ -62,13 +86,17 @@ function statEfectivo(luchador, stat) {
   return Math.max(1, base + bonus);
 }
 
-/** Daño que inflige el jutsu de 'atacante' sobre 'defensor'. */
-export function calcularDano(atacante, defensor, jutsu) {
+/**
+ * Daño que inflige 'atacante' sobre 'defensor' con un ataque concreto.
+ * 'ataque' es indistintamente el ataqueBasico o el jutsu: cualquier objeto
+ * con danoBase vale.
+ */
+export function calcularDano(atacante, defensor, ataque) {
   const ataqueEfectivo = statEfectivo(atacante, 'ataque');
   const defensaEfectiva = statEfectivo(defensor, 'defensa');
   const eficacia = obtenerEficacia(atacante.tipo, defensor.tipo);
 
-  const danoBruto = ataqueEfectivo * jutsu.danoBase * eficacia - defensaEfectiva * 0.5;
+  const danoBruto = ataqueEfectivo * ataque.danoBase * eficacia - defensaEfectiva * 0.5;
   return { cantidad: Math.max(1, Math.round(danoBruto)), eficacia };
 }
 
@@ -91,24 +119,70 @@ export function reducirDuracionModificadores(luchador) {
 }
 
 /**
- * Ejecuta el jutsu de 'atacante' sobre 'defensor': aplica daño y efecto de
- * estado. Muta hpActual y modificadoresTemporales de los luchadores dados.
+ * Cada cuántos turnos, aproximadamente, lanza su jutsu este luchador. En un
+ * turno 1 vs 1 normal ataca una vez y recibe una vez, así que la barra sube
+ * (cargaPorAtacar + cargaPorRecibirDano) por turno. Es una estimación para
+ * enseñar el ritmo del personaje en la UI, no un valor que use el combate:
+ * quien no reciba golpes cargará más lento que esto.
+ */
+export function turnosParaCargarJutsu(luchador) {
+  const porTurno = luchador.cargaPorAtacar + luchador.cargaPorRecibirDano;
+  if (porTurno <= 0) return Infinity;
+  return Math.max(1, Math.ceil((luchador.cargaMaxima - luchador.cargaJutsu) / porTurno));
+}
+
+/** Sube la barra de jutsu de un luchador sin pasarse de su máximo. */
+function acumularCarga(luchador, cantidad) {
+  luchador.cargaJutsu = Math.min(luchador.cargaMaxima, luchador.cargaJutsu + cantidad);
+}
+
+/**
+ * Ejecuta el ataque de 'atacante' sobre 'defensor'. Es el núcleo del sistema
+ * de jutsus automáticos: el atacante no elige, lo decide su barra.
+ *
+ * - Barra llena → lanza el JUTSU (daño alto + efectoEstado) y la vacía. Lanzar
+ *   el jutsu no carga.
+ * - Barra sin llenar → ataque BÁSICO (daño bajo, sin efectoEstado) y después
+ *   suma cargaPorAtacar.
+ * - El defensor suma cargaPorRecibirDano siempre que reciba daño, venga del
+ *   ataque que venga.
+ *
+ * La barra NO dispara en el mismo turno en que se llena: se llena al final del
+ * ataque básico y el jutsu sale en el siguiente. Si no, un mismo turno podría
+ * encadenar básico + jutsu y el indicador nunca se vería lleno en pantalla.
+ *
+ * Muta hpActual, cargaJutsu y modificadoresTemporales de los luchadores dados.
  * Devuelve un resumen del turno, pensado para que la UI lo pueda mostrar.
  */
-export function ejecutarJutsu(atacante, defensor) {
-  const jutsu = atacante.jutsu;
-  const { cantidad, eficacia } = calcularDano(atacante, defensor, jutsu);
+export function ejecutarAtaque(atacante, defensor) {
+  const usaJutsu = atacante.cargaJutsu >= atacante.cargaMaxima;
+  const ataque = usaJutsu ? atacante.jutsu : atacante.ataqueBasico;
+  const { cantidad, eficacia } = calcularDano(atacante, defensor, ataque);
 
   defensor.hpActual = Math.max(0, defensor.hpActual - cantidad);
-  aplicarEfectoEstado(atacante, defensor, jutsu.efectoEstado);
+
+  if (usaJutsu) {
+    atacante.cargaJutsu = 0;
+    aplicarEfectoEstado(atacante, defensor, atacante.jutsu.efectoEstado);
+  } else {
+    acumularCarga(atacante, atacante.cargaPorAtacar);
+  }
+  if (cantidad > 0) {
+    acumularCarga(defensor, defensor.cargaPorRecibirDano);
+  }
 
   return {
     atacanteId: atacante.id,
     defensorId: defensor.id,
-    jutsuNombre: jutsu.nombre,
+    tipoAtaque: usaJutsu ? 'jutsu' : 'basico',
+    jutsuNombre: ataque.nombre, // el nombre del ataque usado, básico o jutsu
     dano: cantidad,
     eficacia,
     defensorDerrotado: defensor.hpActual <= 0,
+    // Carga DESPUÉS del ataque, para que la UI pueda repintar las dos barras
+    // reproduciendo el historial turno a turno, igual que hace con el HP.
+    cargaAtacante: atacante.cargaJutsu,
+    cargaDefensor: defensor.cargaJutsu,
   };
 }
 
@@ -122,15 +196,15 @@ export function determinarOrden(luchadorA, luchadorB) {
 /**
  * Resuelve un turno completo de combate 1 vs 1: orden por velocidad, ambos
  * ataques (si el segundo sigue con vida), y reduce la duración de los
- * efectos de estado al final. No decide qué jutsu usa cada uno (cada
- * personaje solo tiene un jutsu, así que no hay elección que resolver).
+ * efectos de estado al final. Sigue sin haber elección que resolver: qué
+ * ataque usa cada uno lo decide su barra de jutsu dentro de ejecutarAtaque.
  */
 export function resolverTurno(luchador1, luchador2) {
   const [primero, segundo] = determinarOrden(luchador1, luchador2);
-  const eventos = [ejecutarJutsu(primero, segundo)];
+  const eventos = [ejecutarAtaque(primero, segundo)];
 
   if (segundo.hpActual > 0) {
-    eventos.push(ejecutarJutsu(segundo, primero));
+    eventos.push(ejecutarAtaque(segundo, primero));
   }
 
   reducirDuracionModificadores(luchador1);
@@ -150,7 +224,8 @@ export function resolverTurno(luchador1, luchador2) {
  * Resuelve un combate 1 vs 1 completo de forma automática, encadenando
  * turnos hasta que uno de los dos caiga o se alcance el límite de turnos
  * (config.combate.turnosMaximos). No hay ninguna decisión del jugador
- * durante la pelea: cada personaje ya tiene un único jutsu fijo.
+ * durante la pelea: cada personaje alterna su ataque básico y su jutsu según
+ * cómo se le llene la barra, sin pulsar nada.
  *
  * Devuelve el historial completo de turnos (para animar/mostrar en la UI
  * si se quiere) y el id del ganador.

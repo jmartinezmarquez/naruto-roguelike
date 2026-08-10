@@ -14,11 +14,15 @@
 ## `combat.js`
 
 - `obtenerEficacia(tipoAtacante, tipoDefensor)` — lee la matriz de `types.json`.
-- `crearLuchador(personajeBase, nivel, hpActualInicial, multiplicadoresExtra)` — instancia de combate. **`hpActualInicial`** (nuevo): si se pasa, el luchador empieza con ese HP en vez de a HP completo — es lo que permite que el HP persista entre combates. **`multiplicadoresExtra`** (nuevo): multiplicadores aplicados después del modo, para los buffs temporales de eventos ("+20% ataque, 3 combates"). El modo activo se sigue calculando internamente con `obtenerModoActivo`.
-- `calcularDano(atacante, defensor, jutsu)` — fórmula: `ataqueEfectivo * jutsu.danoBase * eficacia - defensaEfectiva * 0.5`, mínimo 1.
+- `crearLuchador(personajeBase, nivel, hpActualInicial, multiplicadoresExtra, multiplicadorCargaExtra)` — instancia de combate. **`hpActualInicial`**: si se pasa, el luchador empieza con ese HP en vez de a HP completo — es lo que permite que el HP persista entre combates. **`multiplicadoresExtra`**: multiplicadores aplicados después del modo, para los buffs temporales de eventos ("+20% ataque, 3 combates"). **`multiplicadorCargaExtra`**: acelera o frena la barra de jutsu, se combina con `modoActivo.multiplicadorCarga`. El modo activo se sigue calculando internamente con `obtenerModoActivo`.
+- `calcularDano(atacante, defensor, ataque)` — fórmula: `ataqueEfectivo * ataque.danoBase * eficacia - defensaEfectiva * 0.5`, mínimo 1. `ataque` es indistintamente el `ataqueBasico` o el `jutsu`.
+- `ejecutarAtaque(atacante, defensor)` — el atacante no elige: lanza su **jutsu** si la barra está llena (y la vacía), o su **ataque básico** si no (y la carga). Sustituyó a `ejecutarJutsu`. Ver [29](./29-sistema-de-jutsus-automaticos.md) para las reglas completas de carga.
+- `turnosParaCargarJutsu(luchador)` — estimación del ritmo de un personaje, solo para la UI.
 - `aplicarEfectoEstado` / `reducirDuracionModificadores` — buffs/debuffs temporales con contador de turnos. **Desactivado para el MVP**: todos los `jutsu.efectoEstado` de `characters.json`/`enemies.json`/`common-enemies.json` están a `null` — añadían complejidad de cálculo y no tenían sentido narrativo en todos los personajes. El motor sigue soportándolos tal cual (`aplicarEfectoEstado` ya es null-safe, `if (!efecto) return`) por si se rellenan de nuevo más adelante — no hace falta tocar `engine/` para reactivarlos, solo los datos.
 - `resolverTurno(luchador1, luchador2)` — resuelve un turno completo (orden por velocidad, ambos ataques, reduce duración de efectos). Usada internamente por `resolverCombateCompleto`.
 - `resolverCombateCompleto(luchador1, luchador2)` — encadena turnos automáticamente hasta que uno caiga o se alcance `config.combate.turnosMaximos` (empate resuelto por % de HP restante).
+
+> Al sustituir `ejecutarJutsu` por `ejecutarAtaque` se hizo el `grep` que pide `CLAUDE.md` antes de borrar nada: solo la llamaba `resolverTurno`, dentro del propio `combat.js`. La lección de abajo salió cara una vez.
 
 > Bug corregido: al introducir `resolverCombateCompleto`, un `str_replace` sustituyó por completo la función `resolverTurno` sin darse cuenta de que la nueva función la sigue llamando internamente en su bucle — quedó una llamada a una función inexistente (`ReferenceError: resolverTurno is not defined`). Reinsertada. Lección: al reemplazar una función que otra sigue usando, verificar las llamadas internas antes de dar el cambio por bueno.
 

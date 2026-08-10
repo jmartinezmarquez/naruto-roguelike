@@ -16,11 +16,20 @@
         "xpParaSiguienteNivel": 24,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Shadow Clone Rush",
+        "danoBase": 0.9
+      },
       "jutsu": {
         "nombre": "Rasengan",
         "descripcion": "A rotating sphere of chakra that damages and destabilizes the opponent.",
-        "danoBase": 5,
-        "efectoEstado": null
+        "danoBase": 2.1,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 32,
+          "alRecibirDano": 22,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -60,11 +69,20 @@
         "xpParaSiguienteNivel": 24,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Kunai Throw",
+        "danoBase": 0.81
+      },
       "jutsu": {
         "nombre": "Great Fireball Jutsu",
         "descripcion": "A massive fireball that scorches the opponent, weakening their attack through the burns.",
-        "danoBase": 1.35,
-        "efectoEstado": null
+        "danoBase": 1.89,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 52,
+          "alRecibirDano": 8,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -104,11 +122,20 @@
         "xpParaSiguienteNivel": 23,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Chakra Punch",
+        "danoBase": 0.69
+      },
       "jutsu": {
         "nombre": "Medical Chakra Strike",
         "descripcion": "Concentrates chakra in her fist while reinforcing her own stamina.",
-        "danoBase": 1.15,
-        "efectoEstado": null
+        "danoBase": 2.07,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -148,11 +175,20 @@
         "xpParaSiguienteNivel": 22,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Leaf Whirlwind",
+        "danoBase": 0.84
+      },
       "jutsu": {
         "nombre": "Primary Lotus",
         "descripcion": "Pure taijutsu at maximum speed; risks lowering his own defense.",
-        "danoBase": 1.4,
-        "efectoEstado": null
+        "danoBase": 1.96,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 50,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -192,11 +228,20 @@
         "xpParaSiguienteNivel": 22,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Gentle Fist Jab",
+        "danoBase": 0.78
+      },
       "jutsu": {
         "nombre": "Eight Trigrams: 64 Palms",
         "descripcion": "Strikes the opponent's chakra points, blocking part of their energy.",
-        "danoBase": 1.3,
-        "efectoEstado": null
+        "danoBase": 2.34,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -236,11 +281,20 @@
         "xpParaSiguienteNivel": 21,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Shuriken Throw",
+        "danoBase": 0.72
+      },
       "jutsu": {
         "nombre": "Weapon Summoning",
         "descripcion": "A rain of thrown weapons that improves her own accuracy.",
-        "danoBase": 1.2,
-        "efectoEstado": null
+        "danoBase": 2.16,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -280,11 +334,20 @@
         "xpParaSiguienteNivel": 21,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Kunai Throw",
+        "danoBase": 0.54
+      },
       "jutsu": {
         "nombre": "Shadow Possession Jutsu",
         "descripcion": "Immobilizes the opponent, drastically reducing their speed.",
-        "danoBase": 0.9,
-        "efectoEstado": null
+        "danoBase": 1.98,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 18,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -324,11 +387,20 @@
         "xpParaSiguienteNivel": 21,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Kunai Throw",
+        "danoBase": 0.51
+      },
       "jutsu": {
         "nombre": "Mind Transfer Jutsu",
         "descripcion": "Takes momentary control of the opponent, weakening their attack.",
-        "danoBase": 0.85,
-        "efectoEstado": null
+        "danoBase": 1.53,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 28,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -368,11 +440,20 @@
         "xpParaSiguienteNivel": 22,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Palm Bash",
+        "danoBase": 0.75
+      },
       "jutsu": {
         "nombre": "Human Bullet Tank",
         "descripcion": "Launches himself as a giant ball, gaining bulk and endurance.",
-        "danoBase": 1.25,
-        "efectoEstado": null
+        "danoBase": 2.25,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 20,
+          "alRecibirDano": 26,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -412,11 +493,20 @@
         "xpParaSiguienteNivel": 21,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Fang Swipe",
+        "danoBase": 0.78
+      },
       "jutsu": {
         "nombre": "Fang Over Fang",
         "descripcion": "Spinning attack alongside Akamaru that gains speed from the momentum.",
-        "danoBase": 1.3,
-        "efectoEstado": null
+        "danoBase": 1.82,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 46,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -456,11 +546,20 @@
         "xpParaSiguienteNivel": 21,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Gentle Fist Jab",
+        "danoBase": 0.66
+      },
       "jutsu": {
         "nombre": "Eight Trigrams: Two Palms",
         "descripcion": "Precise strike to the tenketsu that reinforces her own defense through concentration.",
-        "danoBase": 1.1,
-        "efectoEstado": null
+        "danoBase": 1.54,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 46,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -500,11 +599,20 @@
         "xpParaSiguienteNivel": 21,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Insect Bite",
+        "danoBase": 0.6
+      },
       "jutsu": {
         "nombre": "Destruction Bug Swarm",
         "descripcion": "His insects drain chakra from the opponent, gradually weakening their attack.",
-        "danoBase": 1,
-        "efectoEstado": null
+        "danoBase": 1.8,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 24,
+          "alRecibirDano": 16,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -544,11 +652,20 @@
         "xpParaSiguienteNivel": 17,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Ink Dart",
+        "danoBase": 0.75
+      },
       "jutsu": {
         "nombre": "Super Beast Imitation Drawing",
         "descripcion": "Summons a giant ink beast that attacks and disorients the opponent.",
-        "danoBase": 1.25,
-        "efectoEstado": null
+        "danoBase": 2.25,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
       },
       "modos": [
         {
@@ -578,11 +695,20 @@
         "xpParaSiguienteNivel": 18,
         "crecimiento": 1.015
       },
+      "ataqueBasico": {
+        "nombre": "Wood Spike",
+        "danoBase": 0.66
+      },
       "jutsu": {
         "nombre": "Wood Style: Arbor Jutsu",
         "descripcion": "Raises a wood wall that protects and strengthens the team.",
-        "danoBase": 1.1,
-        "efectoEstado": null
+        "danoBase": 1.98,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 26,
+          "alRecibirDano": 16,
+          "inicial": 0
+        }
       },
       "modos": [
         {
