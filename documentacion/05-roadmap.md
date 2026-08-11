@@ -193,8 +193,18 @@
 - [x] Daño recalibrado para que la dificultad no se moviera, medido con el nuevo
   `scripts/simular-combates.mjs` contra el motor anterior. `turnosMaximos` 20 → 30. Corregido de
   paso el `danoBase: 5` de Naruto (dedazo: el resto del roster estaba entre 0,85 y 1,4).
-- [x] Barra de jutsu en `CombatScreen` y ritmo de carga ("Jutsu about every N turns") en la ficha de
+- [x] Barra de jutsu en `CombatScreen` y ritmo de carga en la ficha de
   personaje y en la tarjeta de reclutar — sin eso no hay forma de saber en qué se diferencian.
+- [x] **Ataque básico unificado**: ya no lo define nadie en los JSON, todos usan
+  `config.combate.jutsu.ataqueBasicoPorDefecto` ("Kunai Throw", 0.65). Esos números nunca fueron
+  diseño — salían de aplicar `básico = 0,6·D` en la calibración— y el daño real ya se diferencia por
+  la stat de ataque. Jutsus recalibrados (`jutsu = T·D − (T−1)·0,65`) y test de invariante para que
+  nadie vuelva a añadir uno propio en silencio.
+- [x] Ficha de personaje adelgazada: fuera el ataque básico, fuera los "Power N" (no son daño, son un
+  multiplicador contra una fórmula interna) y fuera el "Jutsu about every N turns". Queda el nombre
+  del jutsu y **tres puntitos** de ritmo de carga (`RitmoCarga`) — cualitativo, porque reclutar es
+  elegir entre tres ninjas que no has visto pelear y sin ninguna pista la decisión vuelve a ser solo
+  stats. Ver [29](./29-sistema-de-jutsus-automaticos.md).
 - [ ] **Fuera de alcance a propósito**: el [27](./27-sistema-de-balance.md) es ahora el punto 6 bis
   de abajo. Solo se han dejado sus dos enganches (`multiplicadorCarga` en modos, `carga.inicial`
   para objetos).
@@ -250,9 +260,12 @@
 
 
 9. **Playtest y ajuste de balance** — con `scripts/simular-combates.mjs` ya hay con qué medirlo.
-    Lo que canta hoy: los combates normales se ganan al 96-99% y los jefes 1 vs 1 al 7-21%, un salto
+    Lo que canta hoy: los combates normales se ganan al 96-97% y los jefes 1 vs 1 al 14%, un salto
     demasiado brusco; y los combates duran ~4,5 turnos, tan poco que el jutsu apenas sale una vez
-    (ver [29](./29-sistema-de-jutsus-automaticos.md)). Además, los tres arcos pasaron a 8 pisos
+    (ver [29](./29-sistema-de-jutsus-automaticos.md)). Ojo con una cosa que salió al unificar el
+    ataque básico: con combates tan cortos, **cargar lento castiga más de lo que dice la media** —
+    un jefe con `T`=4 se come tres básicos flojos antes de su golpe gordo y el combate ya se acabó.
+    Los perfiles de carga no son solo sabor, mueven la dificultad real. Además, los tres arcos pasaron a 8 pisos
     (antes 10 y 12) por legibilidad del mapa, y eso recorta los combates —y por tanto la XP— de los
     arcos 2 y 3 sin haber recalibrado `nivelEnemigoBase` ni los niveles fijos de jefe. Ver
     [11](./11-progresion-y-arcos.md). Además, revisar el salto de dificultad cuando un
@@ -260,6 +273,13 @@
     [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en
     un arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`).
     (Leer MVP [27](./27-sistema-de-balance.md))
+
+10. **Enciclopedia** — el sitio donde vive la información que se ha ido sacando de las tarjetas para
+    que quepan en una pantalla: descripción de cada jutsu, potencia, turnos exactos de carga, tabla de
+    eficacias de chakra, y ficha de cada personaje y enemigo. Es consulta voluntaria, no algo que se
+    cruce en medio de una run — pantalla propia desde el menú de iconos del mapa, como Logros.
+    Ojo: hoy esa información **no está en ninguna parte**, así que hasta que esto exista hay una deuda
+    real, no solo un "ya lo pondremos".
 
 ### Descartado
 

@@ -10,22 +10,40 @@ Shikamaru cada 4 pero pegando mucho más fuerte, y Gaara solo carga rápido si l
 
 ## Datos
 
-En `characters.json`, `enemies.json` y `common-enemies.json`, cada entrada trae:
+En `characters.json`, `enemies.json` y `common-enemies.json`, cada entrada trae **solo su jutsu**:
 
 ```json
-"ataqueBasico": { "nombre": "Shadow Clone Rush", "danoBase": 0.9 },
 "jutsu": {
   "nombre": "Rasengan",
-  "danoBase": 2.1,
+  "danoBase": 2.35,
   "efectoEstado": null,
   "carga": { "alAtacar": 32, "alRecibirDano": 22, "inicial": 0 }
 }
 ```
 
-Los globales viven en `config.json` → `combate.jutsu`: `cargaMaxima` (100), más un
-`cargaPorDefecto` y un `ataqueBasicoPorDefecto` que solo se usan si una entrada no trae los suyos.
-Hoy todos los traen; los valores por defecto son la red de seguridad para contenido nuevo, y hay un
-test que los cubre.
+Los globales viven en `config.json` → `combate.jutsu`: `cargaMaxima` (100), `cargaPorDefecto` (red de
+seguridad para contenido nuevo, hoy todos traen la suya) y `ataqueBasicoPorDefecto`.
+
+### El ataque básico es único para todos
+
+`ataqueBasicoPorDefecto` (hoy "Kunai Throw", `danoBase: 0.65`) **no es un defecto: es el ataque
+básico de todo el mundo**. Ningún personaje ni enemigo define el suyo.
+
+En la primera versión sí lo tenían, uno por cabeza. Fue un error, y por un motivo concreto: esos
+números nunca los decidió nadie. Salieron de aplicar `básico = 0,6 · D` personaje a personaje durante
+la calibración — eran el residuo de una hoja de cálculo, no diseño. Y como el daño real es
+`ataque × danoBase`, un `danoBase` común ya hace que el personaje con más ATK pegue más fuerte con el
+mismo kunai, que es justo lo que se quería. Un `danoBase` propio encima de eso era diferenciar dos
+veces por lo mismo.
+
+Además tiene consecuencias fuera de los datos: el ataque básico tendrá **una sola animación de kunai**
+para todos (punto 7 del roadmap), y desaparece de la ficha de personaje, que estaba enseñando el
+nombre y el poder de un ataque estándar como si fuera una característica.
+
+El motor sigue leyendo `personajeBase.ataqueBasico` si existiera, por si algún día un jefe merece uno
+propio. Hay un **test de invariante** que falla si alguien vuelve a añadir uno: la decisión se
+rompería en silencio, porque un personaje con básico propio funcionaría perfectamente, solo que
+pegaría distinto al resto sin que nada avisara.
 
 `carga.inicial` es el hueco reservado para el objeto "Pergamino de Chakra" ("empiezas el combate con
 parte del indicador lleno"). Está a 0 en todos: no conviene regalar de serie lo que debería ser una
@@ -71,9 +89,29 @@ El estado de las barras se reconstruye reproduciendo el historial, igual que ya 
 pero **la carga no se acumula sumando**: cada evento trae `cargaAtacante` / `cargaDefensor` ya
 resueltos, porque lanzar el jutsu la pone a cero y eso no sale de sumar incrementos.
 
-La ficha de personaje (`PersonajeHoverCard`, y la tarjeta de `RecruitScreen`) muestra los dos
-ataques y un "Jutsu about every N turns". Sin eso no habría forma de saber que Rock Lee lanza su
-técnica el doble de a menudo que Shikamaru, que es lo que da sentido a elegir entre uno y otro.
+### Qué enseña la ficha de personaje, y qué no
+
+`PersonajeHoverCard` (y la tarjeta de `RecruitScreen`) muestran del jutsu **el nombre y tres
+puntitos** de ritmo de carga (`RitmoCarga`: 3 puntos = cada ≤2 turnos, 2 = cada 3, 1 = cada 4 o más).
+Nada más.
+
+Se probó primero con toda la información —los dos ataques con su "Power N" y un "Jutsu about every N
+turns"— y sobraba casi todo:
+
+- **El ataque básico** ya no es una característica del personaje, es el estándar de todos.
+- **"Power 2.35"** no es daño: es un multiplicador contra una fórmula interna que el jugador no ve.
+  Parece un dato comparable y no lo es, así que es peor que no poner nada.
+- **El número exacto de turnos** es ficha técnica en un juego pensado para echar runs cortas. El
+  ritmo real se aprende en dos combates viendo la barra llenarse.
+
+Pero quitarlo **del todo** tampoco valía, y esta es la parte que no es obvia: reclutar es elegir
+entre tres ninjas que no has visto pelear nunca. Sin ninguna pista de ritmo, esa decisión vuelve a
+ser solo stats y el sistema de carga deja de notarse justo en el único momento en que hay que
+decidir. De ahí los puntitos: cualitativos, ocupan menos que el nombre del jutsu, y no dan una cifra
+que nadie puede usar.
+
+El resto (descripción del jutsu, potencias, número de turnos) es material de la **enciclopedia**,
+punto 10 del roadmap.
 
 ## Calibración del daño
 
@@ -117,6 +155,37 @@ normales se ganan al 96 % y los jefes 1 vs 1 al 14 %.
 **Corregido de paso**: Naruto tenía `jutsu.danoBase: 5` cuando el resto del roster estaba entre 0,85
 y 1,4. Era un dedazo (le daba ~4× el daño de cualquier otro) y se ha normalizado a 1,5, que es la
 cifra que encaja con sus 9 de ataque frente a los 11 de Sasuke con 1,35.
+
+### Segunda calibración: al unificar el ataque básico
+
+Fijar el básico en 0,65 para todos obliga a recalcular el jutsu de cada uno, o el daño medio por
+turno se descuadra. Misma ecuación, despejando la otra incógnita:
+
+```
+jutsu = T · D − (T−1) · 0,65
+```
+
+`D` se recupera exacto de los datos viejos (`D = básico / 0,6`), así que la migración no estima nada.
+El efecto es el esperado: quien tenía un básico por encima de 0,65 (Zabuza, Pain) recibe un jutsu más
+gordo a cambio, y quien lo tenía por debajo (Ino, Shikamaru) uno más pequeño, porque su básico ahora
+aporta más.
+
+| | antes de unificar | después |
+|---|---|---|
+| turnos, combate normal | 4,2–4,8 | 4,4–4,9 |
+| victorias normales | 96–99 % | 96–97 % |
+| victorias jefe 1 vs 1 | 7–21 % | 14 % en los seis |
+| HP restante | 79–92 % | 80–92 % |
+| jutsus por combate | 0,9–1,2 | 0,8–1,2 |
+
+Lo llamativo es que **las victorias de jefe se han igualado a 14 %**, cuando antes iban de 7 % (Pain)
+a 21 % (Kabuto). No es casualidad ni ruido: el daño medio de cada jefe no se ha movido, pero su
+reparto en el tiempo sí. Pain carga en 4 turnos, así que ahora pega tres básicos flojos (0,65 en vez
+de 0,96) antes de su golpe gordo — y como el combate dura ~4,5 turnos, buena parte de esa compensación
+llega tarde o directamente no llega. **Con combates cortos, cargar lento sale caro por encima de lo
+que dice la media.** Es un argumento más para alargar los combates en el punto 9 del roadmap, y hay
+que tenerlo presente antes de tocar los perfiles de carga: `T` no es solo sabor, mueve la dificultad
+real.
 
 ## Fuera de alcance
 

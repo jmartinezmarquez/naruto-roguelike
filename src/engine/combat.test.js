@@ -9,6 +9,9 @@ import {
   resolverCombateCompleto,
 } from './combat';
 import configGlobal from '../data/config.json';
+import charactersData from '../data/characters.json';
+import enemiesData from '../data/enemies.json';
+import commonEnemiesData from '../data/common-enemies.json';
 
 // Sin ataqueBasico ni jutsu.carga a propósito: así este fixture comprueba de
 // paso que los valores por defecto de config.json funcionan.
@@ -74,6 +77,8 @@ describe('barra de jutsu', () => {
     jutsu: { ...personajeDePrueba.jutsu, carga: { alAtacar: cargaMaxima, alRecibirDano: 0, inicial: 0 } },
   };
 
+  // Este es el camino NORMAL desde que el ataque básico se unificó: ningún
+  // personaje ni enemigo define el suyo, todos usan el de config.
   it('un luchador sin ataqueBasico ni carga propios usa los valores por defecto de config', () => {
     const luchador = crearLuchador(personajeDePrueba, 5);
     expect(luchador.ataqueBasico).toEqual(ataqueBasicoPorDefecto);
@@ -209,5 +214,31 @@ describe('resolverCombateCompleto', () => {
     const luchador2 = crearLuchador(rivalDePrueba, 10);
     const resultado = resolverCombateCompleto(luchador1, luchador2);
     expect(resultado.historial.length).toBeGreaterThan(0);
+  });
+});
+
+// El ataque básico es único para todos a propósito: lo que diferencia el daño
+// básico de un personaje a otro es su stat de ataque, no un `danoBase` propio.
+// Este test existe porque la decisión se rompería en silencio — un personaje
+// nuevo con su propio `ataqueBasico` seguiría funcionando, simplemente pegaría
+// distinto que el resto sin que nada avisara. Ver documentacion/29.
+describe('ataque básico unificado (invariante de datos)', () => {
+  const todosLosLuchadores = [
+    ...charactersData.personajes,
+    ...enemiesData.jefes,
+    ...commonEnemiesData.plantillasGenericas,
+    ...commonEnemiesData.enemigosNombrados,
+  ];
+
+  it('ningún personaje ni enemigo define su propio ataqueBasico', () => {
+    const conBasicoPropio = todosLosLuchadores.filter((l) => l.ataqueBasico).map((l) => l.id);
+    expect(conBasicoPropio).toEqual([]);
+  });
+
+  it('todos usan el mismo ataque básico, el de config.json', () => {
+    const { ataqueBasicoPorDefecto } = configGlobal.combate.jutsu;
+    for (const base of todosLosLuchadores) {
+      expect(crearLuchador(base, 5).ataqueBasico).toEqual(ataqueBasicoPorDefecto);
+    }
   });
 });

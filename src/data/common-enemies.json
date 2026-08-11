@@ -11,13 +11,9 @@
         "defensa": 4,
         "velocidad": 5
       },
-      "ataqueBasico": {
-        "nombre": "Kunai Throw",
-        "danoBase": 0.66
-      },
       "jutsu": {
         "nombre": "Minor Fire Jutsu",
-        "danoBase": 1.98,
+        "danoBase": 2.0,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 30,
@@ -37,13 +33,9 @@
         "defensa": 3,
         "velocidad": 6
       },
-      "ataqueBasico": {
-        "nombre": "Kunai Throw",
-        "danoBase": 0.66
-      },
       "jutsu": {
         "nombre": "Slashing Gust",
-        "danoBase": 1.98,
+        "danoBase": 2.0,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 30,
@@ -63,13 +55,9 @@
         "defensa": 3,
         "velocidad": 5
       },
-      "ataqueBasico": {
-        "nombre": "Kunai Throw",
-        "danoBase": 0.69
-      },
       "jutsu": {
         "nombre": "Minor Discharge",
-        "danoBase": 2.07,
+        "danoBase": 2.15,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 30,
@@ -89,13 +77,9 @@
         "defensa": 6,
         "velocidad": 3
       },
-      "ataqueBasico": {
-        "nombre": "Kunai Throw",
-        "danoBase": 0.54
-      },
       "jutsu": {
         "nombre": "Earth Wall",
-        "danoBase": 1.62,
+        "danoBase": 1.4,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 30,
@@ -115,13 +99,9 @@
         "defensa": 5,
         "velocidad": 4
       },
-      "ataqueBasico": {
-        "nombre": "Kunai Throw",
-        "danoBase": 0.66
-      },
       "jutsu": {
         "nombre": "Water Whip",
-        "danoBase": 1.98,
+        "danoBase": 2.0,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 30,
@@ -143,14 +123,10 @@
         "defensa": 6,
         "velocidad": 7
       },
-      "ataqueBasico": {
-        "nombre": "Air Blast",
-        "danoBase": 0.75
-      },
       "jutsu": {
         "nombre": "Slicing Sound Wave",
         "descripcion": "Compressed air waves launched from his arms.",
-        "danoBase": 2.25,
+        "danoBase": 2.45,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 34,
@@ -175,14 +151,10 @@
         "defensa": 8,
         "velocidad": 6
       },
-      "ataqueBasico": {
-        "nombre": "Gauntlet Bash",
-        "danoBase": 0.69
-      },
       "jutsu": {
         "nombre": "Sonic Vibration",
         "descripcion": "A gauntlet emits a sound that disorients the opponent.",
-        "danoBase": 2.07,
+        "danoBase": 2.15,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 26,
@@ -207,14 +179,10 @@
         "defensa": 6,
         "velocidad": 8
       },
-      "ataqueBasico": {
-        "nombre": "Senbon Throw",
-        "danoBase": 0.66
-      },
       "jutsu": {
         "nombre": "Illusory Senbon",
         "descripcion": "Needles thrown with precision to weaken the opponent's focus.",
-        "danoBase": 1.98,
+        "danoBase": 2.0,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 30,

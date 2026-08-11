@@ -3,7 +3,8 @@ import { useGameStore } from '../../store/useGameStore';
 import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import configGlobal from '../../data/config.json';
-import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
+import { crearLuchador } from '../../engine/combat';
+import { RitmoCarga } from '../common/PersonajeHoverCard';
 
 function encontrarBase(id) {
   return (
@@ -92,14 +93,9 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
         <BarraStat label="HP" valor={hp} max={maxStat} />
       </div>
 
-      <div className="border-t border-pergamino-100/10 pt-2 mt-auto">
-        <div className="flex items-center justify-between gap-1">
-          <p className="text-[11px] font-display text-pergamino-100 truncate">🌀 {base.jutsu.nombre}</p>
-          <span className="text-[10px] text-pergamino-200/60 shrink-0">{base.jutsu.danoBase} PWR</span>
-        </div>
-        <p className="text-[10px] text-sello-500/80">
-          every ~{turnosParaCargarJutsu(luchador)} turns
-        </p>
+      <div className="border-t border-pergamino-100/10 pt-2 mt-auto flex items-center justify-between gap-1">
+        <p className="text-[11px] font-display text-pergamino-100 truncate">🌀 {base.jutsu.nombre}</p>
+        <RitmoCarga luchador={luchador} className="shrink-0" />
       </div>
     </button>
   );

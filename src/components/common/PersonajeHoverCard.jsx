@@ -20,6 +20,31 @@ const EMOJI_TIPO = {
   suiton: '💧',
 };
 
+/**
+ * Ritmo de carga del jutsu, en 3 puntitos. Es cualitativo a propósito: el
+ * número exacto de turnos ("Jutsu about every 3 turns") era una ficha técnica
+ * en un juego que se juega a ratos, y el ritmo real se aprende viendo la barra
+ * en combate. Pero sí hace falta ALGO, porque reclutar es elegir entre tres
+ * ninjas que no has visto pelear nunca: sin esto la decisión vuelve a ser solo
+ * stats y el sistema de carga deja de notarse justo donde se decide.
+ */
+export function RitmoCarga({ luchador, className = '' }) {
+  const turnos = turnosParaCargarJutsu(luchador);
+  const llenos = turnos <= 2 ? 3 : turnos === 3 ? 2 : 1;
+  const etiqueta = ['', 'Slow charge', 'Steady charge', 'Fast charge'][llenos];
+
+  return (
+    <span className={`inline-flex items-center gap-0.5 ${className}`} title={etiqueta} aria-label={etiqueta}>
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className={`w-1.5 h-1.5 rounded-full ${i < llenos ? 'bg-sello-500' : 'bg-pergamino-100/20'}`}
+        />
+      ))}
+    </span>
+  );
+}
+
 export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, className = '' }) {
   const base = useMemo(() => encontrarBase(id), [id]);
   const luchador = useMemo(() => (base ? crearLuchador(base, nivel ?? 1) : null), [base, nivel]);
@@ -53,26 +78,15 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, className = '' }
         <span>HP {luchador.statsBase.hp}</span>
       </div>
 
-      <div className="mt-2 pt-2 border-t border-pergamino-100/10">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="text-[11px] text-pergamino-200/70">{luchador.ataqueBasico.nombre}</p>
-          <p className="text-[10px] text-pergamino-200/40 font-display shrink-0">
-            Power {luchador.ataqueBasico.danoBase}
-          </p>
-        </div>
-        <div className="flex items-baseline justify-between gap-2 mt-1">
-          <p className="text-[11px] font-display font-bold text-pergamino-100">🌀 {base.jutsu.nombre}</p>
-          <p className="text-[10px] text-pergamino-200/50 font-display shrink-0">Power {base.jutsu.danoBase}</p>
-        </div>
-        {/* El ritmo de carga es lo que diferencia a un personaje de otro, así
-            que va en la ficha: sin esto no hay forma de saber que Rock Lee
-            lanza su jutsu el doble de a menudo que Shikamaru. */}
-        <p className="text-[10px] text-sello-500/80 mt-0.5">
-          Jutsu about every {turnosParaCargarJutsu(luchador)} turns
-        </p>
-        {/* Sin la descripción del jutsu a propósito: ocupaba media tarjeta para
-            contar algo narrativo que no cambia ninguna decisión. Lo que importa
-            aquí es potencia y ritmo; el texto de sabor irá en la enciclopedia. */}
+      {/* Solo el jutsu y su ritmo. Fuera quedaron, a propósito:
+          - el ataque básico, que ahora es el mismo para todos (ver config.json);
+          - el "Power N", que no es daño sino un multiplicador contra una fórmula
+            interna: parece un dato comparable y no lo es;
+          - la descripción del jutsu, texto narrativo que no cambia ninguna decisión.
+          Todo eso es material de enciclopedia (punto 10 del roadmap). */}
+      <div className="mt-2 pt-2 border-t border-pergamino-100/10 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-display font-bold text-pergamino-100 truncate">🌀 {base.jutsu.nombre}</p>
+        <RitmoCarga luchador={luchador} className="shrink-0" />
       </div>
     </div>
   );

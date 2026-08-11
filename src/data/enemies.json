@@ -11,14 +11,10 @@
         "defensa": 9,
         "velocidad": 10
       },
-      "ataqueBasico": {
-        "nombre": "Senbon Throw",
-        "danoBase": 0.78
-      },
       "jutsu": {
         "nombre": "Demonic Ice Mirrors",
         "descripcion": "Traps the opponent in a prison of ice mirrors, slowing them down.",
-        "danoBase": 2.34,
+        "danoBase": 2.6,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 26,
@@ -48,14 +44,10 @@
         "defensa": 10,
         "velocidad": 10
       },
-      "ataqueBasico": {
-        "nombre": "Cleaver Slash",
-        "danoBase": 0.87
-      },
       "jutsu": {
         "nombre": "Hidden Mist Jutsu",
         "descripcion": "Attacks from the mist with the Kubikiribōchō, exploiting the element of surprise.",
-        "danoBase": 2.61,
+        "danoBase": 3.05,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 28,
@@ -97,14 +89,10 @@
         "defensa": 9,
         "velocidad": 10
       },
-      "ataqueBasico": {
-        "nombre": "Scalpel Cut",
-        "danoBase": 0.78
-      },
       "jutsu": {
         "nombre": "Chakra Scalpel",
         "descripcion": "Cuts vital points with medical precision, weakening the opponent's defense.",
-        "danoBase": 2.34,
+        "danoBase": 2.6,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 26,
@@ -144,14 +132,10 @@
         "defensa": 10,
         "velocidad": 10
       },
-      "ataqueBasico": {
-        "nombre": "Sand Whip",
-        "danoBase": 0.84
-      },
       "jutsu": {
         "nombre": "Sand Coffin",
         "descripcion": "Crushes the opponent with compacted sand, severely reducing their defense.",
-        "danoBase": 1.96,
+        "danoBase": 2.15,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 14,
@@ -203,14 +187,10 @@
         "defensa": 9,
         "velocidad": 10
       },
-      "ataqueBasico": {
-        "nombre": "Beast Charge",
-        "danoBase": 0.81
-      },
       "jutsu": {
         "nombre": "Multiple Summoning",
         "descripcion": "Summons giant beasts that ram and stun the opponent.",
-        "danoBase": 2.43,
+        "danoBase": 2.75,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 26,
@@ -239,14 +219,10 @@
         "defensa": 10,
         "velocidad": 10
       },
-      "ataqueBasico": {
-        "nombre": "Black Rod Strike",
-        "danoBase": 0.96
-      },
       "jutsu": {
         "nombre": "Shinra Tensei",
         "descripcion": "Devastating gravitational repulsion that obliterates the opponent's defense.",
-        "danoBase": 3.52,
+        "danoBase": 4.45,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 18,

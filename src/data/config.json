@@ -7,18 +7,36 @@
   },
   "economia": {
     "oroInicial": 50,
-    "oroPorCombateGanado": { "min": 10, "max": 20 },
-    "oroPorEventoPositivo": { "min": 5, "max": 15 },
-    "precioReclutamientoPorRareza": { "inicial": 40, "comun": 40, "raro": 70, "legendario": 120 }
+    "oroPorCombateGanado": {
+      "min": 10,
+      "max": 20
+    },
+    "oroPorEventoPositivo": {
+      "min": 5,
+      "max": 15
+    },
+    "precioReclutamientoPorRareza": {
+      "inicial": 40,
+      "comun": 40,
+      "raro": 70,
+      "legendario": 120
+    }
   },
   "combate": {
     "turnosMaximos": 30,
     "ordenPorVelocidad": true,
     "jutsu": {
-      "_comentario": "Barra de jutsu: sube alAtacar por ataque básico propio y alRecibirDano por golpe recibido, y al llegar a cargaMaxima el SIGUIENTE ataque es el jutsu (que la vacía). Los valores por defecto solo se usan si el personaje/enemigo no trae los suyos en su JSON — hoy todos los traen, están aquí como red de seguridad para contenido nuevo.",
+      "_comentario": "Barra de jutsu: sube alAtacar por ataque básico propio y alRecibirDano por golpe recibido, y al llegar a cargaMaxima el SIGUIENTE ataque es el jutsu (que la vacía). cargaPorDefecto es red de seguridad para contenido nuevo (hoy todos traen la suya). ataqueBasicoPorDefecto NO es un defecto: es el ataque básico de TODOS los luchadores, único a propósito — lo que diferencia el daño básico de un personaje a otro es su stat de ataque, no un danoBase propio. Ningún personaje ni enemigo define ya el suyo. El motor sigue leyendo personajeBase.ataqueBasico si existiera, por si algún día un jefe merece uno.",
       "cargaMaxima": 100,
-      "cargaPorDefecto": { "alAtacar": 20, "alRecibirDano": 10, "inicial": 0 },
-      "ataqueBasicoPorDefecto": { "nombre": "Basic Attack", "danoBase": 0.65 }
+      "cargaPorDefecto": {
+        "alAtacar": 20,
+        "alRecibirDano": 10,
+        "inicial": 0
+      },
+      "ataqueBasicoPorDefecto": {
+        "nombre": "Kunai Throw",
+        "danoBase": 0.65
+      }
     }
   },
   "progresion": {
@@ -31,7 +49,11 @@
   },
   "tienda": {
     "numeroObjetosOfrecidos": 3,
-    "probabilidadRareza": { "comun": 65, "raro": 30, "legendario": 5 }
+    "probabilidadRareza": {
+      "comun": 65,
+      "raro": 30,
+      "legendario": 5
+    }
   },
   "guardado": {
     "claveLocalStorage": "naruto-roguelike-run-actual",

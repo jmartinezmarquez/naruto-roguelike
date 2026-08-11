@@ -19,7 +19,7 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (128 tests)
+## Cobertura actual (130 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -29,7 +29,11 @@ sin mocks ni DOM.
   siempre devuelve ganador y el perdedor queda a 0 HP. **Barra de jutsu**: se carga al atacar y al
   recibir daño, topa en `cargaMaxima`, con la barra llena el siguiente ataque es el jutsu y la deja
   a cero, el básico pega menos y no aplica `efectoEstado`, un modo con `multiplicadorCarga` acelera
-  la barra, y un luchador sin `ataqueBasico`/`carga` propios cae a los valores de `config.json`.
+  la barra, y un luchador sin `ataqueBasico`/`carga` propios cae a los valores de `config.json` (que
+  desde la unificación del ataque básico es el camino normal, no el excepcional). Además, un
+  **invariante de datos**: ningún personaje ni enemigo de los tres JSON define su propio
+  `ataqueBasico`, y todos acaban con el mismo. Sin este test la decisión se rompería en silencio —
+  un personaje nuevo con básico propio funcionaría, solo que pegaría distinto al resto.
 - **`engine/mapGenerator.test.js`** — el piso 1 nunca tiene descanso (el bug real, repetido 30
   veces por la aleatoriedad), el último piso siempre 1 nodo `jefe`, el piso de mini-jefe siempre
   tiene exactamente un nodo `miniJefe`, todo nodo (salvo el inicial) tiene conexión entrante,
