@@ -1,6 +1,6 @@
 import { useGameStore } from '../../store/useGameStore';
 import itemsData from '../../data/items.json';
-import { SPRITE_OBJETO } from '../Inventory/itemSprites';
+import { SPRITE_OBJETO, lineasDeEfecto } from '../Inventory/itemSprites';
 
 const SHOP_FLAVOR = {
   pais_de_las_olas: 'A traveling merchant has set up shop by the roadside.',
@@ -44,8 +44,27 @@ function TarjetaItem({ entrada, oro, onComprar }) {
         {item.nombre}
       </p>
 
-      <p className="text-xs text-pergamino-200/60 text-center flex-1 leading-relaxed mb-4">
-        {item.descripcion}
+      {/* Qué HACE, y solo eso: la tienda es donde se decide gastar oro. La
+          descripción narrativa del objeto no se enseña en ninguna tarjeta — no
+          cambia ninguna decisión, y va a la enciclopedia (punto 10 del roadmap).
+          Las frases salen del catálogo de pasivas, igual que en la mochila. */}
+      <div className="flex flex-col gap-1 flex-1 mb-4">
+        {lineasDeEfecto(item).map((linea) => (
+          <p
+            key={linea.texto}
+            className={`text-xs text-center leading-snug ${linea.positivo ? 'text-fuuton' : 'text-sello-500'}`}
+          >
+            {linea.icono} {linea.texto}
+          </p>
+        ))}
+      </div>
+
+      {/* El precio va aquí, justo bajo el efecto, y no dentro del botón: es un
+          dato que se compara entre las tres tarjetas antes de decidir, no la
+          acción. En rojo si no da el oro, que es la única pista de por qué el
+          botón está apagado. */}
+      <p className={`text-sm font-display text-center mb-3 ${puedeComprar ? 'text-raiton' : 'text-sello-500'}`}>
+        {entrada.precio} gold
       </p>
 
       {etiqueta && (
@@ -64,7 +83,7 @@ function TarjetaItem({ entrada, oro, onComprar }) {
         onClick={onComprar}
         className="w-full py-2 text-sm font-display rounded-lg transition-colors bg-sello-600 hover:bg-sello-500 disabled:bg-tinta-800 disabled:text-pergamino-200/40 disabled:cursor-not-allowed text-pergamino-100"
       >
-        {entrada.precio} gold
+        Buy
       </button>
     </div>
   );

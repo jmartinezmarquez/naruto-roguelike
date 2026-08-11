@@ -107,10 +107,16 @@ export default function CombatScreen() {
       for (const evento of ronda.historial[i].eventos) {
         if (evento.atacanteId === ronda.jugador.id) {
           hpEnemigo -= evento.dano;
+          // El HP del ATACANTE no se deduce restando: con `heal_on_kill` sube al
+          // rematar. Por eso el evento lo trae ya resuelto. Mismo caso que la
+          // barra de carga, que tampoco se puede reconstruir sumando porque
+          // lanzar el jutsu la pone a cero.
+          if (evento.hpAtacante != null) hpJugador = evento.hpAtacante;
           cargaJugador = evento.cargaAtacante;
           cargaEnemigo = evento.cargaDefensor;
         } else {
           hpJugador -= evento.dano;
+          if (evento.hpAtacante != null) hpEnemigo = evento.hpAtacante;
           cargaEnemigo = evento.cargaAtacante;
           cargaJugador = evento.cargaDefensor;
         }

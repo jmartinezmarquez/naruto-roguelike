@@ -3,6 +3,7 @@
 // La clave es el id de `data/items.json`. Un objeto sin sprite cae al
 // emoji/marco vacío en la UI, no rompe nada.
 
+import { normalizarPasivas, describirPasiva } from '../../engine/passives';
 import pildoraSoldado from '../../assets/items/pildora_soldado.png';
 import bandaRepuesto from '../../assets/items/banda_repuesto.png';
 import selloChakra from '../../assets/items/sello_chakra.png';
@@ -52,28 +53,49 @@ export const ETIQUETA_RAREZA = {
  * es lo que se enseña en la ficha — leer el efecto en crudo no dice nada.
  * Devuelve un array porque un objeto puede tener buff y debuff a la vez.
  */
+// Icono por pasiva. No es decoración: la rejilla del inventario se lee de un
+// vistazo por el icono, no leyendo tres frases.
+const ICONO_PASIVA = {
+  first_jutsu_bonus: '🌀',
+  first_attack_bonus: '⚔',
+  basic_attack_bonus: '⚔',
+  jutsu_bonus: '🌀',
+  ignore_defense: '💥',
+  damage_floor: '💥',
+  first_hit_reduction: '🛡',
+  reduce_damage_taken: '🛡',
+  low_hp_reduction: '🛡',
+  increase_damage_taken: '☠',
+  priority: '⚡',
+  heal_on_kill: '❤',
+  heal_after_battle: '❤',
+  repeat_basic_chance: '⚔',
+};
+
+/**
+ * Líneas de efecto de un objeto, para pintarlas en la mochila y en la tienda.
+ *
+ * Casi todo viene ya del catálogo de pasivas (`describirPasiva`), que es la
+ * única fuente de esas frases — un objeto y una transformación con la misma
+ * pasiva dicen exactamente lo mismo. Solo quedan a mano los dos efectos que no
+ * son pasivas de combate porque los resuelve el store: el consumible que cura y
+ * el revivir de un solo uso.
+ */
 export function lineasDeEfecto(objeto) {
+  if (objeto?.pasivas?.length) {
+    return normalizarPasivas(objeto.pasivas).map((pasiva) => ({
+      icono: ICONO_PASIVA[pasiva.id] ?? '✦',
+      texto: describirPasiva(pasiva),
+      positivo: pasiva.id !== 'increase_damage_taken',
+    }));
+  }
+
   const efecto = objeto?.efecto;
   if (!efecto) return [];
 
-  const iconoStat = { ataque: '⚔', defensa: '🛡', velocidad: '⚡', hp: '❤', todas: '✦' };
-  const nombreStat = { ataque: 'Attack', defensa: 'Defense', velocidad: 'Speed', hp: 'Max HP', todas: 'All stats' };
-  const conSigno = (n) => (n >= 0 ? `+${n}` : `${n}`);
-  const stat = (s, cantidad) => ({
-    icono: iconoStat[s] ?? '✦',
-    texto: `${conSigno(cantidad)} ${nombreStat[s] ?? s}`,
-    positivo: cantidad >= 0,
-  });
-
   switch (efecto.tipo) {
-    case 'buffEquipable':
-      return [stat(efecto.stat, efecto.cantidad)];
-    case 'buffYDebuffEquipable':
-      return [stat(efecto.buff.stat, efecto.buff.cantidad), stat(efecto.debuff.stat, efecto.debuff.cantidad)];
     case 'curarPersonaje':
       return [{ icono: '❤', texto: `Heals ${parseInt(efecto.cantidad, 10)}% HP`, positivo: true }];
-    case 'curacionPostCombate':
-      return [{ icono: '❤', texto: `Heals ${parseInt(efecto.cantidad, 10)}% HP after each fight`, positivo: true }];
     case 'revivirUnaVez':
       return [{ icono: '✨', texto: `Revives once with ${efecto.hpAlRevivir} HP`, positivo: true }];
     default:

@@ -20,7 +20,7 @@ import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
-import { calcularBonificacionDeObjetoEquipado } from '../engine/items';
+import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
@@ -48,23 +48,23 @@ function encontrarPersonajeBase(id) {
 
 /**
  * Datos base del personaje con sus bonificaciones permanentes (evento
- * `mejoraPermanenteAleatoria`) Y la bonificación del objeto que lleve
- * equipado (`objetoEquipadoId`, ver `equiparObjeto`) ya sumadas a statsBase.
- * El objeto equipado es "de verdad" — se relee de `itemsData` cada vez, no
- * se hornea en la instancia, así que equipar/desequipar/reemplazar se nota
- * al instante sin tener que tocar nada más.
+ * `mejoraPermanenteAleatoria`) ya sumadas a statsBase.
+ *
+ * Los objetos equipados ya NO suman stats aquí: desde el rediseño de balance
+ * dan pasivas, no números (ver documentacion/30-sistema-de-pasivas.md). Se
+ * pasan aparte a `crearLuchador`, porque cambian reglas del combate en vez de
+ * engordar las cuatro estadísticas de siempre.
  */
 function personajeBaseConBonificaciones(instancia) {
   const base = encontrarPersonajeBase(instancia.id);
   const b = instancia.bonificaciones ?? { ataque: 0, defensa: 0, velocidad: 0, hp: 0 };
-  const eq = calcularBonificacionDeObjetoEquipado(instancia.objetoEquipadoId, itemsData.objetos);
   return {
     ...base,
     statsBase: {
-      hp: base.statsBase.hp + b.hp + eq.hp,
-      ataque: base.statsBase.ataque + b.ataque + eq.ataque,
-      defensa: base.statsBase.defensa + b.defensa + eq.defensa,
-      velocidad: base.statsBase.velocidad + b.velocidad + eq.velocidad,
+      hp: base.statsBase.hp + b.hp,
+      ataque: base.statsBase.ataque + b.ataque,
+      defensa: base.statsBase.defensa + b.defensa,
+      velocidad: base.statsBase.velocidad + b.velocidad,
     },
   };
 }
@@ -98,6 +98,17 @@ function porcentajeDesdeTexto(cantidadTexto) {
 function objetoEquipadoDe(instancia) {
   if (!instancia.objetoEquipadoId) return null;
   return itemsData.objetos.find((o) => o.id === instancia.objetoEquipadoId) ?? null;
+}
+
+/**
+ * Pasivas del objeto que lleve equipado, normalizadas. Son las mismas que puede
+ * declarar una transformación: modos y objetos comparten catálogo
+ * (ver documentacion/30-sistema-de-pasivas.md). Se releen de `itemsData` en cada
+ * combate, no se hornean en la instancia, así que equipar o quitar un objeto se
+ * nota al instante.
+ */
+function pasivasDeObjetoEquipado(instancia) {
+  return normalizarPasivas(objetoEquipadoDe(instancia)?.pasivas ?? []);
 }
 
 /**
@@ -491,7 +502,14 @@ export const useGameStore = create((set, get) => ({
 
       const personajeBase = personajeBaseConBonificaciones(activo);
       const multiplicadoresBuffs = combinarMultiplicadoresTemporales(get().buffsTemporales);
-      const luchadorJugador = crearLuchador(personajeBase, activo.nivel, activo.hpActual, multiplicadoresBuffs);
+      const luchadorJugador = crearLuchador(
+        personajeBase,
+        activo.nivel,
+        activo.hpActual,
+        multiplicadoresBuffs,
+        1,
+        pasivasDeObjetoEquipado(activo),
+      );
       const hpInicialJugador = luchadorJugador.hpActual;
       const hpInicialEnemigo = luchadorEnemigo.hpActual;
       // El enemigo es UNO solo para todo el nodo, así que arrastra su barra de
@@ -756,16 +774,13 @@ export const useGameStore = create((set, get) => ({
 
       if (p.id === idPersonaje) {
         const conHp = { ...conXp, hpActual: hpFinalActivo };
-        // Semilla del Sabio Ermitaño (curacionPostCombate): cura un % extra
-        // a quien la lleve equipada, justo tras ganar el combate.
-        const itemEquipado = objetoEquipadoDe(conHp);
-        if (itemEquipado?.efecto?.tipo === 'curacionPostCombate') {
+        // Pasiva `heal_after_battle` del objeto equipado (Pergamino de Reserva):
+        // cura un % extra a quien lo lleve, justo tras ganar. Es de las que el
+        // motor no toca — pasa DESPUÉS de la pelea, no dentro.
+        const curacion = cantidadDePasiva(pasivasDeObjetoEquipado(conHp), 'heal_after_battle');
+        if (curacion > 0) {
           const hpMax = calcularHpMaximo(conHp);
-          const curado = Math.min(
-            hpMax,
-            conHp.hpActual + Math.round(hpMax * porcentajeDesdeTexto(itemEquipado.efecto.cantidad)),
-          );
-          return { ...conHp, hpActual: curado };
+          return { ...conHp, hpActual: Math.min(hpMax, conHp.hpActual + Math.round(hpMax * curacion)) };
         }
         return conHp;
       }

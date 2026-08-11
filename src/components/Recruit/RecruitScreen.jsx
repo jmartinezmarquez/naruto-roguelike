@@ -97,6 +97,9 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
         <p className="text-[11px] font-display text-pergamino-100 truncate">🌀 {base.jutsu.nombre}</p>
         <RitmoCarga luchador={luchador} className="shrink-0" />
       </div>
+      {/* Sin transformación en la tarjeta: son una sorpresa, y además las tienen
+          todos, así que no distinguirían a un candidato de otro. Ver
+          documentacion/30-sistema-de-pasivas.md. */}
     </button>
   );
 }

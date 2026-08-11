@@ -1,5 +1,13 @@
 # Objetos equipables y consumibles (aplicación real de efectos)
 
+> ⚠️ **Parcialmente superado por [30 - Sistema de pasivas](./30-sistema-de-pasivas.md) (fase 3).**
+> Lo que sigue vigente: el **modelo de equipo** (un hueco por personaje, solo beneficia a quien lo
+> lleva, vuelve al inventario al desequipar o al reemplazar a ese personaje) y el flujo de UI.
+> Lo que ya NO es cierto: los objetos no dan estadísticas. `buffEquipable`,
+> `buffYDebuffEquipable` y `curacionPostCombate` han desaparecido de los datos, y con ellos
+> `engine/items.js` entero. Ahora cada objeto declara **pasivas** del mismo catálogo que las
+> transformaciones. El motivo, con números, está en el doc 30.
+
 ## De dónde viene esto
 
 En la sesión anterior se construyó `PanelObjetos` (hover con descripción + efecto exacto de cada

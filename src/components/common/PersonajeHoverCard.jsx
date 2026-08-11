@@ -45,6 +45,17 @@ export function RitmoCarga({ luchador, className = '' }) {
   );
 }
 
+// Las transformaciones NO aparecen en ninguna tarjeta, a propósito. Se probó con
+// la descripción de sus pasivas (desbordaba la tarjeta) y luego solo con el
+// nombre (se truncaba: "Nine-Tails Chakra…", que no es sabor, es una tarjeta
+// rota). Pero el motivo de fondo es otro: TODOS los personajes tienen
+// transformación —hay un test de invariante que lo garantiza— así que decir que
+// la tienen no distingue a nadie, sale igual en las 14 tarjetas.
+//
+// Son una sorpresa: se descubren al desbloquearlas (pantalla de transformación,
+// punto 4 del roadmap), al ver saltar la pasiva en combate (punto 2), o en la
+// enciclopedia si alguien quiere el detalle en frío (punto 10).
+
 export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, className = '' }) {
   const base = useMemo(() => encontrarBase(id), [id]);
   const luchador = useMemo(() => (base ? crearLuchador(base, nivel ?? 1) : null), [base, nivel]);

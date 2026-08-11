@@ -19,7 +19,7 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (130 tests)
+## Cobertura actual (153 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -34,6 +34,18 @@ sin mocks ni DOM.
   **invariante de datos**: ningún personaje ni enemigo de los tres JSON define su propio
   `ataqueBasico`, y todos acaban con el mismo. Sin este test la decisión se rompería en silencio —
   un personaje nuevo con básico propio funcionaría, solo que pegaría distinto al resto.
+- **`engine/passives.test.js`** — las pasivas del catálogo probadas en combate real, no en
+  aislamiento: que `first_hit_reduction` al 100% deja el golpe en 0 y no carga la barra del defensor,
+  que `first_jutsu_bonus` solo sube el primero, que `priority` gana a la velocidad (y se anula si la
+  tienen los dos), que el jutsu nunca se repite, que `heal_on_kill` no pasa del máximo. Más:
+  `normalizarPasivas` con las dos formas de declaración y **reventando** con un id inválido, que modo
+  y objeto se acumulan, que los contadores no se reinician entre atacantes distintos (el caso de la
+  cadena de rondas), y el **invariante** de que `engine/passives.js` y `data/passives.json` tienen
+  los mismos ids. La aleatoriedad de `repeat_basic_chance` se inyecta (`azar`) para no depender de la
+  suerte. Además, **invariantes de datos** que protegen decisiones de contenido que se romperían sin
+  hacer ruido: todo modo declara pasivas válidas, **todo modo se desbloquea dentro de la run**
+  (estaban a nivel 60-85 con la run acabando en 49, así que no se veían nunca), todo personaje tiene
+  transformación, y ningún objeto da bonificaciones planas de estadísticas.
 - **`engine/mapGenerator.test.js`** — el piso 1 nunca tiene descanso (el bug real, repetido 30
   veces por la aleatoriedad), el último piso siempre 1 nodo `jefe`, el piso de mini-jefe siempre
   tiene exactamente un nodo `miniJefe`, todo nodo (salvo el inicial) tiene conexión entrante,

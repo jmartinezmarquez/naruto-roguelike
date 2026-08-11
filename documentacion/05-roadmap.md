@@ -234,19 +234,127 @@
 
 ## Próximos pasos (en orden sugerido)
 
-6 bis. **Rediseño del balance** — catálogo de pasivas reutilizables (`first_jutsu_bonus`,
+> **Por dónde seguir ahora mismo: la fase 4 del punto 1.** Es lo único que queda tocando motor y
+> datos; todo lo demás de la lista es interfaz. Terminarla deja el proyecto en un sitio limpio —
+> sistemas cerrados, el resto es pintar— y sobre todo **cierra el problema que motivó el punto
+> entero**: las fases 1-3 han cambiado de dónde viene el poder de objetos y transformaciones, pero
+> la curva de niveles sigue intacta (`crecimientoStatsPorNivel: 0.08` lineal = ×8,9 a lo largo de
+> una run). La bola de nieve que el doc 27 quería matar sigue ahí, y como los multiplicadores de las
+> transformaciones bajaron un 60 %, es probable que hoy los niveles pesen **más** que antes en
+> términos relativos. Cualquier cosa que se pruebe o se balancee antes de esa fase es sobre números
+> que van a moverse.
+>
+> Después, **punto 2 y punto 4**: son los que sacan de la invisibilidad todo lo hecho en las fases
+> 1-3, que hoy el jugador no percibe en ninguna parte.
+>
+> Si hace falta algo corto y visible entre medias, el **punto 8** (tarjeta de equipo) es el más
+> barato y el que está mejor especificado.
+
+1. **Rediseño del balance** — catálogo de pasivas reutilizables (`first_jutsu_bonus`,
    `ignore_defense`, `heal_on_kill`…), transformaciones que cambian reglas en vez de multiplicar
    stats, objetos que definen el estilo de la run, y reparto del poder 40% objetos / 30%
    transformaciones / 30% niveles. No se podía abordar hasta tener la barra de jutsu.
    (Leer MVP [27](./27-sistema-de-balance.md))
 
+   **Va el primero, por delante de la interfaz de combate, por dos motivos.**
 
-7. **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
+   El de fondo: **hoy los objetos no existen**. Con `crecimientoStatsPorNivel: 0.08` lineal, un
+   Naruto de nivel 100 tiene 80 de ataque frente a los 9 del nivel 1, y el mejor objeto legendario
+   del juego (Kubikiribōchō) da **+4 planos** — un 5%. Como los bonus son planos y las stats crecen
+   ×8,9, los objetos son **más fuertes al principio de la run que al final**, justo al revés de lo
+   que se quiere en un roguelike. El reparto real de ese Naruto es ~52% niveles / 47% transformación
+   / **1,5% objetos**: el 40/30/30 no consiste tanto en bajar los niveles como en **hacer que los
+   objetos importen**, y eso lo arreglan los efectos por regla del doc 27 ("el primer golpe recibido
+   hace un 50% menos de daño"), que no se diluyen con el nivel.
+
+   El práctico: las pasivas no son números, son **sucesos de combate** (un primer golpe bloqueado, un
+   básico repetido, curarse al matar, atacar primero) y la animación del punto 2 tiene que
+   enseñarlos. Montar el punto 2 sobre el vocabulario de eventos actual y meter las pasivas después
+   obliga a rehacer el replay — que ya mordió una vez con la barra de carga, que no se podía
+   reconstruir sumando.
+
+   > **Este segundo motivo ya está cumplido** (fases 1-3): el vocabulario de eventos está cerrado y
+   > el punto 2 se puede hacer cuando se quiera. Lo que sostiene el orden a partir de aquí es solo el
+   > primer motivo — no dejar el balance a medias.
+
+   **Cuidado con la complejidad**: el juego es deliberadamente sencillo (runs cortas), así que la
+   complejidad va **en el motor, no en la pantalla** — el jugador ve una línea corta por
+   transformación y por objeto, nunca un catálogo. Y se implementan **solo las pasivas que algún dato
+   use de verdad**: el doc lista 12 y sus ejemplos usan unas 8; una pasiva sin usuario es código
+   muerto que hay que mantener y testear.
+
+   Fases (cada una deja el juego jugable):
+   1. [x] **Motor de pasivas** — `engine/passives.js` (el catálogo, todo salido de los ejemplos del
+      doc 27, ninguna especulativa), textos en `src/data/passives.json`, y los enganches en
+      `combat.js`. Un id desconocido revienta al crear el luchador en vez de ignorarse en silencio.
+      Los contadores de "primer golpe / primer jutsu" viven en el luchador, no en el bucle de turnos,
+      para que el enemigo de un nodo no vuelva a bloquear un primer golpe con cada personaje que
+      entra en la cadena de rondas. El evento de ataque gana `pasivasActivadas` y `hpAtacante` para
+      el punto 2. 23 tests nuevos; el simulador da los mismos números que antes, que es la prueba de
+      que la fase no ha cambiado el juego. Ver [30](./30-sistema-de-pasivas.md).
+   2. [x] **Transformaciones** — los 31 modos declaran pasivas y sus multiplicadores se acercan a 1
+      (`nuevo = 1 + (viejo − 1)·0,4`). Los siete ejemplos del doc 27 implementados literalmente.
+      **Destapó un bug de contenido**: los segundos modos se desbloqueaban entre el nivel 60 y el 85
+      cuando una run termina sobre el 49, así que no se activaban nunca — y Sai y Yamato, con un
+      único modo a nivel 75/80, no tenían transformación en absoluto. Remapeados a la banda 40-45,
+      con test de invariante para que no vuelva a pasar. Los modos de los **jefes** se dejan intactos
+      a propósito: también están fuera de alcance, pero bajarlos es rebalancear jefes y eso es la
+      fase 4. El simulador pasa a ser **determinista** (semilla fija), porque con azar en el combate
+      dos ejecuciones daban 14% y 21% en el mismo combate y así no se puede comparar nada.
+      Ver [30](./30-sistema-de-pasivas.md).
+      - Arreglado de paso el replay de `CombatScreen`: con `heal_on_kill` en los datos (Naruto,
+        Sakura, Shino…) reconstruir el HP restando daño dejó de ser correcto, porque el atacante
+        **sube** de HP al rematar. Ahora usa el `hpAtacante` que ya trae el evento. Es el mismo error
+        que ya nos pasó con la barra de carga, y esta vez se ha visto venir.
+   3. [x] **Objetos** — los 10 objetos declaran pasivas del mismo catálogo que las transformaciones,
+      repartidos en las categorías del doc 27 (combate, supervivencia, riesgo, exclusivos de jefe,
+      consumible). Los `buffEquipable` planos desaparecen, con test que lo protege: daban +4 de
+      ataque contra un ataque de 80 al final de la run, y al ser planos **valían más al empezar la
+      partida que al acabarla**. `engine/items.js` borrado entero (solo servía para sumar esas stats).
+      Ver [30](./30-sistema-de-pasivas.md).
+      - **Falta la categoría económica** (más oro, más XP, descuentos): las pasivas encajan en
+        `_aplicarVictoria` sin problema, pero **no hay sprite** para objetos nuevos — los 10 actuales
+        agotan `sprite-objetos-iniciales.png`. Hace falta arte antes que código.
+      - ⚠️ **El simulador es ciego a esta fase**: da los mismos números que antes porque **nunca
+        equipa objetos**, mide personajes desnudos. Enseñarle a simular una run con objetos encima es
+        lo primero que hay que hacer en la fase 4, o el 40/30/30 no se puede comprobar.
+   4. **Curva de niveles y recalibración** ← **lo siguiente**. En este orden:
+      1. **Enseñar al simulador a equipar objetos y a reportar de dónde viene el poder.** Hoy mide
+         personajes desnudos, y por eso fue completamente ciego a la fase 3. Sin esto el 40/30/30 no
+         se puede comprobar: es a ojo.
+      2. **Aplanar la curva**: `crecimientoStatsPorNivel: 0.08` lineal da ×8,9 sobre una run entera.
+         Pasa a incrementos pequeños (`+2 HP / +1 ATK / +1 DEF / +1 SPD`). Es LA causa de la bola de
+         nieve, y sigue intacta después de las fases 1-3.
+      3. **Recalibrar los tres arcos** con el simulador ya fiable, absorbiendo de paso lo que dejaron
+         abiertas las fases anteriores: el arco 3 se quedó más fácil al hacer alcanzables los
+         segundos modos, los jefes se ganan al 14 % planos, los combates duran 4,5 turnos (el jutsu
+         apenas sale una vez) y los arcos 2 y 3 nunca se recalibraron tras pasar de 10/12 a 8 pisos.
+         **Absorbe buena parte del punto 7.**
+
+      Hasta la fase 3 los cambios eran aditivos; a partir de aquí no hay vuelta atrás sin re-simular.
+      Es la fase con más iteración de las cuatro.
+
+   **Verificación**: `npm test` en cada fase (toca `engine/` y `store/`, es obligatorio), el
+   simulador antes y después de cada cambio de balance, y prueba manual.
+
+
+2. **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
    el primero esté peleando. Sprites de los personajes visibles. Los logs de texto se sustituyen
    por una animación: el ninja lanza un kunai al enemigo y al impactar la barra de HP baja.
    Personajes caídos → card apagada (estilo Pokelike). Efecto de sacudida al recibir golpe.
+   Y **enseñar las pasivas cuando saltan** (`pasivasActivadas` viene en cada evento): sin eso el
+   sistema entero del punto 1 es invisible — ver [30](./30-sistema-de-pasivas.md).
 
-7 bis. **Nodo de reclutar con rareza visible y recluta legendario por combate** — la hoja
+   > **Cambio de criterio: este punto ya NO está bloqueado por el 1.** La razón original para
+   > ponerlo detrás era que las pasivas iban a crear sucesos nuevos que la animación tendría que
+   > enseñar, y el vocabulario de eventos podía cambiar bajo los pies. Ese vocabulario **ya está
+   > cerrado** desde la fase 3: `pasivasActivadas`, `esAtaqueExtra` y `hpAtacante` están en los
+   > eventos, y la fase 4 solo mueve números, no añade tipos de suceso. Se puede hacer antes que la
+   > fase 4 sin arriesgar rehacer trabajo — y es lo que haría visible todo lo construido hasta ahora.
+   > Se recomienda igualmente cerrar la fase 4 primero, pero por coherencia del balance, no por
+   > dependencia técnica.
+
+3. **Nodo de reclutar con rareza visible y recluta legendario por combate** — la hoja
    `assets/sprite-nodos-mapa.png` trae tres pergaminos (verde común, azul raro, dorado legendario) y
    hoy solo se usa uno, porque el nodo no sabe qué rareza ofrece: `generarOfertaReclutar` sortea los
    candidatos al **entrar** en el nodo, no al generar el mapa. Hay que subir la rareza al nodo
@@ -255,31 +363,57 @@
    solo se recluta si lo ganas — flujo nuevo (pantalla de combate con `alGanar: reclutar`), no una
    variante de `RecruitScreen`. Es el único de los ajustes visuales de esta tanda que toca motor,
    store y datos, por eso va aparte.
+   **Va detrás del 2 a propósito**: reutiliza la pantalla de combate nueva, no la vieja.
 
-8. **Actualizar interfaz de logros** — (Leer MVP [25](./25-diseño-pantalla-logros.md))
+4. **Pantalla de transformación** — ⚠️ **no es opcional**: desde que las transformaciones se quitaron
+   de las tarjetas (son una sorpresa, ver [30](./30-sistema-de-pasivas.md)), esta pantalla y el
+   punto 2 son los **únicos** sitios donde el jugador se entera de que existen. Sin ellos, medio
+   rediseño del balance vive solo en los JSON.
+   Hoy, cuando un personaje alcanza el nivel de su modo, **no pasa
+   absolutamente nada**: sube de nivel y de repente tiene el Manto del Kyūbi, sin aviso, sin pantalla,
+   sin una línea de texto. Es el momento más importante de la progresión de un personaje y ahora
+   mismo es invisible. Debería ser una pantalla propia al terminar el combate en que sube (estilo
+   evolución de Pokémon): sprite del personaje, nombre de la transformación, y **aquí sí** la
+   descripción de lo que hace, que se ha quitado de la tarjeta a propósito — es el momento en que
+   esa información importa y en que el jugador está mirando.
+   Va después del punto 2 porque encadena con el final del combate, que esa pantalla reescribe.
 
+5. **Actualizar interfaz de logros** — (Leer MVP [25](./25-diseño-pantalla-logros.md))
 
-9. **Playtest y ajuste de balance** — con `scripts/simular-combates.mjs` ya hay con qué medirlo.
-    Lo que canta hoy: los combates normales se ganan al 96-97% y los jefes 1 vs 1 al 14%, un salto
-    demasiado brusco; y los combates duran ~4,5 turnos, tan poco que el jutsu apenas sale una vez
-    (ver [29](./29-sistema-de-jutsus-automaticos.md)). Ojo con una cosa que salió al unificar el
-    ataque básico: con combates tan cortos, **cargar lento castiga más de lo que dice la media** —
-    un jefe con `T`=4 se come tres básicos flojos antes de su golpe gordo y el combate ya se acabó.
-    Los perfiles de carga no son solo sabor, mueven la dificultad real. Además, los tres arcos pasaron a 8 pisos
-    (antes 10 y 12) por legibilidad del mapa, y eso recorta los combates —y por tanto la XP— de los
-    arcos 2 y 3 sin haber recalibrado `nivelEnemigoBase` ni los niveles fijos de jefe. Ver
-    [11](./11-progresion-y-arcos.md). Además, revisar el salto de dificultad cuando un
-    personaje de banquillo entra en una ronda encadenada contra un jefe (ver nota en
-    [11](./11-progresion-y-arcos.md)), y ahora también el ritmo de empezar solo (1 personaje) en
-    un arco sin reclutas (`pais_de_las_olas` tiene `personajesReclutablesIds: []`).
-    (Leer MVP [27](./27-sistema-de-balance.md))
+6. **Actualizar interfaz de eventos** — es el único punto **sin documento MVP**. Antes de poder
+   planificarlo hay que escribir qué se quiere de esa pantalla, como se hizo con
+   [23](./23-diseño-tarjeta-de-inventario.md) o [25](./25-diseño-pantalla-logros.md).
+
+7. **Playtest jugando** — la recalibración numérica se hace en la **fase 4 del punto 1** (con el
+    simulador, contra los datos ya rediseñados); recalibrar antes sería trabajo tirado. Lo que queda
+    aquí es lo que un script no puede medir: sentarse a jugar runs enteras y ver qué se siente mal.
+    Con lo ya detectado como lista de sospechosos:
+    - Los combates normales se ganan al 96-97% y los jefes 1 vs 1 al 14%: un salto demasiado brusco.
+    - Los combates duran ~4,5 turnos, tan poco que el jutsu apenas sale una vez
+      (ver [29](./29-sistema-de-jutsus-automaticos.md)). Y con combates tan cortos **cargar lento
+      castiga más de lo que dice la media** — un jefe con `T`=4 se come tres básicos flojos antes de
+      su golpe gordo y el combate ya se acabó. Los perfiles de carga mueven la dificultad real, no
+      son solo sabor.
+    - Los tres arcos pasaron a 8 pisos (antes 10 y 12) por legibilidad del mapa, y eso recorta los
+      combates —y por tanto la XP— de los arcos 2 y 3 sin haber recalibrado `nivelEnemigoBase` ni los
+      niveles fijos de jefe. Ver [11](./11-progresion-y-arcos.md).
+    - El salto de dificultad cuando un personaje de banquillo entra en una ronda encadenada contra un
+      jefe (ver nota en [11](./11-progresion-y-arcos.md)).
+    - El ritmo de empezar solo (1 personaje) en un arco sin reclutas (`pais_de_las_olas` tiene
+      `personajesReclutablesIds: []`).
+
+8. **Actualizar tarjeta de equipo** — Los nombres deberian estar acortados a "Naruto U." para no ocupar tanto en la pantalla de equipo. La fuente debería ser de un tamaño más pequeño para que tanto en la tarjeta de equipo como en la de reclutamiento el nombre quepa en una linea. Ahora que no tenemos descripción de nada podemos poner el tipo del luchador (Katon) como una etiqueta debajo del nombre debajo de la HP y eliminarlo del nombre. Mover el orden de los peleadores del equipo deberia ser un drag and drop, no un click. El objeto equipado en cada uno de ellos debería enseñar el sprite del objeto con una X para desequiparlo. Podemos ensanchar la tarjeta del equipo para no tener que hacer la fuente tan pequeña que sea dificil de ver, hay espacio. 
+
+9. **Diseño de la columna central** — Con unos nodos mas grandes la columna central puede volver a su tamaño anterior, manteniendo las proporciones y ajustandose a la pantalla. También el sprite usado en la columna central tiene que ser mas sencillo y representativo del arco actual. "Current arc" tiene que eliminarse, y el nombre del arco actual tendría uqe estar con ese estilo caracteristico de Naruto en el que la fuente tiene color negro con ese reborde blanco tan caracteristico
 
 10. **Enciclopedia** — el sitio donde vive la información que se ha ido sacando de las tarjetas para
-    que quepan en una pantalla: descripción de cada jutsu, potencia, turnos exactos de carga, tabla de
-    eficacias de chakra, y ficha de cada personaje y enemigo. Es consulta voluntaria, no algo que se
-    cruce en medio de una run — pantalla propia desde el menú de iconos del mapa, como Logros.
+    que quepan en una pantalla: descripción de cada jutsu, potencia, turnos exactos de carga, **qué
+    hace cada transformación** (`describirPasiva` ya genera esas líneas), **la descripción narrativa
+    de cada objeto** (sigue en `items.json`, ya no se pinta en ninguna tarjeta), tabla de eficacias
+    de chakra, y ficha de cada personaje y enemigo. Es consulta voluntaria, no algo que se cruce en
+    medio de una run — pantalla propia desde el menú de iconos del mapa, como Logros.
     Ojo: hoy esa información **no está en ninguna parte**, así que hasta que esto exista hay una deuda
-    real, no solo un "ya lo pondremos".
+    real, no solo un "ya lo pondremos". Y crece cada vez que se adelgaza una tarjeta.
 
 ### Descartado
 

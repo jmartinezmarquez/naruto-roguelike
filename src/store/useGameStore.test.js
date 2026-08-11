@@ -531,12 +531,40 @@ describe('equiparObjeto / desequiparObjeto', () => {
     expect(exito).toBe(false);
   });
 
-  it('el objeto equipado afecta a las stats reales (HP máximo, vía obtenerHpMaximo)', () => {
+  // Los objetos YA NO dan stats: desde el rediseño de balance dan pasivas, que
+  // cambian reglas en vez de engordar los cuatro números de siempre. Un bonus
+  // plano se diluye con el nivel (un +4 de ataque contra 80 es ruido), y era la
+  // razón de que los objetos aportaran ~1,5% del poder de una run.
+  it('el objeto equipado NO cambia las stats del personaje', () => {
     const hpAntes = useGameStore.getState().obtenerHpMaximo('naruto');
     useGameStore.setState({ inventario: ['pergamino_reserva'] });
     useGameStore.getState().equiparObjeto('pergamino_reserva', 'naruto');
-    const hpDespues = useGameStore.getState().obtenerHpMaximo('naruto');
-    expect(hpDespues).toBe(hpAntes + 8);
+    expect(useGameStore.getState().obtenerHpMaximo('naruto')).toBe(hpAntes);
+  });
+
+  // El de verdad: que las pasivas del objeto lleguen al motor y hagan algo en un
+  // combate real. `semilla_sabio` cura al rematar, así que quien la lleve debe
+  // terminar la pelea con más HP que quien no.
+  it('las pasivas del objeto equipado llegan al combate', () => {
+    const hpMaximo = useGameStore.getState().obtenerHpMaximo('naruto');
+    const hpDePartida = Math.round(hpMaximo * 0.5);
+
+    useGameStore.setState({
+      equipo: useGameStore.getState().equipo.map((p) => (p.id === 'naruto' ? { ...p, hpActual: hpDePartida } : p)),
+    });
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    const sinObjeto = useGameStore.getState().equipo.find((p) => p.id === 'naruto').hpActual;
+
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+    useGameStore.setState({
+      inventario: ['semilla_sabio'],
+      equipo: useGameStore.getState().equipo.map((p) => (p.id === 'naruto' ? { ...p, hpActual: hpDePartida } : p)),
+    });
+    useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    const conObjeto = useGameStore.getState().equipo.find((p) => p.id === 'naruto').hpActual;
+
+    expect(conObjeto).toBeGreaterThan(sinObjeto);
   });
 });
 
@@ -583,10 +611,10 @@ describe('revivirUnaVez (equipado) — a través de _aplicarDerrota', () => {
   });
 });
 
-describe('curacionPostCombate (equipado) — a través de _aplicarVictoria', () => {
+describe('heal_after_battle (pasiva de objeto) — a través de _aplicarVictoria', () => {
   it('cura un % extra a quien lo lleva equipado, además de su HP final de combate', () => {
-    useGameStore.setState({ inventario: ['semilla_sabio'] });
-    useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
+    useGameStore.setState({ inventario: ['pergamino_reserva'] });
+    useGameStore.getState().equiparObjeto('pergamino_reserva', 'naruto');
 
     const hpMaximo = useGameStore.getState().obtenerHpMaximo('naruto');
     const hpFinalBajo = Math.round(hpMaximo * 0.3); // terminó el combate con poco HP

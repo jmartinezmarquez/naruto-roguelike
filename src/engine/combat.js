@@ -8,6 +8,7 @@
 import tiposData from '../data/types.json';
 import configGlobal from '../data/config.json';
 import { calcularStatsPorNivel, aplicarMultiplicadoresModo, aplicarMultiplicadores, obtenerModoActivo } from './leveling';
+import { ENGANCHES, normalizarPasivas, aplicarModificadores, alguna, ejecutarEfectos } from './passives';
 
 /** Multiplicador de eficacia de un tipo atacante contra un tipo defensor. */
 export function obtenerEficacia(tipoAtacante, tipoDefensor) {
@@ -32,6 +33,10 @@ export function obtenerEficacia(tipoAtacante, tipoDefensor) {
  * con el del modo activo (si lo trae). Es el enganche previsto para objetos
  * tipo "Manual de Entrenamiento" y para modos tipo "Modo Sabio carga un 30%
  * más rápido" — hoy ningún dato lo usa, pero el motor ya lo respeta.
+ *
+ * pasivasExtra: pasivas que no vienen del modo activo — hoy, las del objeto
+ * equipado, que las pasa el store. Se juntan con las del modo porque modos y
+ * objetos comparten el mismo catálogo (ver engine/passives.js).
  */
 export function crearLuchador(
   personajeBase,
@@ -39,6 +44,7 @@ export function crearLuchador(
   hpActualInicial = null,
   multiplicadoresExtra = null,
   multiplicadorCargaExtra = 1,
+  pasivasExtra = [],
 ) {
   const modoActivo = obtenerModoActivo(personajeBase, nivel);
   let stats = calcularStatsPorNivel(personajeBase.statsBase, nivel);
@@ -74,6 +80,16 @@ export function crearLuchador(
     cargaJutsu: Math.min(carga.inicial ?? 0, configJutsu.cargaMaxima),
     cargaPorAtacar: carga.alAtacar * multiplicadorCarga,
     cargaPorRecibirDano: carga.alRecibirDano * multiplicadorCarga,
+    // Pasivas ya normalizadas (id desconocido revienta aquí, no a mitad de una
+    // pelea). Modo activo primero, objeto después, aunque el orden solo importa
+    // para pasivas que se pisen entre sí — hoy ninguna.
+    pasivas: normalizarPasivas([...(modoActivo?.pasivas ?? []), ...pasivasExtra]),
+    // Contadores del combate en curso, que son lo que hace posible "el PRIMER
+    // jutsu", "el PRIMER golpe recibido". Viven en el luchador y no en el bucle
+    // de turnos porque un luchador dura todo el nodo: en una cadena de rondas el
+    // enemigo conserva sus contadores igual que conserva el HP, así que no
+    // vuelve a bloquear un primer golpe con cada personaje que entra.
+    estadoCombate: { ataquesLanzados: 0, jutsusLanzados: 0, golpesRecibidos: 0 },
   };
 }
 
@@ -90,14 +106,25 @@ function statEfectivo(luchador, stat) {
  * Daño que inflige 'atacante' sobre 'defensor' con un ataque concreto.
  * 'ataque' es indistintamente el ataqueBasico o el jutsu: cualquier objeto
  * con danoBase vale.
+ *
+ * Devuelve también `danoBruto`, el daño ANTES de restar defensa: lo necesita la
+ * pasiva `damage_floor` ("tu daño nunca baja de un % de su potencia"), que sobre
+ * el daño ya restado no significaría nada.
  */
-export function calcularDano(atacante, defensor, ataque) {
+export function calcularDano(atacante, defensor, ataque, contexto = {}) {
   const ataqueEfectivo = statEfectivo(atacante, 'ataque');
-  const defensaEfectiva = statEfectivo(defensor, 'defensa');
   const eficacia = obtenerEficacia(atacante.tipo, defensor.tipo);
+  // La defensa la pliega el ATACANTE: `ignore_defense` es suya, no del defensor.
+  const defensaEfectiva = aplicarModificadores(
+    ENGANCHES.DEFENSA_EFECTIVA,
+    statEfectivo(defensor, 'defensa'),
+    atacante,
+    contexto,
+  );
 
-  const danoBruto = ataqueEfectivo * ataque.danoBase * eficacia - defensaEfectiva * 0.5;
-  return { cantidad: Math.max(1, Math.round(danoBruto)), eficacia };
+  const danoBruto = ataqueEfectivo * ataque.danoBase * eficacia;
+  const cantidad = danoBruto - defensaEfectiva * 0.5;
+  return { cantidad: Math.max(1, Math.round(cantidad)), danoBruto, eficacia };
 }
 
 /** Aplica un efecto de estado (buff/debuff temporal) al objetivo correspondiente. */
@@ -154,12 +181,41 @@ function acumularCarga(luchador, cantidad) {
  * Muta hpActual, cargaJutsu y modificadoresTemporales de los luchadores dados.
  * Devuelve un resumen del turno, pensado para que la UI lo pueda mostrar.
  */
-export function ejecutarAtaque(atacante, defensor) {
+export function ejecutarAtaque(atacante, defensor, esAtaqueExtra = false) {
   const usaJutsu = atacante.cargaJutsu >= atacante.cargaMaxima;
   const ataque = usaJutsu ? atacante.jutsu : atacante.ataqueBasico;
-  const { cantidad, eficacia } = calcularDano(atacante, defensor, ataque);
 
-  defensor.hpActual = Math.max(0, defensor.hpActual - cantidad);
+  // Contexto compartido por todos los enganches de este ataque. `activadas` se
+  // va rellenando sola y acaba en el evento, para que la pantalla de combate
+  // pueda explicar por qué un golpe hizo 0 o por qué alguien se curó de repente.
+  const contexto = {
+    atacante,
+    defensor,
+    ataque,
+    esJutsu: usaJutsu,
+    esAtaqueExtra,
+    esPrimerAtaque: atacante.estadoCombate.ataquesLanzados === 0,
+    esPrimerJutsu: usaJutsu && atacante.estadoCombate.jutsusLanzados === 0,
+    esPrimerGolpeRecibido: defensor.estadoCombate.golpesRecibidos === 0,
+    activadas: [],
+  };
+
+  const { cantidad, danoBruto, eficacia } = calcularDano(atacante, defensor, ataque, contexto);
+  contexto.danoBruto = danoBruto;
+
+  // El daño pasa por las pasivas del atacante y luego por las del defensor. El
+  // mínimo de 1 de `calcularDano` ya ha quedado atrás a propósito: una pasiva SÍ
+  // puede dejar un golpe en 0 (Susanoo bloquea el primero entero), y un golpe de
+  // 0 no carga la barra del defensor, cosa que la rama de abajo ya respetaba.
+  let dano = aplicarModificadores(ENGANCHES.DANO_INFLIGIDO, cantidad, atacante, contexto);
+  dano = aplicarModificadores(ENGANCHES.DANO_RECIBIDO, dano, defensor, contexto);
+  dano = Math.max(0, Math.round(dano));
+
+  defensor.hpActual = Math.max(0, defensor.hpActual - dano);
+
+  atacante.estadoCombate.ataquesLanzados += 1;
+  if (usaJutsu) atacante.estadoCombate.jutsusLanzados += 1;
+  defensor.estadoCombate.golpesRecibidos += 1;
 
   if (usaJutsu) {
     atacante.cargaJutsu = 0;
@@ -167,8 +223,13 @@ export function ejecutarAtaque(atacante, defensor) {
   } else {
     acumularCarga(atacante, atacante.cargaPorAtacar);
   }
-  if (cantidad > 0) {
+  if (dano > 0) {
     acumularCarga(defensor, defensor.cargaPorRecibirDano);
+  }
+
+  const defensorDerrotado = defensor.hpActual <= 0;
+  if (defensorDerrotado) {
+    ejecutarEfectos(ENGANCHES.AL_DERROTAR, atacante, contexto);
   }
 
   return {
@@ -176,18 +237,36 @@ export function ejecutarAtaque(atacante, defensor) {
     defensorId: defensor.id,
     tipoAtaque: usaJutsu ? 'jutsu' : 'basico',
     jutsuNombre: ataque.nombre, // el nombre del ataque usado, básico o jutsu
-    dano: cantidad,
+    dano,
     eficacia,
-    defensorDerrotado: defensor.hpActual <= 0,
-    // Carga DESPUÉS del ataque, para que la UI pueda repintar las dos barras
-    // reproduciendo el historial turno a turno, igual que hace con el HP.
+    defensorDerrotado,
+    esAtaqueExtra,
+    // Qué pasivas han hecho algo en ESTE golpe. Va en el evento y no en el
+    // luchador porque la UI reproduce el historial turno a turno.
+    pasivasActivadas: contexto.activadas,
+    // HP y carga DESPUÉS del ataque, para que la UI pueda repintar las barras
+    // reproduciendo el historial, igual que hace con el HP.
     cargaAtacante: atacante.cargaJutsu,
     cargaDefensor: defensor.cargaJutsu,
+    // El atacante puede curarse a sí mismo al rematar (heal_on_kill), así que su
+    // HP ya no se deduce solo restando daño recibido.
+    hpAtacante: atacante.hpActual,
   };
 }
 
-/** Orden de actuación de dos luchadores en un turno, según velocidad efectiva. */
+/**
+ * Orden de actuación de dos luchadores en un turno. Manda la velocidad efectiva,
+ * salvo que uno tenga prioridad (Puertas Internas de Rock Lee, Botas Shinobi).
+ * Si la tienen los dos se anulan y vuelve a decidir la velocidad, que es lo
+ * menos sorprendente.
+ */
 export function determinarOrden(luchadorA, luchadorB) {
+  const prioridadA = alguna(ENGANCHES.PRIORIDAD, luchadorA);
+  const prioridadB = alguna(ENGANCHES.PRIORIDAD, luchadorB);
+  if (prioridadA !== prioridadB) {
+    return prioridadA ? [luchadorA, luchadorB] : [luchadorB, luchadorA];
+  }
+
   const velA = statEfectivo(luchadorA, 'velocidad');
   const velB = statEfectivo(luchadorB, 'velocidad');
   return velA >= velB ? [luchadorA, luchadorB] : [luchadorB, luchadorA];
@@ -199,12 +278,27 @@ export function determinarOrden(luchadorA, luchadorB) {
  * efectos de estado al final. Sigue sin haber elección que resolver: qué
  * ataque usa cada uno lo decide su barra de jutsu dentro de ejecutarAtaque.
  */
-export function resolverTurno(luchador1, luchador2) {
+export function resolverTurno(luchador1, luchador2, azar = Math.random) {
+  /**
+   * Un ataque más su posible repetición (Marca Maldita). Como mucho una extra por
+   * ataque: encadenar repeticiones sin tope podría no terminar nunca, y un turno
+   * con tres golpes ya no se lee en pantalla.
+   */
+  function atacarConExtras(atacante, defensor) {
+    const eventos = [ejecutarAtaque(atacante, defensor)];
+    const repite = defensor.hpActual > 0
+      && alguna(ENGANCHES.ATAQUE_EXTRA, atacante, { esJutsu: eventos[0].tipoAtaque === 'jutsu', azar });
+    if (repite) {
+      eventos.push(ejecutarAtaque(atacante, defensor, true));
+    }
+    return eventos;
+  }
+
   const [primero, segundo] = determinarOrden(luchador1, luchador2);
-  const eventos = [ejecutarAtaque(primero, segundo)];
+  const eventos = atacarConExtras(primero, segundo);
 
   if (segundo.hpActual > 0) {
-    eventos.push(ejecutarAtaque(segundo, primero));
+    eventos.push(...atacarConExtras(segundo, primero));
   }
 
   reducirDuracionModificadores(luchador1);
@@ -230,14 +324,14 @@ export function resolverTurno(luchador1, luchador2) {
  * Devuelve el historial completo de turnos (para animar/mostrar en la UI
  * si se quiere) y el id del ganador.
  */
-export function resolverCombateCompleto(luchador1, luchador2) {
+export function resolverCombateCompleto(luchador1, luchador2, azar = Math.random) {
   const maxTurnos = configGlobal.combate.turnosMaximos;
   const historial = [];
   let resultado = { combateTerminado: false, ganadorId: null };
   let turno = 0;
 
   while (!resultado.combateTerminado && turno < maxTurnos) {
-    resultado = resolverTurno(luchador1, luchador2);
+    resultado = resolverTurno(luchador1, luchador2, azar);
     turno += 1;
     historial.push({ turno, eventos: resultado.eventos });
   }

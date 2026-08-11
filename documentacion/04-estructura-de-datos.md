@@ -29,7 +29,17 @@ Dos categorías, mismo esquema que un personaje (`statsBase`, `jutsu`, `modos: [
 
 ## `items.json`
 
-Array `objetos`, cada uno con `tipo` (`equipable`/`consumible`), `rareza`, `precioTienda` (`null` si no es comprable) y `efecto`. Tipos de `efecto`: `curarPersonaje` (consumible), `revivirUnaVez`, `buffEquipable`, `curacionPostCombate`, `buffYDebuffEquipable` (equipables).
+Array `objetos`, cada uno con `tipo` (`equipable`/`consumible`), `categoria` (`combate`,
+`supervivencia`, `riesgo`, `jefe`, `consumible`), `rareza` y `precioTienda` (`null` si no es
+comprable). Y **o `pasivas` o `efecto`, nunca los dos** (hay un test que lo comprueba):
+
+- **`pasivas`** — lo normal. Ids del catálogo de `engine/passives.js`, los mismos que declaran las
+  transformaciones. Los resuelve el motor durante el combate. Ver [30](./30-sistema-de-pasivas.md).
+- **`efecto`** — solo los dos casos que el motor no puede resolver porque pasan fuera de la pelea y
+  tocan el inventario: `curarPersonaje` (consumible) y `revivirUnaVez`.
+
+Los objetos ya **no dan estadísticas** (`buffEquipable` y compañía se eliminaron): un bonus plano se
+diluye con el nivel y hacía que un objeto valiera más al empezar la run que al terminarla.
 
 Los `equipable` se asignan a un personaje concreto del equipo (un hueco por personaje,
 `instancia.objetoEquipadoId`) y solo benefician a quien los lleve puesto — ver

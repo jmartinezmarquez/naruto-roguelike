@@ -54,6 +54,18 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - **Modos/transformaciones**: array `modos` (0 a 2 tiers), se activa siempre el de mayor
   `nivelDesbloqueo` disponible, calculado internamente por `crearLuchador` — nunca cambia a mitad
   de combate.
+- **Pasivas**: catálogo de efectos con nombre (`engine/passives.js` + textos en
+  `src/data/passives.json`) que cambian **reglas** del combate en vez de estadísticas. Modos y
+  objetos los declaran por id y comparten implementación. Un id que no esté en el catálogo **revienta**
+  al crear el luchador, no se ignora. Las declaran los 31 modos y los 10 objetos (fases 1-3 de las 4
+  del rediseño de balance). Ver `documentacion/30-sistema-de-pasivas.md`.
+- **Los objetos NO dan estadísticas**, dan pasivas. Un bonus plano se diluye con el nivel (+4 de
+  ataque contra 80 al final de la run) y hacía que los objetos valieran más al empezar la partida
+  que al acabarla. Hay un test de invariante que lo protege. `engine/items.js` se borró al quedarse
+  sin uso.
+- **Todo modo tiene que desbloquearse dentro de la run** (nivel ≤ 49, el del jefe final del arco 3).
+  Los segundos modos estaban a nivel 60-85 y no se activaban NUNCA; Sai y Yamato no tenían
+  transformación en absoluto. Hay un test de invariante que lo protege.
 - **Sistema de tipos**: 5 naturalezas de chakra (katon, fuuton, raiton, doton, suiton), tabla en `src/data/types.json`.
 - **Los 3 arcos tienen 8 pisos** (`numeroPisos`, con `pisoMiniJefe: 4` y `pisoJefeFinal: 8`). Es un
   límite de la pantalla de mapa, que escala el lienzo para que quepa entero sin scroll: con más de
@@ -85,13 +97,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 130 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 153 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 130 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 153 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -145,6 +157,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   `PanelObjetos` movido a la columna derecha como rejilla de sprites con hover de una línea;
   `nombrePersonaje` unificado en `components/common/nombres.js` (los jefes reclutados por logro
   salían con el id crudo). Ver `documentacion/13-ui-mapa-y-combate.md`.
+- [x] **Rediseño del balance, fases 1-3 de 4** (`documentacion/30-sistema-de-pasivas.md`): motor de
+  pasivas, transformaciones y objetos. Falta la **fase 4** (curva de niveles + recalibración de los
+  3 arcos). El arco 3 quedó más fácil al hacer alcanzables los segundos modos: es una diferencia
+  real que absorbe la fase 4, no ruido. **Lo primero de la fase 4**: `simular-combates.mjs` no
+  equipa objetos, así que hoy es ciego a la fase 3 y no puede comprobar el reparto 40/30/30.
+- [x] `scripts/simular-combates.mjs` es **determinista** (semilla fija): desde que hay pasivas con
+  probabilidad, con `Math.random` dos ejecuciones daban 14% y 21% en el mismo combate.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 

@@ -60,11 +60,21 @@
           "nombre": "Demon of the Mist Fury",
           "nivelDesbloqueo": 15,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.2,
-            "velocidad": 1.1,
-            "hp": 1.2
-          }
+            "ataque": 1.16,
+            "defensa": 1.08,
+            "velocidad": 1.04,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.5
+            },
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.15
+            }
+          ]
         }
       ],
       "recompensa": {
@@ -105,11 +115,21 @@
           "nombre": "Snake-Senjutsu Fusion",
           "nivelDesbloqueo": 33,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.5,
-            "velocidad": 1.2,
-            "hp": 1.3
-          }
+            "ataque": 1.16,
+            "defensa": 1.2,
+            "velocidad": 1.08,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.2
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
         }
       ],
       "recompensa": {
@@ -148,21 +168,37 @@
           "nombre": "Absolute Sand Shield",
           "nivelDesbloqueo": 30,
           "multiplicadores": {
-            "ataque": 1.2,
-            "defensa": 1.6,
-            "velocidad": 0.9,
-            "hp": 1
-          }
+            "ataque": 1.08,
+            "defensa": 1.24,
+            "velocidad": 0.96,
+            "hp": 1.0
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.8
+            }
+          ]
         },
         {
           "nombre": "Partial Shukaku Release",
           "nivelDesbloqueo": 50,
           "multiplicadores": {
-            "ataque": 1.6,
-            "defensa": 1.9,
-            "velocidad": 0.8,
-            "hp": 1.4
-          }
+            "ataque": 1.24,
+            "defensa": 1.36,
+            "velocidad": 0.92,
+            "hp": 1.16
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.8
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.25
+            }
+          ]
         }
       ],
       "recompensa": {
@@ -235,11 +271,18 @@
           "nombre": "Six Paths Synchronization",
           "nivelDesbloqueo": 90,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.4,
-            "velocidad": 1.3,
-            "hp": 1.3
-          }
+            "ataque": 1.2,
+            "defensa": 1.16,
+            "velocidad": 1.12,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 1
+            },
+            "priority"
+          ]
         }
       ],
       "recompensa": {

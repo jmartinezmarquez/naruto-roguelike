@@ -156,7 +156,8 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
         </div>
       </div>
 
-      <p className="text-[8px] text-pergamino-200/60 leading-relaxed">{objeto.descripcion}</p>
+      {/* Sin `objeto.descripcion`: texto narrativo que no cambia ninguna
+          decisión. Va a la enciclopedia (punto 10 del roadmap). */}
 
       {entrada.equipadoPor ? (
         <div className="flex items-center justify-between gap-2 border-t border-pergamino-100/10 pt-3">

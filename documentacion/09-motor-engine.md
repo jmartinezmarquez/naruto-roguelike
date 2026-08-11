@@ -29,6 +29,16 @@
 
 > Bug corregido: al introducir `resolverCombateCompleto`, un `str_replace` sustituyó por completo la función `resolverTurno` sin darse cuenta de que la nueva función la sigue llamando internamente en su bucle — quedó una llamada a una función inexistente (`ReferenceError: resolverTurno is not defined`). Reinsertada. Lección: al reemplazar una función que otra sigue usando, verificar las llamadas internas antes de dar el cambio por bueno.
 
+## `passives.js`
+
+Catálogo de pasivas: efectos con nombre que cambian **reglas** del combate en vez de estadísticas.
+Modos y objetos los declaran por id y comparten implementación. Seis enganches
+(`DEFENSA_EFECTIVA`, `DANO_INFLIGIDO`, `DANO_RECIBIDO`, `PRIORIDAD`, `ATAQUE_EXTRA`, `AL_DERROTAR`)
+que `combat.js` consulta. Documentación completa en [30](./30-sistema-de-pasivas.md).
+
+> `normalizarPasivas` **lanza** con un id que no está en el catálogo, a propósito: una pasiva
+> ignorada en silencio deja al personaje desbalanceado sin que nada lo delate.
+
 ## `store/useGameStore.js`
 
 Store de Zustand. Es el "pegamento" entre el motor puro (`engine/`) y la UI: decide qué llamar y cuándo, no cómo se calcula nada.

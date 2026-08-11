@@ -32,21 +32,41 @@
           "nombre": "Nine-Tails Chakra Cloak",
           "nivelDesbloqueo": 12,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.2,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.16,
+            "defensa": 1.08,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_jutsu_bonus",
+              "cantidad": 0.4
+            },
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.08
+            }
+          ]
         },
         {
           "nombre": "Sage Mode",
-          "nivelDesbloqueo": 62,
+          "nivelDesbloqueo": 40,
           "multiplicadores": {
-            "ataque": 1.8,
-            "defensa": 1.5,
-            "velocidad": 1.6,
-            "hp": 1.4
-          }
+            "ataque": 1.32,
+            "defensa": 1.2,
+            "velocidad": 1.24,
+            "hp": 1.16
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.5
+            },
+            {
+              "id": "damage_floor",
+              "cantidad": 0.45
+            }
+          ]
         }
       ]
     },
@@ -81,21 +101,37 @@
           "nombre": "Curse Mark (Level 2)",
           "nivelDesbloqueo": 12,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.1,
-            "velocidad": 1.3,
-            "hp": 1.1
-          }
+            "ataque": 1.2,
+            "defensa": 1.04,
+            "velocidad": 1.12,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "repeat_basic_chance",
+              "cantidad": 0.3
+            }
+          ]
         },
         {
           "nombre": "Susanoo",
-          "nivelDesbloqueo": 68,
+          "nivelDesbloqueo": 42,
           "multiplicadores": {
-            "ataque": 1.9,
-            "defensa": 1.7,
-            "velocidad": 1.2,
-            "hp": 1.5
-          }
+            "ataque": 1.36,
+            "defensa": 1.28,
+            "velocidad": 1.08,
+            "hp": 1.2
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 1
+            },
+            {
+              "id": "repeat_basic_chance",
+              "cantidad": 0.4
+            }
+          ]
         }
       ]
     },
@@ -130,21 +166,37 @@
           "nombre": "Monstrous Strength",
           "nivelDesbloqueo": 20,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.2,
-            "velocidad": 1,
-            "hp": 1.2
-          }
+            "ataque": 1.16,
+            "defensa": 1.08,
+            "velocidad": 1.0,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.25
+            }
+          ]
         },
         {
           "nombre": "Byakugou Seal",
-          "nivelDesbloqueo": 60,
+          "nivelDesbloqueo": 40,
           "multiplicadores": {
-            "ataque": 1.6,
-            "defensa": 1.6,
-            "velocidad": 1.2,
-            "hp": 1.8
-          }
+            "ataque": 1.24,
+            "defensa": 1.24,
+            "velocidad": 1.08,
+            "hp": 1.32
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.2
+            },
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.35
+            }
+          ]
         }
       ]
     },
@@ -179,21 +231,31 @@
           "nombre": "Inner Gates",
           "nivelDesbloqueo": 22,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 0.9,
-            "velocidad": 1.6,
-            "hp": 1
-          }
+            "ataque": 1.2,
+            "defensa": 0.96,
+            "velocidad": 1.24,
+            "hp": 1.0
+          },
+          "pasivas": [
+            "priority"
+          ]
         },
         {
           "nombre": "Gate of Death",
-          "nivelDesbloqueo": 70,
+          "nivelDesbloqueo": 42,
           "multiplicadores": {
-            "ataque": 2.1,
-            "defensa": 0.8,
-            "velocidad": 2,
-            "hp": 0.9
-          }
+            "ataque": 1.44,
+            "defensa": 0.92,
+            "velocidad": 1.4,
+            "hp": 0.96
+          },
+          "pasivas": [
+            "priority",
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.35
+            }
+          ]
         }
       ]
     },
@@ -228,21 +290,35 @@
           "nombre": "Full Byakugan",
           "nivelDesbloqueo": 24,
           "multiplicadores": {
-            "ataque": 1.3,
-            "defensa": 1.3,
-            "velocidad": 1.2,
-            "hp": 1.1
-          }
+            "ataque": 1.12,
+            "defensa": 1.12,
+            "velocidad": 1.08,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.3,
+              "soloJutsu": false
+            }
+          ]
         },
         {
           "nombre": "Eight Trigrams: 128 Palms",
-          "nivelDesbloqueo": 75,
+          "nivelDesbloqueo": 43,
           "multiplicadores": {
-            "ataque": 1.7,
-            "defensa": 1.4,
-            "velocidad": 1.4,
-            "hp": 1.2
-          }
+            "ataque": 1.28,
+            "defensa": 1.16,
+            "velocidad": 1.16,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.55,
+              "soloJutsu": false
+            }
+          ]
         }
       ]
     },
@@ -277,21 +353,37 @@
           "nombre": "Celestial Arsenal",
           "nivelDesbloqueo": 20,
           "multiplicadores": {
-            "ataque": 1.3,
-            "defensa": 1.1,
-            "velocidad": 1.2,
-            "hp": 1.1
-          }
+            "ataque": 1.12,
+            "defensa": 1.04,
+            "velocidad": 1.08,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.2
+            }
+          ]
         },
         {
           "nombre": "Twin Rising Dragons",
-          "nivelDesbloqueo": 78,
+          "nivelDesbloqueo": 44,
           "multiplicadores": {
-            "ataque": 1.7,
-            "defensa": 1.2,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.28,
+            "defensa": 1.08,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.5
+            },
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.25
+            }
+          ]
         }
       ]
     },
@@ -326,21 +418,34 @@
           "nombre": "Extended Shadow",
           "nivelDesbloqueo": 26,
           "multiplicadores": {
-            "ataque": 1.1,
-            "defensa": 1.2,
-            "velocidad": 1,
-            "hp": 1.2
-          }
+            "ataque": 1.04,
+            "defensa": 1.08,
+            "velocidad": 1.0,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
         },
         {
           "nombre": "Shadow Strangle",
-          "nivelDesbloqueo": 80,
+          "nivelDesbloqueo": 44,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.3,
-            "velocidad": 1.1,
-            "hp": 1.3
-          }
+            "ataque": 1.16,
+            "defensa": 1.12,
+            "velocidad": 1.04,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.25
+            },
+            "priority"
+          ]
         }
       ]
     },
@@ -375,21 +480,37 @@
           "nombre": "Reinforced Mind Link",
           "nivelDesbloqueo": 23,
           "multiplicadores": {
-            "ataque": 1.2,
-            "defensa": 1.1,
-            "velocidad": 1.2,
-            "hp": 1.1
-          }
+            "ataque": 1.08,
+            "defensa": 1.04,
+            "velocidad": 1.08,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.35
+            }
+          ]
         },
         {
           "nombre": "Long-Range Mind Transfer",
-          "nivelDesbloqueo": 72,
+          "nivelDesbloqueo": 42,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.2,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.2,
+            "defensa": 1.08,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_jutsu_bonus",
+              "cantidad": 0.45
+            },
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.35
+            }
+          ]
         }
       ]
     },
@@ -424,21 +545,37 @@
           "nombre": "Butterfly Mode",
           "nivelDesbloqueo": 28,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.3,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.16,
+            "defensa": 1.12,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
         },
         {
           "nombre": "Sage Butterfly Mode",
-          "nivelDesbloqueo": 85,
+          "nivelDesbloqueo": 45,
           "multiplicadores": {
-            "ataque": 1.8,
-            "defensa": 1.6,
-            "velocidad": 1.5,
-            "hp": 1.4
-          }
+            "ataque": 1.32,
+            "defensa": 1.24,
+            "velocidad": 1.2,
+            "hp": 1.16
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.2
+            },
+            {
+              "id": "damage_floor",
+              "cantidad": 0.5
+            }
+          ]
         }
       ]
     },
@@ -473,21 +610,34 @@
           "nombre": "Double Beast Transformation",
           "nivelDesbloqueo": 21,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.1,
-            "velocidad": 1.4,
-            "hp": 1.1
-          }
+            "ataque": 1.16,
+            "defensa": 1.04,
+            "velocidad": 1.16,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "repeat_basic_chance",
+              "cantidad": 0.25
+            }
+          ]
         },
         {
           "nombre": "Ravenous Wolf Fang",
-          "nivelDesbloqueo": 74,
+          "nivelDesbloqueo": 43,
           "multiplicadores": {
-            "ataque": 1.7,
-            "defensa": 1.2,
-            "velocidad": 1.7,
-            "hp": 1.2
-          }
+            "ataque": 1.28,
+            "defensa": 1.08,
+            "velocidad": 1.28,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "repeat_basic_chance",
+              "cantidad": 0.4
+            },
+            "priority"
+          ]
         }
       ]
     },
@@ -522,21 +672,39 @@
           "nombre": "Full Byakugan",
           "nivelDesbloqueo": 25,
           "multiplicadores": {
-            "ataque": 1.2,
-            "defensa": 1.3,
-            "velocidad": 1.2,
-            "hp": 1.2
-          }
+            "ataque": 1.08,
+            "defensa": 1.12,
+            "velocidad": 1.08,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.25,
+              "soloJutsu": false
+            }
+          ]
         },
         {
           "nombre": "Eight Trigrams: Heavenly Void",
-          "nivelDesbloqueo": 82,
+          "nivelDesbloqueo": 44,
           "multiplicadores": {
-            "ataque": 1.6,
-            "defensa": 1.5,
-            "velocidad": 1.4,
-            "hp": 1.4
-          }
+            "ataque": 1.24,
+            "defensa": 1.2,
+            "velocidad": 1.16,
+            "hp": 1.16
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.45,
+              "soloJutsu": false
+            },
+            {
+              "id": "first_jutsu_bonus",
+              "cantidad": 0.3
+            }
+          ]
         }
       ]
     },
@@ -571,21 +739,37 @@
           "nombre": "Full Swarm",
           "nivelDesbloqueo": 27,
           "multiplicadores": {
-            "ataque": 1.2,
-            "defensa": 1.2,
-            "velocidad": 1.1,
-            "hp": 1.3
-          }
+            "ataque": 1.08,
+            "defensa": 1.08,
+            "velocidad": 1.04,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.1
+            }
+          ]
         },
         {
           "nombre": "Ultimate Devouring Colony",
-          "nivelDesbloqueo": 79,
+          "nivelDesbloqueo": 44,
           "multiplicadores": {
-            "ataque": 1.6,
-            "defensa": 1.5,
-            "velocidad": 1.3,
-            "hp": 1.6
-          }
+            "ataque": 1.24,
+            "defensa": 1.2,
+            "velocidad": 1.12,
+            "hp": 1.24
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.2
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
         }
       ]
     },
@@ -618,13 +802,23 @@
       "modos": [
         {
           "nombre": "Ink Army",
-          "nivelDesbloqueo": 75,
+          "nivelDesbloqueo": 43,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.3,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.2,
+            "defensa": 1.12,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.4
+            },
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.2
+            }
+          ]
         }
       ]
     },
@@ -657,13 +851,23 @@
       "modos": [
         {
           "nombre": "Wood Style: Full Release",
-          "nivelDesbloqueo": 80,
+          "nivelDesbloqueo": 44,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.7,
-            "velocidad": 1.1,
-            "hp": 1.5
-          }
+            "ataque": 1.2,
+            "defensa": 1.28,
+            "velocidad": 1.04,
+            "hp": 1.2
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.6
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.1
+            }
+          ]
         }
       ]
     }

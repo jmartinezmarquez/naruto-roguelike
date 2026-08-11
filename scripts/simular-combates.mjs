@@ -57,11 +57,31 @@ function nivelJugadorEnPiso(piso, arco) {
   return Math.max(1, Math.round(desde + (hasta - desde) * avance));
 }
 
+/**
+ * Azar reproducible (mulberry32). Desde que existen pasivas con probabilidad
+ * (`repeat_basic_chance`) el combate ya no es determinista, y con `Math.random`
+ * dos ejecuciones seguidas daban 14% y 21% de victorias en el mismo combate. Así
+ * no se puede comparar un balance antes y después, que es justo para lo que sirve
+ * este script. Con semilla fija, cualquier diferencia que salga es del cambio.
+ */
+function azarConSemilla(semilla) {
+  let estado = semilla;
+  return function siguiente() {
+    estado |= 0;
+    estado = (estado + 0x6D2B79F5) | 0;
+    let t = Math.imul(estado ^ (estado >>> 15), 1 | estado);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const SEMILLA = 20260811;
+
 /** Un combate 1 vs 1 a HP completo. Devuelve turnos, ganador y HP restante. */
-function simularCombate(baseJugador, nivelJugador, baseEnemigo, nivelEnemigo) {
+function simularCombate(baseJugador, nivelJugador, baseEnemigo, nivelEnemigo, azar) {
   const jugador = crearLuchador(baseJugador, nivelJugador);
   const enemigo = crearLuchador(baseEnemigo, nivelEnemigo);
-  const { historial, ganadorId, turnosUsados } = resolverCombateCompleto(jugador, enemigo);
+  const { historial, ganadorId, turnosUsados } = resolverCombateCompleto(jugador, enemigo, azar);
 
   const jutsusJugador = historial
     .flatMap((t) => t.eventos)
@@ -96,6 +116,10 @@ function resumir(etiqueta, resultados) {
 // que importa para el balance, no un personaje concreto.
 const roster = personajesData.personajes;
 
+// Una sola secuencia de azar para toda la simulación: así el combate N-ésimo
+// siempre recibe los mismos números, ejecución tras ejecución.
+const azar = azarConSemilla(SEMILLA);
+
 for (const arco of ARCOS) {
   console.log(`\n=== ${arco.nombre} (pisos 1-${arco.numeroPisos}) ===`);
 
@@ -104,7 +128,7 @@ for (const arco of ARCOS) {
     const nivelEnemigo = calcularNivelPorPiso(piso, arco);
     const resultados = roster.flatMap((personaje) =>
       comunesData.plantillasGenericas.map((enemigo) =>
-        simularCombate(personaje, nivelJugador, enemigo, nivelEnemigo),
+        simularCombate(personaje, nivelJugador, enemigo, nivelEnemigo, azar),
       ),
     );
     resumir(`piso ${piso} (Nv.${nivelJugador} vs ${nivelEnemigo})`, resultados);
@@ -117,7 +141,7 @@ for (const arco of ARCOS) {
     const jefe = enemigosData.jefes.find((j) => j.id === id);
     const piso = rol === 'mini-jefe' ? arco.pisoMiniJefe : arco.pisoJefeFinal;
     const nivelJugador = nivelJugadorEnPiso(piso, arco);
-    const resultados = roster.map((personaje) => simularCombate(personaje, nivelJugador, jefe, nivel));
+    const resultados = roster.map((personaje) => simularCombate(personaje, nivelJugador, jefe, nivel, azar));
     resumir(`${rol} ${jefe.nombre} (Nv.${nivel})`, resultados);
   }
 }

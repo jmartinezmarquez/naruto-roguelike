@@ -1,6 +1,6 @@
 import { useGameStore } from '../../store/useGameStore';
 import itemsData from '../../data/items.json';
-import { SPRITE_OBJETO } from '../Inventory/itemSprites';
+import { SPRITE_OBJETO, lineasDeEfecto } from '../Inventory/itemSprites';
 
 const EMOJI_TIPO = {
   consumible: '🧪',
@@ -49,7 +49,18 @@ export default function ItemRewardScreen() {
             )}
           </div>
           <p className="font-display text-xl text-pergamino-100 leading-tight mb-3">{item.nombre}</p>
-          <p className="text-sm text-pergamino-200/60 leading-relaxed mb-5">{item.descripcion}</p>
+          {/* Mismo criterio que en la tienda: solo qué hace. Aquí también se
+              decide, porque la recompensa se puede saltar. */}
+          <div className="flex flex-col gap-1 mb-5">
+            {lineasDeEfecto(item).map((linea) => (
+              <p
+                key={linea.texto}
+                className={`text-sm leading-snug ${linea.positivo ? 'text-fuuton' : 'text-sello-500'}`}
+              >
+                {linea.icono} {linea.texto}
+              </p>
+            ))}
+          </div>
           {etiqueta && (
             <span className={`text-xs font-display uppercase tracking-wider px-3 py-1 rounded-full ${etiqueta.clase}`}>
               {etiqueta.texto}

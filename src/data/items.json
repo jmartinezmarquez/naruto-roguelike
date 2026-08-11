@@ -8,7 +8,11 @@
       "tipo": "consumible",
       "rareza": "comun",
       "precioTienda": 25,
-      "efecto": { "tipo": "curarPersonaje", "cantidad": "40porciento" }
+      "efecto": {
+        "tipo": "curarPersonaje",
+        "cantidad": "40porciento"
+      },
+      "categoria": "consumible"
     },
     {
       "id": "banda_repuesto",
@@ -17,79 +21,135 @@
       "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": 60,
-      "efecto": { "tipo": "revivirUnaVez", "hpAlRevivir": 1 }
+      "efecto": {
+        "tipo": "revivirUnaVez",
+        "hpAlRevivir": 1
+      },
+      "categoria": "supervivencia"
     },
     {
       "id": "sello_chakra",
       "nombre": "Chakra Seal",
-      "descripcion": "Increases the attack of whoever has it equipped.",
+      "descripcion": "A seal that concentrates chakra for the opening technique.",
       "tipo": "equipable",
       "rareza": "comun",
       "precioTienda": 40,
-      "efecto": { "tipo": "buffEquipable", "stat": "ataque", "cantidad": 2 }
+      "categoria": "combate",
+      "pasivas": [
+        {
+          "id": "first_jutsu_bonus",
+          "cantidad": 0.25
+        }
+      ]
     },
     {
       "id": "pergamino_reserva",
-      "nombre": "Chakra Reserve Scroll",
-      "descripcion": "Increases the max HP of whoever has it equipped.",
+      "nombre": "Reserve Scroll",
+      "descripcion": "Stored chakra that closes wounds once the fighting stops.",
       "tipo": "equipable",
       "rareza": "comun",
       "precioTienda": 40,
-      "efecto": { "tipo": "buffEquipable", "stat": "hp", "cantidad": 8 }
+      "categoria": "supervivencia",
+      "pasivas": [
+        {
+          "id": "heal_after_battle",
+          "cantidad": 0.12
+        }
+      ]
     },
     {
       "id": "semilla_sabio",
-      "nombre": "Hermit Sage Seed",
-      "descripcion": "Heals a percentage of HP from whoever has it equipped, automatically after each won battle.",
+      "nombre": "Sage Hermit's Seed",
+      "descripcion": "Natural energy flows back into the bearer with every enemy felled.",
       "tipo": "equipable",
       "rareza": "raro",
-      "precioTienda": 55,
-      "efecto": { "tipo": "curacionPostCombate", "cantidad": "15porciento" }
+      "precioTienda": 60,
+      "categoria": "supervivencia",
+      "pasivas": [
+        {
+          "id": "heal_on_kill",
+          "cantidad": 0.15
+        }
+      ]
     },
     {
       "id": "fragmento_sello_maldito",
-      "nombre": "Cursed Seal Fragment",
-      "descripcion": "Greatly increases the attack of whoever has it equipped, but reduces their defense. Risky.",
+      "nombre": "Cursed Seal Shard",
+      "descripcion": "Borrowed power that tears at the body of whoever uses it.",
       "tipo": "equipable",
       "rareza": "raro",
-      "precioTienda": 65,
-      "efecto": { "tipo": "buffYDebuffEquipable", "buff": { "stat": "ataque", "cantidad": 4 }, "debuff": { "stat": "defensa", "cantidad": -2 } }
+      "precioTienda": 75,
+      "categoria": "riesgo",
+      "pasivas": [
+        {
+          "id": "jutsu_bonus",
+          "cantidad": 0.3
+        },
+        {
+          "id": "increase_damage_taken",
+          "cantidad": 0.15
+        }
+      ]
     },
     {
       "id": "pergamino_viento",
       "nombre": "Wind Scroll",
-      "descripcion": "Increases the speed of whoever has it equipped. Obtained by defeating Haku.",
+      "descripcion": "Wind chakra carries the bearer into the fight before anyone else.",
       "tipo": "equipable",
       "rareza": "raro",
-      "precioTienda": null,
-      "efecto": { "tipo": "buffEquipable", "stat": "velocidad", "cantidad": 3 }
+      "precioTienda": 70,
+      "categoria": "combate",
+      "pasivas": [
+        "priority"
+      ]
     },
     {
       "id": "kubikiribocho_fragmento",
       "nombre": "Kubikiribōchō Fragment",
-      "descripcion": "A piece of the legendary decapitating sword. Increases the attack of whoever has it equipped. Obtained by defeating Zabuza.",
+      "descripcion": "A shard of the executioner blade. It drinks what it cuts.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffEquipable", "stat": "ataque", "cantidad": 4 }
+      "categoria": "jefe",
+      "pasivas": [
+        {
+          "id": "heal_on_kill",
+          "cantidad": 0.2
+        }
+      ]
     },
     {
       "id": "calabaza_arena",
       "nombre": "Sand Gourd (Fragment)",
-      "descripcion": "Significantly increases the defense of whoever has it equipped. Obtained by defeating Gaara.",
+      "descripcion": "The sand rises on its own when its bearer is about to fall.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffEquipable", "stat": "defensa", "cantidad": 5 }
+      "categoria": "jefe",
+      "pasivas": [
+        {
+          "id": "low_hp_reduction",
+          "cantidad": 0.5,
+          "umbral": 0.3
+        }
+      ]
     },
     {
       "id": "anillo_rinnegan_fragmento",
       "nombre": "Rinnegan Ring Fragment",
-      "descripcion": "A fragment of the Six Paths power. End-of-run trophy — increases all stats of whoever has it equipped.",
+      "descripcion": "A sliver of the Rinnegan. The first technique of a battle cannot be defended.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffEquipable", "stat": "todas", "cantidad": 3 }
+      "categoria": "jefe",
+      "pasivas": [
+        {
+          "id": "ignore_defense",
+          "cantidad": 1,
+          "soloJutsu": true,
+          "soloPrimero": true
+        }
+      ]
     }
   ]
 }

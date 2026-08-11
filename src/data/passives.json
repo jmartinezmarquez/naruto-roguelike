@@ -1,0 +1,75 @@
+{
+  "_comentario": "Textos de cara al jugador de cada pasiva del catálogo. La LÓGICA vive en engine/passives.js; aquí solo está el nombre y la línea que se enseña en la tarjeta de un modo o de un objeto. Separado a propósito: `engine/` es agnóstico del contenido y no debe llevar texto de UI dentro (ver CLAUDE.md). `plantilla` admite {n} para un parámetro numérico y {porciento} para el mismo valor en porcentaje — quien pinta la línea sustituye con los parámetros reales de esa pasiva concreta, porque el mismo efecto se reutiliza con cifras distintas (el Protector Ninja reduce el primer golpe un 50%, el Susanoo lo bloquea entero). Hay un test que comprueba que este archivo y el catálogo del motor tienen exactamente los mismos ids.",
+  "pasivas": [
+    {
+      "id": "first_jutsu_bonus",
+      "nombre": "Focused Chakra",
+      "plantilla": "The first jutsu of each battle deals {porciento} more damage."
+    },
+    {
+      "id": "first_attack_bonus",
+      "nombre": "Opening Strike",
+      "plantilla": "The first attack of each battle deals {porciento} more damage."
+    },
+    {
+      "id": "basic_attack_bonus",
+      "nombre": "Honed Edge",
+      "plantilla": "Basic attacks deal {porciento} more damage."
+    },
+    {
+      "id": "jutsu_bonus",
+      "nombre": "Chakra Surge",
+      "plantilla": "Jutsus deal {porciento} more damage."
+    },
+    {
+      "id": "ignore_defense",
+      "nombre": "Piercing Chakra",
+      "plantilla": "Jutsus ignore {porciento} of the enemy's defense."
+    },
+    {
+      "id": "damage_floor",
+      "nombre": "Unstoppable",
+      "plantilla": "Your damage is never reduced below {porciento} of its raw power."
+    },
+    {
+      "id": "first_hit_reduction",
+      "nombre": "Absolute Guard",
+      "plantilla": "The first hit taken each battle deals {porciento} less damage."
+    },
+    {
+      "id": "reduce_damage_taken",
+      "nombre": "Shadow Bind",
+      "plantilla": "Takes {porciento} less damage for the whole battle."
+    },
+    {
+      "id": "increase_damage_taken",
+      "nombre": "Reckless",
+      "plantilla": "Takes {porciento} more damage."
+    },
+    {
+      "id": "low_hp_reduction",
+      "nombre": "Last Stand",
+      "plantilla": "Takes {porciento} less damage while badly wounded."
+    },
+    {
+      "id": "heal_after_battle",
+      "nombre": "Second Wind",
+      "plantilla": "Restores {porciento} of max HP after each won battle."
+    },
+    {
+      "id": "priority",
+      "nombre": "Inner Gates",
+      "plantilla": "Always attacks first, whatever the speed."
+    },
+    {
+      "id": "heal_on_kill",
+      "nombre": "Feral Recovery",
+      "plantilla": "Restores {porciento} of max HP when defeating an enemy."
+    },
+    {
+      "id": "repeat_basic_chance",
+      "nombre": "Cursed Frenzy",
+      "plantilla": "Basic attacks have a {porciento} chance to strike twice."
+    }
+  ]
+}

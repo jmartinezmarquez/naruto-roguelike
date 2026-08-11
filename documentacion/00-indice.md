@@ -31,5 +31,6 @@
 - [27 - Rediseño del sistema de balance (pendiente de implementar)](./27-sistema-de-balance.md)
 - [28 - Mochila (inventario y equipar)](./28-mochila.md)
 - [29 - Sistema de jutsus automáticos (ataque básico + barra de jutsu)](./29-sistema-de-jutsus-automaticos.md)
+- [30 - Sistema de pasivas](./30-sistema-de-pasivas.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

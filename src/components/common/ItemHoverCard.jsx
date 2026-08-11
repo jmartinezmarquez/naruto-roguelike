@@ -1,4 +1,5 @@
 import itemsData from '../../data/items.json';
+import { normalizarPasivas, describirPasiva } from '../../engine/passives';
 import HoverTooltip from './HoverTooltip';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 
@@ -6,33 +7,39 @@ function encontrarObjeto(id) {
   return itemsData.objetos.find((o) => o.id === id) ?? null;
 }
 
-const STAT_NAME = {
-  ataque: 'ATK',
-  defensa: 'DEF',
-  velocidad: 'SPD',
-  hp: 'HP',
-  todas: 'all stats',
-};
-
 const RAREZA_LABEL = {
   comun: 'Common',
   raro: 'Rare',
   legendario: 'Legendary',
 };
 
-function textoEfecto(efecto) {
-  switch (efecto.tipo) {
+const CATEGORIA_LABEL = {
+  combate: 'Combat',
+  supervivencia: 'Survival',
+  riesgo: 'Risk',
+  jefe: 'Boss relic',
+  consumible: 'Consumable',
+};
+
+/**
+ * Qué hace el objeto, en una frase.
+ *
+ * Casi todos los objetos lo dicen ya a través de sus pasivas, y esas frases
+ * salen del catálogo (`data/passives.json`), no de aquí: así un objeto y una
+ * transformación que compartan pasiva dicen exactamente lo mismo, sin dos
+ * textos que mantener. Solo quedan escritos a mano los dos efectos que no son
+ * pasivas de combate porque los resuelve el store.
+ */
+function textoEfecto(objeto) {
+  if (objeto.pasivas?.length) {
+    return normalizarPasivas(objeto.pasivas).map(describirPasiva).join(' ');
+  }
+  const efecto = objeto.efecto;
+  switch (efecto?.tipo) {
     case 'curarPersonaje':
       return `Restores ${efecto.cantidad.replace('porciento', '%')} HP to the chosen character.`;
     case 'revivirUnaVez':
       return `If the carrier falls, revives with ${efecto.hpAlRevivir} HP. Consumed on activation.`;
-    case 'buffEquipable':
-      return `+${efecto.cantidad} ${STAT_NAME[efecto.stat] ?? efecto.stat} for whoever has it equipped.`;
-    case 'curacionPostCombate':
-      return `Heals ${efecto.cantidad.replace('porciento', '%')} HP to the carrier after each won battle.`;
-    case 'buffYDebuffEquipable':
-      return `+${efecto.buff.cantidad} ${STAT_NAME[efecto.buff.stat] ?? efecto.buff.stat}, `
-        + `${efecto.debuff.cantidad} ${STAT_NAME[efecto.debuff.stat] ?? efecto.debuff.stat} for whoever has it equipped.`;
     default:
       return '';
   }
@@ -70,11 +77,14 @@ export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
       </div>
       <p className={`text-[10px] uppercase tracking-wide mt-0.5 ${COLOR_RAREZA[objeto.rareza] ?? ''}`}>
         {RAREZA_LABEL[objeto.rareza] ?? objeto.rareza}
+        {CATEGORIA_LABEL[objeto.categoria] && ` · ${CATEGORIA_LABEL[objeto.categoria]}`}
       </p>
-      <p className="text-[10px] opacity-70 mt-1.5">{objeto.descripcion}</p>
-      {objeto.efecto && (
+      {/* Sin `objeto.descripcion`: el texto narrativo no cambia ninguna decisión
+          y va a la enciclopedia (punto 10 del roadmap). En la tarjeta solo el
+          efecto, que es lo accionable. */}
+      {textoEfecto(objeto) && (
         <p className="text-[10px] text-sello-600 font-display mt-1.5 pt-1.5 border-t border-tinta-950/10">
-          {textoEfecto(objeto.efecto)}
+          {textoEfecto(objeto)}
         </p>
       )}
       {equipadoEnNombre && (
@@ -86,21 +96,18 @@ export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
 
 /**
  * Variante de una sola línea: "Nombre: efecto". Es la que usa la rejilla de
- * sprites del mapa, donde la tarjeta completa (rareza, tipo, descripción,
- * equipado-en) era una ventana enorme para un icono de 28 px. Cae a la
- * descripción solo si el objeto no tiene efecto mecánico que contar.
+ * sprites del mapa, donde la tarjeta completa (rareza, tipo, equipado-en) era
+ * una ventana enorme para un icono de 28 px.
  */
 export function FichaObjetoCompacta({ id, className = '' }) {
   const objeto = encontrarObjeto(id);
   if (!objeto) return null;
 
-  const efecto = objeto.efecto ? textoEfecto(objeto.efecto) : '';
-
   return (
     <div className={`bg-pergamino-100 text-tinta-950 ${className}`}>
       <p className="text-[10px] leading-snug">
         <span className="font-display font-bold">{objeto.nombre}:</span>{' '}
-        {efecto || objeto.descripcion}
+        {textoEfecto(objeto)}
       </p>
     </div>
   );
