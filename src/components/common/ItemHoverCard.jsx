@@ -84,14 +84,45 @@ export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
   );
 }
 
-export default function ItemHoverCard({ id, equipadoEnNombre, posicion = 'derecha', className = 'inline-block', children }) {
+/**
+ * Variante de una sola línea: "Nombre: efecto". Es la que usa la rejilla de
+ * sprites del mapa, donde la tarjeta completa (rareza, tipo, descripción,
+ * equipado-en) era una ventana enorme para un icono de 28 px. Cae a la
+ * descripción solo si el objeto no tiene efecto mecánico que contar.
+ */
+export function FichaObjetoCompacta({ id, className = '' }) {
+  const objeto = encontrarObjeto(id);
+  if (!objeto) return null;
+
+  const efecto = objeto.efecto ? textoEfecto(objeto.efecto) : '';
+
+  return (
+    <div className={`bg-pergamino-100 text-tinta-950 ${className}`}>
+      <p className="text-[10px] leading-snug">
+        <span className="font-display font-bold">{objeto.nombre}:</span>{' '}
+        {efecto || objeto.descripcion}
+      </p>
+    </div>
+  );
+}
+
+export default function ItemHoverCard({
+  id,
+  equipadoEnNombre,
+  posicion = 'derecha',
+  className = 'inline-block',
+  compacto = false,
+  children,
+}) {
   if (!encontrarObjeto(id)) return children;
 
   return (
     <HoverTooltip
       posicion={posicion}
       className={className}
-      contenido={(
+      contenido={compacto ? (
+        <FichaObjetoCompacta id={id} className="w-48 rounded-md border-2 border-tinta-950 shadow-xl px-2 py-1.5" />
+      ) : (
         <FichaObjeto
           id={id}
           equipadoEnNombre={equipadoEnNombre}

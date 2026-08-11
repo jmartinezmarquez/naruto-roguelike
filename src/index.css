@@ -49,3 +49,23 @@ img {
   image-rendering: pixelated;
 }
 
+/*
+ * Alza la pieza unos píxeles al pasar por encima, como en Pokelike: el hover no
+ * solo cambia de color, la tarjeta o el botón se despega del fondo. Se combina
+ * con el resaltado de selección que ya teníamos (borde + glow), no lo sustituye.
+ *
+ * Va como clase propia y no como utilidad suelta de Tailwind porque el efecto
+ * lo comparten tarjetas de tienda, de reclutar y botones de acción, y así el
+ * "cuánto sube" se toca en un sitio. La transición lista también los colores
+ * para no pisar el `transition-colors` de los sitios donde ya estaba.
+ */
+.elevar-hover {
+  transition-property: transform, box-shadow, background-color, border-color, color, filter;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.elevar-hover:hover:not(:disabled) {
+  transform: translateY(-4px);
+}
+

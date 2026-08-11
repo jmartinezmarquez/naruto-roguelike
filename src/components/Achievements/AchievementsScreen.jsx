@@ -1,21 +1,7 @@
 import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import achievementsData from '../../data/achievements.json';
-import personajesData from '../../data/characters.json';
-import enemiesData from '../../data/enemies.json';
-import itemsData from '../../data/items.json';
-
-function nombrePersonajeOJefe(id) {
-  return (
-    personajesData.personajes.find((p) => p.id === id)?.nombre
-    ?? enemiesData.jefes.find((j) => j.id === id)?.nombre
-    ?? id
-  );
-}
-
-function nombreObjeto(id) {
-  return itemsData.objetos.find((o) => o.id === id)?.nombre ?? id;
-}
+import { nombrePersonaje as nombrePersonajeOJefe, nombreObjeto } from '../common/nombres';
 
 function textoRecompensa(recompensa) {
   if (recompensa.tipo === 'desbloquearPersonajeReclutable') {

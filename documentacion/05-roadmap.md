@@ -199,6 +199,29 @@
   de abajo. Solo se han dejado sus dos enganches (`multiplicadorCarga` en modos, `carga.inicial`
   para objetos).
 
+**Pulido visual estilo Pokelike**
+- [x] Nodos del mapa no clicables: se apagan con transparencia (`opacity-40` fuera de alcance,
+  `opacity-65` visitado) + cursor de prohibido, en vez de `grayscale brightness-[0.35]`. Los filtros
+  mantenían el sprite opaco pero dejaban el mapa entero casi negro.
+- [x] Los nodos garantizan un tamaño **real en pantalla** (mínimo 44 px): antes eran 48 px de lienzo,
+  y como el lienzo se escala para caber, acababan en ~31 px y el icono no se distinguía. Ver
+  `tamanoNodo()` en `MapScreen.jsx`.
+- [x] Hover de nodo: al mini-zoom que ya había se le suma un halo rojo, y el tooltip pasa a ser solo
+  el título del tipo de nodo (se quitó `INFO_NODO`, la descripción larga).
+- [x] Las tarjetas suben unos píxeles al pasar por encima (`.elevar-hover` en `index.css`),
+  combinado con el resaltado por color/glow que ya teníamos. Va solo en lo que el jugador **elige**
+  (tarjetas de tienda/reclutar/selección de personaje, sprites del panel de objetos, "Collect"), no
+  en los botones de ejecutar o salir (`Equip`, `Close`, `SKIP`) — probado con los dos y el rebote los
+  ponía al mismo nivel que la elección de verdad. Ver [13](./13-ui-mapa-y-combate.md).
+- [x] Ficha de personaje sin la descripción del jutsu: ocupaba media tarjeta con texto narrativo que
+  no cambia ninguna decisión. Irá a la futura enciclopedia.
+- [x] `PanelObjetos` movido a la columna derecha, encima de la rueda de chakra: rejilla de sprites
+  sin nombre, oro en la misma línea del título "ITEMS" (no es un objeto de la mochila), y hover
+  compacto de una línea "Nombre: efecto" (`FichaObjetoCompacta` en `ItemHoverCard.jsx`).
+- [x] `nombrePersonaje` unificado en `components/common/nombres.js`: cada pantalla tenía su copia
+  mirando solo `characters.json`, así que un jefe reclutado por logro (Zabuza, Pain) salía con el id
+  crudo en el panel de equipo, la mochila y el game over.
+
 ## Próximos pasos (en orden sugerido)
 
 6 bis. **Rediseño del balance** — catálogo de pasivas reutilizables (`first_jutsu_bonus`,
@@ -212,6 +235,16 @@
    el primero esté peleando. Sprites de los personajes visibles. Los logs de texto se sustituyen
    por una animación: el ninja lanza un kunai al enemigo y al impactar la barra de HP baja.
    Personajes caídos → card apagada (estilo Pokelike). Efecto de sacudida al recibir golpe.
+
+7 bis. **Nodo de reclutar con rareza visible y recluta legendario por combate** — la hoja
+   `assets/sprite-nodos-mapa.png` trae tres pergaminos (verde común, azul raro, dorado legendario) y
+   hoy solo se usa uno, porque el nodo no sabe qué rareza ofrece: `generarOfertaReclutar` sortea los
+   candidatos al **entrar** en el nodo, no al generar el mapa. Hay que subir la rareza al nodo
+   (`mapGenerator.js`) para poder pintar el pergamino correcto desde el mapa.
+   Encima, el legendario deja de ser una elección: se convierte en un combate contra ese personaje y
+   solo se recluta si lo ganas — flujo nuevo (pantalla de combate con `alGanar: reclutar`), no una
+   variante de `RecruitScreen`. Es el único de los ajustes visuales de esta tanda que toca motor,
+   store y datos, por eso va aparte.
 
 8. **Actualizar interfaz de logros** — (Leer MVP [25](./25-diseño-pantalla-logros.md))
 

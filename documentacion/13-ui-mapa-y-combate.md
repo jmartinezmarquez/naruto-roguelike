@@ -38,11 +38,23 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 - Nodos: **sprite pixel art por tipo** (`SPRITE_NODO` en `MapScreen.jsx`), recortado en círculo,
   con borde de color según tipo. Sustituye a los glifos kanji provisionales (`⚔ ? ¥ ♨ ✚ ☠ 危`), que
   eran un apaño hasta tener arte propio. 4 estados igual de diferenciados que las aristas: nodo
-  actual (anillo sello), visitado (apagado, escala de grises al 55 % de brillo), disponible
-  (brillante, clicable), fuera de alcance (más apagado todavía, 35 % de brillo, no clicable).
-  - Los estados apagados usan **filtros (`grayscale` + `brightness`), nunca `opacity`**: en un
-    Pokelike los nodos son sprites opacos, y bajarles el alpha deja ver el fondo y las líneas del
-    mapa a través del sprite. Apagados siguen siendo opacos; la jerarquía la marca el brillo.
+  actual (anillo sello), visitado (`opacity-65` + tick), disponible (brillante, clicable, con
+  mini-zoom y halo al hover), fuera de alcance (`opacity-40`, no clicable).
+  - Los estados apagados usan **`opacity` + `cursor-not-allowed`**. Se probó lo contrario primero
+    —filtros `grayscale brightness-[0.35]`, para que el sprite siguiera siendo opaco como en un
+    Pokelike de verdad— y el problema no era el sprite suelto sino el conjunto: con la mayoría de
+    nodos del mapa fuera de alcance, la pantalla entera quedaba oscurísima. Transparentar deja
+    asomar el fondo del arco por debajo, y eso es preferible a un mapa negro.
+  - **Tamaño garantizado en pantalla** (`tamanoNodo()`): el lienzo es de 520 × 120·pisos y se escala
+    entero para caber sin scroll, así que un tamaño fijo en coordenadas de lienzo se traduce en un
+    tamaño variable en pantalla. Los 48 px de antes acababan en ~31 px reales a escala 0,65 y el
+    icono no se distinguía. Ahora el lado se calcula contra la escala para no bajar nunca de 44 px
+    reales (Pokelike no baja de 32), con un tope de 76 px de lienzo para que en un piso de 5 nodos
+    no se toquen: la separación horizontal es `ANCHO/6` ≈ 87 px.
+  - **Hover**: mini-zoom (`scale-110`) + halo rojo (`shadow-[0_0_16px_...]`). El tooltip lleva
+    **solo el título** del tipo de nodo (`ETIQUETA_NODO`). La descripción larga que había antes
+    (`INFO_NODO`, "Random enemy — win XP and gold on victory"…) se quitó: ocupaba media pantalla
+    para algo que se lee una vez y se aprende jugando.
   - **Tick `✓` en todo nodo visitado**, superpuesto al sprite con su propio velo para que se lea
     encima de cualquier dibujo. Va también en el nodo actual (con velo más suave, porque el anillo
     rojo ya lo distingue): al llegar a un nodo se resuelve al instante, así que estar en él ya
@@ -121,14 +133,20 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
   que el layout no deje hueco en blanco. La página entera es `h-screen overflow-hidden` (ya no
   `min-h-screen`) — todo el contenido tiene que caber, en vez de crecer y scrollear.
 - **Tira de HP del equipo**: muestra cada personaje con nivel, barra de HP real (vía el selector `obtenerHpMaximo` del store) y si está derrotado — necesario ahora que el HP persiste entre combates, para que el jugador sepa cuándo curarse. Cada entrada envuelta en `PersonajeHoverCard` (ver más abajo).
-- **`PanelObjetos`**, debajo del panel de equipo: oro y objetos del inventario (solo lo que está
-  suelto — lo ya equipado vive en `PanelEquipo`, no aquí), agrupados por id con "×N" si hay
-  repetidos. Cada objeto envuelto en `ItemHoverCard` (ver más abajo) — descripción en prosa más el
-  efecto exacto en números, no solo "aumenta el ataque" sino "+2 ATQ permanente". Tocar un objeto
-  abre un selector inline de personaje ("Equipar en..." si es `equipable`, "Usar en..." si es
-  `consumible`) que despacha a `equiparObjeto`/`usarConsumible` en el store — ver
-  [21 - Objetos equipables](./21-objetos-equipables.md).
-- **`RuedaChakra`**: pictograma del ciclo de ventajas de chakra, junto al mapa —
+- **`PanelObjetos`**, en la columna **derecha**, encima de `RuedaChakra`: los objetos del inventario
+  (solo lo que está suelto — lo ya equipado vive en `PanelEquipo`, no aquí), agrupados por id con el
+  número en una esquina si hay repetidos. Tocar uno abre la mochila con ese objeto ya seleccionado.
+  - **Rejilla de sprites, sin nombre**: una fila con texto por objeto crecía sin parar y no cabía.
+    El nombre lo cuenta el hover.
+  - **El oro va en la misma línea que el título "ITEMS"**, no dentro de la lista: no es un objeto de
+    la mochila, es el contador de la run. Dentro del panel solo entran sprites de objeto.
+  - El hover usa la variante **compacta** de `ItemHoverCard` (`compacto`): una sola línea
+    "Nombre: efecto". La tarjeta completa (rareza, tipo, descripción, equipado-en) era una ventana
+    enorme colgando de un icono de 28 px.
+  - Está a la derecha y no debajo del equipo porque las dos columnas tienen papeles distintos: la
+    izquierda es la que se toca para jugar (reordenar el equipo), la derecha es consulta rápida
+    (qué llevo, qué le gana a qué).
+- **`RuedaChakra`**: pictograma del ciclo de ventajas de chakra, debajo de `PanelObjetos` —
   ver [19 - Selección de personaje](./19-seleccion-de-personaje.md).
 - **`MenuIconos`**: esquina superior derecha, estilo Pokelike — Logros (🏆), Pantalla completa (⛶,
   Fullscreen API del navegador) y Reiniciar Run (⟲, con `window.confirm` porque borra la run actual
@@ -174,10 +192,41 @@ falta un tooltip nuevo. Tres usos hoy:
 - **`ItemHoverCard.jsx`** — tarjeta de detalle de un objeto (`items.json`): tipo, rareza,
   descripción en prosa y el efecto exacto en números (`textoEfecto`, traduce `item.efecto` a texto
   legible: "+2 ATQ permanente", "Cura un 15% de HP tras cada combate ganado", etc.), más un
-  `equipadoEnNombre` opcional ("Equipado en X"). Usada en `PanelObjetos` de `MapScreen`. El efecto
-  ya se aplica de verdad, no es solo texto — ver [21 - Objetos equipables](./21-objetos-equipables.md).
-- **Hover de nodo del mapa** (dentro de `NodoMapa`, `MapScreen.jsx`) — tipo de nodo, qué hace, y su
-  estado actual. Sustituye a la vieja `LeyendaMapa` fija.
+  `equipadoEnNombre` opcional ("Equipado en X"). El efecto ya se aplica de verdad, no es solo
+  texto — ver [21 - Objetos equipables](./21-objetos-equipables.md).
+  - Con `compacto`, en cambio, renderiza `FichaObjetoCompacta`: una línea, "Nombre: efecto". Es la
+    que usa la rejilla del mapa, donde la tarjeta completa era desproporcionada.
+- **Hover de nodo del mapa** (dentro de `NodoMapa`, `MapScreen.jsx`) — solo el nombre del tipo de
+  nodo. Sustituye a la vieja `LeyendaMapa` fija.
+
+## `components/common/nombres.js`
+
+`nombrePersonaje(id)` / `nombreObjeto(id)`, compartidos. Existen porque cada pantalla se había hecho
+su propia copia de `nombrePersonaje` mirando **solo** `characters.json`, y los jefes se pueden
+reclutar por logro: el panel de equipo, la mochila y el game over enseñaban `pain_camino_deva` tal
+cual en cuanto llevabas a uno. La versión compartida busca también en `enemies.json`.
+
+## `.elevar-hover` (`src/index.css`)
+
+Clase compartida: la pieza sube 4 px al pasar por encima, como en Pokelike — el hover no solo cambia
+de color, la tarjeta se despega del fondo. Se **combina** con el resaltado por borde/glow que ya
+existía, no lo sustituye. Va como clase propia y no como utilidad suelta de Tailwind porque la
+comparten tarjetas de tienda, de reclutar, de selección de personaje y botones de acción, y así el
+"cuánto sube" se toca en un sitio. Su `transition-property` lista también los colores para no pisar
+el `transition-colors` de los sitios donde ya estaba.
+
+**Dónde va**: en lo que el jugador *elige* — tarjetas de tienda, de reclutar, de selección de
+personaje, sprites del panel de objetos, y el "Collect" de la recompensa de mini-jefe. Son
+decisiones, y el rebote las hace apetecibles.
+
+**Dónde NO va**, decidido tras verlo en marcha:
+- Botones **dentro** de una tarjeta que ya se eleva (el "N gold" de la tienda): los dos a la vez dan
+  un salto doble.
+- Botones de **acción o de salida** dentro de una pantalla: `Equip`/`Use`/`Replace`/`Unequip` y
+  `Close` de la mochila, `SKIP` de reclutar. Son ejecutar y salir, no elegir; el rebote los ponía al
+  mismo nivel de importancia que la elección de verdad y distraía.
+- Enlaces de texto subrayado (`Skip animation` en combate, `Skip` de la recompensa): nunca lo
+  llevaron — un enlace que salta no se lee como enlace.
 
 ## `App.jsx`
 

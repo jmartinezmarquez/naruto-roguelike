@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import itemsData from '../../data/items.json';
-import personajesData from '../../data/characters.json';
+import { nombrePersonaje } from '../common/nombres';
 import { SPRITE_OBJETO, COLOR_RAREZA, ETIQUETA_RAREZA, lineasDeEfecto } from './itemSprites';
 
 /**
@@ -21,10 +21,6 @@ import { SPRITE_OBJETO, COLOR_RAREZA, ETIQUETA_RAREZA, lineasDeEfecto } from './
 
 function encontrarObjeto(id) {
   return itemsData.objetos.find((o) => o.id === id) ?? null;
-}
-
-function nombrePersonaje(id) {
-  return personajesData.personajes.find((p) => p.id === id)?.nombre ?? id;
 }
 
 const ETIQUETA_TIPO = {

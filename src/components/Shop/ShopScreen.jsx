@@ -27,9 +27,9 @@ function TarjetaItem({ entrada, oro, onComprar }) {
 
   return (
     <div className={`
-      relative flex flex-col bg-tinta-900 border-2 rounded-xl p-5 transition-all duration-200
+      elevar-hover relative flex flex-col bg-tinta-900 border-2 rounded-xl p-5
       ${puedeComprar
-        ? 'border-pergamino-100/20 hover:border-pergamino-100/50 cursor-pointer hover:bg-tinta-800'
+        ? 'border-pergamino-100/20 hover:border-pergamino-100/50 cursor-pointer hover:bg-tinta-800 hover:shadow-lg hover:shadow-black/40'
         : 'border-pergamino-100/10 opacity-50'}
     `}>
       <div className="h-16 flex items-center justify-center mb-3">
@@ -56,6 +56,8 @@ function TarjetaItem({ entrada, oro, onComprar }) {
         </div>
       )}
 
+      {/* Sin `elevar-hover`: este botón vive DENTRO de la tarjeta, que ya sube
+          entera al pasar por encima. Los dos a la vez dan un salto doble. */}
       <button
         type="button"
         disabled={!puedeComprar}
@@ -119,7 +121,7 @@ export default function ShopScreen() {
       <button
         type="button"
         onClick={volverAlMapa}
-        className="px-8 py-2.5 bg-tinta-800 hover:bg-tinta-700 border border-pergamino-100/20 rounded-full font-display text-pergamino-100 transition-colors text-sm tracking-widest"
+        className="elevar-hover px-8 py-2.5 bg-tinta-800 hover:bg-tinta-700 border border-pergamino-100/20 rounded-full font-display text-pergamino-100 text-sm tracking-widest"
       >
         LEAVE
       </button>

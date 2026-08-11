@@ -66,7 +66,7 @@ export default function ItemRewardScreen() {
         <button
           type="button"
           onClick={reclamarRecompensaMiniJefe}
-          className="px-8 py-2.5 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors text-sm tracking-wide"
+          className="elevar-hover px-8 py-2.5 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 text-sm tracking-wide"
         >
           Collect
         </button>

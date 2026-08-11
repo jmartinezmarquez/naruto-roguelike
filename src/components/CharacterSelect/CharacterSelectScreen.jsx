@@ -12,8 +12,10 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
       type="button"
       onClick={onClick}
       className={[
-        'w-full rounded-lg border-2 transition-colors text-left',
-        seleccionado ? 'border-sello-600' : 'border-transparent hover:border-pergamino-100/30',
+        'elevar-hover w-full rounded-lg border-2 text-left',
+        seleccionado
+          ? 'border-sello-600'
+          : 'border-transparent hover:border-pergamino-100/30 hover:shadow-lg hover:shadow-black/40',
       ].join(' ')}
     >
       <FichaPersonaje id={personaje.id} className="p-3" />

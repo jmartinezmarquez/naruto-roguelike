@@ -1,9 +1,5 @@
 import { useGameStore } from '../../store/useGameStore';
-import personajesData from '../../data/characters.json';
-
-function nombrePersonaje(id) {
-  return personajesData.personajes.find((p) => p.id === id)?.nombre ?? id;
-}
+import { nombrePersonaje } from '../common/nombres';
 
 export default function GameOverScreen() {
   const equipo = useGameStore((s) => s.equipo);

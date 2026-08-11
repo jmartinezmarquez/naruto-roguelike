@@ -63,10 +63,10 @@ function TarjetaPersonaje({ opcion, nivel, seleccionado, onClick }) {
       type="button"
       onClick={onClick}
       className={`
-        flex flex-col bg-tinta-900 rounded-xl p-4 border-2 transition-all duration-200 text-left w-full
+        elevar-hover flex flex-col bg-tinta-900 rounded-xl p-4 border-2 text-left w-full
         ${seleccionado
-          ? 'border-fuuton shadow-lg shadow-fuuton/20 scale-[1.02]'
-          : 'border-pergamino-100/15 hover:border-pergamino-100/40 hover:bg-tinta-800'}
+          ? 'border-fuuton shadow-lg shadow-fuuton/20'
+          : 'border-pergamino-100/15 hover:border-pergamino-100/40 hover:bg-tinta-800 hover:shadow-lg hover:shadow-black/40'}
       `}
     >
       <div className="mb-3">
@@ -119,7 +119,7 @@ function PanelReemplazo({ nombreNuevo, equipo, onElegir, onCancelar }) {
                 key={p.id}
                 type="button"
                 onClick={() => onElegir(p.id)}
-                className="py-2 px-1 bg-tinta-800 hover:bg-sello-600/30 border border-pergamino-100/10 hover:border-sello-600/60 rounded-lg text-xs text-pergamino-100 font-display transition-colors"
+                className="elevar-hover py-2 px-1 bg-tinta-800 hover:bg-sello-600/30 border border-pergamino-100/10 hover:border-sello-600/60 rounded-lg text-xs text-pergamino-100 font-display"
               >
                 {base?.nombre ?? p.id}
               </button>

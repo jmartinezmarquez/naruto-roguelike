@@ -70,7 +70,9 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, className = '' }
         <p className="text-[10px] text-sello-500/80 mt-0.5">
           Jutsu about every {turnosParaCargarJutsu(luchador)} turns
         </p>
-        <p className="text-[10px] text-pergamino-200/50 mt-0.5">{base.jutsu.descripcion}</p>
+        {/* Sin la descripción del jutsu a propósito: ocupaba media tarjeta para
+            contar algo narrativo que no cambia ninguna decisión. Lo que importa
+            aquí es potencia y ritmo; el texto de sabor irá en la enciclopedia. */}
       </div>
     </div>
   );

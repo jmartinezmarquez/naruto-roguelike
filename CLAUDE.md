@@ -132,6 +132,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   jutsus lanzados. Correrlo antes y después de cualquier cambio de balance. Se ejecuta con
   `node scripts/simular-combates.mjs` (lleva un hook de Node para poder importar el motor, escrito
   para Vite, sin pasar por Vitest).
+- [x] Pulido visual estilo Pokelike: nodos del mapa con tamaño mínimo garantizado **en pantalla**
+  (`tamanoNodo()`, el lienzo se escala y 48 px acababan en 31), apagados con `opacity` en vez de
+  filtros (el mapa quedaba negro), hover con mini-zoom + halo y tooltip de solo el título;
+  `.elevar-hover` en `index.css` para que tarjetas y botones suban al pasar por encima;
+  `PanelObjetos` movido a la columna derecha como rejilla de sprites con hover de una línea;
+  `nombrePersonaje` unificado en `components/common/nombres.js` (los jefes reclutados por logro
+  salían con el id crudo). Ver `documentacion/13-ui-mapa-y-combate.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 
