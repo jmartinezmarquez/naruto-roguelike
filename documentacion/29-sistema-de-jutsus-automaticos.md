@@ -183,7 +183,7 @@ a 21 % (Kabuto). No es casualidad ni ruido: el daño medio de cada jefe no se ha
 reparto en el tiempo sí. Pain carga en 4 turnos, así que ahora pega tres básicos flojos (0,65 en vez
 de 0,96) antes de su golpe gordo — y como el combate dura ~4,5 turnos, buena parte de esa compensación
 llega tarde o directamente no llega. **Con combates cortos, cargar lento sale caro por encima de lo
-que dice la media.** Es un argumento más para alargar los combates en el punto 9 del roadmap, y hay
+que dice la media.** Es un argumento más para alargar los combates en el playtest (punto 7 del roadmap), y hay
 que tenerlo presente antes de tocar los perfiles de carga: `T` no es solo sabor, mueve la dificultad
 real.
 

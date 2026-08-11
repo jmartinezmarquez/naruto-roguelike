@@ -3,13 +3,21 @@
 ## `leveling.js`
 
 - `xpParaSiguienteNivel(curvaXp, nivelActual)` — XP requerida para el siguiente nivel.
-- `calcularStatsPorNivel(statsBase, nivel)` — stats actuales, crecimiento lineal simple (`config.progresion.crecimientoStatsPorNivel`, valor inicial 0.08 = +8% por nivel sobre base).
+- `calcularStatsPorNivel(statsBase, nivel)` — stats actuales, crecimiento lineal simple (`config.progresion.crecimientoStatsPorNivel`, hoy 0.03 = +3% por nivel sobre base; era 0.08 y se aplanó en la fase 4 del rediseño de balance).
 - `ganarXp(personajeEstado, cantidadXp, curvaXp)` — aplica XP y resuelve subidas de nivel (puede subir varios niveles de golpe). No muta el objeto de entrada.
 - `obtenerModoActivo(personajeBase, nivelActual)` — de `personajeBase.modos` (array, 0 a 2 tiers), devuelve el de mayor `nivelDesbloqueo` que esté disponible, o `null`. Sustituye al antiguo `modoDesbloqueado` (que solo soportaba 1 modo booleano).
 - `aplicarMultiplicadoresModo(stats, modo)` — aplica los multiplicadores del modo a unas stats ya calculadas.
 
 - `aplicarMultiplicadores(stats, multiplicadores)` — genérico: aplica un objeto `{ataque, defensa, velocidad, hp}` a unas stats ya calculadas. Lo usan tanto los modos como los buffs temporales de eventos (mismo mecanismo, distinta duración).
 - `aplicarMultiplicadoresModo(stats, modo)` — wrapper fino sobre `aplicarMultiplicadores`, para modos/transformaciones.
+- `nivelesEstimadosDeLaRun(curvaXp, arcos, xpDeJefe)` — a qué nivel llega un personaje a cada piso
+  de la run, jugando un camino: un nodo por piso con la XP que cabe esperar de él, la XP entera de
+  los dos jefes, y arrastrando el nivel de un arco al siguiente. Devuelve `{ [arcoId]: Map<piso, nivel> }`.
+  Sigue siendo agnóstico del contenido: los arcos entran por parámetro. Vive aquí y no en el
+  simulador porque la pregunta "¿a qué nivel llega el jugador a este jefe?" se hace en dos sitios —
+  el script de balance y el test de invariante que impide que los niveles fijos de los arcos se
+  separen otra vez de la realidad, que es un error que ya pasó dos veces
+  (ver [11](./11-progresion-y-arcos.md)).
 
 ## `combat.js`
 

@@ -240,6 +240,51 @@ describe('_aplicarVictoria — XP de personajes caídos', () => {
   });
 });
 
+describe('_aplicarVictoria — HP al subir de nivel', () => {
+  // El bug que este test existe para que no vuelva: `aplicarXpYActualizarHp` sí
+  // sumaba el incremento de vida al subir de nivel, pero para el personaje que
+  // había peleado `_aplicarVictoria` pisaba después su hpActual con el HP del
+  // final del combate, y el incremento se perdía entero. O sea que el banquillo
+  // cobraba la vida del nivel y el que peleaba —el que gana la XP completa y por
+  // tanto el que más sube de nivel— no. Invisible en pantalla: la barra sube de
+  // máximo y el jugador no tiene forma de saber que le faltan puntos.
+  it('el que ha peleado gana la vida del nivel sobre el HP con el que terminó el combate', () => {
+    const antes = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    const hpMaximoAntes = useGameStore.getState().obtenerHpMaximo('naruto');
+    const hpFinalDeCombate = Math.round(hpMaximoAntes * 0.5);
+
+    // XP de sobra para garantizar al menos una subida de nivel.
+    useGameStore.getState()._aplicarVictoria(
+      antes.id,
+      hpFinalDeCombate,
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } },
+      new Set(),
+    );
+
+    const despues = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    const hpMaximoDespues = useGameStore.getState().obtenerHpMaximo('naruto');
+    expect(despues.nivel).toBeGreaterThan(antes.nivel);
+    expect(hpMaximoDespues).toBeGreaterThan(hpMaximoAntes);
+    expect(despues.hpActual).toBe(hpFinalDeCombate + (hpMaximoDespues - hpMaximoAntes));
+  });
+
+  it('el incremento nunca deja el HP por encima del nuevo máximo', () => {
+    const antes = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    const hpMaximoAntes = useGameStore.getState().obtenerHpMaximo('naruto');
+
+    // Termina el combate a HP lleno: sumar el incremento encima se pasaría.
+    useGameStore.getState()._aplicarVictoria(
+      antes.id,
+      hpMaximoAntes,
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } },
+      new Set(),
+    );
+
+    const despues = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    expect(despues.hpActual).toBe(useGameStore.getState().obtenerHpMaximo('naruto'));
+  });
+});
+
 describe('_aplicarDerrota (a través de jugarCombate)', () => {
   it('los personajes derrotados quedan al final del orden del equipo', () => {
     // Solo se enfrenta el enemigo débil (gana el activo), así que forzamos

@@ -349,7 +349,7 @@ function PanelObjetos({ inventario, oro, abrirMochila }) {
       </div>
 
       {idsUnicos.length === 0 ? (
-        <p className="text-[10px] opacity-50 leading-snug mt-2">No items yet.</p>
+        <p className="text-[10px] opacity-50 leading-snug mt-2">Empty bag.</p>
       ) : (
         // Rejilla de sprites sin nombre: el nombre lo cuenta el hover, y la
         // lista con texto obligaba a una fila por objeto y crecía sin parar.

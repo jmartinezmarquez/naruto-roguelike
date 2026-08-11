@@ -1,15 +1,15 @@
 # Sistema de pasivas
 
-Implementa las fases 1, 2 y 3 del punto 1 del [roadmap](./05-roadmap.md), a partir del
-[27](./27-sistema-de-balance.md). Queda la fase 4 (curva de niveles y recalibración).
+Implementa el punto 1 del [roadmap](./05-roadmap.md) entero (fases 1 a 4), a partir del
+[27](./27-sistema-de-balance.md).
 
 ## Por qué
 
 Niveles, transformaciones y objetos subían los mismos cuatro números, así que la única palanca de
 balance era "más grande" y el juego hacía bola de nieve. Medido: con `crecimientoStatsPorNivel: 0.08`
-lineal, un Naruto de nivel 100 tiene 80 de ataque frente a 9 en el nivel 1, y el mejor objeto
-legendario del juego da **+4 planos**. Los objetos son más fuertes al empezar la run que al
-terminarla, justo al revés de lo que se quiere.
+lineal (hoy 0,03, ver fase 4), un Naruto de nivel 100 tenía 80 de ataque frente a 9 en el nivel 1, y
+el mejor objeto legendario del juego daba **+4 planos**. Los objetos eran más fuertes al empezar la
+run que al terminarla, justo al revés de lo que se quiere.
 
 Una pasiva no escala con el nivel: "el primer golpe recibido hace un 50% menos de daño" vale lo
 mismo en el nivel 3 que en el 90. Por eso el reparto 40/30/30 del doc 27 depende de esto.
@@ -299,17 +299,71 @@ el módulo entero (y sus 9 tests) quedó muerto. Borrado en vez de dejado "por s
 bonificaciones permanentes de eventos (`mejoraPermanenteAleatoria`) siguen por su camino, que nunca
 pasó por ahí.
 
-## El simulador es ciego a esta fase
+## Fase 4 — Curva de niveles y recalibración
 
-`scripts/simular-combates.mjs` da **exactamente los mismos números** que antes de la fase 3, y no es
-que no haya cambiado nada: es que el simulador **nunca equipa objetos**. Mide personajes desnudos.
+### Primero, hacer que el simulador mida
 
-No es un fallo de esta fase, es el trabajo que la fase 4 tiene pendiente: para comprobar el reparto
-40/30/30 hay que poder medir de dónde viene el poder, y hoy el script no sabe simular una run con
-objetos encima. Es lo primero que hay que hacerle.
+`scripts/simular-combates.mjs` daba **exactamente los mismos números** antes y después de la fase 3,
+y no era que no hubiera cambiado nada: es que **nunca equipaba objetos**. Medía personajes desnudos.
+Peor todavía, *suponía* el nivel del jugador interpolando entre los niveles de jefe del arco, o sea
+que daba por buena justo la conclusión que hacía falta demostrar.
+
+Ahora imprime cuatro bloques:
+
+| Bloque | Qué mide | Para qué |
+|---|---|---|
+| 0 | Nivel real del jugador piso a piso, con la XP simulada | Que los niveles fijos del arco signifiquen algo |
+| 1 | Balance por arco, personajes desnudos | El histórico, comparable antes/después |
+| 1b | Los 6 jefes con el equipo de 3 **en cadena** | La única medida honesta de un jefe |
+| 2 | Peso de cada objeto en combate real | Si un objeto se nota o no |
+| 3 | De dónde viene el poder: niveles / transformación / objeto | El reparto 40/30/30 |
+
+Dos decisiones del instrumento que importan:
+
+- **El bloque 1b existe porque el 1 vs 1 no dice nada de un jefe.** Zabuza se ganaba el 7% de las
+  veces en 1 vs 1, un número del que no se puede concluir absolutamente nada: lo que decide la run
+  es si tres personajes en cadena lo tumban. Se simulan los 364 tríos posibles del roster, y el
+  trío llega al mini-jefe **con el HP que le deje el camino** (los pisos anteriores se juegan, y el
+  HP persiste entre nodos como en el juego). Al jefe final sí llega curado, porque el generador
+  garantiza un descanso en el piso anterior. Medir un mini-jefe con el equipo intacto era medir un
+  combate que no existe: Haku pasó del 87% al 80% al dejar de suponerlo.
+- **El bloque 3 mide contra un maniquí inmortal**, no contra enemigos del juego. Poder = daño que
+  repartes antes de caer, que multiplica ofensa por supervivencia en un solo número y hace
+  comparables cosas tan distintas como "+45% al primer jutsu" y "el primer golpe recibido hace la
+  mitad". Inmortal porque si pudiera morir, todo personaje de sobra fuerte tocaría el mismo techo.
+  El precio: las pasivas de rematar (`heal_on_kill`) no se disparan ahí, y se miden en el bloque 2.
+
+El maniquí tiene el ataque de un jefe (12) y no la media del roster (9) por un motivo concreto: con
+9, su golpe contra los personajes más defensivos del arco 3 caía al mínimo de 1, y ahí
+`calabaza_arena` más la reducción del modo lo dejaban en 0. Chōji y Yamato se volvían literalmente
+inmortales y su medida no terminaba nunca. Un patrón que no puede matarte no mide tu supervivencia.
+
+### Lo que la medida encontró
+
+Que el problema no era `crecimientoStatsPorNivel`, que es lo que esta fase venía a arreglar. Era la
+**economía de XP**: el jugador llegaba a Zabuza (Nv.4) siendo nivel 9, a Gaara (Nv.24) siendo 34 y a
+Pain (Nv.49) siendo 70. La recalibración completa está en
+[11 - progresión y arcos](./11-progresion-y-arcos.md), sección "v4".
+
+### Reparto del poder, antes y después
+
+| Arco | Antes (niveles/transf./objetos) | Después |
+|---|---|---|
+| País de las Olas | 92 / 0 / 8 | **62 → 58 / 21 / 21** |
+| Examen Chunin | 70 / 18 / 11 | **49 / 27 / 24** |
+| Invasión de Pain | 48 / 37 / 15 | **31 / 47 / 22** |
+
+Tres cambios lo movieron: aplanar `crecimientoStatsPorNivel` de 0,08 a 0,03, bajar los tier 1 de las
+transformaciones al arco 1 (antes el primer arco entero se jugaba sin ninguna), y subir las
+cantidades de las pasivas de objeto (`first_jutsu_bonus` 0,25 → 0,45; `heal_on_kill` 0,2 → 0,4;
+`jutsu_bonus` 0,3 → 0,5; `ignore_defense` deja de ser solo del primer jutsu).
+
+**Los objetos se quedan en el 21-24%, no en el 40% que pide el doc 27.** Es deliberado: llegar al 40%
+exigiría que un único objeto equipado pesara más que la transformación entera del personaje, y solo
+hay un hueco de equipo. Frente al **1,5% con el que empezó este rediseño**, el objetivo de fondo —que
+los objetos existan— está cumplido. El 40% se puede revisar cuando haya más huecos o una categoría
+económica.
 
 ## Estado
 
-Fases 1, 2 y 3 terminadas. `npm test` da 153 (bajó de 157 al borrar `items.test.js`, y subió con
-cuatro invariantes de objeto). Queda la **fase 4**: curva de niveles aplanada y recalibración de los
-tres arcos.
+Las cuatro fases terminadas. `npm test` da 160 (153 más siete invariantes de progresión y de arco).

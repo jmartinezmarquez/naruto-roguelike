@@ -38,8 +38,9 @@
     "sai",
     "yamato"
   ],
-  "nivelEnemigoBase": 46,
-  "escaladoNivelPorPiso": 0.2,
-  "nivelMiniJefe": 48,
-  "nivelJefeFinal": 49
+  "nivelEnemigoBase": 33,
+  "escaladoNivelPorPiso": 1.0,
+  "nivelMiniJefe": 36,
+  "nivelJefeFinal": 44,
+  "xpCombateComun": 100
 }

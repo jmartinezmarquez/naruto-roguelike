@@ -30,7 +30,7 @@
       "modos": [
         {
           "nombre": "Nine-Tails Chakra Cloak",
-          "nivelDesbloqueo": 12,
+          "nivelDesbloqueo": 5,
           "multiplicadores": {
             "ataque": 1.16,
             "defensa": 1.08,
@@ -50,7 +50,7 @@
         },
         {
           "nombre": "Sage Mode",
-          "nivelDesbloqueo": 40,
+          "nivelDesbloqueo": 34,
           "multiplicadores": {
             "ataque": 1.32,
             "defensa": 1.2,
@@ -99,7 +99,7 @@
       "modos": [
         {
           "nombre": "Curse Mark (Level 2)",
-          "nivelDesbloqueo": 12,
+          "nivelDesbloqueo": 5,
           "multiplicadores": {
             "ataque": 1.2,
             "defensa": 1.04,
@@ -115,7 +115,7 @@
         },
         {
           "nombre": "Susanoo",
-          "nivelDesbloqueo": 42,
+          "nivelDesbloqueo": 35,
           "multiplicadores": {
             "ataque": 1.36,
             "defensa": 1.28,
@@ -164,7 +164,7 @@
       "modos": [
         {
           "nombre": "Monstrous Strength",
-          "nivelDesbloqueo": 20,
+          "nivelDesbloqueo": 6,
           "multiplicadores": {
             "ataque": 1.16,
             "defensa": 1.08,
@@ -180,7 +180,7 @@
         },
         {
           "nombre": "Byakugou Seal",
-          "nivelDesbloqueo": 40,
+          "nivelDesbloqueo": 34,
           "multiplicadores": {
             "ataque": 1.24,
             "defensa": 1.24,
@@ -229,7 +229,7 @@
       "modos": [
         {
           "nombre": "Inner Gates",
-          "nivelDesbloqueo": 22,
+          "nivelDesbloqueo": 7,
           "multiplicadores": {
             "ataque": 1.2,
             "defensa": 0.96,
@@ -242,7 +242,7 @@
         },
         {
           "nombre": "Gate of Death",
-          "nivelDesbloqueo": 42,
+          "nivelDesbloqueo": 35,
           "multiplicadores": {
             "ataque": 1.44,
             "defensa": 0.92,
@@ -288,7 +288,7 @@
       "modos": [
         {
           "nombre": "Full Byakugan",
-          "nivelDesbloqueo": 24,
+          "nivelDesbloqueo": 7,
           "multiplicadores": {
             "ataque": 1.12,
             "defensa": 1.12,
@@ -305,7 +305,7 @@
         },
         {
           "nombre": "Eight Trigrams: 128 Palms",
-          "nivelDesbloqueo": 43,
+          "nivelDesbloqueo": 36,
           "multiplicadores": {
             "ataque": 1.28,
             "defensa": 1.16,
@@ -351,7 +351,7 @@
       "modos": [
         {
           "nombre": "Celestial Arsenal",
-          "nivelDesbloqueo": 20,
+          "nivelDesbloqueo": 6,
           "multiplicadores": {
             "ataque": 1.12,
             "defensa": 1.04,
@@ -367,7 +367,7 @@
         },
         {
           "nombre": "Twin Rising Dragons",
-          "nivelDesbloqueo": 44,
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
             "ataque": 1.28,
             "defensa": 1.08,
@@ -416,7 +416,7 @@
       "modos": [
         {
           "nombre": "Extended Shadow",
-          "nivelDesbloqueo": 26,
+          "nivelDesbloqueo": 8,
           "multiplicadores": {
             "ataque": 1.04,
             "defensa": 1.08,
@@ -432,7 +432,7 @@
         },
         {
           "nombre": "Shadow Strangle",
-          "nivelDesbloqueo": 44,
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
             "ataque": 1.16,
             "defensa": 1.12,
@@ -478,7 +478,7 @@
       "modos": [
         {
           "nombre": "Reinforced Mind Link",
-          "nivelDesbloqueo": 23,
+          "nivelDesbloqueo": 7,
           "multiplicadores": {
             "ataque": 1.08,
             "defensa": 1.04,
@@ -494,7 +494,7 @@
         },
         {
           "nombre": "Long-Range Mind Transfer",
-          "nivelDesbloqueo": 42,
+          "nivelDesbloqueo": 35,
           "multiplicadores": {
             "ataque": 1.2,
             "defensa": 1.08,
@@ -543,7 +543,7 @@
       "modos": [
         {
           "nombre": "Butterfly Mode",
-          "nivelDesbloqueo": 28,
+          "nivelDesbloqueo": 9,
           "multiplicadores": {
             "ataque": 1.16,
             "defensa": 1.12,
@@ -559,7 +559,7 @@
         },
         {
           "nombre": "Sage Butterfly Mode",
-          "nivelDesbloqueo": 45,
+          "nivelDesbloqueo": 38,
           "multiplicadores": {
             "ataque": 1.32,
             "defensa": 1.24,
@@ -608,7 +608,7 @@
       "modos": [
         {
           "nombre": "Double Beast Transformation",
-          "nivelDesbloqueo": 21,
+          "nivelDesbloqueo": 6,
           "multiplicadores": {
             "ataque": 1.16,
             "defensa": 1.04,
@@ -624,7 +624,7 @@
         },
         {
           "nombre": "Ravenous Wolf Fang",
-          "nivelDesbloqueo": 43,
+          "nivelDesbloqueo": 36,
           "multiplicadores": {
             "ataque": 1.28,
             "defensa": 1.08,
@@ -670,7 +670,7 @@
       "modos": [
         {
           "nombre": "Full Byakugan",
-          "nivelDesbloqueo": 25,
+          "nivelDesbloqueo": 8,
           "multiplicadores": {
             "ataque": 1.08,
             "defensa": 1.12,
@@ -687,7 +687,7 @@
         },
         {
           "nombre": "Eight Trigrams: Heavenly Void",
-          "nivelDesbloqueo": 44,
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
             "ataque": 1.24,
             "defensa": 1.2,
@@ -737,7 +737,7 @@
       "modos": [
         {
           "nombre": "Full Swarm",
-          "nivelDesbloqueo": 27,
+          "nivelDesbloqueo": 8,
           "multiplicadores": {
             "ataque": 1.08,
             "defensa": 1.08,
@@ -753,7 +753,7 @@
         },
         {
           "nombre": "Ultimate Devouring Colony",
-          "nivelDesbloqueo": 44,
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
             "ataque": 1.24,
             "defensa": 1.2,
@@ -802,7 +802,7 @@
       "modos": [
         {
           "nombre": "Ink Army",
-          "nivelDesbloqueo": 43,
+          "nivelDesbloqueo": 36,
           "multiplicadores": {
             "ataque": 1.2,
             "defensa": 1.12,
@@ -851,7 +851,7 @@
       "modos": [
         {
           "nombre": "Wood Style: Full Release",
-          "nivelDesbloqueo": 44,
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
             "ataque": 1.2,
             "defensa": 1.28,

@@ -6,9 +6,9 @@
       "nombre": "Haku",
       "tipo": "suiton",
       "statsBase": {
-        "hp": 74,
-        "ataque": 12,
-        "defensa": 9,
+        "hp": 59,
+        "ataque": 9,
+        "defensa": 8,
         "velocidad": 10
       },
       "jutsu": {
@@ -24,7 +24,7 @@
       },
       "modos": [],
       "recompensa": {
-        "xp": 150,
+        "xp": 100,
         "objetoGarantizado": "pergamino_viento"
       },
       "rareza": "raro",
@@ -39,9 +39,9 @@
       "nombre": "Zabuza Momochi",
       "tipo": "suiton",
       "statsBase": {
-        "hp": 90,
-        "ataque": 14,
-        "defensa": 10,
+        "hp": 63,
+        "ataque": 10,
+        "defensa": 9,
         "velocidad": 10
       },
       "jutsu": {
@@ -78,7 +78,7 @@
         }
       ],
       "recompensa": {
-        "xp": 450,
+        "xp": 165,
         "objetoGarantizado": "kubikiribocho_fragmento",
         "desbloqueaSiguienteArco": true
       },
@@ -94,9 +94,9 @@
       "nombre": "Kabuto Yakushi",
       "tipo": "doton",
       "statsBase": {
-        "hp": 74,
-        "ataque": 12,
-        "defensa": 9,
+        "hp": 59,
+        "ataque": 9,
+        "defensa": 8,
         "velocidad": 10
       },
       "jutsu": {
@@ -133,7 +133,7 @@
         }
       ],
       "recompensa": {
-        "xp": 220
+        "xp": 125
       },
       "rareza": "raro",
       "curvaXp": {
@@ -147,9 +147,9 @@
       "nombre": "Gaara",
       "tipo": "doton",
       "statsBase": {
-        "hp": 90,
-        "ataque": 14,
-        "defensa": 10,
+        "hp": 63,
+        "ataque": 10,
+        "defensa": 9,
         "velocidad": 10
       },
       "jutsu": {
@@ -202,7 +202,7 @@
         }
       ],
       "recompensa": {
-        "xp": 900,
+        "xp": 210,
         "objetoGarantizado": "calabaza_arena",
         "desbloqueaSiguienteArco": true
       },
@@ -218,9 +218,9 @@
       "nombre": "Pain: Animal Path",
       "tipo": "doton",
       "statsBase": {
-        "hp": 74,
-        "ataque": 12,
-        "defensa": 9,
+        "hp": 59,
+        "ataque": 9,
+        "defensa": 8,
         "velocidad": 10
       },
       "jutsu": {
@@ -236,7 +236,7 @@
       },
       "modos": [],
       "recompensa": {
-        "xp": 700
+        "xp": 160
       },
       "rareza": "raro",
       "curvaXp": {
@@ -250,9 +250,9 @@
       "nombre": "Pain (Deva Path)",
       "tipo": "raiton",
       "statsBase": {
-        "hp": 90,
-        "ataque": 14,
-        "defensa": 10,
+        "hp": 63,
+        "ataque": 10,
+        "defensa": 9,
         "velocidad": 10
       },
       "jutsu": {
@@ -286,7 +286,7 @@
         }
       ],
       "recompensa": {
-        "xp": 2000,
+        "xp": 300,
         "objetoGarantizado": "anillo_rinnegan_fragmento",
         "finDeLaRun": true
       },

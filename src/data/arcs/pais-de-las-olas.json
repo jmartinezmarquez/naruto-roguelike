@@ -41,7 +41,8 @@
     "sakura"
   ],
   "nivelEnemigoBase": 1,
-  "escaladoNivelPorPiso": 0.33,
+  "escaladoNivelPorPiso": 1.0,
   "nivelMiniJefe": 3,
-  "nivelJefeFinal": 4
+  "nivelJefeFinal": 10,
+  "xpCombateComun": 65
 }

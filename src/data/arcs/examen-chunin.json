@@ -45,8 +45,9 @@
     "hinata",
     "shino"
   ],
-  "nivelEnemigoBase": 20,
-  "escaladoNivelPorPiso": 0.25,
-  "nivelMiniJefe": 22,
-  "nivelJefeFinal": 24
+  "nivelEnemigoBase": 17,
+  "escaladoNivelPorPiso": 1.0,
+  "nivelMiniJefe": 19,
+  "nivelJefeFinal": 27,
+  "xpCombateComun": 80
 }

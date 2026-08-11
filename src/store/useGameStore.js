@@ -115,14 +115,21 @@ function pasivasDeObjetoEquipado(instancia) {
  * Aplica XP a una instancia y, si sube de nivel, incrementa su hpActual en
  * la misma cantidad que sube su hpMaximo (no lo cura del todo de regalo,
  * pero tampoco se queda "atrás" respecto a su nueva vida máxima).
+ *
+ * `hpDePartida` es el HP sobre el que sumar el incremento. Existe porque el
+ * personaje que ha peleado llega aquí con un HP que no es el de la instancia
+ * sino el del final del combate, y ese es el que hay que subir. Sin este
+ * parámetro había que pisar el hpActual DESPUÉS de llamar a esta función, y ahí
+ * se perdía el incremento entero: el banquillo cobraba la vida del nivel y el
+ * que peleaba no, que es justo el que más sube de nivel.
  */
-function aplicarXpYActualizarHp(instancia, cantidadXp) {
+function aplicarXpYActualizarHp(instancia, cantidadXp, hpDePartida = instancia.hpActual) {
   const curva = encontrarPersonajeBase(instancia.id).curvaXp;
   const hpMaxAntes = calcularHpMaximo(instancia);
   const actualizado = ganarXp(instancia, cantidadXp, curva);
   const hpMaxDespues = calcularHpMaximo(actualizado);
   const delta = hpMaxDespues - hpMaxAntes;
-  return { ...actualizado, hpActual: Math.min(hpMaxDespues, instancia.hpActual + delta) };
+  return { ...actualizado, hpActual: Math.min(hpMaxDespues, hpDePartida + delta) };
 }
 
 /** Combina los multiplicadores de todos los buffs temporales activos en un único objeto. */
@@ -758,8 +765,12 @@ export const useGameStore = create((set, get) => ({
    * no debe "revivirlo" de regalo si sube de nivel.
    */
   _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase, idsYaDerrotadosAntesDelCombate) {
-    const { equipo, oro, inventario } = get();
-    const xpGanada = enemigoBase.recompensa?.xp ?? 20;
+    const { equipo, oro, inventario, arcoActualDatos } = get();
+    // Los jefes traen su XP escrita. Los enemigos comunes no: cobran la del arco
+    // (`xpCombateComun`), porque las mismas 5 plantillas genéricas se reutilizan en
+    // los tres y un enemigo del arco 3 tiene que dar más que uno del 1 para que el
+    // nivel siga subiendo al mismo ritmo. El 20 final es solo red de seguridad.
+    const xpGanada = enemigoBase.recompensa?.xp ?? arcoActualDatos?.xpCombateComun ?? 20;
     const porcentajeBanquillo = configGlobal.progresion.porcentajeXpBanquillo;
     const oroGanado = Math.round(
       (configGlobal.economia.oroPorCombateGanado.min +
@@ -770,19 +781,23 @@ export const useGameStore = create((set, get) => ({
       if (idsYaDerrotadosAntesDelCombate.has(p.id)) return p;
 
       const xpParaEste = p.id === idPersonaje ? xpGanada : Math.round(xpGanada * porcentajeBanquillo);
-      const conXp = aplicarXpYActualizarHp(p, xpParaEste);
+      // El activo parte del HP con el que ha terminado la pelea, no del que traía
+      // la instancia: así el incremento por subir de nivel se suma encima en vez
+      // de perderse al sobrescribir el hpActual.
+      const conXp = p.id === idPersonaje
+        ? aplicarXpYActualizarHp(p, xpParaEste, hpFinalActivo)
+        : aplicarXpYActualizarHp(p, xpParaEste);
 
       if (p.id === idPersonaje) {
-        const conHp = { ...conXp, hpActual: hpFinalActivo };
         // Pasiva `heal_after_battle` del objeto equipado (Pergamino de Reserva):
         // cura un % extra a quien lo lleve, justo tras ganar. Es de las que el
         // motor no toca — pasa DESPUÉS de la pelea, no dentro.
-        const curacion = cantidadDePasiva(pasivasDeObjetoEquipado(conHp), 'heal_after_battle');
+        const curacion = cantidadDePasiva(pasivasDeObjetoEquipado(conXp), 'heal_after_battle');
         if (curacion > 0) {
-          const hpMax = calcularHpMaximo(conHp);
-          return { ...conHp, hpActual: Math.min(hpMax, conHp.hpActual + Math.round(hpMax * curacion)) };
+          const hpMax = calcularHpMaximo(conXp);
+          return { ...conXp, hpActual: Math.min(hpMax, conXp.hpActual + Math.round(hpMax * curacion)) };
         }
-        return conHp;
+        return conXp;
       }
       if (p.derrotado) return { ...conXp, hpActual: 0 }; // cayó en este combate: gana XP, sigue a 0 HP
       return conXp; // vivo y no participó: gana su XP de banquillo, HP sin cambios

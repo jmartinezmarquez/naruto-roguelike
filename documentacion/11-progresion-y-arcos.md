@@ -1,12 +1,17 @@
 # Progresión de nivel y arcos del MVP
 
-El MVP tiene **3 arcos**, jugados en una única run continua de nivel 1 a 100 (`config.progresion.nivelMaximo`).
+El MVP tiene **3 arcos**, jugados en una única run continua. Una run va de nivel 1 a ~51;
+`config.progresion.nivelMaximo: 100` es solo un techo teórico que nadie alcanza jugando.
 
-| Arco | Archivo | Pisos | Mini-jefe (nivel fijo) | Jefe final (nivel fijo) |
-|---|---|---|---|---|
-| País de las Olas | `arcs/pais-de-las-olas.json` | 8 | Haku (3) | **Zabuza (4)** |
-| Examen Chunin | `arcs/examen-chunin.json` | 10 | Kabuto (22) | **Gaara (24)** |
-| Invasión de Pain *(licencia creativa)* | `arcs/invasion-de-pain.json` | 12 | Camino Animal de Pain (48) | **Pain, Camino Deva (49)** |
+| Arco | Archivo | Pisos | Niveles | Mini-jefe (nivel fijo) | Jefe final (nivel fijo) |
+|---|---|---|---|---|---|
+| País de las Olas | `arcs/pais-de-las-olas.json` | 8 | 1 → 10 | Haku (3) | **Zabuza (10)** |
+| Examen Chunin | `arcs/examen-chunin.json` | 8 | 17 → 27 | Kabuto (19) | **Gaara (27)** |
+| Invasión de Pain *(licencia creativa)* | `arcs/invasion-de-pain.json` | 8 | 33 → 44 | Camino Animal de Pain (36) | **Pain, Camino Deva (44)** |
+
+Los saltos entre arcos (10 → 17, 27 → 33) los da la XP del jefe final del arco anterior. Dentro de
+un arco el jugador va 1 nivel por debajo del enemigo en los primeros pisos y 2-4 por encima tras el
+mini-jefe, y llega a los dos jefes **a su mismo nivel**.
 
 ## Historia del sistema de nivel de enemigo (importante para no repetir el error)
 
@@ -42,18 +47,53 @@ Los arcos 2 y 3 tenían 10 y 12 pisos. Se bajaron a 8, como el arco 1, porque el
 caber entero en el viewport (ver [13](./13-ui-mapa-y-combate.md)) y a partir de 8 pisos los nodos
 salían demasiado pequeños para verse. `pisoMiniJefe` pasa a 4 y `pisoJefeFinal` a 8 en los tres.
 
-**Esto desbalancea a la baja los arcos 2 y 3 y está sin recalibrar.** La calibración de v3 cuenta
-los combates de un único camino como `(pisos-1) * peso_combate / peso_total`: con 8 pisos en vez de
-12, el arco 3 da ~1/3 menos de combates y por tanto bastante menos XP, mientras que
-`nivelEnemigoBase` (20 y 46) y los niveles fijos de jefe (22/24 y 48/49) siguen calculados para los
-arcos largos. Al llegar al arco 3 se irá con menos nivel del que esos números asumen. Pendiente de
-recalibrar con simulación en el playtest ([05 - roadmap](./05-roadmap.md), punto 9).
+**Recalibrado en la fase 4 del rediseño de balance** (ver más abajo). Durante mucho tiempo los
+niveles de los arcos 2 y 3 siguieron siendo los de cuando medían 10 y 12 pisos.
 
 ## Curva de XP (corregida — la original era matemáticamente inviable)
 
 La curva original (`crecimiento: 1.12`, exponencial) necesitaba **24,8 millones de XP** para
 llegar a nivel 100. Toda la run genera, como mucho, ~5.000 XP. Corregida a `crecimiento: 1.015`
 (bases 17-24 según personaje).
+
+## v4 — Recalibración con el nivel del jugador CALCULADO, no supuesto
+
+El error que cerró esta versión es el mismo de v1 con otra cara: nadie estaba comprobando a qué
+nivel llega el jugador de verdad. `scripts/simular-combates.mjs` *interpolaba* el nivel del jugador
+entre los niveles de jefe del arco — es decir, daba por buena la conclusión que tenía que demostrar.
+
+Con la XP real medida (`nivelesEstimadosDeLaRun` en `engine/leveling.js`), el jugador llegaba a
+**Zabuza (Nv.4) siendo nivel 9, a Gaara (Nv.24) siendo 34 y a Pain (Nv.49) siendo 70**. Los
+combates comunes se ganaban el 99-100% de las veces con el 91-98% del HP intacto: no eran combates.
+Y el mini-jefe era la pelea más dura de cada arco, porque se pelea *antes* de que caiga su propia
+XP, que era la que te catapultaba.
+
+La causa: **la economía de XP**, no la curva de stats. Un combate común daba 20 XP y un jefe entre
+150 y 2000. Haku solo te subía de nivel 1 a 8.
+
+Lo que se cambió:
+
+- **XP común por arco** (`arco.xpCombateComun`: 65 / 80 / 100). Las 5 plantillas genéricas se
+  reutilizan en los tres arcos y no declaran `recompensa`, así que sin esto un enemigo del arco 3
+  daba lo mismo que uno del 1. El store lo lee en `_aplicarVictoria`, detrás de lo que declare el
+  enemigo. Los enemigos nombrados (Zaku, Dosu, Kin) perdieron su XP propia y cobran la del arco:
+  eran comunes con nombre y daban menos que un genérico.
+- **XP de jefe** bajada de 150/450/220/900/700/2000 a 100/165/125/210/160/300. La del jefe final de
+  arco sigue siendo grande a propósito: es el puente al arco siguiente.
+- **Bandas de nivel de los arcos** ensanchadas a ~10 niveles cada una. Las viejas (1→4, 20→24,
+  46→49) eran aritméticamente imposibles: 8 pisos dan ~5 nodos con XP, y no hay forma de que sumen
+  solo 3 niveles salvo que den casi cero.
+- **`escaladoNivelPorPiso` a 1.0** en los tres, para que el enemigo común suba al ritmo del jugador.
+- **`crecimientoStatsPorNivel` de 0,08 a 0,03.** Esta sí es la curva de stats, y se aplanó por otro
+  motivo: con 0,08 el 92% del poder de un personaje venía de subir de nivel (ver
+  [30](./30-sistema-de-pasivas.md), fase 4).
+- **Stats de los jefes** bajadas (mini 74/12/9/10 → 59/9/8/10; final 90/14/10/10 → 63/10/9/10). Con
+  los niveles ya alineados, un nodo de jefe se ganaba solo el 38-57% de las veces **con el equipo de
+  3 entero y a HP completo**: una run completa salía al ~1%.
+
+Hay tres tests de invariante en `engine/leveling.test.js` que impiden que esto se vuelva a separar:
+todos los arcos declaran su `xpCombateComun`, el jugador llega a cada jefe con ±2 niveles de
+diferencia, y nunca va más de 5 niveles por encima del enemigo de un piso normal.
 
 ## Reparto de XP con el banquillo
 
@@ -64,9 +104,17 @@ vivo ese % de la XP de cada combate ganado, aunque no haya participado.
 
 ## Balance de jefes/minijefes: ratios fijos, no valores absolutos
 
-Las `statsBase` de los jefes son un múltiplo fijo de un personaje medio (hp41/ataque9/defensa7/velocidad8):
-- **Mini-jefe**: ×1.8 hp, ×1.3 ataque/defensa, ×1.2 velocidad.
-- **Jefe final**: ×2.2 hp, ×1.5 ataque, ×1.4 defensa, ×1.2 velocidad.
+Las `statsBase` de los jefes son un múltiplo fijo de un personaje medio (hp39/ataque9/defensa7/velocidad8):
+- **Mini-jefe** (Haku, Kabuto, Camino Animal) — 59/9/8/10: ×1.5 hp, ×1.1 defensa, ×1.3 velocidad,
+  ataque igual que un personaje.
+- **Jefe final** (Zabuza, Gaara, Pain) — 63/10/9/10: ×1.6 hp, ×1.15 ataque, ×1.2 defensa, ×1.3 velocidad.
+
+Los múltiplos anteriores eran bastante más altos (×1.8/×2.2 de HP y ×1.3/×1.5 de ataque). Se
+bajaron en la fase 4 al medir un nodo de jefe como se pelea de verdad —el equipo de 3 en cadena, no
+un 1 vs 1— y ver que se ganaba solo el 38-57% de las veces. Ahora los mini-jefes se ganan el 80-93%
+y los jefes finales el 82-88%, con el trío llegando al mini-jefe tocado del camino (el HP persiste
+entre nodos) y al jefe final curado por el descanso garantizado del piso anterior. El nodo más
+justo es Haku, al 80%: es el primer mini-jefe de la run y al que se llega con menos recursos.
 
 Como jugador y enemigo se escalan con la misma fórmula de nivel, el ratio se mantiene constante en
 cualquier nivel. (Bug histórico ya corregido: antes las stats de los jefes estaban puestas como si
@@ -81,35 +129,30 @@ ya fueran "finales" y el escalado por nivel las multiplicaba otra vez encima.)
 
 | Personaje | Tier 1 | Tier 2 |
 |---|---|---|
-| Naruto | 12 | 62 |
-| Sasuke | 12 | 68 |
-| Sakura | 20 | 60 |
-| Rock Lee | 22 | 70 |
-| Neji | 24 | 75 |
-| Tenten | 20 | 78 |
-| Shikamaru | 26 | 80 |
-| Ino | 23 | 72 |
-| Choji | 28 | 85 |
-| Kiba | 21 | 74 |
-| Hinata | 25 | 82 |
-| Shino | 27 | 79 |
-| Sai | 75 (único tier) | — |
-| Yamato | 80 (único tier) | — |
+| Naruto | 5 | 34 |
+| Sasuke | 5 | 35 |
+| Sakura | 6 | 34 |
+| Rock Lee | 7 | 35 |
+| Neji | 7 | 36 |
+| Tenten | 6 | 37 |
+| Shikamaru | 8 | 37 |
+| Ino | 7 | 35 |
+| Choji | 9 | 38 |
+| Kiba | 6 | 36 |
+| Hinata | 8 | 37 |
+| Shino | 8 | 37 |
+| Sai | — | 36 (único tier) |
+| Yamato | — | 37 (único tier) |
 
-## Nivel inicial al reclutar
+Remapeados dos veces, las dos por el mismo motivo: **un modo que se desbloquea por encima del nivel
+al que termina la run es contenido muerto**, escrito y balanceado pero que nadie ve.
 
-`reclutarPersonaje(id, nivelInicial)` acepta el nivel al que entra el personaje — usado tanto por
-recompensas de jefe como por el reclutamiento de tienda (`calcularNivelPorPiso` del nodo), para
-que un reclutamiento tardío en la run no entre indefenso.
+La primera vez estaban en 60-85 con runs que acababan sobre el 49 (fase 2 del rediseño de balance).
+La segunda fue efecto colateral de la fase 4: al recalibrar la XP, el arco 1 pasó a terminar sobre
+el nivel 10 y los tier 1 seguían en 12-28, así que **el primer arco entero se jugaba sin ninguna
+transformación** — y ahí el 92% del poder venía de subir de nivel y nada más. Ahora el tier 1 cae
+dentro del arco 1 (5-9) y el tier 2 dentro del arco 3 (34-38).
 
-## Jefes como reclutables (rareza, curvaXp)
-
-Cada jefe/mini-jefe en `enemies.json` tiene `rareza` (`raro` mini-jefes, `legendario` jefes
-finales), `curvaXp` y `desbloqueablePorLogro: true`. Detalle completo en
-[14 - Reclutamiento y rareza](./14-reclutamiento-y-rareza.md).
-
-## Pendiente
-
-`recompensa.finDeLaRun` (en Pain) todavía no lo lee ningún código — falta conectar en
-`useGameStore.js` para marcar `runGanada: true` al completar la run (hoy `runTerminada` solo
-cubre la derrota).
+Hay un test de invariante por cada uno de los dos errores: que ningún modo pase del nivel final de
+la run, y que todo personaje con dos modos desbloquee el primero dentro del arco 1. Sai y Yamato
+tienen un único modo, tardío a propósito, y quedan fuera del segundo.

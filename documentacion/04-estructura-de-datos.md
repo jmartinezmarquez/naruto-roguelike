@@ -64,6 +64,10 @@ Configuración genérica que el generador de mapa debe leer:
 - `poolTiposNodo` (con pesos de probabilidad)
 - `pisoMiniJefe` / `miniJefeId`, `pisoJefeFinal` / `jefeFinalId`
 - `personajesInicialesIds` (solo relevante en el primer arco de la run), `personajesReclutablesIds`
-- `nivelEnemigoBase`, `escaladoNivelPorPiso`
+- `nivelEnemigoBase`, `escaladoNivelPorPiso`, `nivelMiniJefe`, `nivelJefeFinal`
+- `xpCombateComun` — XP de un enemigo común **de este arco**. Las 5 plantillas genéricas se
+  reutilizan en los tres arcos y no declaran `recompensa`, así que sin este campo un enemigo del
+  arco 3 daría lo mismo que uno del 1. El store lo lee en `_aplicarVictoria`, detrás de lo que
+  declare el enemigo. Hay un test de invariante que exige que los tres arcos lo traigan.
 
 > Añadir un arco nuevo = crear otro archivo con esta misma forma. El motor de generación de mapa no debe tener ninguna referencia hardcodeada a ningún arco concreto.

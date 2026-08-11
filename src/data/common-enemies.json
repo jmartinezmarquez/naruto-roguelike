@@ -136,10 +136,7 @@
       },
       "modos": [],
       "esEntrenador": true,
-      "geninAntes": 2,
-      "recompensa": {
-        "xp": 60
-      }
+      "geninAntes": 2
     },
     {
       "id": "dosu",
@@ -164,10 +161,7 @@
       },
       "modos": [],
       "esEntrenador": true,
-      "geninAntes": 2,
-      "recompensa": {
-        "xp": 60
-      }
+      "geninAntes": 2
     },
     {
       "id": "kin",
@@ -192,10 +186,7 @@
       },
       "modos": [],
       "esEntrenador": true,
-      "geninAntes": 1,
-      "recompensa": {
-        "xp": 50
-      }
+      "geninAntes": 1
     }
   ]
 }

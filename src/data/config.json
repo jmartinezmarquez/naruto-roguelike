@@ -41,7 +41,7 @@
   },
   "progresion": {
     "nivelMaximo": 100,
-    "crecimientoStatsPorNivel": 0.08,
+    "crecimientoStatsPorNivel": 0.03,
     "porcentajeXpBanquillo": 0.6,
     "multiplicadorEficaciaFuerte": 1.5,
     "multiplicadorEficaciaDebil": 0.5,

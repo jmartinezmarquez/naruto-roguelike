@@ -1,10 +1,11 @@
 # Naruto Roguelike — contexto del proyecto
 
 Roguelike de mapa ramificado inspirado en Pokelike/Slay the Spire, temática Naruto.
-MVP con 3 arcos jugados en una sola run continua, nivel 1 a 100:
-1. País de las Olas — mini-jefe Haku (nivel fijo 3), jefe final Zabuza (nivel fijo 4).
-2. Examen Chunin — mini-jefe Kabuto (22), jefe final Gaara (24).
-3. Invasión de Pain (licencia creativa) — mini-jefe Camino Animal de Pain (48), jefe final Pain, Camino Deva (49).
+MVP con 3 arcos jugados en una sola run continua, de nivel 1 a ~51 (`nivelMaximo: 100` es solo un
+techo teórico que nadie alcanza jugando):
+1. País de las Olas (niveles 1-10) — mini-jefe Haku (nivel fijo 3), jefe final Zabuza (10).
+2. Examen Chunin (17-27) — mini-jefe Kabuto (19), jefe final Gaara (27).
+3. Invasión de Pain (licencia creativa) (33-44) — mini-jefe Camino Animal de Pain (36), jefe final Pain, Camino Deva (44).
 
 Documentación completa en `documentacion/` — índice en `documentacion/00-indice.md`. Antes de
 explorar el código a ciegas, comprueba si el documento correspondiente ya explica el porqué.
@@ -50,7 +51,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   cura con descanso, eventos de curación, o (más adelante) consumibles.
 - **Nivel de enemigo: FIJO, no relativo al jugador.** Se intentó escalado dinámico y se descartó —
   rompe el sentido de subir de nivel. Ver la historia completa en `documentacion/11-progresion-y-arcos.md`
-  antes de tocar esto, para no repetir el ciclo de errores.
+  antes de tocar esto, para no repetir el ciclo de errores. **Pero fijo no quiere decir "sin
+  comprobar"**: los niveles que declara un arco solo significan algo si el jugador llega ahí de
+  verdad, y eso hay que calcularlo (`nivelesEstimadosDeLaRun` en `engine/leveling.js`), no suponerlo.
+  Se dio por supuesto durante meses y el jugador llegaba a Pain (Nv.49) siendo nivel 70. Hay cuatro
+  tests de invariante en `leveling.test.js` que lo protegen.
 - **Modos/transformaciones**: array `modos` (0 a 2 tiers), se activa siempre el de mayor
   `nivelDesbloqueo` disponible, calculado internamente por `crearLuchador` — nunca cambia a mitad
   de combate.
@@ -97,13 +102,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 153 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 162 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 153 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 162 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -146,10 +151,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   básico) y `turnosMaximos` 20 → 30. La ficha de personaje enseña solo el nombre del jutsu y tres
   puntitos de ritmo (`RitmoCarga`), no potencias ni turnos exactos: eso es material de la futura
   enciclopedia (punto 10 del roadmap) — ver `documentacion/29-sistema-de-jutsus-automaticos.md`.
-- [x] `scripts/simular-combates.mjs`: simula los combates de los 3 arcos y saca turnos, victorias y
-  jutsus lanzados. Correrlo antes y después de cualquier cambio de balance. Se ejecuta con
-  `node scripts/simular-combates.mjs` (lleva un hook de Node para poder importar el motor, escrito
-  para Vite, sin pasar por Vitest).
+- [x] `scripts/simular-combates.mjs`: el instrumento de balance. Cuatro bloques — nivel real del
+  jugador piso a piso, balance por arco, jefes con el equipo de 3 **en cadena**, peso de cada objeto,
+  y de dónde viene el poder (niveles/transformación/objeto). Correrlo antes y después de cualquier
+  cambio de balance. Se ejecuta con `node scripts/simular-combates.mjs` (lleva un hook de Node para
+  poder importar el motor, escrito para Vite, sin pasar por Vitest).
 - [x] Pulido visual estilo Pokelike: nodos del mapa con tamaño mínimo garantizado **en pantalla**
   (`tamanoNodo()`, el lienzo se escala y 48 px acababan en 31), apagados con `opacity` en vez de
   filtros (el mapa quedaba negro), hover con mini-zoom + halo y tooltip de solo el título;
@@ -157,11 +163,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   `PanelObjetos` movido a la columna derecha como rejilla de sprites con hover de una línea;
   `nombrePersonaje` unificado en `components/common/nombres.js` (los jefes reclutados por logro
   salían con el id crudo). Ver `documentacion/13-ui-mapa-y-combate.md`.
-- [x] **Rediseño del balance, fases 1-3 de 4** (`documentacion/30-sistema-de-pasivas.md`): motor de
-  pasivas, transformaciones y objetos. Falta la **fase 4** (curva de niveles + recalibración de los
-  3 arcos). El arco 3 quedó más fácil al hacer alcanzables los segundos modos: es una diferencia
-  real que absorbe la fase 4, no ruido. **Lo primero de la fase 4**: `simular-combates.mjs` no
-  equipa objetos, así que hoy es ciego a la fase 3 y no puede comprobar el reparto 40/30/30.
+- [x] **Rediseño del balance, las 4 fases** (`documentacion/30-sistema-de-pasivas.md`): motor de
+  pasivas, transformaciones, objetos y recalibración. La fase 4 encontró que el problema no era la
+  curva de stats sino la **economía de XP**: el jugador llegaba a los jefes 5, 10 y 21 niveles por
+  encima, y los combates comunes se ganaban al 99% con el HP casi intacto. Recalibrados XP común por
+  arco (`xpCombateComun`), XP de jefe, bandas de nivel de los tres arcos, stats de jefe, niveles de
+  desbloqueo de las transformaciones y `crecimientoStatsPorNivel` (0,08 → 0,03). El reparto del poder
+  pasó de 92/0/8 a ~50/30/20 (niveles/transformación/objetos). Ver
+  `documentacion/11-progresion-y-arcos.md` sección "v4".
 - [x] `scripts/simular-combates.mjs` es **determinista** (semilla fija): desde que hay pasivas con
   probabilidad, con `Math.random` dos ejecuciones daban 14% y 21% en el mismo combate.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
@@ -175,4 +184,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - `setState` síncrono dentro del cuerpo de un `useEffect` (React) — el patrón correcto para resetear estado al cambiar una prop/valor es ajustarlo durante el render, no en un efecto (ver `CombatScreen.jsx`, comentarios en el código).
 - Nivel de reclutamiento calculado con `calcularNivelPorPiso` (nivel del piso) en vez del nivel del equipo — con la run empezando en 1 solo personaje, daba reclutas muy por debajo del resto (ej. nivel 2). Ahora se usa el nivel del personaje más fuerte del equipo — ver `documentacion/19-seleccion-de-personaje.md`.
 - SVG: un `markerEnd` (punta de flecha) que termina justo en el centro de una forma dibujada DESPUÉS (p. ej. un círculo) queda completamente tapado por esa forma, aunque el trazo de la línea sí se vea. Hay que recortar el final del trazo al borde de la forma destino, no al centro — ver el bug de `RuedaChakra` en `documentacion/19-seleccion-de-personaje.md`.
+- HP al subir de nivel: `aplicarXpYActualizarHp` sumaba correctamente el incremento de vida, pero
+  `_aplicarVictoria` pisaba después el `hpActual` del personaje activo con el HP del final del
+  combate, tirando ese incremento. Resultado: el banquillo cobraba la vida del nivel y **el que
+  peleaba no** — justo el que gana la XP completa y más sube de nivel. Invisible en pantalla (la
+  barra sube de máximo y nada indica que faltan puntos). El patrón del fallo es genérico: **si una
+  función devuelve un campo calculado, no lo sobrescribas después con un valor "más fresco"** —
+  pásaselo como entrada. Ahora `aplicarXpYActualizarHp` recibe `hpDePartida`.
 - XP de personajes caídos: `_aplicarVictoria` comprobaba `p.derrotado` en el momento de ganar el combate, no en el momento en que empezó — un personaje que cae a mitad de una cadena de rondas (rondas encadenadas) y luego gana otro compañero se quedaba sin su XP de esa misma victoria, aunque hubiera participado. Solución: `jugarCombate` toma una foto de quién estaba derrotado ANTES de empezar (`idsYaDerrotadosAntesDelCombate`) y esa foto es la que decide quién se salta la XP, no el estado en vivo al final.

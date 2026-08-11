@@ -19,11 +19,18 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (153 tests)
+## Cobertura actual (162 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
-  primero de la lista), `aplicarMultiplicadores`.
+  primero de la lista), `aplicarMultiplicadores`, y `nivelesEstimadosDeLaRun` (empieza a nivel 1, un
+  piso normal solo aporta la XP *esperada* y no la de un combate entero, el nivel se arrastra entre
+  arcos). Más cuatro **invariantes de arco**, todos contra el mismo error: que los niveles fijos que
+  declara un arco se separen de donde el jugador llega de verdad. Los tres arcos declaran su
+  `xpCombateComun`; el jugador llega a cada jefe con ±2 niveles de diferencia; nunca va más de 5
+  niveles por encima del enemigo de un piso normal; y todo personaje con dos modos desbloquea el
+  primero dentro del arco 1. Sin ellos el juego se descalibra en silencio: llegó a estar en Zabuza
+  (Nv.4) peleado a nivel 9 y Pain (Nv.49) a nivel 70, con los combates comunes al 99% de victorias.
 - **`engine/combat.test.js`** — eficacias de tipo, `crearLuchador` (HP persistido y su recorte al
   máximo), daño mínimo de 1, `resolverTurno` termina con un ganador, `resolverCombateCompleto`
   siempre devuelve ganador y el perdedor queda a 0 HP. **Barra de jutsu**: se carga al atacar y al
@@ -46,6 +53,10 @@ sin mocks ni DOM.
   hacer ruido: todo modo declara pasivas válidas, **todo modo se desbloquea dentro de la run**
   (estaban a nivel 60-85 con la run acabando en 49, así que no se veían nunca), todo personaje tiene
   transformación, y ningún objeto da bonificaciones planas de estadísticas.
+- **`store/useGameStore.test.js`** (además de lo ya cubierto) — **HP al subir de nivel**: el
+  personaje que ha peleado gana el incremento de vida sobre el HP con el que terminó el combate, y
+  ese incremento nunca lo deja por encima del nuevo máximo. Los dos fallan sin el arreglo. Cubren un
+  bug invisible en pantalla: el banquillo cobraba la vida del nivel y el que peleaba no.
 - **`engine/mapGenerator.test.js`** — el piso 1 nunca tiene descanso (el bug real, repetido 30
   veces por la aleatoriedad), el último piso siempre 1 nodo `jefe`, el piso de mini-jefe siempre
   tiene exactamente un nodo `miniJefe`, todo nodo (salvo el inicial) tiene conexión entrante,

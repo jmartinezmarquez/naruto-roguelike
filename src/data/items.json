@@ -38,7 +38,7 @@
       "pasivas": [
         {
           "id": "first_jutsu_bonus",
-          "cantidad": 0.25
+          "cantidad": 0.45
         }
       ]
     },
@@ -53,7 +53,7 @@
       "pasivas": [
         {
           "id": "heal_after_battle",
-          "cantidad": 0.12
+          "cantidad": 0.2
         }
       ]
     },
@@ -68,7 +68,7 @@
       "pasivas": [
         {
           "id": "heal_on_kill",
-          "cantidad": 0.15
+          "cantidad": 0.28
         }
       ]
     },
@@ -83,7 +83,7 @@
       "pasivas": [
         {
           "id": "jutsu_bonus",
-          "cantidad": 0.3
+          "cantidad": 0.5
         },
         {
           "id": "increase_damage_taken",
@@ -114,7 +114,7 @@
       "pasivas": [
         {
           "id": "heal_on_kill",
-          "cantidad": 0.2
+          "cantidad": 0.4
         }
       ]
     },
@@ -130,7 +130,7 @@
         {
           "id": "low_hp_reduction",
           "cantidad": 0.5,
-          "umbral": 0.3
+          "umbral": 0.45
         }
       ]
     },
@@ -146,8 +146,7 @@
         {
           "id": "ignore_defense",
           "cantidad": 1,
-          "soloJutsu": true,
-          "soloPrimero": true
+          "soloJutsu": true
         }
       ]
     }
