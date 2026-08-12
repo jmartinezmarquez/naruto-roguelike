@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/useGameStore';
 import { nombrePersonaje } from '../common/nombres';
+import { spriteDeCombate } from '../common/datosDeLuchador';
 
 export default function GameOverScreen() {
   const equipo = useGameStore((s) => s.equipo);
@@ -40,9 +41,23 @@ export default function GameOverScreen() {
                   key={p.id}
                   className="flex items-center justify-between rounded-md border border-pergamino-100/10 bg-tinta-950/40 px-3 py-2"
                 >
-                  <div className="text-left">
-                    <p className="text-sm font-display">{nombrePersonaje(p.id)}</p>
-                    <p className="text-xs text-pergamino-200/50">Lv. {p.nivel}</p>
+                  <div className="flex items-center gap-3 text-left min-w-0">
+                    {/* La pantalla de game over es la foto final de la run: sin
+                        sprites era una tabla de nombres, y el equipo que has
+                        montado es justo lo que quieres ver ahí. Los caídos van
+                        atenuados, igual que en combate. */}
+                    {spriteDeCombate(p.id, p.nivel) && (
+                      <img
+                        src={spriteDeCombate(p.id, p.nivel)}
+                        alt=""
+                        className={`w-12 h-12 shrink-0 ${p.derrotado ? 'opacity-40' : ''}`}
+                        style={{ imageRendering: 'pixelated' }}
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-display truncate">{nombrePersonaje(p.id)}</p>
+                      <p className="text-xs text-pergamino-200/50">Lv. {p.nivel}</p>
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className={`text-xs ${p.derrotado ? 'text-sello-500' : 'text-fuuton'}`}>

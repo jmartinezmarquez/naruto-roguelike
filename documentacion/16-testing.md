@@ -29,7 +29,10 @@ sin mocks ni DOM.
   declara un arco se separen de donde el jugador llega de verdad. Los tres arcos declaran su
   `xpCombateComun`; el jugador llega a cada jefe con ±2 niveles de diferencia; nunca va más de 5
   niveles por encima del enemigo de un piso normal; y todo personaje con dos modos desbloquea el
-  primero dentro del arco 1. Sin ellos el juego se descalibra en silencio: llegó a estar en Zabuza
+  primero dentro del arco 1, y **todo jefe con transformación llega transformado a su combate**
+  (este último es nuevo: el anterior solo miraba `characters.json`, y por eso Zabuza desbloqueaba su
+  modo a nivel 15 peleándose a 10, y Pain a **90** peleándose a 44, sin que nadie se enterara —
+  meses de arte recortado que no se veía). Sin ellos el juego se descalibra en silencio: llegó a estar en Zabuza
   (Nv.4) peleado a nivel 9 y Pain (Nv.49) a nivel 70, con los combates comunes al 99% de victorias.
 - **`engine/combat.test.js`** — eficacias de tipo, `crearLuchador` (HP persistido y su recorte al
   máximo), daño mínimo de 1, `resolverTurno` termina con un ganador, `resolverCombateCompleto`

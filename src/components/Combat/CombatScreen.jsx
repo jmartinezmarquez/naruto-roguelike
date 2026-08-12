@@ -97,7 +97,7 @@ function estadoDelEquipo(resultado, indiceRonda, hpJugadorEnVivo) {
 function estadoDeLosEnemigos(cadenaEnemigos, ronda, hpEnemigoEnVivo) {
   const actual = {
     id: ronda.enemigo.id,
-    nombre: ronda.enemigo.nombre,
+    nombre: nombrePersonaje(ronda.enemigo.id),
     nivel: ronda.enemigo.nivel,
     hpActual: hpEnemigoEnVivo,
     hpMaximo: ronda.enemigo.hpMaximo,
@@ -112,7 +112,7 @@ function estadoDeLosEnemigos(cadenaEnemigos, ronda, hpEnemigoEnVivo) {
     const yaCayo = i < cadenaEnemigos.indiceActual;
     return {
       id: eslabon.enemigoBase.id,
-      nombre: eslabon.enemigoBase.nombre,
+      nombre: nombrePersonaje(eslabon.enemigoBase.id),
       nivel: eslabon.nivel,
       hpActual: yaCayo ? 0 : luchador.hpMaximo,
       hpMaximo: luchador.hpMaximo,
@@ -936,7 +936,7 @@ export default function CombatScreen() {
 
         {transicionRonda && (
           <p className="text-sello-500 text-sm font-display text-center mb-3">
-            {ronda.jugador.nombre} has fallen — {resultado.rondas[indiceRonda + 1]?.jugador.nombre} enters combat...
+            {nombrePersonaje(ronda.jugador.id)} has fallen — {nombrePersonaje(resultado.rondas[indiceRonda + 1]?.jugador.id)} enters combat...
           </p>
         )}
 
@@ -952,7 +952,7 @@ export default function CombatScreen() {
             <div className="px-3 pb-3 max-h-40 overflow-y-auto flex flex-col gap-1.5">
               {eventosVisibles.map((evento, i) => {
                 const esJugador = evento.atacanteId === ronda.jugador.id;
-                const nombreAtacante = esJugador ? ronda.jugador.nombre : ronda.enemigo.nombre;
+                const nombreAtacante = nombrePersonaje(esJugador ? ronda.jugador.id : ronda.enemigo.id);
                 const esJutsu = evento.tipoAtaque === 'jutsu';
                 return (
                   <p key={i} className={esJutsu ? 'text-sm' : 'text-sm text-pergamino-200/60'}>

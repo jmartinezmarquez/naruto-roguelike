@@ -426,18 +426,128 @@ salieron abiertos por defecto en todas las pantallas.
   número de ronda, así que en cada relevo se remontaban también las del banquillo y sus barras y
   estelas volvían a empezar de cero.
 
+**Tarjeta de equipo del mapa (punto 8) — ver [13](./13-ui-mapa-y-combate.md)**
+
+Hecho junto con el 11: los dos rediseñaban la misma tarjeta y por separado habría sido tocarla dos
+veces. El panel de equipo es la vista que el jugador tiene delante casi toda la partida y era texto
+puro cuando ya existían los sprites.
+
+- [x] **Sprite** con el nivel en la esquina, **nombre abreviado** (`nombreCorto`, "Naruto U.") en su
+  propia línea a lo ancho de la tarjeta, los **números de HP** debajo de la barra, el **objeto
+  equipado en su propia fila** con sprite, nombre y X, y el panel más ancho (`w-32` → `w-40`) para no
+  tener que achicar la letra.
+- [x] **El nombre necesita la fila entera**: compartiéndola con el sprite le quedaban 60 px y hasta
+  "Naruto U." se truncaba en "Nar…". Por eso el nivel va superpuesto al sprite y no en una columna.
+- [x] **El objeto se probó en la esquina del retrato y se movió abajo**: tapaba justo al ninja, que
+  es lo primero que identifica la tarjeta. Y debajo de la barra van los **números de HP** en vez de
+  la naturaleza de chakra — en el mapa lo que se consulta a cada paso es cuánta vida queda.
+- [x] **Reordenar es drag and drop**, y no solo por comodidad: el clic solo sabía hacer "al frente",
+  así que ordenar el segundo y el tercero entre sí era imposible. Al soltar se **saca y se
+  reinserta**, no se intercambia — intercambiar deja el orden intermedio como estaba y el gesto no
+  cuadra con lo que ve el jugador.
+- [x] Los sprites placeholder que pedía el punto ya no hacen falta: los reales existen desde el 2.
+
+**Tarjetas de personaje con sprite (punto 11) — ver [22](./22-diseño-tarjeta-de-personaje.md)**
+
+Las tarjetas se diseñaron sin arte, con el nombre y las barras haciendo todo el trabajo. Con
+`assets/characters/` y `assets/transformations/` poblados, se rehízo `FichaPersonaje` siguiendo el
+[22](./22-diseño-tarjeta-de-personaje.md).
+
+- [x] **Sprite grande** sobre su claro de tierra, nombre con nivel, **rareza en estrellas** (solo las
+  estrellas y su color — la palabra "Legendary" repetía el dato y era lo más largo de la fila; se
+  conserva en el `title`) y afinidad
+  de chakra en pastilla de color, barra de HP con color por tramos y su cifra centrada, estadísticas
+  **en lista alineada, sin barras y con abreviaturas** (ATT/DEF/SPE/HP), jutsu con su ritmo de carga
+  y el objeto equipado con su sprite.
+- [x] **Una sola ficha para todo el juego.** La pantalla de reclutar tenía su propio diseño en
+  paralelo —con una barra por estadística, justo lo que el doc 22 descarta, y sin sprite—, así que
+  reclutar enseñaba a un ninja distinto del que salía en el hover del mapa. Ahora las tres cartas del
+  pergamino y la ficha del desafío legendario son `FichaPersonaje` dentro de un botón.
+- [x] Sprites también en la **mochila al equipar**, en el **panel de reemplazo** al reclutar y en el
+  **game over**, que era una tabla de nombres siendo la foto final de la run.
+- [x] **Lo que NO se hizo del doc 22**: la sección de transformación en la tarjeta. Sigue fuera a
+  propósito y por un motivo posterior al documento — todos los personajes tienen transformación (hay
+  un test de invariante), así que decirlo no distingue a nadie, y son una sorpresa. Ver
+  [30](./30-sistema-de-pasivas.md).
+
+✅ **Y el ⚠️ que arrastraba: ninguna transformación de jefe se activaba jamás.** Sus modos se
+desbloqueaban por encima del nivel al que se pelean — Zabuza a 15 peleándose a 10, Kabuto a 33
+peleándose a 19, Gaara a 30 peleándose a 27 y Pain a **90** peleándose a 44 — con arte recortado que
+nadie iba a ver. Bajados a 8 / 17 / 24 / 40, y el tier 2 de Gaara de 50 a 40 para que exista si lo
+reclutas. Como el modo aporta multiplicadores y pasivas, **se compensó el `statsBase` de los cuatro
+dividiéndolo por los multiplicadores de su propio modo**: el jefe pesa lo mismo que antes, pero ahora
+parte de ese peso viene de la transformación en vez de números en crudo — el mismo reparto que se le
+hizo al jugador en el punto 1.
+Re-simulado: los nodos de jefe pasan de 80-93% a **77-92%** de victorias, dentro de la banda.
+Hay un **test de invariante nuevo** que exige que todo jefe con modo llegue transformado a su
+combate; el que ya existía solo miraba `characters.json` y por eso esto vivió tanto. Haku y Camino
+Animal siguen sin modo a propósito: no hay arte para ellos, y el test se los salta.
+
+
+**El final del combate (punto 12) — ver [13](./13-ui-mapa-y-combate.md)**
+
+El cierre era un `Victory` de texto con un botón: el oro cambiaba en un panel de otra pantalla y el
+objeto aparecía en la mochila sin que nadie lo dijera. Ganar no se celebraba en ningún sitio.
+
+- [x] **`PanelRecompensas`** entre el rótulo y el botón, que es donde el ojo ya está: `+N Gold` y el
+  objeto con su sprite. El objeto **solo sale si ha entrado de verdad en la mochila**: el del
+  mini-jefe tiene su propia pantalla de recogida y anunciarlo aquí además sería contarlo dos veces.
+  Viaja en el resumen del combate (`recompensas`) y no se lee del store, misma regla que
+  `equipoAlEmpezar`: cuando la animación empieza, el store ya tiene el estado final.
+- [x] **La XP no se enseña, y es una decisión tomada probándola.** Hubo una barra de XP en la tarjeta
+  y un `+N XP` en el panel, y se quitaron los dos: con la economía de XP actual **casi cada combate
+  sube un nivel**, así que la barra vivía siempre a punto de llenarse y el número no cambiaba
+  ninguna decisión. Lo que se ve de la XP es su consecuencia — el cartel de subida de nivel y,
+  detrás, la transformación.
+- [x] ⚠️ De aquella barra salió un bug que conviene no repetir: `{progresoXp && <barra/>}` con
+  `progresoXp === 0` **pinta un `0`**. En el primer combate de la run todos tienen 0 de XP, así que
+  aparecía un cero suelto en la tarjeta sin explicación. En JSX un guard numérico con `&&` renderiza
+  el número cuando vale 0.
+- [x] 189 tests: que el resumen trae el oro y coincide con el que se suma, que la XP **no** viaja en
+  él, y que el objeto del mini-jefe no se anuncia ahí.
+
+**Sin hacer, a propósito**: cualquier barra de XP, ni dentro ni fuera del combate. Si algún día se
+decide que la XP merece verse, el sitio es `FichaPersonaje`.
+
+
+**Segunda tanda de playtest (sobre las tarjetas de personaje ya rehechas)**
+
+- [x] **El nombre nunca se trunca ni se parte en dos líneas**: si no cabe entero se usa su versión
+  corta. **Se mide, no se estima** (`NombreQueCabe`): el primer intento contaba caracteres contra un
+  máximo fijo y falló en cuanto la misma ficha se usó en tres anchuras distintas — cabía en el hover
+  del mapa y no en la de selección de personaje. Ahora se pregunta al DOM y solo se cambia en un
+  sentido, porque volver al largo al ensanchar sería un bucle.
+- [x] **El nombre del jutsu parte de línea** en vez de truncarse: llegan a 29 caracteres ("Super
+  Beast Imitation Drawing") y son nombres propios, no hay forma de abreviarlos. La fila pasa a ser
+  **tres columnas** (icono / nombre / ritmo) para que la espiral y los puntitos se centren contra un
+  nombre de dos líneas, y **reserva la altura de dos líneas** para que las tarjetas de jutsu corto no
+  se queden con un hueco abajo al estirarse la rejilla.
+- [x] **Los paréntesis del nombre se cortan** ("Pain (Deva Path)" → "Pain") en todas las pantallas,
+  desde `nombrePersonaje`. Los **dos puntos no**: "Pain: Animal Path" es el otro jefe del mismo arco.
+- [x] **Estadísticas con abreviaturas y sin iconos** (ATT/DEF/SPE/HP). Con "⚔ Attack" y "❤ Max HP" la
+  etiqueta no cabía en media columna, se partía en dos líneas y descuadraba la rejilla entera.
+- [x] **La afinidad de chakra en pastilla del color de su naturaleza**, en vez de un emoji suelto.
+  ⚠️ Las clases van escritas enteras (`bg-katon/15`…) y no compuestas (`bg-${tipo}/15`): Tailwind
+  escanea el código como texto, así que una clase construida en tiempo de ejecución no llega al
+  bundle y la pastilla saldría transparente.
+- [x] **Los números de HP, centrados** bajo la barra: pegados a un extremo parecían el final de otra
+  cosa en vez de la lectura de la barra entera.
+
+
 ## Próximos pasos (en orden sugerido)
 
-> **Por dónde seguir ahora mismo: el 11 junto con el 8.** Cerrados el 1 (motor y balance), el 2
-> (combate), el 3 (reclutar con rareza y desafío legendario), el 4 (transformación) y el 12 (el final
-> del combate). **Con el 3 se acabó el trabajo de motor, store y datos: todo lo que queda de aquí en
-> adelante es interfaz o contenido.**
+> **Por dónde seguir ahora mismo: el 7 (playtest).** Todo lo cerrado —del 1 al 4, el 8, el 11 y el
+> 12— está arriba, en "Hecho", con su número en el título para que las referencias a "punto N del
+> roadmap" repartidas por el código sigan encontrando su sitio.
 >
-> El 11 y el 8 van **juntos y no seguidos**: los dos rediseñan la misma tarjeta de personaje —el 11
-> le mete el sprite, el 8 el drag and drop, el tipo como etiqueta y el objeto equipado— y hacerlos por
-> separado significa tocarla dos veces. Ahí entra también la **barra de XP** fuera del combate, que el
-> punto 12 dejó a propósito sin poner por esto mismo. El 11 arrastra además el ⚠️ de que ninguna
-> transformación de jefe se activa jamás, que sí toca datos y pide re-simular.
+> **Ya no queda nada que toque motor, store ni datos**, y las dos pantallas que el jugador mira todo
+> el rato —mapa y combate— están hechas. Lo que queda es pulir pantallas secundarias (5 logros, 6
+> eventos, 9 columna central) o añadir contenido (10 enciclopedia, 13 Kakashi).
+>
+> **El 7 va primero, y no como formalidad.** Las dos últimas tandas de mejoras salieron enteras de
+> partidas tuyas, no de la lista; y desde el último playtest han cambiado el balance de los jefes, la
+> frecuencia y la rareza de los reclutas, el final del combate y todas las tarjetas de personaje.
+> Cualquier punto que se elija ahora sin haber jugado se elige a ciegas.
 >
 > **Lo único grande que le sigue faltando al MVP y no es un punto de la lista: el sonido.** No es un
 > retoque de pantalla sino un sistema entero (assets, precarga, mezcla, ajuste de volumen), y por eso
@@ -445,8 +555,8 @@ salieron abiertos por defecto en todas las pantallas.
 >
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas
 > por comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar.
-> La lista empieza en 5 porque los puntos 1 a 4 están hechos y se han movido a "Hecho" —
-> **conservando su número en el título** para que esas referencias sigan encontrando su sitio.
+> La lista se queda con **5, 6, 7, 9, 10 y 13**: los huecos (1-4, 8, 11, 12) son puntos hechos que
+> se han movido a "Hecho" **conservando su número en el título**, no errores de numeración.
 >
 > Lo único que el punto 1 deja abierto a propósito es el peso de los objetos: se quedaron en el
 > 21-24% del poder, no en el 40% del doc 27. Llegar al 40% exigiría que un solo objeto pesara más
@@ -482,8 +592,6 @@ salieron abiertos por defecto en todas las pantallas.
     - El ritmo de empezar solo (1 personaje) en un arco sin reclutas (`pais_de_las_olas` tiene
       `personajesReclutablesIds: []`).
 
-8. **Actualizar tarjeta de equipo** — Los nombres deberian estar acortados a "Naruto U." para no ocupar tanto en la pantalla de equipo. La fuente debería ser de un tamaño más pequeño para que tanto en la tarjeta de equipo como en la de reclutamiento el nombre quepa en una linea. Ahora que no tenemos descripción de nada podemos poner el tipo del luchador (Katon) como una etiqueta debajo del nombre debajo de la HP y eliminarlo del nombre. Mover el orden de los peleadores del equipo deberia ser un drag and drop, no un click. El objeto equipado en cada uno de ellos debería enseñar el sprite del objeto con una X para desequiparlo. Podemos ensanchar la tarjeta del equipo para no tener que hacer la fuente tan pequeña que sea dificil de ver, hay espacio. (ver [22](./22-diseño-tarjeta-de-personaje.md)) Y utiliza sprites placeholder para simular el espacio visual aunque no sean los definitivos
-
 9. **Diseño de la columna central** — Con unos nodos mas grandes la columna central puede volver a su tamaño anterior, manteniendo las proporciones y ajustandose a la pantalla. También el sprite usado en la columna central tiene que ser mas sencillo y representativo del arco actual. El nombre del arco actual tendría uqe estar con ese estilo caracteristico de Naruto en el que la fuente tiene color negro con ese reborde blanco tan caracteristico
 
 10. **Enciclopedia** — el sitio donde vive la información que se ha ido sacando de las tarjetas para
@@ -494,55 +602,6 @@ salieron abiertos por defecto en todas las pantallas.
     medio de una run — pantalla propia desde el menú de iconos del mapa, como Logros.
     Ojo: hoy esa información **no está en ninguna parte**, así que hasta que esto exista hay una deuda
     real, no solo un "ya lo pondremos". Y crece cada vez que se adelgaza una tarjeta.
-
-11. **Rehacer la UI de personaje ahora que hay sprites** — hasta ahora las tarjetas se diseñaron
-    sin arte, con el nombre y las barras haciendo todo el trabajo. Con `assets/characters/` y
-    `assets/transformations/` ya poblados, las pantallas donde aparece un personaje se han quedado
-    desfasadas: enseñan texto donde ya podrían enseñar al ninja. Dos frentes:
-
-    - **Las tarjetas de personaje en general** (`PersonajeHoverCard`/`FichaPersonaje`, selección de
-      personaje, reclutar, mochila al equipar, game over). La de combate ya se rehízo con el
-      rediseño Pokelike del punto 2 y sirve de referencia: sprite sobre su suelo, icono de
-      naturaleza de chakra junto al nombre, y las barras debajo.
-    - **El panel de equipo del mapa** (`MapScreen`), que es donde más se nota: es la vista que el
-      jugador tiene delante casi toda la partida y hoy no enseña ni un sprite. Encaja con el punto 8
-      (tarjeta de equipo), que ya pedía drag and drop y el objeto equipado visible — conviene
-      hacerlos a la vez y no tocar la misma tarjeta dos veces.
-
-    ⚠️ **Ninguna transformación de jefe se activa jamás.** Al pintar el sprite correcto se vio: sus
-    modos se desbloquean por encima del nivel al que se pelean — Zabuza a 15 y se pelea a 10, Kabuto
-    a 33 y se pelea a 19, Gaara a 30 y se pelea a 27, Pain a **90** y se pelea a 44. Es exactamente
-    el bug que la fase 2 arregló para los personajes jugables, y que en los jefes se dejó a
-    propósito para la fase 4... donde se recalibraron sus NIVELES pero no los umbrales de sus modos.
-    Hay arte recortado de las cuatro (`assets/transformations/zabuza_0`, `kabuto_0`, `gaara_0/1`,
-    `pain_camino_deva_0`) que nadie va a ver. Arreglarlo es bajar esos umbrales y **re-simular**:
-    los jefes se vuelven más fuertes, así que hay que volver a mirar el bloque de jefes en cadena.
-    El test de invariante que protege esto solo mira `modosDePersonajes`, por eso no saltó.
-
-12. [x] **El final del combate** — el cierre era un `Victory` de texto con un botón: la XP se
-    aplicaba en el store y solo se notaba si además subías de nivel, el oro cambiaba en un panel de
-    otra pantalla y el objeto aparecía en la mochila sin que nadie lo dijera. Ganar no se celebraba
-    en ningún sitio. Ahora:
-
-    - **`PanelRecompensas`** entre el rótulo y el botón, que es donde el ojo ya está: `+N Gold` y el
-      objeto con su sprite. El objeto **solo sale si ha entrado de verdad en la mochila**: el del
-      mini-jefe tiene su propia pantalla de recogida y anunciarlo aquí además sería contarlo dos veces.
-      Viaja en el resumen del combate (`recompensas`) y no se lee del store, misma regla que
-      `equipoAlEmpezar`.
-    - **La XP no se enseña, y es una decisión tomada probándola.** Hubo una barra de XP en la tarjeta
-      y un `+N XP` en el panel, y se quitaron los dos: con la economía de XP actual **casi cada
-      combate sube un nivel**, así que la barra vivía siempre a punto de llenarse y el número no
-      cambiaba ninguna decisión. Lo que se ve de la XP es su consecuencia — el cartel de subida de
-      nivel y, detrás, la transformación.
-    - ⚠️ De aquella barra salió un bug que conviene no repetir: `{progresoXp && <barra/>}` con
-      `progresoXp === 0` **pinta un `0`**. En el primer combate de la run todos tienen 0 de XP, así
-      que aparecía un cero suelto en la tarjeta sin explicación. En JSX un guard numérico con `&&`
-      renderiza el número cuando vale 0.
-    - 189 tests (eran 187): que el resumen trae el oro y coincide con el que se suma, que la XP **no**
-      viaja en él, y que el objeto del mini-jefe no se anuncia ahí.
-
-    **Sin hacer, a propósito**: cualquier barra de XP fuera del combate. Las tarjetas de personaje las
-    rehacen los puntos 11 y 8, y si algún día se decide que la XP merece verse, ese es el sitio.
 
 13. **Añadir personaje y objeto** - Creo que es buen momento para probar como se sentiría añadir un nuevo personaje al elenco. Como el primer arco no tiene muchos personajes jugables y ninguno es legendario hasta que superas el boss final, me gustaría añadir a Kakashi. Dale un jutsu apropiado para esta altura de la historia, una transfomracion acorde y unas pasivas que se sientan del estilo de Kakashi. Dale tipo legendario y haz que sus números se sientan fuertes, pero sin desbalancear la run. Con él, añade también el objeto de los cascabeles, simplemente por ver como de difícil sería añadir un parche a futuro añadiendo cosas al juego. Si no tienes sprites, buscalos en internet, crealos tu o usa placeholders si no tienes suerte
 

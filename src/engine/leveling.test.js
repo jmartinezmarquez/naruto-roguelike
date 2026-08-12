@@ -206,4 +206,27 @@ describe('arcos (invariantes de datos)', () => {
       expect(personaje.modos[0].nivelDesbloqueo, personaje.id).toBeLessThanOrEqual(finDelPrimerArco);
     }
   });
+
+  it('todo jefe con transformación llega transformado al combate en que se pelea', () => {
+    // El mismo error que el de arriba, pero en los jefes, donde estuvo vivo mucho
+    // más tiempo porque el test anterior solo mira `characters.json`: Zabuza
+    // desbloqueaba a 15 y se pelea a 10, Kabuto a 33 peleándose a 19, Gaara a 30
+    // peleándose a 27 y Pain a **90** peleándose a 44. Ninguna se activaba jamás,
+    // con arte recortado que nadie iba a ver nunca.
+    //
+    // Van al nivel al que se pelean o por debajo, no "dentro de la run": un jefe
+    // tiene un solo combate, así que o llega transformado o su modo no existe.
+    const combatesDeJefe = ARCOS.flatMap((arco) => [
+      [arco.miniJefeId, arco.nivelMiniJefe],
+      [arco.jefeFinalId, arco.nivelJefeFinal],
+    ]);
+
+    for (const [id, nivelDelCombate] of combatesDeJefe) {
+      const jefe = enemiesData.jefes.find((j) => j.id === id);
+      // Haku y Camino Animal no tienen modos: no hay arte para ellos y se dejan
+      // sin transformación a propósito. Lo que no vale es tener uno y no usarlo.
+      if (!jefe?.modos?.length) continue;
+      expect(jefe.modos[0].nivelDesbloqueo, id).toBeLessThanOrEqual(nivelDelCombate);
+    }
+  });
 });

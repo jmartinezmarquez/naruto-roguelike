@@ -106,13 +106,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 189 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 190 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 189 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 190 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -227,6 +227,19 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   **La XP no se enseña a propósito**: casi cada combate sube un nivel, así que el número no cambia
   ninguna decisión; se ve su consecuencia (cartel de subida de nivel). Se probó con barra de XP y se
   quitó.
+- [x] **Tarjetas de personaje con sprite** (puntos 8 y 11 del roadmap): `FichaPersonaje` es la
+  **única** tarjeta de personaje del juego (hover del mapa, selección, las tres cartas de reclutar y
+  el desafío legendario) — reclutar tenía su propio diseño en paralelo. Sprite grande sobre su suelo,
+  rareza en estrellas, afinidad de chakra, stats en lista sin barras, jutsu y objeto equipado; sin
+  sección de transformación, que sigue siendo sorpresa. El **panel de equipo del mapa** lleva sprite,
+  nombre abreviado (`nombreCorto`), el tipo como etiqueta, el objeto con su sprite y una X, y se
+  reordena con **drag and drop** (el clic solo sabía hacer "al frente"). Ver
+  `documentacion/22-diseño-tarjeta-de-personaje.md` y `13-ui-mapa-y-combate.md`.
+- [x] **Las transformaciones de jefe ya se activan**: sus umbrales estaban por encima del nivel al que
+  se pelean (Pain a 90, peleándose a 44) y no se veía ninguna. Bajados a 8/17/24/40, con el
+  `statsBase` de los cuatro dividido por los multiplicadores de su propio modo para que el jefe pese
+  lo mismo pero parte de su poder venga de la transformación. Test de invariante nuevo — el que había
+  solo miraba `characters.json`. Ver `documentacion/11-progresion-y-arcos.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 

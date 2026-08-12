@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import itemsData from '../../data/items.json';
-import { nombrePersonaje } from '../common/nombres';
+import { nombrePersonaje, nombreCorto } from '../common/nombres';
+import { spriteDeCombate } from '../common/datosDeLuchador';
 import { SPRITE_OBJETO, COLOR_RAREZA, ETIQUETA_RAREZA, lineasDeEfecto } from './itemSprites';
 
 /**
@@ -179,9 +180,21 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
             const yaLoLleva = p.objetoEquipadoId === objeto.id;
             return (
               <div key={p.id} className="flex items-center justify-between gap-2">
-                <span className="min-w-0">
+                {/* Con sprite: elegir a quién le pones el objeto es elegir a un
+                    ninja concreto, y con solo el nombre había que reconstruirlo
+                    de memoria. Va a media resolución de su lienzo (96 → 32), que
+                    sigue siendo múltiplo entero. */}
+                {spriteDeCombate(p.id, p.nivel) && (
+                  <img
+                    src={spriteDeCombate(p.id, p.nivel)}
+                    alt=""
+                    className="w-8 h-8 shrink-0"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                )}
+                <span className="min-w-0 flex-1">
                   <span className="block text-[10px] font-display text-pergamino-100 truncate">
-                    {nombrePersonaje(p.id)}
+                    {nombreCorto(p.id)}
                   </span>
                   <span className="block text-[8px] text-pergamino-200/50">
                     Lv. {p.nivel}

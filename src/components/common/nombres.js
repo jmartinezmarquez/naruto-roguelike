@@ -14,10 +14,61 @@ import itemsData from '../../data/items.json';
  * reclutabas a un jefe.
  */
 export function nombrePersonaje(id) {
-  return (
+  const nombre = (
     personajesData.personajes.find((p) => p.id === id)?.nombre
     ?? enemiesData.jefes.find((j) => j.id === id)?.nombre
+    ?? commonEnemiesData.plantillasGenericas.find((e) => e.id === id)?.nombre
+    ?? commonEnemiesData.enemigosNombrados.find((e) => e.id === id)?.nombre
     ?? id
+  );
+  return sinParentesis(nombre);
+}
+
+/**
+ * Se queda con lo de delante del paréntesis: "Pain (Deva Path)" → "Pain".
+ *
+ * El paréntesis existe en los datos porque hay varios Caminos de Pain y hay que
+ * distinguirlos ahí dentro, pero en pantalla es la parte que sobra: ocupa el
+ * doble que el nombre y es lo primero que se corta al truncar, así que el jugador
+ * acababa leyendo "Pain (Deva…" — el paréntesis abierto sin cerrar, que es peor
+ * que no ponerlo. El dato no se toca; esto es solo cómo se muestra.
+ */
+function sinParentesis(nombre) {
+  const corte = nombre.indexOf('(');
+  return corte === -1 ? nombre : nombre.slice(0, corte).trim();
+}
+
+/**
+ * Nombre abreviado al estilo lista de equipo: "Naruto Uzumaki" → "Naruto U.".
+ *
+ * Existe porque el panel de equipo del mapa es estrecho y los nombres completos
+ * o se truncaban a mitad de palabra ("Kakashi Hatak…") o forzaban una fuente tan
+ * pequeña que no se leía. Abreviar el apellido gana la línea entera sin perder a
+ * quién estás mirando: el nombre de pila es el que identifica.
+ *
+ * Un nombre de una sola palabra (Gaara, Haku) se queda como está, y uno con
+ * paréntesis o más de dos partes —"Pain (Deva Path)"— también: partirlo por la
+ * primera inicial daría "Pain (." La regla solo se aplica donde tiene sentido.
+ */
+export function nombreCorto(id) {
+  const partes = nombrePersonaje(id).split(' '); // ya viene sin el paréntesis
+  if (partes.length === 1) return partes[0]; // Gaara, Haku, Pain
+  if (partes.length === 2) return `${partes[0]} ${partes[1][0]}.`; // Naruto U.
+  // Tres o más: las dos primeras palabras enteras. Sale de "Pain: Animal Path",
+  // donde abreviar por iniciales daría "Pain: A.P." y quedarse solo con la
+  // primera lo confundiría con el otro Pain del mismo arco.
+  return `${partes[0]} ${partes[1]}`;
+}
+
+/**
+ * Rareza de un luchador reclutable (`comun` | `inicial` | `raro` | `legendario`),
+ * o null. Mira también en los jefes: se desbloquean como reclutables por logro.
+ */
+export function rarezaDeLuchador(id) {
+  return (
+    personajesData.personajes.find((p) => p.id === id)?.rareza
+    ?? enemiesData.jefes.find((j) => j.id === id)?.rareza
+    ?? null
   );
 }
 
@@ -51,6 +102,29 @@ const EMOJI_TIPO = {
 /** Icono de la naturaleza de chakra de un luchador, o '' si no se encuentra. */
 export function emojiDeTipo(id) {
   return EMOJI_TIPO[tipoDeLuchador(id)] ?? '';
+}
+
+/** El nombre de la naturaleza como etiqueta ("Katon"), o '' si no se encuentra. */
+export function nombreDeTipo(id) {
+  const tipo = tipoDeLuchador(id);
+  return tipo ? tipo[0].toUpperCase() + tipo.slice(1) : '';
+}
+
+// Clases de la pastilla de naturaleza, una por tipo. Van escritas enteras y no
+// compuestas (`bg-${tipo}/15`) porque Tailwind escanea el código como texto: una
+// clase construida en tiempo de ejecución no existe en el bundle y la pastilla
+// saldría transparente.
+const CLASE_TIPO = {
+  katon: 'bg-katon/15 border-katon/60 text-katon',
+  fuuton: 'bg-fuuton/15 border-fuuton/60 text-fuuton',
+  raiton: 'bg-raiton/15 border-raiton/60 text-raiton',
+  doton: 'bg-doton/15 border-doton/60 text-doton',
+  suiton: 'bg-suiton/15 border-suiton/60 text-suiton',
+};
+
+/** Clases de color de la pastilla de naturaleza de un luchador. */
+export function clasePastillaDeTipo(id) {
+  return CLASE_TIPO[tipoDeLuchador(id)] ?? 'bg-pergamino-100/10 border-pergamino-100/30 text-pergamino-200';
 }
 
 export function nombreObjeto(id) {

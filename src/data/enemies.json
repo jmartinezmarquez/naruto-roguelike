@@ -39,9 +39,9 @@
       "nombre": "Zabuza Momochi",
       "tipo": "suiton",
       "statsBase": {
-        "hp": 63,
-        "ataque": 10,
-        "defensa": 9,
+        "hp": 58,
+        "ataque": 9,
+        "defensa": 8,
         "velocidad": 10
       },
       "jutsu": {
@@ -58,7 +58,7 @@
       "modos": [
         {
           "nombre": "Demon of the Mist Fury",
-          "nivelDesbloqueo": 15,
+          "nivelDesbloqueo": 8,
           "multiplicadores": {
             "ataque": 1.16,
             "defensa": 1.08,
@@ -94,10 +94,10 @@
       "nombre": "Kabuto Yakushi",
       "tipo": "doton",
       "statsBase": {
-        "hp": 59,
-        "ataque": 9,
-        "defensa": 8,
-        "velocidad": 10
+        "hp": 53,
+        "ataque": 8,
+        "defensa": 7,
+        "velocidad": 9
       },
       "jutsu": {
         "nombre": "Chakra Scalpel",
@@ -113,7 +113,7 @@
       "modos": [
         {
           "nombre": "Snake-Senjutsu Fusion",
-          "nivelDesbloqueo": 33,
+          "nivelDesbloqueo": 17,
           "multiplicadores": {
             "ataque": 1.16,
             "defensa": 1.2,
@@ -148,8 +148,8 @@
       "tipo": "doton",
       "statsBase": {
         "hp": 63,
-        "ataque": 10,
-        "defensa": 9,
+        "ataque": 9,
+        "defensa": 7,
         "velocidad": 10
       },
       "jutsu": {
@@ -166,7 +166,7 @@
       "modos": [
         {
           "nombre": "Absolute Sand Shield",
-          "nivelDesbloqueo": 30,
+          "nivelDesbloqueo": 24,
           "multiplicadores": {
             "ataque": 1.08,
             "defensa": 1.24,
@@ -182,7 +182,7 @@
         },
         {
           "nombre": "Partial Shukaku Release",
-          "nivelDesbloqueo": 50,
+          "nivelDesbloqueo": 40,
           "multiplicadores": {
             "ataque": 1.24,
             "defensa": 1.36,
@@ -250,10 +250,10 @@
       "nombre": "Pain (Deva Path)",
       "tipo": "raiton",
       "statsBase": {
-        "hp": 63,
-        "ataque": 10,
-        "defensa": 9,
-        "velocidad": 10
+        "hp": 56,
+        "ataque": 8,
+        "defensa": 8,
+        "velocidad": 9
       },
       "jutsu": {
         "nombre": "Shinra Tensei",
@@ -269,7 +269,7 @@
       "modos": [
         {
           "nombre": "Six Paths Synchronization",
-          "nivelDesbloqueo": 90,
+          "nivelDesbloqueo": 40,
           "multiplicadores": {
             "ataque": 1.2,
             "defensa": 1.16,

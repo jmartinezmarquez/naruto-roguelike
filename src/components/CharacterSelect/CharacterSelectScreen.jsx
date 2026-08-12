@@ -18,7 +18,11 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
           : 'border-transparent hover:border-pergamino-100/30 hover:shadow-lg hover:shadow-black/40',
       ].join(' ')}
     >
-      <FichaPersonaje id={personaje.id} className="p-3" />
+      {/* Con el nivel, aunque siempre sea 1: elegir con quién empiezas es un
+          reclutamiento como el de los pergaminos, y la ficha tiene que decir lo
+          mismo en los dos sitios. Sin él, la fila de la rareza se quedaba coja y
+          esta era la única tarjeta del juego que no decía a qué nivel entra. */}
+      <FichaPersonaje id={personaje.id} nivel={1} className="p-3" />
       {seleccionado && <p className="text-xs text-sello-500 text-center py-1 font-display">★ Chosen</p>}
     </button>
   );
@@ -67,7 +71,7 @@ export default function CharacterSelectScreen({ onConfirmar }) {
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
-      <div className="max-w-2xl w-full text-center">
+      <div className="max-w-3xl w-full text-center">
         <h1 className="font-naruto text-4xl text-pergamino-100 mb-2">Choose your ninja</h1>
         <p className="text-sm text-pergamino-200/60 mb-8">
           The rest of your team is built by recruiting during the adventure.

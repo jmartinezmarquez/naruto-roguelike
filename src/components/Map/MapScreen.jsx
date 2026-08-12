@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import typesData from '../../data/types.json';
-import { nombrePersonaje, nombreObjeto } from '../common/nombres';
+import { nombreObjeto, nombreCorto } from '../common/nombres';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
 import ItemHoverCard from '../common/ItemHoverCard';
 import HoverTooltip from '../common/HoverTooltip';
@@ -161,10 +161,9 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
   // `in` y no `??`: el nodo de inicio tiene sprite `null` a propósito, y con
   // `??` habría caído al de combate.
   // Con el nivel al que se pelea, para que el nodo enseñe al jefe tal y como te
-  // lo vas a encontrar. Hoy ningún jefe llega transformado (sus modos se
-  // desbloquean por encima de su nivel de combate — ver el punto 11 del
-  // roadmap), así que devuelve el sprite normal; el día que se arregle, el mapa
-  // se entera solo.
+  // lo vas a encontrar — y desde que sus umbrales se bajaron al nivel de su
+  // propio combate, eso significa **transformado**. El mapa no ha tenido que
+  // cambiar para enterarse: el sprite es función del nivel.
   const spriteDelJefe = nodo.tipo === 'miniJefe'
     ? spriteDeCombate(arco?.miniJefeId, arco?.nivelMiniJefe)
     : nodo.tipo === 'jefe' ? spriteDeCombate(arco?.jefeFinalId, arco?.nivelJefeFinal)
@@ -295,16 +294,46 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
   );
 }
 
-/** Panel izquierdo: equipo con HP, clicable para reordenar (pon a alguien en posición 1). */
+/**
+ * Panel izquierdo: el equipo. Es la vista que el jugador tiene delante casi toda
+ * la partida, así que es donde más se notaba que las tarjetas se diseñaron antes
+ * de que hubiera arte: enseñaban texto donde ya podían enseñar al ninja.
+ *
+ * Cambios respecto a la versión de solo texto (puntos 8 y 11 del roadmap):
+ * - **Sprite** a la izquierda, con el nivel encima. Con el nivel real, así que
+ *   un personaje transformado se ve transformado también aquí.
+ * - **Nombre abreviado** ("Naruto U.") y la naturaleza de chakra como etiqueta
+ *   propia debajo del HP, fuera del nombre. Los nombres completos se truncaban a
+ *   mitad de palabra y el emoji dentro del nombre le robaba sitio.
+ * - **Reordenar con drag and drop** en vez de un clic que mandaba a la posición 1.
+ *   Arrastrar dice *dónde* lo pones; el clic solo permitía "al frente", así que
+ *   ordenar el segundo y el tercero entre sí era imposible.
+ * - **El objeto equipado se ve con su sprite**, con una X para quitarlo.
+ * - El panel es más ancho (`w-40`): había sitio de sobra y la letra no tiene por
+ *   qué ser diminuta.
+ */
 function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjeto }) {
-  function ponerEnFrente(idElegido) {
-    if (equipo[0]?.id === idElegido) return;
-    const nuevoOrden = [idElegido, ...equipo.filter((p) => p.id !== idElegido).map((p) => p.id)];
-    reordenarEquipo(nuevoOrden);
+  // El id que se está arrastrando. Es estado local y no del store a propósito:
+  // no es información de la run, solo del gesto en curso.
+  const [arrastrando, setArrastrando] = useState(null);
+  const [encima, setEncima] = useState(null);
+
+  function soltarSobre(idDestino) {
+    if (!arrastrando || arrastrando === idDestino) return;
+    const ids = equipo.map((p) => p.id);
+    const desde = ids.indexOf(arrastrando);
+    const hasta = ids.indexOf(idDestino);
+    if (desde === -1 || hasta === -1) return;
+    // Sacar y volver a insertar, no intercambiar: intercambiar dos posiciones
+    // deja el orden intermedio como estaba y el gesto no se corresponde con lo
+    // que ve el jugador, que es "he metido a este aquí".
+    ids.splice(desde, 1);
+    ids.splice(hasta, 0, arrastrando);
+    reordenarEquipo(ids);
   }
 
   return (
-    <div className="w-32 shrink-0">
+    <div className="w-40 shrink-0">
       <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-2">
         <p className="font-display font-bold text-[10px] mb-2 tracking-wide">TEAM</p>
         <div className="flex flex-col gap-1.5">
@@ -312,6 +341,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
             const hpMaximo = obtenerHpMaximo(p.id) ?? p.hpActual ?? 1;
             const porcentaje = Math.max(0, p.hpActual / hpMaximo);
             const esActivo = index === 0;
+            const sprite = spriteDeCombate(p.id, p.nivel);
             return (
               <PersonajeHoverCard
                 key={p.id}
@@ -319,43 +349,104 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                 nivel={p.nivel}
                 hpActual={p.hpActual}
                 hpMaximo={hpMaximo}
+                objetoEquipadoId={p.objetoEquipadoId}
                 className="block w-full"
               >
                 <div
+                  draggable={!p.derrotado}
+                  onDragStart={() => setArrastrando(p.id)}
+                  onDragEnd={() => { setArrastrando(null); setEncima(null); }}
+                  onDragOver={(e) => { e.preventDefault(); setEncima(p.id); }}
+                  onDragLeave={() => setEncima((actual) => (actual === p.id ? null : actual))}
+                  onDrop={(e) => { e.preventDefault(); soltarSobre(p.id); setEncima(null); }}
                   className={[
                     'w-full text-left rounded-md p-1.5 border transition-colors',
                     esActivo ? 'border-sello-600 bg-sello-600/10' : 'border-tinta-950/15 bg-tinta-950/5',
-                    p.derrotado ? 'opacity-40' : '',
+                    p.derrotado ? 'opacity-40' : 'cursor-grab active:cursor-grabbing',
+                    arrastrando === p.id ? 'opacity-50' : '',
+                    encima === p.id && arrastrando && arrastrando !== p.id ? 'border-fuuton border-dashed' : '',
                   ].join(' ')}
                 >
-                  <button
-                    type="button"
-                    onClick={() => ponerEnFrente(p.id)}
-                    disabled={p.derrotado || esActivo}
-                    className={`w-full text-left ${p.derrotado ? 'cursor-default' : 'cursor-pointer'}`}
-                    title={esActivo ? 'This character is in position 1' : 'Move to position 1'}
-                  >
-                    <p className="text-[10px] font-display font-bold truncate">
-                      {nombrePersonaje(p.id)} {esActivo && '★'}
-                    </p>
-                    <p className="text-[8px] opacity-70">Lv. {p.nivel}{p.derrotado ? ' — defeated' : ''}</p>
-                    <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden mt-1">
-                      <div
-                        className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
-                        style={{ width: `${porcentaje * 100}%` }}
-                      />
+                  {/* El nombre va en su propia línea, a lo ancho de la
+                      tarjeta: compartiendo fila con el sprite le quedaban 60 px y
+                      hasta "Naruto U." se cortaba en "Nar…", que no identifica a
+                      nadie. Debajo, el sprite y el estado. */}
+                  <p className="text-[10px] font-display font-bold truncate mb-1">
+                    {nombreCorto(p.id)} {esActivo && '★'}
+                  </p>
+
+                  <div className="flex items-center gap-1.5">
+                    {/* El sprite va a la mitad de su lienzo (96 → 48): sigue
+                        siendo un múltiplo entero, que es lo que mantiene limpio
+                        el pixel art. El nivel va encima, en la esquina — es un
+                        dato de una o dos cifras y no merece una columna. */}
+                    <div className="relative w-12 h-12 shrink-0 flex items-end justify-center">
+                      <div className="absolute bottom-0 w-9 h-2 rounded-[50%] bg-tinta-950/20" />
+                      {sprite && (
+                        <img
+                          src={sprite}
+                          alt=""
+                          className="relative w-12 h-12 object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                          draggable={false}
+                        />
+                      )}
+                      <span className="absolute top-0 left-0 text-[8px] font-display bg-tinta-950/70 text-pergamino-100 px-1 rounded-sm leading-tight">
+                        {p.nivel}
+                      </span>
                     </div>
-                  </button>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
+                          style={{ width: `${porcentaje * 100}%` }}
+                        />
+                      </div>
+                      {/* Debajo de la barra van los NÚMEROS de HP, no la
+                          naturaleza de chakra: en el mapa lo que se consulta a
+                          cada paso es cuánta vida le queda a cada uno para decidir
+                          si toca descanso. El tipo es de leer una vez y sigue en
+                          el hover, con su pastilla de color.
+
+                          Sin el sufijo "HP" y sin espacios alrededor de la barra:
+                          la columna son ~78 px y "45 / 45 HP" se cortaba en
+                          "45 / 45 …". La barra justo encima ya dice que eso es
+                          vida, y así caben incluso los 3 dígitos del final de la
+                          run ("245/245"). */}
+                      <p className="text-[8px] opacity-70 mt-1 truncate">
+                        {Math.max(0, p.hpActual)}/{hpMaximo}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* El objeto equipado, en su propia fila debajo. Se probó
+                      encima del sprite, en la esquina, y tapaba justo al ninja:
+                      el retrato es lo primero que identifica la tarjeta y el
+                      objeto le caía encima con su botón de quitar. Aquí abajo
+                      cabe entero, con su nombre, y la X no pisa nada. */}
                   {p.objetoEquipadoId && (
-                    <div className="flex items-center justify-between gap-1 mt-1.5 pt-1.5 border-t border-tinta-950/10">
-                      <span className="text-[9px] opacity-70 truncate">🎒 {nombreObjeto(p.objetoEquipadoId)}</span>
+                    <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-tinta-950/10">
+                      {SPRITE_OBJETO[p.objetoEquipadoId] && (
+                        <img
+                          src={SPRITE_OBJETO[p.objetoEquipadoId]}
+                          alt=""
+                          className="w-5 h-5 shrink-0"
+                          style={{ imageRendering: 'pixelated' }}
+                          draggable={false}
+                        />
+                      )}
+                      <span className="text-[8px] opacity-80 truncate flex-1 min-w-0">
+                        {nombreObjeto(p.objetoEquipadoId)}
+                      </span>
                       <button
                         type="button"
                         onClick={() => desequiparObjeto(p.id)}
-                        className="text-[9px] opacity-60 hover:opacity-100 shrink-0 underline leading-none"
+                        className="shrink-0 w-4 h-4 rounded-full bg-tinta-950/15 hover:bg-sello-600 hover:text-pergamino-100 text-[9px] leading-none flex items-center justify-center transition-colors"
                         title="Unequip (returns to inventory)"
+                        aria-label={`Unequip ${nombreObjeto(p.objetoEquipadoId)}`}
                       >
-                        remove
+                        ×
                       </button>
                     </div>
                   )}
@@ -365,7 +456,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
           })}
         </div>
         <p className="text-[8px] opacity-50 mt-2 leading-snug">
-          Tap a ninja to send them to position 1.
+          Drag to reorder. The first one fights.
         </p>
       </div>
     </div>

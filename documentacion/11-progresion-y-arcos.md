@@ -178,3 +178,35 @@ una trampa temprano y casi un regalo tarde. Se acepta —y no se corrige escalan
 opcional y se ve desde el mapa antes de entrar: el jugador decide con la información delante. Si
 alguna vez se quiere aplanar, la palanca no es el nivel sino los pesos de `poolRarezaReclutar` por
 piso, que hoy son iguales para todo el arco.
+
+## Transformaciones de jefe: activarlas y compensar sus stats
+
+Durante meses **ninguna transformación de jefe se activó jamás**: sus modos se desbloqueaban por
+encima del nivel al que se pelean — Zabuza a 15 peleándose a 10, Kabuto a 33 peleándose a 19, Gaara a
+30 peleándose a 27 y Pain a **90** peleándose a 44. Había arte recortado (`assets/transformations/`)
+que nadie iba a ver nunca. Es el mismo error que la fase 2 arregló para los personajes jugables, y en
+los jefes sobrevivió porque el test de invariante que lo protege solo mira `characters.json`.
+
+Umbrales nuevos: **8 / 17 / 24 / 40**, y el tier 2 de Gaara de 50 a 40 para que exista si lo reclutas.
+Un jefe tiene un solo combate, así que la regla no es "dentro de la run" como en los personajes: o
+llega transformado, o su modo no existe.
+
+**La compensación importa tanto como el umbral.** El modo aporta multiplicadores y pasivas, así que
+activarlo sin más subía a los jefes de golpe: Zabuza pasó del 88% al 55% de nodos ganados y Kabuto del
+90% al 62%. Se dividió el `statsBase` de los cuatro por los multiplicadores de su propio modo, así que
+el jefe pesa aproximadamente lo mismo que antes pero **parte de ese peso viene ahora de la
+transformación en vez de números en crudo** — exactamente el reparto que se le hizo al jugador en el
+rediseño de balance.
+
+| Nodo | Antes | Después |
+|---|---|---|
+| mini-jefe Haku (sin modo) | 80% | 80% |
+| JEFE Zabuza | 88% | 77% |
+| mini-jefe Kabuto | 90% | 77% |
+| JEFE Gaara | 82% | 88% |
+| mini-jefe Camino Animal (sin modo) | 93% | 92% |
+| JEFE Pain | 84% | 84% |
+
+Gaara **sube** porque su modo es defensivo (defensa ×1,24 y `first_hit_reduction`) y dividir su ataque
+le quita más de lo que le da. Haku y Camino Animal siguen sin modo a propósito: no hay arte para
+ellos, y el test de invariante nuevo se salta a los jefes que no tienen ninguno.

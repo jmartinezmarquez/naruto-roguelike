@@ -174,6 +174,34 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 - El viejo aviso "este nodo no tiene pantalla propia todavía" se quitó — ya no existe ningún tipo de
   nodo sin pantalla o resolución propia (descanso se auto-resuelve, el resto tiene pantalla).
 
+### Panel de equipo (`PanelEquipo`)
+
+La vista que el jugador tiene delante casi toda la partida, y la que más se había quedado atrás: era
+texto puro cuando ya existían los sprites. Rehecha con los puntos 8 y 11 del roadmap.
+
+- **El nombre va en su propia línea, a lo ancho de la tarjeta.** Compartiendo fila con el sprite le
+  quedaban unos 60 px y hasta "Naruto U." se cortaba en "Nar…", que no identifica a nadie.
+- **Sprite** debajo, a media resolución de su lienzo (96 → 48, múltiplo entero) y con el nivel real,
+  así que un personaje transformado se ve transformado también aquí. **El nivel va encima del
+  sprite**, en la esquina: es un dato de una o dos cifras y no merece una columna propia en una
+  tarjeta tan estrecha.
+- **Nombre abreviado** (`nombreCorto`: "Naruto Uzumaki" → "Naruto U."). El panel es estrecho y los
+  nombres completos o se truncaban a mitad de palabra o forzaban una letra ilegible; el nombre de
+  pila es el que identifica. Un nombre de una palabra (Gaara) o con paréntesis ("Pain (Deva Path)")
+  se queda entero — partirlo por la primera inicial daría "Pain (.".
+- **Debajo de la barra van los NÚMEROS de HP**, no la naturaleza de chakra. En el mapa lo que se
+  consulta a cada paso es cuánta vida le queda a cada uno, para decidir si toca buscar un descanso;
+  el tipo es de leer una vez y sigue en el hover, con su pastilla de color.
+- **Reordenar con drag and drop.** No es solo comodidad: el clic solo sabía hacer "al frente", así
+  que ordenar el segundo y el tercero entre sí era imposible. Al soltar se **saca y se reinserta**,
+  no se intercambia — intercambiar deja el orden intermedio como estaba y el gesto no cuadra con lo
+  que ve el jugador, que es "he metido a este aquí". El id que se arrastra es estado local del
+  componente, no del store: no es información de la run, solo del gesto en curso.
+- **El objeto equipado va en su propia fila debajo**, con su sprite, su nombre y una X para quitarlo.
+  Se probó en la esquina del retrato y tapaba justo al ninja: el sprite es lo primero que identifica
+  la tarjeta y el objeto le caía encima con su botón. Abajo cabe entero y la X no pisa nada.
+- Panel más ancho (`w-32` → `w-40`): había sitio y la letra no tiene por qué ser diminuta.
+
 ## `components/Combat/CombatScreen.jsx`
 
 - Lee `ultimoResultadoCombate` del store (resumen enriquecido: nombres, HP máximo, modo activo).

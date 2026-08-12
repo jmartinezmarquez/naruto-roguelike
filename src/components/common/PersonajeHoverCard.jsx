@@ -1,9 +1,14 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import HoverTooltip from './HoverTooltip';
-import { emojiDeTipo } from './nombres';
+import {
+  emojiDeTipo, nombreDeTipo, nombreObjeto, rarezaDeLuchador, nombrePersonaje, nombreCorto,
+  clasePastillaDeTipo,
+} from './nombres';
+import { spriteDeCombate } from './datosDeLuchador';
+import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 
 function encontrarBase(id) {
   return (
@@ -49,37 +54,192 @@ export function RitmoCarga({ luchador, className = '' }) {
 // punto 4 del roadmap), al ver saltar la pasiva en combate (punto 2), o en la
 // enciclopedia si alguien quiere el detalle en frío (punto 10).
 
-export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, className = '' }) {
+// Estrellas y color por rareza. La rareza es lo que el doc 22 pide en vez del
+// tipo al estilo Pokémon; el tipo tiene su propia pastilla de color al lado, que
+// dice lo mismo que decía el emoji suelto pero se lee como una etiqueta.
+// Ver documentacion/22-diseño-tarjeta-de-personaje.md.
+const RAREZA = {
+  comun: { estrellas: '★', etiqueta: 'Common', color: 'text-pergamino-200/60' },
+  inicial: { estrellas: '★', etiqueta: 'Starter', color: 'text-fuuton' },
+  raro: { estrellas: '★★', etiqueta: 'Rare', color: 'text-suiton' },
+  legendario: { estrellas: '★★★', etiqueta: 'Legendary', color: 'text-raiton' },
+};
+
+/**
+ * El nombre entero si cabe, y si no su versión corta ("Naruto U.").
+ *
+ * **Se mide, no se estima.** El primer intento contaba caracteres contra un
+ * máximo fijo, aprovechando que la fuente del juego es monoespaciada — y falló en
+ * cuanto la misma ficha se usó en tres anchuras distintas: cabe en el hover del
+ * mapa (~232 px) pero no en la tarjeta de selección de personaje (~189 px), así
+ * que "Naruto Uzumaki" salía entero en un sitio y cortado en otro. Un número
+ * fijo tendría que ser el de la tarjeta más estrecha, y entonces todos los
+ * nombres saldrían abreviados en todas partes.
+ *
+ * Aquí se pregunta al DOM: si el texto desborda su caja (`scrollWidth >
+ * clientWidth`, que funciona porque el `truncate` recorta), se cambia al corto.
+ * **Solo se cambia en un sentido** — una vez corto se queda corto hasta que
+ * cambia el personaje. Volver atrás al ensanchar sería un bucle: el nombre largo
+ * desbordaría otra vez y volvería a acortarse.
+ */
+function NombreQueCabe({ id, className }) {
+  const ref = useRef(null);
+  const [usarCorto, setUsarCorto] = useState(false);
+  // Reset al cambiar de personaje **durante el render**, no en un efecto: hacer
+  // `setState` síncrono dentro de un `useEffect` es el patrón que ya nos mordió
+  // una vez (ver CLAUDE.md y el comentario del reset en CombatScreen).
+  const [idPrevio, setIdPrevio] = useState(id);
+  if (id !== idPrevio) {
+    setIdPrevio(id);
+    setUsarCorto(false);
+  }
+
+  useLayoutEffect(() => {
+    const elemento = ref.current;
+    if (!elemento || usarCorto) return undefined;
+    const medir = () => {
+      if (elemento.scrollWidth > elemento.clientWidth) setUsarCorto(true);
+    };
+    medir();
+    // La tarjeta puede nacer con ancho 0 (dentro de un tooltip que aún no se ha
+    // colocado) o cambiar con la ventana, así que no vale medir una sola vez.
+    const observador = new ResizeObserver(medir);
+    observador.observe(elemento);
+    return () => observador.disconnect();
+  }, [id, usarCorto]);
+
+  return (
+    <p ref={ref} className={`truncate ${className}`}>
+      {usarCorto ? nombreCorto(id) : nombrePersonaje(id)}
+    </p>
+  );
+}
+
+/** La barra de HP, con el color por tramos igual que en combate. */
+function BarraHp({ actual, maximo }) {
+  const porcentaje = Math.max(0, Math.min(1, actual / maximo));
+  const color = porcentaje > 0.5 ? 'bg-fuuton' : porcentaje > 0.2 ? 'bg-raiton' : 'bg-sello-500';
+
+  return (
+    <div>
+      <div className="h-2 w-full bg-tinta-800 rounded-sm overflow-hidden border border-tinta-950">
+        <div className={`h-full ${color}`} style={{ width: `${porcentaje * 100}%` }} />
+      </div>
+      {/* Centrado bajo la barra, no alineado a la derecha: la cifra pertenece a
+          la barra entera, y pegada a un extremo parecía el final de otra cosa. */}
+      <p className="text-[10px] mt-1 text-pergamino-200/60 text-center">
+        {Math.max(0, actual)} / {maximo} HP
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Las cuatro estadísticas en lista alineada, sin barras (doc 22).
+ *
+ * Con las abreviaturas de siempre y sin iconos: "⚔ Attack" y "❤ Max HP" no
+ * cabían en media columna con la fuente pixel art, así que "Max HP" se partía en
+ * dos líneas y descuadraba la rejilla entera. ATT/DEF/SPE/HP son tres letras,
+ * caben siempre y en un juego de stats no hay que explicarlas.
+ */
+function Estadisticas({ stats }) {
+  const filas = [
+    ['ATT', stats.ataque],
+    ['DEF', stats.defensa],
+    ['SPE', stats.velocidad],
+    ['HP', stats.hp],
+  ];
+  return (
+    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+      {filas.map(([etiqueta, valor]) => (
+        <div key={etiqueta} className="flex items-baseline justify-between gap-1.5">
+          <span className="text-[10px] text-pergamino-200/60">{etiqueta}</span>
+          <span className="text-[11px] font-display text-pergamino-100">{valor}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * La ficha de un personaje, en bloques separados por línea (estilo Pokelike,
+ * ver documentacion/22-diseño-tarjeta-de-personaje.md): **sprite** arriba del
+ * todo sobre su suelo, nombre con nivel, rareza y afinidad, HP, estadísticas,
+ * jutsu con su ritmo de carga, y el objeto equipado si lo lleva.
+ *
+ * El sprite es el protagonista y va a **múltiplo entero** de su lienzo de 96 px
+ * (aquí ×1): el pixel art a escalas no enteras duplica unas columnas de píxeles
+ * y otras no, y se ve sucio por mucho que se agrande.
+ *
+ * `objetoEquipadoId` es opcional porque no todas las pantallas que enseñan una
+ * ficha tienen equipo detrás (reclutar y selección de personaje muestran a
+ * alguien que todavía no es tuyo, y ahí no hay objeto que enseñar).
+ */
+export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId = null, className = '' }) {
   const base = useMemo(() => encontrarBase(id), [id]);
   const luchador = useMemo(() => (base ? crearLuchador(base, nivel ?? 1) : null), [base, nivel]);
 
   if (!base || !luchador) return null;
 
   const hpMostrado = hpMaximo ?? luchador.hpMaximo;
-  const hpActualMostrado = hpActual ?? luchador.hpActual;
-  const porcentajeHp = Math.max(0, Math.min(1, hpActualMostrado / hpMostrado));
+  const hpActualMostrado = hpActual ?? luchador.hpMaximo;
+  const rareza = RAREZA[rarezaDeLuchador(id)] ?? null;
+  // Con el nivel: a partir de su umbral el personaje sale ya transformado, y la
+  // ficha tiene que enseñar al ninja que te vas a encontrar (ver `spriteDeCombate`).
+  const sprite = spriteDeCombate(id, nivel ?? 1);
 
   return (
-    <div className={`bg-tinta-900 text-pergamino-100 rounded-lg text-left border border-pergamino-100/15 ${className}`}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="font-display font-bold text-sm leading-tight">
-          {emojiDeTipo(id)} {base.nombre}
-        </p>
-        {nivel != null && <p className="text-[10px] text-pergamino-200/50 shrink-0">Lv. {nivel}</p>}
+    <div className={`bg-tinta-900 text-pergamino-100 rounded-lg text-left border border-pergamino-100/20 flex flex-col gap-2.5 ${className}`}>
+      {/* Sprite sobre su claro de tierra, igual que en la tarjeta de combate:
+          el disco de pergamino y la sombra de contacto para que se apoye en algo
+          en vez de flotar suelto. */}
+      <div className="relative h-24 flex items-end justify-center">
+        <div className="absolute bottom-1 w-20 h-5 rounded-[50%] bg-pergamino-200/25 border border-pergamino-100/15" />
+        <div className="absolute bottom-1.5 w-12 h-2 rounded-[50%] bg-tinta-950/55 blur-[2px]" />
+        {sprite && (
+          <img
+            src={sprite}
+            alt=""
+            className="relative w-24 h-24 object-contain"
+            style={{ imageRendering: 'pixelated' }}
+          />
+        )}
       </div>
 
-      <div className="mt-2">
-        <div className="h-1.5 w-full bg-tinta-800 rounded-full overflow-hidden">
-          <div className="h-full bg-fuuton rounded-full" style={{ width: `${porcentajeHp * 100}%` }} />
+      <div>
+        {/* El nombre va en su propia línea y **nunca truncado**: truncar dejaba
+            "Naruto Uzu…", que es justo el dato que la tarjeta existe para dar. Si
+            no cabe entero se usa su versión corta, no se parte en dos líneas — así
+            la tarjeta no cambia de alto según a quién estés mirando. */}
+        <NombreQueCabe id={id} className="font-display font-bold text-sm leading-tight" />
+        <div className="flex items-center justify-between gap-2 mt-1.5">
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${clasePastillaDeTipo(id)}`}>
+            {emojiDeTipo(id)} {nombreDeTipo(id)}
+          </span>
+          <div className="flex items-baseline gap-2 shrink-0">
+            {/* Solo estrellas y color, sin la palabra: "★★★ Legendary" repetía
+                dos veces el mismo dato y era lo más largo de la fila. Las tres
+                escalas se distinguen de un vistazo por cuántas estrellas hay. El
+                nombre se conserva en el `title` para quien pase por encima y para
+                los lectores de pantalla. */}
+            {rareza && (
+              <span className={`text-[10px] ${rareza.color}`} title={rareza.etiqueta}>
+                {rareza.estrellas}
+              </span>
+            )}
+            {nivel != null && (
+              <span className="text-[11px] font-display text-pergamino-200/60">Lv.{nivel}</span>
+            )}
+          </div>
         </div>
-        <p className="text-[10px] mt-0.5 text-pergamino-200/50">{Math.max(0, hpActualMostrado)} / {hpMostrado} HP</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 mt-2 text-[11px] text-pergamino-200/70">
-        <span>ATK {luchador.statsBase.ataque}</span>
-        <span>DEF {luchador.statsBase.defensa}</span>
-        <span>SPD {luchador.statsBase.velocidad}</span>
-        <span>HP {luchador.statsBase.hp}</span>
+      <div className="border-t border-pergamino-100/10 pt-2.5">
+        <BarraHp actual={hpActualMostrado} maximo={hpMostrado} />
+      </div>
+
+      <div className="border-t border-pergamino-100/10 pt-2.5">
+        <Estadisticas stats={luchador.statsBase} />
       </div>
 
       {/* Solo el jutsu y su ritmo. Fuera quedaron, a propósito:
@@ -88,10 +248,40 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, className = '' }
             interna: parece un dato comparable y no lo es;
           - la descripción del jutsu, texto narrativo que no cambia ninguna decisión.
           Todo eso es material de enciclopedia (punto 10 del roadmap). */}
-      <div className="mt-2 pt-2 border-t border-pergamino-100/10 flex items-center justify-between gap-2">
-        <p className="text-[11px] font-display font-bold text-pergamino-100 truncate">🌀 {base.jutsu.nombre}</p>
+      {/* Tres columnas de verdad —icono, nombre, ritmo— y no un párrafo con el
+          icono metido dentro del texto. Con el icono en línea, un jutsu de dos
+          líneas lo dejaba pegado arriba a la izquierda y descentrado respecto al
+          bloque, y los puntitos de la derecha igual. Ahora los dos se centran
+          contra el nombre entero, ocupe una línea o dos.
+
+          `min-h` de dos líneas: el nombre del jutsu es lo último de la tarjeta, y
+          sin reservar la segunda línea las tarjetas de una línea (Rasengan) se
+          quedaban con un hueco vacío abajo al estirarse la rejilla a la altura de
+          las de dos (Great Fireball Jutsu).
+
+          Sin `truncate`: los nombres llegan a 29 caracteres ("Super Beast
+          Imitation Drawing") y son nombres propios, no hay forma de abreviarlos. */}
+      <div className="border-t border-pergamino-100/10 pt-2.5 flex items-center gap-2 min-h-[2.25rem]">
+        <span className="shrink-0 text-[11px]" aria-hidden="true">🌀</span>
+        <p className="flex-1 min-w-0 text-[11px] font-display text-pergamino-100 leading-tight">
+          {base.jutsu.nombre}
+        </p>
         <RitmoCarga luchador={luchador} className="shrink-0" />
       </div>
+
+      {objetoEquipadoId && (
+        <div className="border-t border-pergamino-100/10 pt-2.5 flex items-center gap-2">
+          {SPRITE_OBJETO[objetoEquipadoId] && (
+            <img
+              src={SPRITE_OBJETO[objetoEquipadoId]}
+              alt=""
+              className="w-5 h-5 shrink-0"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          )}
+          <p className="text-[11px] text-pergamino-200/80 truncate">{nombreObjeto(objetoEquipadoId)}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -101,6 +291,7 @@ export default function PersonajeHoverCard({
   nivel,
   hpActual,
   hpMaximo,
+  objetoEquipadoId = null,
   posicion = 'derecha',
   className = 'inline-block',
   children,
@@ -117,7 +308,8 @@ export default function PersonajeHoverCard({
           nivel={nivel}
           hpActual={hpActual}
           hpMaximo={hpMaximo}
-          className="w-56 shadow-xl p-3"
+          objetoEquipadoId={objetoEquipadoId}
+          className="w-64 shadow-xl p-3"
         />
       )}
     >
