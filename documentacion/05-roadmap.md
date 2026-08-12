@@ -261,26 +261,35 @@
 
 ## Próximos pasos (en orden sugerido)
 
-> **Por dónde seguir ahora mismo: el punto 2, la interfaz de combate.** El punto 1 está cerrado y
-> movido a "Hecho": no queda nada pendiente que toque motor ni datos, todo lo que sigue es interfaz.
+> **Por dónde seguir ahora mismo: el punto 4, la pantalla de transformación.** Los puntos 1 y 2
+> están cerrados, y con ellos el motor y la pantalla de combate.
 >
-> El motivo de que vaya el 2 y no otro: **todo lo construido en el punto 1 es hoy invisible.** Las
-> pasivas saltan en cada combate y el jugador no ve ni una; las transformaciones se quitaron de las
-> tarjetas a propósito para que fueran una sorpresa, y no hay ningún sitio donde se descubran; los
-> objetos definen el estilo de la run y solo se leen en un hover. Medio proyecto vive en los JSON.
-> El punto 2 es el que más desbloquea de golpe, y encima **el 3 y el 4 dependen de él** (los dos
-> encadenan con la pantalla de combate). Plan detallado en el propio punto.
+> El punto 4 va antes que el 3 aunque esté después en la lista, por dos motivos. Es **lo último que
+> deja invisible el rediseño del balance**: las transformaciones se quitaron de las tarjetas a
+> propósito, para que fueran una sorpresa, y ahora mismo no hay ningún sitio donde se descubran —
+> un personaje alcanza el nivel de su modo y no pasa absolutamente nada. Y es **mucho más pequeño**
+> que el 3, que toca generador de mapa, store y un flujo de combate nuevo; el 4 es una pantalla que
+> se engancha al final del combate, que es justo lo que se acaba de reescribir.
 >
-> **La numeración está congelada a propósito.** Hay ~16 referencias a "punto N del roadmap"
-> repartidas por comentarios de código y otros documentos, y ya se han desincronizado dos veces al
-> renumerar. La lista empieza en 2 porque el 1 está hecho, no por error.
+> Lo que el punto 4 necesita decidir y no está escrito: **cómo se detecta que alguien ha
+> desbloqueado un modo**. La vía natural es que `_aplicarVictoria` compare `obtenerModoActivo` antes
+> y después de aplicar la XP, y lo anote en el resumen del combate igual que ya se hace con
+> `logrosDesbloqueados` — que además ya tiene resuelto el problema de "no lo enseñes hasta que la
+> animación termine, no destripes el combate".
+>
+> Después, el **3**. Y si hace falta algo corto y visible entre medias, el **8** (tarjeta de equipo)
+> es el más barato y el mejor especificado.
 >
 > Lo único que el punto 1 deja abierto a propósito es el peso de los objetos: se quedaron en el
 > 21-24% del poder, no en el 40% del doc 27. Llegar al 40% exigiría que un solo objeto pesara más
 > que la transformación entera, y solo hay un hueco de equipo. Revisable si algún día hay más
 > huecos o categoría económica. Frente al 1,5% de partida, el objetivo de fondo está cumplido.
+>
+> **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas
+> por comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar.
+> La lista empieza en 2 porque el 1 está hecho, no por error.
 
-2. **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
+2. [x] **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
    el primero esté peleando. Sprites de los personajes visibles. Los logs de texto se sustituyen
    por una animación: el ninja lanza un kunai al enemigo y al impactar la barra de HP baja.
    Personajes caídos → card apagada (estilo Pokelike). Efecto de sacudida al recibir golpe.
@@ -297,18 +306,18 @@
    Cada una deja el juego jugable y se puede parar entre medias. Van en este orden porque el riesgo
    crece: las dos primeras solo añaden, la tercera reescribe el reloj de la pantalla.
 
-   1. **Equipo entero en pantalla.** Hoy `CombatScreen` pinta un 1 vs 1 y de los otros dos
+   1. [x] **Equipo entero en pantalla.** Hoy `CombatScreen` pinta un 1 vs 1 y de los otros dos
       personajes no hay ni rastro, ni siquiera cuando entran por la cadena de rondas. Tres tarjetas
       del equipo con HP y nivel: la activa resaltada, las caídas apagadas (estilo Pokelike), las
       que esperan en tono normal. El dato ya está: `resultado.rondas[i].jugador` dice quién pelea
       cada ronda y el equipo vive en el store. Sin lógica nueva, solo layout.
-   2. **Pasivas visibles.** Es la fase con más valor por línea escrita y la que justifica el punto
+   2. [x] **Pasivas visibles.** Es la fase con más valor por línea escrita y la que justifica el punto
       entero: `pasivasActivadas` viene en cada evento y hoy **no se lee en ninguna parte**. Etiqueta
       flotante sobre el luchador cuando salta ("¡Susanoo!") más una línea en el registro, con el
       nombre y la frase que ya están en `data/passives.json` (`describirPasiva`, el mismo texto que
       usan los hovers de objeto — sin duplicar textos). Aquí también entra el `esAtaqueExtra`, que
       ahora mismo se pinta como un golpe normal y confunde.
-   3. **Animación en vez de registro de texto.** La parte de verdad. El kunai vuela, impacta, la
+   3. [x] **Animación en vez de registro de texto.** La parte de verdad. El kunai vuela, impacta, la
       barra baja, el objetivo se sacude. `assets/projectile-sprites.png` ya existe.
       **El trabajo real no es la animación, es cambiar la unidad del replay**: hoy `turnosRevelados`
       avanza de turno en turno y un turno puede traer 2-4 eventos (los dos luchadores, más un
@@ -319,14 +328,43 @@
       carga tampoco se reconstruye sumando (lanzar el jutsu la pone a cero). Y el reset de estado al
       cambiar de combate se hace **durante el render**, no en un `useEffect` — está comentado en el
       propio archivo.
-   4. **Sprites por personaje.** Va la última porque es la única bloqueada por arte y ninguna otra
-      depende de ella. Hay hojas dedicadas de Naruto, Sasuke, Haku y Zabuza, pero los otros 10
-      personajes solo están en `map-sprites-idle-all-characters.png`, con paneles de tamaño
-      irregular que hay que recortar uno a uno. Mismo patrón que ya se usó dos veces:
-      un script en `scripts/` que genera `assets/characters/*.png` (ver `generar-sprites-objetos.py`
-      y `generar-columnas-mapa.py`), nunca editar los generados a mano. Hasta entonces, placeholder.
-      **Desbloquea de paso** el pendiente de arte del punto 9 y los sprites de entrenador/mini-jefe
-      /jefe en los nodos del mapa, que hoy comparten icono.
+   4. [x] **Sprites por personaje.** `scripts/generar-sprites-personajes.py` recorta los 25 sprites
+      de `map-sprites-idle-all-characters.png` a `assets/characters/<id>.png`, y
+      `components/common/characterSprites.js` los mapea por id. Se usan en la tarjeta del luchador
+      que pelea (el enemigo volteado para que se miren), en las tres tarjetas de equipo y —
+      desbloqueando el pendiente de arte que había— en los nodos de **mini-jefe y jefe** del mapa,
+      que hasta ahora compartían el icono genérico de combate. El nodo de **entrenador** no puede:
+      su enemigo nombrado se sortea al ENTRAR en el nodo, no al generar el mapa, así que al pintarlo
+      todavía no se sabe quién es.
+
+      **Placeholders declarados** (no descuidos), en `PLACEHOLDERS` del script: Sai y Yamato no están
+      en la hoja y llevan el genin de su naturaleza de chakra (fuuton y doton); Camino Animal
+      comparte sprite con Camino Deva, el único Pain que hay. Pendientes de arte propio.
+
+      El script **no lleva ni una coordenada escrita a mano** — mide la rejilla buscando los
+      separadores oscuros, luego las bandas de fotograma dentro de cada panel. Tres cosas que
+      costaron y conviene no repetir:
+      - El borde interior del panel no es papel, así que aparecía en *todas* las filas y columnas y
+        no se separaba ninguna banda: cada sprite salía siendo el panel entero. Se arregla metiendo
+        el análisis unos píxeles hacia dentro (`MARGEN_PANEL`).
+      - **El papel está texturizado**, son decenas de variantes de (237,225,204). Contando color a
+        color, el "color de fondo" ganador salía el NEGRO plano de los contornos, y el borrado se
+        llevaba los contornos dejando el papel. Hay que agrupar los tonos antes de contar.
+      - En tres paneles (Sakura, Gaara, Kiba) los fotogramas se tocan y la banda se comía dos o tres
+        filas. En vez de escribir la caja a mano, se usa la **mediana** de todas las cajas como
+        calibre y se recorta lo que se pase de `FACTOR_FUSION`.
+
+      También se recortaron los enemigos nombrados (Zaku, Dosu, Kin) y, de
+      `projectile-sprites.png`, **el proyectil de jutsu de cada personaje** (Rasengan, Gran Bola de
+      Fuego, Agujas de Hielo...) además del kunai, que es el ataque básico de todos. Lo que falta de
+      arte está abajo, en "Pendiente de arte", no aquí: un apartado marcado `[x]` no es sitio donde
+      nadie vaya a buscar trabajo por hacer.
+
+   5. [x] **Rediseño de la distribución, estilo Pokelike.** Los dos bandos en cajas a izquierda y
+      derecha en vez de una fila de duelo con el banquillo debajo, y una sola `TarjetaLuchador` para
+      equipo y enemigo — antes eran dos componentes con el mismo diseño duplicado. El **registro de
+      texto pasa a ser solo de desarrollo** (`import.meta.env.DEV`, que Vite convierte en `false` y
+      elimina del bundle): la partida la cuenta la animación.
 
    ### Verificación
 
@@ -347,7 +385,7 @@
    store y datos, por eso va aparte.
    **Va detrás del 2 a propósito**: reutiliza la pantalla de combate nueva, no la vieja.
 
-4. **Pantalla de transformación** — ⚠️ **no es opcional**: desde que las transformaciones se quitaron
+4. **Pantalla de transformación** ← **lo siguiente**. ⚠️ **No es opcional**: desde que las transformaciones se quitaron
    de las tarjetas (son una sorpresa, ver [30](./30-sistema-de-pasivas.md)), esta pantalla y el
    punto 2 son los **únicos** sitios donde el jugador se entera de que existen. Sin ellos, medio
    rediseño del balance vive solo en los JSON.
@@ -401,6 +439,29 @@
     medio de una run — pantalla propia desde el menú de iconos del mapa, como Logros.
     Ojo: hoy esa información **no está en ninguna parte**, así que hasta que esto exista hay una deuda
     real, no solo un "ya lo pondremos". Y crece cada vez que se adelgaza una tarjeta.
+
+### Pendiente de arte
+
+Cosas que no están hechas por falta de dibujo, no por falta de código. Van juntas aquí y no dentro
+del punto que las dejó a medias, porque los puntos terminados se marcan `[x]` y nadie vuelve a
+leerlos buscando trabajo.
+
+- **Sai y Yamato no tienen sprite propio.** Llevan de placeholder el genin rival de su naturaleza de
+  chakra (fuuton y doton). Declarado en `PLACEHOLDERS` de `scripts/generar-sprites-personajes.py`.
+- **Camino Animal de Pain comparte sprite y proyectil con Camino Deva**, que es el único Pain que
+  hay dibujado. Mismo sitio.
+- **Los genin rivales no tienen proyectil de jutsu**, así que lanzan kunai también en su técnica.
+  Sí existe el dibujo: está en la última casilla de cada panel de la fila 5 de
+  `map-sprites-idle-all-characters.png` (fuego, hoja, rayo, roca, agua), pero el script coge el
+  PRIMER fotograma de cada panel y habría que enseñarle a coger también el último.
+  Es el que más se nota, porque los genins son la mayoría de los combates.
+- **Neji, Shikamaru, Kiba, Sai y Yamato tampoco tienen proyectil de jutsu**: no están dibujados en
+  `projectile-sprites.png`. Lanzan kunai. (Rock Lee no cuenta: es cuerpo a cuerpo a propósito, así
+  lo marca la propia hoja.)
+- **El nodo de entrenador del mapa** sigue con el icono genérico de combate. Este no es falta de
+  arte sino de datos: su enemigo nombrado se sortea al ENTRAR en el nodo (`resolverEnemigoDeNodo`),
+  no al generar el mapa, así que al pintarlo todavía no se sabe quién es. Arreglarlo es subir la
+  elección al generador.
 
 ### Descartado
 

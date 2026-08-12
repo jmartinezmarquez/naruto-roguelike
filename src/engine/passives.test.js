@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   normalizarPasivas,
   describirPasiva,
+  nombrePasiva,
+  duenoDePasiva,
   idsDelCatalogo,
   existePasiva,
 } from './passives';
@@ -280,6 +282,24 @@ describe('modos de los personajes (invariantes de datos)', () => {
       expect(modo.pasivas, `${modo.personaje} — ${modo.nombre}`).toBeDefined();
       expect(() => normalizarPasivas(modo.pasivas)).not.toThrow();
       expect(modo.pasivas.length).toBeGreaterThan(0);
+    }
+  });
+
+  // La pantalla de combate pinta la etiqueta de la pasiva sobre el luchador al
+  // que pertenece, y solo recibe el id: sin esto no sabría de quién es y la
+  // pondría siempre sobre el atacante, que es falso la mitad de las veces.
+  it('cada pasiva sabe si es del que ataca o del que recibe', () => {
+    expect(duenoDePasiva('first_hit_reduction')).toBe('defensor');
+    expect(duenoDePasiva('reduce_damage_taken')).toBe('defensor');
+    expect(duenoDePasiva('jutsu_bonus')).toBe('atacante');
+    expect(duenoDePasiva('heal_on_kill')).toBe('atacante');
+    // `ignore_defense` habla de defensa pero la pliega el ATACANTE: es suya.
+    expect(duenoDePasiva('ignore_defense')).toBe('atacante');
+  });
+
+  it('toda pasiva del catálogo tiene un nombre que enseñar', () => {
+    for (const id of idsDelCatalogo()) {
+      expect(nombrePasiva(id), id).not.toBe('');
     }
   });
 

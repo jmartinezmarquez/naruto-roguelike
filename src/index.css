@@ -69,3 +69,59 @@ img {
   transform: translateY(-4px);
 }
 
+
+/* --- Combate: proyectil y sacudida al impactar -------------------------------
+   El kunai cruza el hueco entre los dos luchadores y, al llegar, el que recibe
+   se sacude. Las dos animaciones duran lo mismo que los tiempos que usa
+   `CombatScreen` (MS_VUELO_PROYECTIL): si se cambian ahí, cambiarlas aquí.
+   Se reinician remontando el elemento con `key`, no con clases. */
+
+@keyframes volar-a-la-derecha {
+  from { left: 4%; transform: translateY(-50%) rotate(0deg); opacity: 0; }
+  15%  { opacity: 1; }
+  to   { left: 84%; transform: translateY(-50%) rotate(540deg); opacity: 1; }
+}
+
+@keyframes volar-a-la-izquierda {
+  from { left: 84%; transform: translateY(-50%) rotate(0deg); opacity: 0; }
+  15%  { opacity: 1; }
+  to   { left: 4%; transform: translateY(-50%) rotate(-540deg); opacity: 1; }
+}
+
+.proyectil-derecha { animation: volar-a-la-derecha 420ms linear forwards; }
+.proyectil-izquierda { animation: volar-a-la-izquierda 420ms linear forwards; }
+
+@keyframes sacudida {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+.sacudida { animation: sacudida 300ms ease-in-out; }
+
+@keyframes flotar-dano {
+  from { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
+  20%  { opacity: 1; transform: translate(-50%, -10px) scale(1.15); }
+  to   { opacity: 0; transform: translate(-50%, -38px) scale(1); }
+}
+
+.dano-flotante { animation: flotar-dano 700ms ease-out forwards; }
+
+/* El jutsu vuela sin dar vueltas: un Rasengan girando de campana se lee como un
+   fallo, un kunai girando no. Sobrescribe la rotación de las dos animaciones. */
+@keyframes volar-a-la-derecha-sin-giro {
+  from { left: 4%; transform: translateY(-50%); opacity: 0; }
+  15%  { opacity: 1; }
+  to   { left: 84%; transform: translateY(-50%); opacity: 1; }
+}
+
+@keyframes volar-a-la-izquierda-sin-giro {
+  from { left: 84%; transform: translateY(-50%) scaleX(-1); opacity: 0; }
+  15%  { opacity: 1; }
+  to   { left: 4%; transform: translateY(-50%) scaleX(-1); opacity: 1; }
+}
+
+.proyectil-derecha.proyectil-sin-giro { animation-name: volar-a-la-derecha-sin-giro; }
+.proyectil-izquierda.proyectil-sin-giro { animation-name: volar-a-la-izquierda-sin-giro; }

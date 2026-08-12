@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
+import { spriteDeLuchador } from '../common/characterSprites';
 import typesData from '../../data/types.json';
 import { nombrePersonaje, nombreObjeto } from '../common/nombres';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
@@ -18,9 +19,12 @@ import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
 // `assets/nodes/*.png` a media resolución, 100 px para pintarse a 48).
-// Los tres nodos de combate especiales comparten de momento el sprite de
-// combate: la hoja no trae arte por personaje todavía (ver punto 5 del roadmap),
-// así que lo que los distingue es el badge de rango + el color del borde.
+// El mini-jefe y el jefe final pintan el sprite del PERSONAJE que hay dentro
+// (`spriteDeLuchador`, ver `components/common/characterSprites.js`); el sprite de
+// combate genérico es solo su respaldo. El nodo de entrenador no puede: el
+// enemigo nombrado concreto se sortea al ENTRAR en el nodo (`resolverEnemigoDeNodo`),
+// no al generar el mapa, así que a la hora de pintarlo todavía no se sabe quién es.
+// A los tres los distingue además el badge de rango y el color del borde.
 const SPRITE_NODO = {
   // El nodo de salida no tiene sprite a propósito: nace visitado, así que se
   // pinta como un disco oscuro con su tick, igual que en Pokelike.
@@ -123,12 +127,16 @@ function calcularPosiciones(mapa) {
   return posiciones;
 }
 
-function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onClick }) {
+function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onClick, arco }) {
   const tipoEfectivo = nodo.tipo === 'combate' && nodo.subtipo === 'entrenador' ? 'combateEntrenador' : nodo.tipo;
   const estilo = COLOR_NODO[tipoEfectivo] ?? COLOR_NODO.combate;
   // `in` y no `??`: el nodo de inicio tiene sprite `null` a propósito, y con
   // `??` habría caído al de combate.
-  const sprite = tipoEfectivo in SPRITE_NODO ? SPRITE_NODO[tipoEfectivo] : SPRITE_NODO.combate;
+  const spriteDelJefe = nodo.tipo === 'miniJefe' ? spriteDeLuchador(arco?.miniJefeId)
+    : nodo.tipo === 'jefe' ? spriteDeLuchador(arco?.jefeFinalId)
+      : null;
+  const sprite = spriteDelJefe
+    ?? (tipoEfectivo in SPRITE_NODO ? SPRITE_NODO[tipoEfectivo] : SPRITE_NODO.combate);
   const badge = BADGE_NODO[tipoEfectivo];
   const esJefe = nodo.tipo === 'jefe';
   // El pergamino de reclutar no es circular: recortarlo en círculo le cortaría
@@ -201,6 +209,11 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
                 // la esquina quedaría cortado.
                 esCircular ? 'rounded-full' : 'rounded-sm',
               ].join(' ')}
+              // Solo el sprite de personaje va pixelado: es un dibujo de ~37×63 px
+              // que se AMPLÍA y sin esto sale borroso. Los iconos de nodo, en
+              // cambio, se recortaron a 100 px para pintarse a ~56 y se reducen:
+              // pixelarlos los dejaría dentados.
+              style={spriteDelJefe ? { imageRendering: 'pixelated' } : undefined}
             />
           )}
           {/* Tick de "ya hecho", como en Pokelike: encima del sprite, con su
@@ -724,6 +737,7 @@ export default function MapScreen() {
                   visitado={nodo.visitado}
                   esActual={nodo.id === nodoActualId}
                   onClick={avanzarANodo}
+                  arco={arcoActualDatos}
                 />
               ))}
             </div>

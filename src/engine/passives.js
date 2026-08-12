@@ -288,6 +288,24 @@ export function ejecutarEfectos(enganche, portador, contexto) {
  * un catálogo (el juego es de runs cortas — la complejidad va aquí dentro, no en
  * la pantalla).
  */
+/** Nombre de cara al jugador de una pasiva, por id ("Focused Chakra"). '' si no existe. */
+export function nombrePasiva(id) {
+  return pasivasData.pasivas.find((p) => p.id === id)?.nombre ?? '';
+}
+
+/**
+ * De quién es una pasiva que ha saltado en un golpe: del que ataca o del que lo
+ * recibe. `pasivasActivadas` viaja en el evento como una lista de ids sin dueño,
+ * y la pantalla de combate necesita saber sobre qué luchador pintar la etiqueta.
+ *
+ * Se deduce del enganche, que es justo el conocimiento que vive aquí: solo
+ * `DANO_RECIBIDO` lo pliega el defensor. `DEFENSA_EFECTIVA` es del ATACANTE
+ * aunque hable de defensa (`ignore_defense` es suya, ver `calcularDano`).
+ */
+export function duenoDePasiva(id) {
+  return CATALOGO[id]?.enganche === ENGANCHES.DANO_RECIBIDO ? 'defensor' : 'atacante';
+}
+
 export function describirPasiva(pasiva) {
   const texto = pasivasData.pasivas.find((p) => p.id === pasiva.id);
   if (!texto) return '';

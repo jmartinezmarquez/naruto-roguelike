@@ -70,11 +70,14 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
     descanso `(58, 947) 201×197`, reclutar (pergamino común) `(438, 283) 244×245`.
   - **Reclutar va en marco cuadrado**, no circular: el pergamino no es redondo y un recorte
     circular le cortaría las varillas de arriba y abajo.
-  - **Combate entrenador, mini-jefe y jefe comparten el sprite de combate** — la hoja no trae arte
-    por personaje todavía. Lo que los distingue es el color del borde más un badge de rango
-    (`BADGE_NODO`: `★` entrenador, `☠` mini-jefe, `危` jefe) en la esquina inferior derecha, y el
-    jefe además va más grande (56 px) con borde doble. El recorte circular se aplica a la `<img>`,
-    no al `<button>`: si lo llevara el botón con `overflow-hidden`, cortaría el badge.
+  - **Mini-jefe y jefe pintan el sprite del personaje que hay dentro** (`spriteDeLuchador`, del
+    `miniJefeId`/`jefeFinalId` del arco), con `image-rendering: pixelated` porque se amplían. El
+    **entrenador no puede**: su enemigo nombrado se sortea al ENTRAR en el nodo
+    (`resolverEnemigoDeNodo`), no al generar el mapa, así que al pintarlo todavía no se sabe quién
+    es — se queda con el sprite de combate genérico. A los tres los distingue además el color del
+    borde y un badge de rango (`BADGE_NODO`: `★` entrenador, `☠` mini-jefe, `危` jefe) en la esquina
+    inferior derecha, y el jefe va más grande con borde doble. El recorte circular se aplica a la
+    `<img>`, no al `<button>`: si lo llevara el botón con `overflow-hidden`, cortaría el badge.
 - **Fondo de la columna central, uno por arco** (`FONDO_COLUMNA`, keyed por `id` de arco): País de
   las Olas, Examen Chunin e Invasión de Pain tienen cada uno su paisaje detrás del mapa; un arco
   sin entrada en el mapeo se queda con la columna negra en vez de romperse.
@@ -157,7 +160,52 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 ## `components/Combat/CombatScreen.jsx`
 
 - Lee `ultimoResultadoCombate` del store (resumen enriquecido: nombres, HP máximo, modo activo).
-- Reproduce `historial` turno a turno con auto-avance (900ms/turno), reconstruyendo el HP de cada lado restando el daño acumulado de los turnos ya revelados. Botón "Saltar animación".
+- **Reproduce el combate golpe a golpe, no turno a turno.** Un turno del motor trae 2-4 eventos (los
+  dos luchadores, más algún ataque extra) y resolverlos de una vez hacía imposible animarlos: la
+  barra bajaba dos veces a la vez y no se sabía quién había pegado. La unidad del replay es el
+  evento (`golpes` = `historial.flatMap(t => t.eventos)`).
+- Cada golpe tiene **dos tiempos**: el proyectil vuela (`MS_VUELO_PROYECTIL`) y luego impacta, y
+  **el daño solo cuenta en el impacto** (`golpesAplicados = impactado ? golpesEmpezados : golpesEmpezados - 1`).
+  Sin esa separación la barra de HP empezaba a bajar mientras el kunai seguía en el aire.
+- **Proyectil** (`assets/projectiles/kunai.png`, recortado con `scripts/generar-sprites-proyectiles.py`)
+  cruzando entre los dos luchadores, **sacudida** del que recibe (solo si el daño fue > 0: un golpe
+  bloqueado a 0 no debe verse igual que uno que ha dolido) y **número de daño flotante** sobre el
+  objetivo, que es lo que hace que la animación se entienda sin leer el registro. Un golpe de 0 sale
+  como `Blocked`, que es justo cuando el jugador necesita más explicación, no menos.
+  Las animaciones se reinician **remontando el elemento con `key`**, no quitando y poniendo clases:
+  con clases, el segundo golpe no animaba.
+- **Las pasivas se enseñan cuando saltan**: `pasivasActivadas` viaja en cada evento desde la fase 1
+  del rediseño de balance y hasta ahora no se leía en ninguna parte, así que todo el sistema era
+  invisible. Etiqueta sobre el luchador al que pertenece la pasiva (`duenoDePasiva` en
+  `engine/passives.js` lo deduce del enganche: solo `DANO_RECIBIDO` es del defensor) más el nombre
+  en la línea del registro. Ojo: `priority` y `repeat_basic_chance` **nunca** aparecen ahí, porque se
+  consultan fuera del contexto del golpe — el ataque extra se enseña con `esAtaqueExtra`.
+- **Distribución en dos cajas, estilo Pokelike** (`PanelBando`): tu equipo a la izquierda, el enemigo
+  a la derecha, cada bando en su caja con su rótulo. No hay una "fila de duelo" separada del
+  banquillo — el que pelea es una de las tarjetas del equipo, solo que encendida.
+- **Una sola `TarjetaLuchador` para todos**, equipo y enemigo. Antes había dos componentes (una barra
+  grande para el duelo y una tarjeta chica para el banquillo) y había que mantener el mismo diseño
+  por duplicado. Lleva nombre, nivel, barra de HP con números, sprite sobre una sombra elíptica que
+  hace de suelo, y —solo en quien pelea— la barra de jutsu y las pasivas que acaban de saltar. Tres
+  estados: activo (borde encendido y halo), en espera y caído (`opacity`, nunca filtros — con
+  `grayscale` la tarjeta se quedaba casi negra, el mismo error que ya se corrigió en el mapa).
+- El contenido de cada caja va **centrado en vertical**: las dos tienen distinto número de tarjetas
+  (tres contra una) y así los luchadores activos quedan a la misma altura, que es por donde cruza el
+  proyectil.
+- El estado del equipo **se reconstruye del replay, no se lee del store**: para cuando la animación
+  empieza, `jugarCombate` ya ha aplicado victoria o derrota, así que `equipo` contiene el estado
+  FINAL y pintarlo destriparía quién cae. Por eso el resumen lleva `equipoAlEmpezar`, una foto
+  tomada antes de la primera ronda.
+- **El registro de texto es solo de desarrollo**, plegado tras un `<details>` "[DEV] Combat log" y
+  envuelto en `import.meta.env.DEV`. Vite sustituye eso por `false` al construir y elimina el bloque
+  entero del bundle, así que no hay que acordarse de quitarlo antes de publicar (comprobado: el
+  texto no aparece en `dist/`). La partida la cuenta la animación; el registro es para depurar un
+  combate raro.
+- **Sprite de cada luchador** (`components/common/characterSprites.js`, recortados con
+  `scripts/generar-sprites-personajes.py`): en la tarjeta del que pelea (el enemigo volteado con
+  `-scale-x-100`, para que se miren) y pequeño en las tres tarjetas de equipo. Siempre con
+  `image-rendering: pixelated` — son dibujos de ~37×63 px que se amplían y sin eso salen borrosos.
+- Botón "Skip animation" para saltar al final de la ronda.
 - Barras de HP con color según % restante (`fuuton` >50%, `raiton` 20-50%, `sello` <20%). Cada `BarraLuchador` envuelta en `PersonajeHoverCard` (jugador se abre hacia la derecha, enemigo hacia la izquierda, para no salirse de la pantalla).
 - **Barra de jutsu** bajo la de HP, fina y sin números: lo que importa no es cuánto chakra hay sino
   cuánto falta. Al llenarse pulsa en color raiton con `JUTSU READY`, y en el log el jutsu sale con 🌀

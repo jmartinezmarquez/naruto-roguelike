@@ -498,6 +498,19 @@ export const useGameStore = create((set, get) => ({
     // combate (rondas encadenadas) sí ganó su XP, ya que participó.
     const idsYaDerrotadosAntesDelCombate = new Set(get().equipo.filter((p) => p.derrotado).map((p) => p.id));
 
+    // Foto del equipo ANTES de pelear, para que la pantalla de combate pueda
+    // pintar a los tres personajes mientras reproduce el combate. No vale leer
+    // `equipo` desde la UI: para cuando la animación empieza, este método ya ha
+    // aplicado victoria o derrota, así que el store contiene el estado FINAL y
+    // la pantalla destriparía quién cae antes de que el jugador lo vea.
+    const equipoAlEmpezar = get().equipo.map((p) => ({
+      id: p.id,
+      nivel: p.nivel,
+      hpActual: p.hpActual,
+      hpMaximo: calcularHpMaximo(p),
+      derrotado: p.derrotado,
+    }));
+
     // Como máximo tantas rondas como personajes en el equipo — no puede
     // haber más, cada ronda consume a un personaje (gana o cae).
     while (true) {
@@ -593,7 +606,7 @@ export const useGameStore = create((set, get) => ({
 
     if (consumirBuffs) get()._consumirUsoBuffsTemporales();
 
-    const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado };
+    const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado, equipoAlEmpezar };
     set({ ultimoResultadoCombate: resumen });
     return resumen;
   },

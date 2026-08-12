@@ -240,6 +240,38 @@ describe('_aplicarVictoria — XP de personajes caídos', () => {
   });
 });
 
+describe('jugarCombate — foto del equipo para la pantalla de combate', () => {
+  // `jugarCombate` aplica victoria/derrota ANTES de que la animación empiece, así
+  // que si CombatScreen leyera `equipo` para pintar al equipo estaría pintando el
+  // estado FINAL: se vería caer a un personaje antes de que el jugador lo viva.
+  // Por eso el resumen lleva su propia foto, tomada antes de la primera ronda.
+  it('el resumen trae el equipo tal y como estaba antes de pelear', () => {
+    const equipoAntes = useGameStore.getState().equipo.map((p) => ({ id: p.id, hpActual: p.hpActual }));
+
+    const resumen = useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+
+    expect(resumen.equipoAlEmpezar.map((p) => p.id)).toEqual(equipoAntes.map((p) => p.id));
+    expect(resumen.equipoAlEmpezar.map((p) => p.hpActual)).toEqual(equipoAntes.map((p) => p.hpActual));
+    // Y el estado real del store sí ha cambiado: la foto no es un alias de `equipo`.
+    expect(useGameStore.getState().equipo.every((p) => p.derrotado)).toBe(true);
+  });
+
+  it('la foto trae el HP máximo de ANTES, no el de después de subir de nivel', () => {
+    const maximosAntes = Object.fromEntries(
+      useGameStore.getState().equipo.map((p) => [p.id, useGameStore.getState().obtenerHpMaximo(p.id)]),
+    );
+
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+
+    for (const miembro of resumen.equipoAlEmpezar) {
+      expect(miembro.hpMaximo, miembro.id).toBe(maximosAntes[miembro.id]);
+    }
+    // El activo sube de nivel al ganar, así que su máximo de ahora es mayor: si
+    // la pantalla usara ese, la barra saldría corta durante toda la animación.
+    expect(useGameStore.getState().obtenerHpMaximo('naruto')).toBeGreaterThan(maximosAntes.naruto);
+  });
+});
+
 describe('_aplicarVictoria — HP al subir de nivel', () => {
   // El bug que este test existe para que no vuelva: `aplicarXpYActualizarHp` sí
   // sumaba el incremento de vida al subir de nivel, pero para el personaje que

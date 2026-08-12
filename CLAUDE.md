@@ -173,6 +173,22 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   `documentacion/11-progresion-y-arcos.md` sección "v4".
 - [x] `scripts/simular-combates.mjs` es **determinista** (semilla fija): desde que hay pasivas con
   probabilidad, con `Math.random` dos ejecuciones daban 14% y 21% en el mismo combate.
+- [x] **Interfaz de combate (punto 2 del roadmap), las 4 fases + rediseño Pokelike**: los dos bandos
+  en sendas cajas (izquierda tu equipo, derecha el enemigo) con una única `TarjetaLuchador` para
+  todos; equipo entero en pantalla (con
+  `equipoAlEmpezar` en el resumen del combate, porque el store ya tiene el estado FINAL cuando la
+  animación empieza), pasivas visibles cuando saltan (`nombrePasiva`/`duenoDePasiva` en
+  `engine/passives.js`), replay **golpe a golpe** en vez de turno a turno con kunai, sacudida y
+  número de daño flotante, y sprites por personaje. El registro de texto quedó **solo para
+  desarrollo** (`import.meta.env.DEV`): Vite lo elimina del build de producción, no hay que quitarlo
+  a mano. Ver `documentacion/13-ui-mapa-y-combate.md`.
+- [x] Sprites de personaje (`assets/characters/*.png`, `components/common/characterSprites.js`) y
+  proyectiles —kunai para el ataque básico de todos, más el jutsu propio de cada uno—
+  (`assets/projectiles/`, `components/common/projectileSprites.js`). Generados con
+  `scripts/generar-sprites-personajes.py` y `generar-sprites-proyectiles.py`. **No editar a mano los
+  PNG generados**, se pisan al regenerar. Lo que sigue faltando por falta de dibujo está junto en
+  `documentacion/05-roadmap.md`, sección "Pendiente de arte" — no repartido por los puntos ya
+  cerrados.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 
