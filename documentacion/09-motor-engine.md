@@ -21,6 +21,13 @@
 
 ## `combat.js`
 
+> **El evento de ataque lleva el estado RESUELTO, no los deltas.** `hpAtacante`, `hpDefensor`,
+> `cargaAtacante` y `cargaDefensor` vienen ya calculados. Quien reproduce el historial no debe
+> deducirlos con aritmética: la carga se pone a cero al lanzar el jutsu (no se puede sumar
+> incrementos) y el HP sube con `heal_on_kill` (no se puede restar daño). Las dos cosas ya rompieron
+> el replay una vez cada una. Si mañana hay un jutsu con robo de vida o una pasiva que cure al
+> recibir un golpe, el replay sigue funcionando sin tocar nada.
+
 - `obtenerEficacia(tipoAtacante, tipoDefensor)` — lee la matriz de `types.json`.
 - `crearLuchador(personajeBase, nivel, hpActualInicial, multiplicadoresExtra, multiplicadorCargaExtra)` — instancia de combate. **`hpActualInicial`**: si se pasa, el luchador empieza con ese HP en vez de a HP completo — es lo que permite que el HP persista entre combates. **`multiplicadoresExtra`**: multiplicadores aplicados después del modo, para los buffs temporales de eventos ("+20% ataque, 3 combates"). **`multiplicadorCargaExtra`**: acelera o frena la barra de jutsu, se combina con `modoActivo.multiplicadorCarga`. El modo activo se sigue calculando internamente con `obtenerModoActivo`.
 - `calcularDano(atacante, defensor, ataque)` — fórmula: `ataqueEfectivo * ataque.danoBase * eficacia - defensaEfectiva * 0.5`, mínimo 1. `ataque` es indistintamente el ataque básico o el `jutsu`. El básico sale siempre de

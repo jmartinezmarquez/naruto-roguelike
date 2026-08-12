@@ -167,19 +167,89 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 - Cada golpe tiene **dos tiempos**: el proyectil vuela (`MS_VUELO_PROYECTIL`) y luego impacta, y
   **el daño solo cuenta en el impacto** (`golpesAplicados = impactado ? golpesEmpezados : golpesEmpezados - 1`).
   Sin esa separación la barra de HP empezaba a bajar mientras el kunai seguía en el aire.
-- **Proyectil** (`assets/projectiles/kunai.png`, recortado con `scripts/generar-sprites-proyectiles.py`)
-  cruzando entre los dos luchadores, **sacudida** del que recibe (solo si el daño fue > 0: un golpe
-  bloqueado a 0 no debe verse igual que uno que ha dolido) y **número de daño flotante** sobre el
-  objetivo, que es lo que hace que la animación se entienda sin leer el registro. Un golpe de 0 sale
-  como `Blocked`, que es justo cuando el jugador necesita más explicación, no menos.
+- **Proyectil** —el kunai del ataque básico o el jutsu propio del atacante, ver
+  `components/common/projectileSprites.js`— que sale del **centro del que lanza** y llega al centro
+  del que recibe. Esas dos posiciones no se pueden escribir en el CSS: la tarjeta activa del equipo
+  puede ser la primera, la segunda o la tercera, así que su altura cambia de una ronda a otra. Se
+  miden con `getBoundingClientRect` y se inyectan como variables CSS **antes del primer pintado**
+  (`useLayoutEffect`), que es lo que evita ver un fotograma en la posición equivocada; no pasan por
+  estado de React a propósito, sería un render de más por golpe. Los **números flotantes** (daño y
+  curación) se colocan igual, midiendo la tarjeta del objetivo, y va **coloreado por la eficacia de tipo**: verde flojo,
+  amarillo normal, rojo fuerte (`--color-fuuton` / `--color-raiton` / `--color-katon`). Es una
+  escala de calor y no un semáforo — habla de cuánto ha dolido, porque el mismo número sale sobre
+  tu personaje y sobre el enemigo. El azul de `Blocked` se queda fuera de la escala a propósito: un
+  golpe anulado por una pasiva no es "poco efectivo", y meterlo dentro lo haría pasar por flojo.
+  El jutsu ya no se distingue por color sino **por tamaño**, que además pega más con "ha sido un
+  golpe gordo".
+- **La curación dentro del combate sale como `+N` en verde** y en la tipografía de la interfaz, no
+  en la de los daños: es otra cosa que un golpe y tiene que leerse distinto de un vistazo. La cura
+  por subir de nivel no aparece aquí — esa pasa después del combate y ya la cuenta el cartel "Lv. N!".
+  Se detecta mirando la **diferencia de HP** entre golpes, no el mecanismo que la produjo, así que
+  vale para lo que hay hoy (`heal_on_kill`) y para lo que venga: un jutsu con robo de vida o una
+  pasiva que cure al recibir saldrían solos, sin tocar la pantalla.
+- **La barra de HP lleva estela**: dos barras con el MISMO porcentaje, la pálida de detrás con una
+  transición lenta y con retraso. El hueco entre las dos es el mordisco del último golpe, así que se
+  percibe **cuánto ha quitado**, no solo cuánto queda. No necesita estado: es la misma cifra pintada
+  dos veces a velocidades distintas.
+- **El jutsu se telegrafía.** La barra de chakra se llena un turno ANTES de que el jutsu salga —es
+  una regla del motor (ver [29](./29-sistema-de-jutsus-automaticos.md)), no un efecto— y ese hueco
+  existía sin verse. Ahora quien lo tiene listo respira y brilla, y el turno pasa a ser tensión:
+  sabes que viene y si te da tiempo a tumbarlo antes.
+- **El ritmo no es constante.** Con todos los golpes durando lo mismo el combate sonaba a metrónomo.
+  Un jutsu vuela más lento (560 ms contra 320) y se le deja aire antes (620 ms) y después (520);
+  los básicos se encadenan en 200. La duración del vuelo la fija `Proyectil` desde JS sobre la
+  animación CSS, porque si el CSS se quedara con la suya el impacto y la llegada se separarían.
+- **El que cae se desploma** (gira y se desvanece) en vez de solo apagarse, y **el relevo de la
+  cadena de rondas entra deslizándose**: es el momento más dramático del combate y se contaba con
+  una línea de texto.
+  Las tarjetas llevan **dos envoltorios**: el de fuera es estable dentro de una ronda (identidad,
+  ref y animación de relevo) y el de dentro se remonta con cada impacto para relanzar la sacudida.
+  Con uno solo pasaban las dos cosas a la vez: cada impacto reiniciaba la animación de entrada del
+  que acababa de salir, y dos golpes seguidos al mismo objetivo no volvían a sacudirlo porque la
+  clase no llegaba a quitarse entre uno y otro.
+  El desplome se anima **solo en quien cae peleando** (`cayendoAhora`), no en todo el que esté
+  caído: al cambiar de ronda se remontan las tres tarjetas del equipo, y con `estado === 'caido'` los
+  que ya habían caído repetían su desplome cada vez que entraba el relevo.
+- **Sacudida** del que recibe, solo si el daño fue > 0: un golpe bloqueado a 0 no debe verse igual
+  que uno que ha dolido. Un golpe de 0 saca `Blocked` en vez del número, que es justo cuando el
+  jugador necesita más explicación, no menos.
   Las animaciones se reinician **remontando el elemento con `key`**, no quitando y poniendo clases:
   con clases, el segundo golpe no animaba.
-- **Las pasivas se enseñan cuando saltan**: `pasivasActivadas` viaja en cada evento desde la fase 1
-  del rediseño de balance y hasta ahora no se leía en ninguna parte, así que todo el sistema era
-  invisible. Etiqueta sobre el luchador al que pertenece la pasiva (`duenoDePasiva` en
-  `engine/passives.js` lo deduce del enganche: solo `DANO_RECIBIDO` es del defensor) más el nombre
-  en la línea del registro. Ojo: `priority` y `repeat_basic_chance` **nunca** aparecen ahí, porque se
-  consultan fuera del contexto del golpe — el ataque extra se enseña con `esAtaqueExtra`.
+- **La tarjeta de combate NO abre `PersonajeHoverCard`.** Ya enseña nombre, nivel, HP, tipo,
+  transformación y pasivas, así que el hover solo repetía lo mismo en una ventana encima de la
+  pantalla. El hover se queda donde sí aporta: mapa, tienda y reclutar.
+- **Las pasivas se enseñan siempre, y se resaltan cuando saltan.** Cada luchador lleva bajo su barra
+  de chakra las pasivas que TIENE —las de su transformación activa y las de su objeto equipado,
+  `pasivasDeLuchador` en `components/common/datosDeLuchador.js`— y con hover sale su descripción,
+  la misma frase de `data/passives.json` que usan los objetos. La que acaba de dispararse se
+  enciende. **Una pastilla por pasiva aunque la den dos fuentes**: el Manto de Chakra de Naruto y el
+  Sello de Chakra dan los dos `first_jutsu_bonus` y salía repetida. Se queda la de mayor cantidad y
+  lleva una marca `×2`, porque en el motor **se aplican las dos** (`aplicarModificadores` pliega
+  todas las del enganche): esconder la segunda en silencio sería mentir sobre lo fuerte que es el
+  personaje. La primera versión enseñaba solo las que saltaban y la fila aparecía y desaparecía en
+  cada golpe: no daba tiempo a leer qué tenía tu personaje. El resalte es lo que se conserva de
+  aquello, y sigue siendo necesario — sin él el sistema de pasivas vuelve a ser invisible.
+  Quién es el dueño de una pasiva que salta lo deduce `duenoDePasiva` (`engine/passives.js`) del
+  enganche: solo `DANO_RECIBIDO` es del defensor. Ojo: `priority` y `repeat_basic_chance` **nunca**
+  aparecen entre las activadas, porque se consultan fuera del contexto del golpe — el ataque extra
+  se enseña con `esAtaqueExtra`.
+- **La barra de chakra va en azules** (`suiton`, y `fuuton` claro al llenarse) y **sin rótulo**: el
+  color ya la separa de la de HP, y el pulso al estar llena dice "lista" sin escribirlo.
+- **Subida de nivel**: al terminar el combate, quien haya subido saca un cartel "Lv. N!" sobre su
+  sprite, su tarjeta suelta un destello dorado y **el título pasa a enseñar el nivel nuevo** con una
+  marca ▲. El sprite y las pasivas se siguen calculando con el nivel viejo a propósito: si no, un
+  personaje que acaba de cruzar el umbral de su modo aparecería ya transformado y destriparía la
+  pantalla que viene justo detrás. El store lo detecta comparando el nivel antes y
+  después de aplicar la XP (`subidasDeNivel` en el resumen, igual que `transformacionesDesbloqueadas`)
+  y viaja en el resumen para celebrarlo **cuando acaba la animación**, no al recibir el resultado.
+  La pantalla de transformación **espera** a que el cartel se haya visto: si no, el overlay salía
+  encima y el jugador no llegaba a enterarse de que había subido, que es justo lo que explica de
+  dónde sale la transformación.
+- **El panel enemigo enseña la cadena entera.** Un nodo de entrenador encadena varios combates (N
+  genins y luego el nombrado) y antes se veía solo al de turno, con un "Battle 1/3" encima: el
+  jugador no sabía a qué se enfrentaba ni cuánto le quedaba del nodo. Ahora se pintan todos, como el
+  equipo — el de turno encendido, los ya derrotados apagados (que también es información: dice
+  cuánto llevas) — y esos textos sobran.
 - **Distribución en dos cajas, estilo Pokelike** (`PanelBando`): tu equipo a la izquierda, el enemigo
   a la derecha, cada bando en su caja con su rótulo. No hay una "fila de duelo" separada del
   banquillo — el que pelea es una de las tarjetas del equipo, solo que encendida.
@@ -189,6 +259,18 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
   hace de suelo, y —solo en quien pelea— la barra de jutsu y las pasivas que acaban de saltar. Tres
   estados: activo (borde encendido y halo), en espera y caído (`opacity`, nunca filtros — con
   `grayscale` la tarjeta se quedaba casi negra, el mismo error que ya se corrigió en el mapa).
+- **El suelo bajo cada personaje va en dos capas**: un disco de pergamino (el "claro de tierra"
+  tipo Pokelike) y, encima, la sombra de contacto. Hubo un tercer disco con el color de la
+  naturaleza de chakra, y se quitó: competía con el resto del suelo y no se entendía qué
+  significaba. Esa información ahora va **junto al nombre**, con el mismo icono que usa la tarjeta
+  de hover (`emojiDeTipo` en `components/common/nombres.js`, compartido para que las dos pantallas
+  no se separen).
+- **El sprite es el de la transformación si el personaje tiene una activa** (`spriteDeCombate`).
+  El modo activo no es un estado que alguien encienda: es una función del nivel
+  (`obtenerModoActivo`), así que quien esté por encima del umbral está transformado siempre, también
+  en el banquillo. Se calcula a partir del nivel de la tarjeta y no se lee de ningún sitio — era el
+  bug de que Naruto desbloqueaba el Manto de Chakra, la pantalla de transformación lo celebraba, y
+  acto seguido volvía a salir con su sprite de siempre en todos los combates.
 - El contenido de cada caja va **centrado en vertical**: las dos tienen distinto número de tarjetas
   (tres contra una) y así los luchadores activos quedan a la misma altura, que es por donde cruza el
   proyectil.
@@ -202,9 +284,20 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
   texto no aparece en `dist/`). La partida la cuenta la animación; el registro es para depurar un
   combate raro.
 - **Sprite de cada luchador** (`components/common/characterSprites.js`, recortados con
-  `scripts/generar-sprites-personajes.py`): en la tarjeta del que pelea (el enemigo volteado con
-  `-scale-x-100`, para que se miren) y pequeño en las tres tarjetas de equipo. Siempre con
-  `image-rendering: pixelated` — son dibujos de ~37×63 px que se amplían y sin eso salen borrosos.
+  `scripts/generar-sprites-personajes.py`), siempre con `image-rendering: pixelated`.
+  **Todos los PNG comparten un lienzo de 96×96** y se pintan a un **múltiplo entero** suyo — hoy ×1
+  (96 px) en todas las tarjetas, iguales entre sí. Se probó a pintar al doble el que pelea y las
+  cajas dejaban de cuadrar: quien está en combate se distingue por el borde encendido y el halo, no
+  por el tamaño. Las dos reglas de abajo son necesarias, y la segunda no funciona sin la primera:
+  - El pixel art solo se ve limpio a escalas enteras. Los lienzos iban de 70 a 94 px y se pintaban
+    todos a 80: eso son factores como ×1,07, donde unas columnas de píxeles se duplican y otras no.
+    Se percibía como falta de nitidez, y agrandar sin más no lo arreglaba.
+  - Con lienzos distintos, además, **las proporciones entre personajes estaban mal**: un dibujo
+    pequeño acababa en un lienzo pequeño y luego se ampliaba hasta el mismo tamaño que uno grande,
+    así que Chōji salía del tamaño de Naruto. Al encuadrarlos todos en 96×96 sin reescalar, cada uno
+    conserva su tamaño real.
+  El lienzo común es 96 porque el dibujo más grande de las dos hojas mide 77×82 px; lo que sobra es
+  margen transparente, y eso es justo lo que mantiene las proporciones.
 - Botón "Skip animation" para saltar al final de la ronda.
 - Barras de HP con color según % restante (`fuuton` >50%, `raiton` 20-50%, `sello` <20%). Cada `BarraLuchador` envuelta en `PersonajeHoverCard` (jugador se abre hacia la derecha, enemigo hacia la izquierda, para no salirse de la pantalla).
 - **Barra de jutsu** bajo la de HP, fina y sin números: lo que importa no es cuánto chakra hay sino
@@ -218,6 +311,34 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
   derrota o por vencer a Pain) → `GameOverScreen` (ver [17](./17-game-over.md) y
   [20](./20-arcos-encadenados.md)).
 
+## `components/Combat/TransformationScreen.jsx`
+
+El momento en que un personaje desbloquea un modo. Existe porque las transformaciones se quitaron a
+propósito de las tarjetas de personaje, para que fueran una sorpresa (ver
+[30](./30-sistema-de-pasivas.md)): esta pantalla y las etiquetas de pasiva del combate son los
+**únicos** sitios donde el jugador se entera de que existen.
+
+- **Dos tiempos y luego quietud.** Carga (~1,4 s): el personaje tiembla, dos anillos de chakra
+  desfasados se cierran sobre él y su sprite parpadea entre la forma normal y la transformada — el
+  guiño a la evolución de Pokémon, que sale casi gratis porque tenemos los dos sprites (la silueta
+  es `brightness(0) invert(1)`, y alterna con `steps()` para que el corte sea seco, no un fundido).
+  Estallido (~0,5 s): destello blanco y entra el sprite transformado. Y a partir de ahí **la
+  pantalla se queda fija** con el nombre y las pasivas: lo que tiene que quedarse es qué hace la
+  transformación, y eso no se lee mientras algo parpadea.
+- **Aquí sí va la descripción de las pasivas**, que es justo la que se quitó de la tarjeta de
+  personaje. Este es el momento en que esa información importa y en que el jugador está mirando.
+  Los multiplicadores no: no son un dato comparable, son material de enciclopedia.
+- **Siempre saltable**, y el botón lleva al final del efecto, no cierra la pantalla: las runs son
+  cortas y esto se repite entre partidas, pero lo que no puede perderse es qué hace el modo.
+- **Es una cola.** El banquillo también gana XP, así que dos personajes pueden cruzar el umbral de
+  su modo en la misma victoria; se enseñan de uno en uno.
+- Aparece **al terminar la animación de combate**, no al recibir el resultado: el store desbloqueó el
+  modo antes de que el combate se reprodujera, y sacarla entonces destriparía que has ganado. Mismo
+  criterio que los logros.
+- El estado es un **contador** de cuántas ha visto el jugador, y la cola se deriva en el render.
+  Guardar la lista en estado obligaba a sembrarla desde un `useEffect`, y hacer `setState` síncrono
+  dentro de un efecto es un patrón que ya nos mordió una vez (está en CLAUDE.md, y el linter lo caza).
+
 ## `components/Event/EventScreen.jsx` (nuevo)
 
 - Lee `eventoActual` del store (`{ titulo, descripcion, elecciones }`) y `resolverEventoEleccion`.
@@ -228,6 +349,14 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
 Antes, `ultimoResultadoCombate` era el resultado crudo del motor (`{ historial, ganadorId, turnosUsados }`), con solo IDs. Ahora `jugarCombate` construye un resumen con `jugador`/`enemigo` (`{ id, nombre, hpMaximo, hpFinal, modoActivoNombre }`) además del historial. El motor (`engine/combat.js`) no cambió — esto es una capa de presentación añadida en el store.
 
 ## `components/common/HoverTooltip.jsx` + tarjetas que lo usan
+
+> **Se muestra con el combinador de hijo directo (`.hover-envoltorio:hover > .hover-contenido`), no
+> con el `group-hover` de Tailwind.** Un `group/hover` con nombre lo activa **cualquier** ancestro
+> que lo lleve, y eso rompía el anidamiento: en combate la tarjeta entera tenía hover y dentro
+> llevaba una pastilla por pasiva con el suyo, así que al pasar por encima de la tarjeta se abrían
+> todos los tooltips a la vez, unos encima de otros. Con `>` cada tooltip solo responde a su propio
+> envoltorio. El zoom usa la propiedad `scale` y no `transform: scale()`, porque las posiciones
+> `arriba`/`abajo` se centran con el `-translate-x-1/2` de Tailwind, que ya ocupa `transform`.
 
 `HoverTooltip` es la mecánica genérica de "mostrar algo al hacer hover" (CSS puro, named group de
 Tailwind `group/hover`, sin JS de posicionamiento) — extraída para no repetirla cada vez que hace

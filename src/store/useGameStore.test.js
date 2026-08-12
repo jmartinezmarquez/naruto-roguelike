@@ -272,6 +272,56 @@ describe('jugarCombate — foto del equipo para la pantalla de combate', () => {
   });
 });
 
+describe('jugarCombate — transformaciones desbloqueadas', () => {
+  // No hay ningún evento de "subir de modo": el modo activo es una función del
+  // nivel (`obtenerModoActivo`), así que la única forma de saber que se ha
+  // cruzado el umbral es comparar antes y después de aplicar la XP. Si eso se
+  // rompe, el jugador nunca vuelve a ver la pantalla de transformación y no salta
+  // ningún error — el juego sigue funcionando, solo que en silencio.
+  it('detecta el modo que se acaba de desbloquear y en qué personaje', () => {
+    const naruto = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    expect(naruto.nivel).toBe(1); // arranca por debajo de su primer modo
+
+    // XP de sobra para cruzar el nivel de desbloqueo del primer modo.
+    const resumen = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } }, 1,
+    );
+
+    const deNaruto = resumen.transformacionesDesbloqueadas.find((t) => t.personajeId === 'naruto');
+    expect(deNaruto).toBeDefined();
+    expect(deNaruto.indiceModo).toBe(0);
+  });
+
+  it('no la vuelve a anunciar en el combate siguiente', () => {
+    useGameStore.getState().jugarCombate({ ...enemigoDebilDePrueba, recompensa: { xp: 500 } }, 1);
+    const segundo = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 20 } }, 1,
+    );
+    expect(segundo.transformacionesDesbloqueadas.find((t) => t.personajeId === 'naruto')).toBeUndefined();
+  });
+
+  it('anota quién ha subido de nivel y a cuál, para que la pantalla lo celebre', () => {
+    const antes = useGameStore.getState().equipo.find((p) => p.id === 'naruto').nivel;
+
+    const resumen = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } }, 1,
+    );
+
+    const deNaruto = resumen.subidasDeNivel.find((s2) => s2.personajeId === 'naruto');
+    expect(deNaruto).toBeDefined();
+    expect(deNaruto.nivel).toBeGreaterThan(antes);
+    // El banquillo también gana XP, así que también puede subir.
+    expect(resumen.subidasDeNivel.length).toBeGreaterThan(1);
+  });
+
+  it('sin subir de modo, la lista viene vacía', () => {
+    const resumen = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 1 } }, 1,
+    );
+    expect(resumen.transformacionesDesbloqueadas).toEqual([]);
+  });
+});
+
 describe('_aplicarVictoria — HP al subir de nivel', () => {
   // El bug que este test existe para que no vuelva: `aplicarXpYActualizarHp` sí
   // sumaba el incremento de vida al subir de nivel, pero para el personaje que

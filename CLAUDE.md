@@ -173,7 +173,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   `documentacion/11-progresion-y-arcos.md` sección "v4".
 - [x] `scripts/simular-combates.mjs` es **determinista** (semilla fija): desde que hay pasivas con
   probabilidad, con `Math.random` dos ejecuciones daban 14% y 21% en el mismo combate.
-- [x] **Interfaz de combate (punto 2 del roadmap), las 4 fases + rediseño Pokelike**: los dos bandos
+- [x] **Interfaz de combate (punto 2 del roadmap), las 4 fases + rediseño Pokelike + juiciness**: los dos bandos
   en sendas cajas (izquierda tu equipo, derecha el enemigo) con una única `TarjetaLuchador` para
   todos; equipo entero en pantalla (con
   `equipoAlEmpezar` en el resumen del combate, porque el store ya tiene el estado FINAL cuando la
@@ -181,14 +181,28 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   `engine/passives.js`), replay **golpe a golpe** en vez de turno a turno con kunai, sacudida y
   número de daño flotante, y sprites por personaje. El registro de texto quedó **solo para
   desarrollo** (`import.meta.env.DEV`): Vite lo elimina del build de producción, no hay que quitarlo
-  a mano. Ver `documentacion/13-ui-mapa-y-combate.md`.
+  a mano. La tanda de juiciness añadió estela de HP, telegrafiado del jutsu, ritmo variable por tipo
+  de golpe, desplome al caer, entrada deslizante del relevo, números flotantes de daño (por eficacia)
+  y de curación, y cartel de subida de nivel. Ver `documentacion/13-ui-mapa-y-combate.md`.
+- **Regla del motor que salió de ahí**: el evento de ataque lleva el **estado resuelto**, no los
+  deltas (`hpAtacante`, `hpDefensor`, `cargaAtacante`, `cargaDefensor`). Quien reproduce el historial
+  no debe deducirlos con aritmética — la carga se pone a cero al lanzar el jutsu y el HP sube con
+  `heal_on_kill`. Ya rompió el replay una vez cada uno. Ver `documentacion/09-motor-engine.md`.
 - [x] Sprites de personaje (`assets/characters/*.png`, `components/common/characterSprites.js`) y
   proyectiles —kunai para el ataque básico de todos, más el jutsu propio de cada uno—
   (`assets/projectiles/`, `components/common/projectileSprites.js`). Generados con
   `scripts/generar-sprites-personajes.py` y `generar-sprites-proyectiles.py`. **No editar a mano los
-  PNG generados**, se pisan al regenerar. Lo que sigue faltando por falta de dibujo está junto en
+  PNG generados**, se pisan al regenerar. Todos salen en un **lienzo común de 96×96** y se pintan a
+  múltiplos enteros de él: el pixel art a escalas no enteras duplica unas columnas de píxeles y
+  otras no, y con lienzos distintos las proporciones entre personajes salían mal. Lo que sigue faltando por falta de dibujo está junto en
   `documentacion/05-roadmap.md`, sección "Pendiente de arte" — no repartido por los puntos ya
   cerrados.
+- [x] **Pantalla de transformación** (`components/Combat/TransformationScreen.jsx`, punto 4 del
+  roadmap): carga de chakra con parpadeo de silueta, estallido y luego quietud con el nombre del
+  modo y sus pasivas. El store detecta el desbloqueo comparando `obtenerModoActivo` antes y después
+  de aplicar la XP (no hay evento de "subir de modo"), y lo manda en el resumen del combate como
+  `transformacionesDesbloqueadas`, igual que los logros. Sprites en `assets/transformations/`,
+  generados con `scripts/generar-sprites-transformaciones.py`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 
@@ -200,6 +214,12 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - `setState` síncrono dentro del cuerpo de un `useEffect` (React) — el patrón correcto para resetear estado al cambiar una prop/valor es ajustarlo durante el render, no en un efecto (ver `CombatScreen.jsx`, comentarios en el código).
 - Nivel de reclutamiento calculado con `calcularNivelPorPiso` (nivel del piso) en vez del nivel del equipo — con la run empezando en 1 solo personaje, daba reclutas muy por debajo del resto (ej. nivel 2). Ahora se usa el nivel del personaje más fuerte del equipo — ver `documentacion/19-seleccion-de-personaje.md`.
 - SVG: un `markerEnd` (punta de flecha) que termina justo en el centro de una forma dibujada DESPUÉS (p. ej. un círculo) queda completamente tapado por esa forma, aunque el trazo de la línea sí se vea. Hay que recortar el final del trazo al borde de la forma destino, no al centro — ver el bug de `RuedaChakra` en `documentacion/19-seleccion-de-personaje.md`.
+- CSS mal formado que **el build no detecta**: al editar `index.css` quedó texto de comentario fuera
+  de su bloque `/* */` y un `*/` suelto. Tailwind no falló — `npm run build` dio OK — pero descartó
+  en silencio todas las reglas siguientes, y los tooltips (que se ocultan con `opacity: 0`) salieron
+  abiertos por defecto en todas las pantallas. **Que el build pase no quiere decir que el CSS sea
+  válido**: si tocas `index.css`, comprueba que la regla llega al bundle
+  (`grep -o "mi-clase[^{]*{[^}]*}" dist/assets/*.css`), no solo que compila.
 - HP al subir de nivel: `aplicarXpYActualizarHp` sumaba correctamente el incremento de vida, pero
   `_aplicarVictoria` pisaba después el `hpActual` del personaje activo con el HP del final del
   combate, tirando ese incremento. Resultado: el banquillo cobraba la vida del nivel y **el que

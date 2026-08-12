@@ -17,7 +17,7 @@ import arcoExamenChunin from '../data/arcs/examen-chunin.json';
 import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
-import { ganarXp } from '../engine/leveling';
+import { ganarXp, obtenerModoActivo } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
@@ -492,6 +492,8 @@ export const useGameStore = create((set, get) => ({
     const rondas = [];
     let jugadorGanoFinal = false;
     let logrosDesbloqueados = [];
+    let transformacionesDesbloqueadas = [];
+    let subidasDeNivel = [];
     let arcoCompletado = false;
     // Quiénes ya estaban caídos ANTES de este combate (no curados desde
     // entonces) — esos no ganan XP al ganar. Quien caiga DURANTE este mismo
@@ -509,6 +511,7 @@ export const useGameStore = create((set, get) => ({
       hpActual: p.hpActual,
       hpMaximo: calcularHpMaximo(p),
       derrotado: p.derrotado,
+      objetoEquipadoId: p.objetoEquipadoId, // la pantalla enseña sus pasivas
     }));
 
     // Como máximo tantas rondas como personajes en el equipo — no puede
@@ -571,7 +574,8 @@ export const useGameStore = create((set, get) => ({
       });
 
       if (jugadorGanoRonda) {
-        get()._aplicarVictoria(activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate);
+        ({ transformaciones: transformacionesDesbloqueadas, subidasDeNivel } = get()._aplicarVictoria(
+          activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate));
         // Se desbloquean ya (persisten y afectan a tienda/inventario desde
         // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
         // cuando termine la animación, para no arruinar el suspense.
@@ -606,7 +610,10 @@ export const useGameStore = create((set, get) => ({
 
     if (consumirBuffs) get()._consumirUsoBuffsTemporales();
 
-    const resumen = { rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado, equipoAlEmpezar };
+    const resumen = {
+      rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado, equipoAlEmpezar,
+      transformacionesDesbloqueadas, subidasDeNivel,
+    };
     set({ ultimoResultadoCombate: resumen });
     return resumen;
   },
@@ -790,6 +797,18 @@ export const useGameStore = create((set, get) => ({
         configGlobal.economia.oroPorCombateGanado.max) / 2,
     );
 
+    // Transformaciones desbloqueadas en esta victoria. Se detectan comparando el
+    // modo activo ANTES y DESPUÉS de aplicar la XP: no hay ningún evento de
+    // "subir de modo", el modo es una función del nivel (`obtenerModoActivo`), así
+    // que la única forma de saber que se ha cruzado el umbral es mirar los dos
+    // lados. Viajan en el resumen del combate, como `logrosDesbloqueados`, para
+    // que la pantalla las enseñe CUANDO TERMINE la animación y no antes.
+    const transformaciones = [];
+    // Quién ha subido de nivel y a cuál. Igual que las transformaciones, se
+    // detecta comparando antes y después de aplicar la XP y viaja en el resumen
+    // del combate, para que la pantalla lo celebre CUANDO acabe la animación.
+    const subidasDeNivel = [];
+
     const equipoActualizado = equipo.map((p) => {
       if (idsYaDerrotadosAntesDelCombate.has(p.id)) return p;
 
@@ -800,6 +819,21 @@ export const useGameStore = create((set, get) => ({
       const conXp = p.id === idPersonaje
         ? aplicarXpYActualizarHp(p, xpParaEste, hpFinalActivo)
         : aplicarXpYActualizarHp(p, xpParaEste);
+
+      if (conXp.nivel > p.nivel) {
+        subidasDeNivel.push({ personajeId: p.id, nivel: conXp.nivel });
+      }
+
+      const base = encontrarPersonajeBase(p.id);
+      const modoAntes = obtenerModoActivo(base, p.nivel);
+      const modoDespues = obtenerModoActivo(base, conXp.nivel);
+      if (modoDespues && modoDespues !== modoAntes) {
+        transformaciones.push({
+          personajeId: p.id,
+          indiceModo: base.modos.indexOf(modoDespues),
+          nivel: conXp.nivel,
+        });
+      }
 
       if (p.id === idPersonaje) {
         // Pasiva `heal_after_battle` del objeto equipado (Pergamino de Reserva):
@@ -839,6 +873,8 @@ export const useGameStore = create((set, get) => ({
       inventario: inventarioActualizado,
       ...(recompensaNueva ? { recompensaMiniJefe: recompensaNueva } : {}),
     });
+
+    return { transformaciones, subidasDeNivel };
   },
 
   /**

@@ -261,33 +261,31 @@
 
 ## Próximos pasos (en orden sugerido)
 
-> **Por dónde seguir ahora mismo: el punto 4, la pantalla de transformación.** Los puntos 1 y 2
-> están cerrados, y con ellos el motor y la pantalla de combate.
+> **Por dónde seguir ahora mismo: el punto 3.** Cerrados el 1 (motor y balance), el 2 (combate) y
+> el 4 (transformación). Con eso **el combate ya tiene el nivel de acabado que pide un MVP** y todo
+> lo del rediseño de balance es visible para el jugador, que era lo que quedaba pendiente de fondo.
 >
-> El punto 4 va antes que el 3 aunque esté después en la lista, por dos motivos. Es **lo último que
-> deja invisible el rediseño del balance**: las transformaciones se quitaron de las tarjetas a
-> propósito, para que fueran una sorpresa, y ahora mismo no hay ningún sitio donde se descubran —
-> un personaje alcanza el nivel de su modo y no pasa absolutamente nada. Y es **mucho más pequeño**
-> que el 3, que toca generador de mapa, store y un flujo de combate nuevo; el 4 es una pantalla que
-> se engancha al final del combate, que es justo lo que se acaba de reescribir.
+> El 3 es el único que queda tocando motor, store y datos; el resto de la lista es interfaz o
+> contenido. Después iría el **11** junto con el **8**, porque los dos rediseñan la misma tarjeta de
+> personaje y hacerlos por separado significa tocarla dos veces.
 >
-> Lo que el punto 4 necesita decidir y no está escrito: **cómo se detecta que alguien ha
-> desbloqueado un modo**. La vía natural es que `_aplicarVictoria` compare `obtenerModoActivo` antes
-> y después de aplicar la XP, y lo anote en el resumen del combate igual que ya se hace con
-> `logrosDesbloqueados` — que además ya tiene resuelto el problema de "no lo enseñes hasta que la
-> animación termine, no destripes el combate".
+> **Lo que le falta al combate para dejar de ser un MVP** (y no está en ningún punto de arriba
+> porque no es "terminar" nada, es añadir):
+> - **Sonido.** Es, con diferencia, lo que más notaría el jugador, y es lo único grande que falta.
+>   No es un retoque: el proyecto no tiene nada de audio, así que son assets, precarga, mezcla y un
+>   ajuste de volumen. Está en el backlog.
+> - **El final del combate.** Todo lo de dentro está cuidado y el cierre es un "Victory" de texto.
+>   El momento de la recompensa —XP ganada, oro, objeto— no se celebra. Es el eslabón más flojo de
+>   la pantalla ahora mismo. Punto 12.
 >
-> Después, el **3**. Y si hace falta algo corto y visible entre medias, el **8** (tarjeta de equipo)
-> es el más barato y el mejor especificado.
+> **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas
+> por comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar.
+> La lista empieza en 2 porque el 1 está hecho, no por error.
 >
 > Lo único que el punto 1 deja abierto a propósito es el peso de los objetos: se quedaron en el
 > 21-24% del poder, no en el 40% del doc 27. Llegar al 40% exigiría que un solo objeto pesara más
 > que la transformación entera, y solo hay un hueco de equipo. Revisable si algún día hay más
 > huecos o categoría económica. Frente al 1,5% de partida, el objetivo de fondo está cumplido.
->
-> **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas
-> por comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar.
-> La lista empieza en 2 porque el 1 está hecho, no por error.
 
 2. [x] **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
    el primero esté peleando. Sprites de los personajes visibles. Los logs de texto se sustituyen
@@ -366,6 +364,30 @@
       texto pasa a ser solo de desarrollo** (`import.meta.env.DEV`, que Vite convierte en `false` y
       elimina del bundle): la partida la cuenta la animación.
 
+   6. [x] **Juiciness.** La tanda de golpe a golpe que convierte el combate en algo que se mira:
+      - **Estela de HP**: dos barras con el mismo porcentaje, la de detrás lenta y con retraso, así
+        que el hueco entre ambas es el mordisco del golpe. Sin estado en React.
+      - **Telegrafiado del jutsu**: la barra se llena un turno ANTES de disparar (regla del motor,
+        [29](./29-sistema-de-jutsus-automaticos.md)) y ese hueco no se veía. Ahora quien lo tiene
+        listo brilla, y el turno pasa a ser tensión.
+      - **Ritmo variable**: el jutsu vuela más lento y con aire antes y después; los básicos se
+        encadenan rápido. Con todo a la misma velocidad el combate sonaba a metrónomo.
+      - **Desplome al caer** y **entrada deslizante del relevo**, que era el momento más dramático
+        del combate y se contaba con una línea de texto.
+      - **Números flotantes**: daño coloreado por eficacia (verde flojo / amarillo normal / rojo
+        fuerte, escala de calor y no semáforo — el mismo número sale sobre los dos bandos) y
+        **curación en verde**, que se detecta por la diferencia de HP y no por el mecanismo, así
+        que un futuro jutsu con robo de vida saldría solo.
+      - **Subida de nivel**: cartel sobre el sprite, destello dorado y el nivel nuevo en el título.
+        La pantalla de transformación espera a que se vea — el orden cuenta la historia (subes de
+        nivel, *por eso* desbloqueas el modo).
+
+      De aquí salió una regla para el motor, ya escrita en [09](./09-motor-engine.md): **el evento de
+      ataque lleva el estado resuelto, no los deltas**. La carga se pone a cero al lanzar el jutsu y
+      el HP sube con `heal_on_kill`, así que ni una ni otro se pueden reconstruir con aritmética.
+      Ya rompió el replay una vez cada uno; ahora el evento trae `hpAtacante` y `hpDefensor` y el
+      replay no calcula nada.
+
    ### Verificación
 
    `npm test` no cubre componentes (los tests son de `engine/` y `store/`), así que aquí la red de
@@ -373,6 +395,11 @@
    de rondas encadene bien las tres tarjetas, que una pasiva salte visiblemente al menos una vez
    (Naruto o Sakura con `heal_on_kill` es la más fácil de provocar), y que "Skip animation" siga
    saltando al final sin dejar barras a medias.
+
+   ⚠️ Y una que **no** cubre `npm run build`: si tocas `index.css`, comprueba que la regla llega al
+   bundle (`grep -o "mi-clase[^{]*{[^}]*}" dist/assets/*.css`). Un comentario mal cerrado hizo que
+   Tailwind descartara en silencio todas las reglas siguientes —el build daba OK— y los tooltips
+   salieron abiertos por defecto en todas las pantallas.
 
 3. **Nodo de reclutar con rareza visible y recluta legendario por combate** — la hoja
    `assets/sprite-nodos-mapa.png` trae tres pergaminos (verde común, azul raro, dorado legendario) y
@@ -385,7 +412,7 @@
    store y datos, por eso va aparte.
    **Va detrás del 2 a propósito**: reutiliza la pantalla de combate nueva, no la vieja.
 
-4. **Pantalla de transformación** ← **lo siguiente**. ⚠️ **No es opcional**: desde que las transformaciones se quitaron
+4. [x] **Pantalla de transformación**. ⚠️ **No era opcional**: desde que las transformaciones se quitaron
    de las tarjetas (son una sorpresa, ver [30](./30-sistema-de-pasivas.md)), esta pantalla y el
    punto 2 son los **únicos** sitios donde el jugador se entera de que existen. Sin ellos, medio
    rediseño del balance vive solo en los JSON.
@@ -440,6 +467,38 @@
     Ojo: hoy esa información **no está en ninguna parte**, así que hasta que esto exista hay una deuda
     real, no solo un "ya lo pondremos". Y crece cada vez que se adelgaza una tarjeta.
 
+11. **Rehacer la UI de personaje ahora que hay sprites** — hasta ahora las tarjetas se diseñaron
+    sin arte, con el nombre y las barras haciendo todo el trabajo. Con `assets/characters/` y
+    `assets/transformations/` ya poblados, las pantallas donde aparece un personaje se han quedado
+    desfasadas: enseñan texto donde ya podrían enseñar al ninja. Dos frentes:
+
+    - **Las tarjetas de personaje en general** (`PersonajeHoverCard`/`FichaPersonaje`, selección de
+      personaje, reclutar, mochila al equipar, game over). La de combate ya se rehízo con el
+      rediseño Pokelike del punto 2 y sirve de referencia: sprite sobre su suelo, icono de
+      naturaleza de chakra junto al nombre, y las barras debajo.
+    - **El panel de equipo del mapa** (`MapScreen`), que es donde más se nota: es la vista que el
+      jugador tiene delante casi toda la partida y hoy no enseña ni un sprite. Encaja con el punto 8
+      (tarjeta de equipo), que ya pedía drag and drop y el objeto equipado visible — conviene
+      hacerlos a la vez y no tocar la misma tarjeta dos veces.
+
+    ⚠️ **Ninguna transformación de jefe se activa jamás.** Al pintar el sprite correcto se vio: sus
+    modos se desbloquean por encima del nivel al que se pelean — Zabuza a 15 y se pelea a 10, Kabuto
+    a 33 y se pelea a 19, Gaara a 30 y se pelea a 27, Pain a **90** y se pelea a 44. Es exactamente
+    el bug que la fase 2 arregló para los personajes jugables, y que en los jefes se dejó a
+    propósito para la fase 4... donde se recalibraron sus NIVELES pero no los umbrales de sus modos.
+    Hay arte recortado de las cuatro (`assets/transformations/zabuza_0`, `kabuto_0`, `gaara_0/1`,
+    `pain_camino_deva_0`) que nadie va a ver. Arreglarlo es bajar esos umbrales y **re-simular**:
+    los jefes se vuelven más fuertes, así que hay que volver a mirar el bloque de jefes en cadena.
+    El test de invariante que protege esto solo mira `modosDePersonajes`, por eso no saltó.
+
+12. **El final del combate** — todo lo de dentro de la pelea está cuidado y el cierre es un
+    `Victory` de texto con un botón. Ahora mismo es el eslabón más flojo de la pantalla: el momento
+    de la recompensa no se celebra. Lo que hay y no se enseña: la XP ganada (el store la aplica y
+    solo se ve el resultado si además subes de nivel), el oro, y el objeto en los nodos que lo dan.
+    Encaja con la barra de XP que tampoco existe en ninguna tarjeta.
+    Va después del 3 porque el recluta legendario añade un final de combate nuevo ("has ganado, se
+    une a tu equipo") y conviene diseñarlos juntos y no dos veces.
+
 ### Pendiente de arte
 
 Cosas que no están hechas por falta de dibujo, no por falta de código. Van juntas aquí y no dentro
@@ -458,6 +517,10 @@ leerlos buscando trabajo.
 - **Neji, Shikamaru, Kiba, Sai y Yamato tampoco tienen proyectil de jutsu**: no están dibujados en
   `projectile-sprites.png`. Lanzan kunai. (Rock Lee no cuenta: es cuerpo a cuerpo a propósito, así
   lo marca la propia hoja.)
+- **Los tier 2 de nueve personajes no tienen sprite de transformación** (la hoja solo trae el
+  segundo modo de Naruto, Sasuke, Sakura y los jefes). `spriteDeModo` cae al tier 1 del mismo
+  personaje, que ya lleva aura y se lee como "está transformado". Sai y Yamato no tienen ninguno y
+  caen a su sprite normal — que además ya es un placeholder, así que son los dos que peor se ven.
 - **El nodo de entrenador del mapa** sigue con el icono genérico de combate. Este no es falta de
   arte sino de datos: su enemigo nombrado se sortea al ENTRAR en el nodo (`resolverEnemigoDeNodo`),
   no al generar el mapa, así que al pintarlo todavía no se sabe quién es. Arreglarlo es subir la
@@ -474,6 +537,12 @@ leerlos buscando trabajo.
 
 Ideas nuevas pensadas para encajar con el formato Pokelike/Slay the Spire, marcadas aparte por ser
 más grandes de lo que cabe en una sesión de bugfixing/ajuste:
+
+- **Sonido.** Lo que más juice añadiría de todo lo que queda, y por eso está aquí y no en los
+  próximos pasos: no es un retoque de pantalla sino un sistema entero (assets, precarga, mezcla,
+  ajuste de volumen, y decidir qué pasa cuando el jugador silencia la pestaña). El combate ya tiene
+  los ganchos donde irían los golpes: cada evento del historial dice si fue básico o jutsu, si
+  impactó, y qué pasivas saltaron.
 
 - **Bifurcación de riesgo/recompensa** en algún nodo de evento: elegir entre un camino más difícil
   con mejor recompensa o uno seguro con menos, al estilo "elite fight" de Slay the Spire.

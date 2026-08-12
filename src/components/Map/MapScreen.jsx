@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { spriteDeLuchador } from '../common/characterSprites';
+import { spriteDeCombate } from '../common/datosDeLuchador';
 import typesData from '../../data/types.json';
 import { nombrePersonaje, nombreObjeto } from '../common/nombres';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
@@ -132,8 +132,14 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
   const estilo = COLOR_NODO[tipoEfectivo] ?? COLOR_NODO.combate;
   // `in` y no `??`: el nodo de inicio tiene sprite `null` a propósito, y con
   // `??` habría caído al de combate.
-  const spriteDelJefe = nodo.tipo === 'miniJefe' ? spriteDeLuchador(arco?.miniJefeId)
-    : nodo.tipo === 'jefe' ? spriteDeLuchador(arco?.jefeFinalId)
+  // Con el nivel al que se pelea, para que el nodo enseñe al jefe tal y como te
+  // lo vas a encontrar. Hoy ningún jefe llega transformado (sus modos se
+  // desbloquean por encima de su nivel de combate — ver el punto 11 del
+  // roadmap), así que devuelve el sprite normal; el día que se arregle, el mapa
+  // se entera solo.
+  const spriteDelJefe = nodo.tipo === 'miniJefe'
+    ? spriteDeCombate(arco?.miniJefeId, arco?.nivelMiniJefe)
+    : nodo.tipo === 'jefe' ? spriteDeCombate(arco?.jefeFinalId, arco?.nivelJefeFinal)
       : null;
   const sprite = spriteDelJefe
     ?? (tipoEfectivo in SPRITE_NODO ? SPRITE_NODO[tipoEfectivo] : SPRITE_NODO.combate);
@@ -213,7 +219,12 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
               // que se AMPLÍA y sin esto sale borroso. Los iconos de nodo, en
               // cambio, se recortaron a 100 px para pintarse a ~56 y se reducen:
               // pixelarlos los dejaría dentados.
-              style={spriteDelJefe ? { imageRendering: 'pixelated' } : undefined}
+              // El `scale` compensa el lienzo común de 96 px de los sprites de
+              // personaje: el dibujo ocupa menos parte del PNG que antes, y sin
+              // esto el jefe se veía pequeño dentro de su nodo. No hay escala
+              // entera posible aquí (el nodo cambia de tamaño con el zoom del
+              // mapa), pero a este tamaño no se nota.
+              style={spriteDelJefe ? { imageRendering: 'pixelated', transform: 'scale(1.25)' } : undefined}
             />
           )}
           {/* Tick de "ya hecho", como en Pokelike: encima del sprite, con su

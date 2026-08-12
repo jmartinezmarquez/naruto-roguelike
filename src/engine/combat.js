@@ -248,9 +248,14 @@ export function ejecutarAtaque(atacante, defensor, esAtaqueExtra = false) {
     // reproduciendo el historial, igual que hace con el HP.
     cargaAtacante: atacante.cargaJutsu,
     cargaDefensor: defensor.cargaJutsu,
-    // El atacante puede curarse a sí mismo al rematar (heal_on_kill), así que su
-    // HP ya no se deduce solo restando daño recibido.
+    // El HP de LOS DOS tal y como queda tras el golpe, no solo el daño. Quien
+    // reproduce el historial no puede deducirlo restando: el atacante puede
+    // curarse al rematar (`heal_on_kill`), y mañana un jutsu con robo de vida o
+    // una pasiva que cure al recibir moverían el HP sin que el daño lo explique.
+    // Es el mismo motivo por el que la barra de carga viaja resuelta en el evento
+    // en vez de acumularse sumando.
     hpAtacante: atacante.hpActual,
+    hpDefensor: defensor.hpActual,
   };
 }
 

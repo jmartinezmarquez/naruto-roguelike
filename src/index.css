@@ -70,26 +70,64 @@ img {
 }
 
 
+/* --- Hover de tooltip -------------------------------------------------------
+   El contenido se muestra con el combinador de HIJO DIRECTO (`>`), no con el
+   `group-hover` de Tailwind. Un `group/hover` con nombre lo activa CUALQUIER
+   ancestro que lo lleve, así que dos tooltips anidados —una tarjeta con hover
+   que dentro tiene pastillas con su propio hover— se abrían todos a la vez al
+   pasar por encima de la tarjeta. Con `>` solo responde su envoltorio inmediato,
+   y anidar deja de ser un problema.
+
+   El zoom usa la propiedad `scale` y NO `transform: scale()`: las posiciones
+   `arriba` y `abajo` se centran con el `-translate-x-1/2` de Tailwind, que ya
+   ocupa `transform`, y declararlo aquí otra vez lo pisaría y descentraría el
+   tooltip. `scale` es una propiedad aparte y se compone con la otra. */
+
+.hover-envoltorio > .hover-contenido {
+  opacity: 0;
+  scale: 0.95;
+  pointer-events: none;
+  transition: opacity 150ms, scale 150ms;
+}
+
+.hover-envoltorio:hover > .hover-contenido {
+  opacity: 1;
+  scale: 1;
+}
+
+
 /* --- Combate: proyectil y sacudida al impactar -------------------------------
-   El kunai cruza el hueco entre los dos luchadores y, al llegar, el que recibe
-   se sacude. Las dos animaciones duran lo mismo que los tiempos que usa
-   `CombatScreen` (MS_VUELO_PROYECTIL): si se cambian ahí, cambiarlas aquí.
-   Se reinician remontando el elemento con `key`, no con clases. */
+   El proyectil va del CENTRO del que lanza al centro del que recibe, y esas dos
+   posiciones no se pueden escribir aquí: la tarjeta activa del equipo puede ser
+   la primera, la segunda o la tercera, así que su altura cambia. `Proyectil` las
+   mide con `getBoundingClientRect` y las inyecta como variables antes del primer
+   pintado (`useLayoutEffect`). Aquí solo se interpolan.
 
-@keyframes volar-a-la-derecha {
-  from { left: 4%; transform: translateY(-50%) rotate(0deg); opacity: 0; }
-  15%  { opacity: 1; }
-  to   { left: 84%; transform: translateY(-50%) rotate(540deg); opacity: 1; }
+   La duración la fija `Proyectil` desde JS (`animationDuration`), porque el reloj
+   del replay la varía según el golpe: un jutsu vuela más lento que un básico. El
+   valor de aquí es solo el de respaldo. */
+
+@keyframes volar-proyectil {
+  from {
+    transform: translate(var(--desde-x), var(--desde-y)) rotate(0deg);
+    opacity: 0;
+  }
+  15% { opacity: 1; }
+  to {
+    transform: translate(var(--hasta-x), var(--hasta-y)) rotate(var(--giro, 0deg));
+    opacity: 1;
+  }
 }
 
-@keyframes volar-a-la-izquierda {
-  from { left: 84%; transform: translateY(-50%) rotate(0deg); opacity: 0; }
-  15%  { opacity: 1; }
-  to   { left: 4%; transform: translateY(-50%) rotate(-540deg); opacity: 1; }
+.proyectil {
+  /* El elemento se coloca en el origen del contenedor y viaja con `translate`:
+     así las variables son coordenadas absolutas dentro de la caja del combate y
+     no hay que pelearse con `left`/`top` a la vez que con la animación. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: volar-proyectil 420ms linear forwards;
 }
-
-.proyectil-derecha { animation: volar-a-la-derecha 420ms linear forwards; }
-.proyectil-izquierda { animation: volar-a-la-izquierda 420ms linear forwards; }
 
 @keyframes sacudida {
   0%, 100% { transform: translateX(0); }
@@ -109,19 +147,123 @@ img {
 
 .dano-flotante { animation: flotar-dano 700ms ease-out forwards; }
 
-/* El jutsu vuela sin dar vueltas: un Rasengan girando de campana se lee como un
-   fallo, un kunai girando no. Sobrescribe la rotación de las dos animaciones. */
-@keyframes volar-a-la-derecha-sin-giro {
-  from { left: 4%; transform: translateY(-50%); opacity: 0; }
-  15%  { opacity: 1; }
-  to   { left: 84%; transform: translateY(-50%); opacity: 1; }
+/* --- Transformación: el momento en que se desbloquea un modo ----------------
+   Dos tiempos, y los dos duran lo mismo que las constantes de
+   `TransformationScreen`: si se cambian ahí, cambiarlas aquí.
+
+   1. CARGA: el personaje tiembla mientras un anillo de chakra se cierra sobre
+      él, y su silueta parpadea entre la forma normal y la transformada — el
+      guiño a la evolución de Pokémon, que aquí sale casi gratis porque tenemos
+      los dos sprites.
+   2. ESTALLIDO: destello blanco que se abre y deja ya el sprite transformado. */
+
+@keyframes temblor-transformacion {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
 }
 
-@keyframes volar-a-la-izquierda-sin-giro {
-  from { left: 84%; transform: translateY(-50%) scaleX(-1); opacity: 0; }
-  15%  { opacity: 1; }
-  to   { left: 4%; transform: translateY(-50%) scaleX(-1); opacity: 1; }
+.temblor-transformacion { animation: temblor-transformacion 120ms linear infinite; }
+
+/* La silueta se consigue aplastando el sprite a blanco puro. Alterna con el
+   sprite normal a golpes secos (`steps`), no con un fundido: el corte duro es
+   justo lo que hace que se lea como "está cambiando". */
+@keyframes parpadeo-silueta {
+  0%, 49% { filter: none; }
+  50%, 100% { filter: brightness(0) invert(1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.9)); }
 }
 
-.proyectil-derecha.proyectil-sin-giro { animation-name: volar-a-la-derecha-sin-giro; }
-.proyectil-izquierda.proyectil-sin-giro { animation-name: volar-a-la-izquierda-sin-giro; }
+.parpadeo-silueta { animation: parpadeo-silueta 260ms steps(1, end) infinite; }
+
+/* El anillo se cierra desde fuera hacia el personaje. Es un borde grueso que
+   encoge, sin imagen: no hay arte de sello y con tipografía quedaba pobre. */
+@keyframes anillo-chakra {
+  from { width: 320px; height: 320px; opacity: 0; border-width: 2px; }
+  30%  { opacity: 0.9; }
+  to   { width: 90px; height: 90px; opacity: 0; border-width: 10px; }
+}
+
+.anillo-chakra { animation: anillo-chakra 700ms ease-in infinite; }
+
+@keyframes destello-transformacion {
+  from { opacity: 0; transform: scale(0.2); }
+  30%  { opacity: 1; }
+  to   { opacity: 0; transform: scale(2.4); }
+}
+
+.destello-transformacion { animation: destello-transformacion 520ms ease-out forwards; }
+
+@keyframes entrada-transformado {
+  from { opacity: 0; transform: scale(0.7); }
+  60%  { opacity: 1; transform: scale(1.12); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.entrada-transformado { animation: entrada-transformado 520ms ease-out forwards; }
+
+/* --- Subida de nivel en combate ---------------------------------------------
+   Dos piezas a la vez: el cartel sube y se desvanece, y la tarjeta suelta un
+   destello dorado. El cartel solo no se veía — llega justo cuando el jugador
+   está mirando el banner de victoria, no la tarjeta. */
+
+@keyframes cartel-subida-nivel {
+  from { opacity: 0; transform: translate(-50%, 10px) scale(0.7); }
+  25%  { opacity: 1; transform: translate(-50%, -6px) scale(1.15); }
+  70%  { opacity: 1; transform: translate(-50%, -14px) scale(1); }
+  to   { opacity: 0; transform: translate(-50%, -30px) scale(1); }
+}
+
+.cartel-subida-nivel { animation: cartel-subida-nivel 1600ms ease-out forwards; }
+
+@keyframes halo-subida-nivel {
+  0%, 100% { box-shadow: 0 0 0 rgba(217, 178, 60, 0); }
+  30% { box-shadow: 0 0 26px 4px rgba(217, 178, 60, 0.75); }
+}
+
+.halo-subida-nivel { animation: halo-subida-nivel 1600ms ease-out forwards; }
+
+/* --- Estela de la barra de HP -----------------------------------------------
+   Una segunda barra pálida detrás de la de vida, atada al MISMO porcentaje pero
+   con una transición mucho más lenta y con retraso. El resultado es que al
+   recibir un golpe se ve el mordisco durante un segundo antes de que la estela
+   alcance a la barra real: se percibe cuánto ha quitado el golpe, no solo cuánto
+   queda. No necesita estado en React — es la misma cifra pintada dos veces a
+   velocidades distintas. */
+
+.estela-hp { transition: width 900ms ease-out 250ms; }
+
+/* --- Jutsu cargado ----------------------------------------------------------
+   La barra se llena un turno ANTES de que el jutsu salga (es una regla del
+   motor, ver documentacion/29). Ese hueco existía y no se veía: aquí el luchador
+   que lo tiene listo respira y brilla, así que el turno pasa a ser tensión —
+   sabes que viene y si te da tiempo a tumbarlo antes. */
+
+@keyframes telegrafia-jutsu {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(61, 122, 158, 0.6)); }
+  50% { transform: scale(1.07); filter: drop-shadow(0 0 12px rgba(94, 156, 132, 0.95)); }
+}
+
+.telegrafia-jutsu { animation: telegrafia-jutsu 700ms ease-in-out infinite; }
+
+/* --- Caída ------------------------------------------------------------------
+   El que cae se desploma en vez de apagarse sin más. Con `forwards` se queda
+   tumbado: la tarjeta ya está atenuada, esto cuenta el momento. */
+
+@keyframes caida-ko {
+  from { transform: rotate(0) translateY(0); opacity: 1; }
+  to { transform: rotate(-75deg) translateY(14px); opacity: 0.35; }
+}
+
+.caida-ko { animation: caida-ko 500ms ease-in forwards; }
+
+/* --- Relevo en la cadena de rondas ------------------------------------------
+   Cuando cae tu personaje activo entra el siguiente, y ese es el momento más
+   dramático del combate: se contaba con una línea de texto. Ahora su tarjeta
+   entra deslizándose desde la izquierda. */
+
+@keyframes entrada-relevo {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.entrada-relevo { animation: entrada-relevo 420ms ease-out; }

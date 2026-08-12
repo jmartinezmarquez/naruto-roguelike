@@ -1,20 +1,44 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
+import { crearLuchador } from '../../engine/combat';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
-import PersonajeHoverCard from '../common/PersonajeHoverCard';
-import { nombrePersonaje } from '../common/nombres';
-import { nombrePasiva, duenoDePasiva } from '../../engine/passives';
-import { spriteDeLuchador } from '../common/characterSprites';
+import { nombrePersonaje, emojiDeTipo } from '../common/nombres';
+import { nombrePasiva, duenoDePasiva, describirPasiva } from '../../engine/passives';
+import { spriteDeCombate, pasivasDeLuchador } from '../common/datosDeLuchador';
+import HoverTooltip from '../common/HoverTooltip';
 import { spriteDeProyectil } from '../common/projectileSprites';
+import TransformationScreen from './TransformationScreen';
 
 // El replay avanza de GOLPE en golpe, no de turno en turno. Un turno trae 2-4
 // eventos (los dos luchadores, más algún ataque extra) y resolverlos todos de
 // una vez hacía imposible animarlos: la barra bajaba dos veces a la vez y no se
 // sabía quién había pegado. Cada golpe tiene dos tiempos: el proyectil vuela y
 // luego impacta, y el daño se aplica en el impacto, no al empezar.
-const MS_VUELO_PROYECTIL = 420;
-const MS_ENTRE_GOLPES = 320;
+//
+// Los tiempos NO son constantes: con todos los golpes durando lo mismo el
+// combate sonaba a metrónomo. Un jutsu vuela más lento y se le deja aire antes y
+// después; los básicos se encadenan rápido. Así la pelea tiene frases en vez de
+// pulsos, y el golpe gordo se nota que es el golpe gordo.
+const MS_VUELO_BASICO = 320;
+const MS_VUELO_JUTSU = 560;
+const MS_ENTRE_BASICOS = 200;
+const MS_TRAS_JUTSU = 520;
+const MS_ANTES_DE_JUTSU = 620;
+
+const esJutsu = (golpe) => golpe?.tipoAtaque === 'jutsu';
+const msDeVuelo = (golpe) => (esJutsu(golpe) ? MS_VUELO_JUTSU : MS_VUELO_BASICO);
+
+/** La pausa tras un golpe: manda la anticipación del siguiente sobre el eco del anterior. */
+function msEntreGolpes(golpeQueAcaba, golpeSiguiente) {
+  if (esJutsu(golpeSiguiente)) return MS_ANTES_DE_JUTSU;
+  if (esJutsu(golpeQueAcaba)) return MS_TRAS_JUTSU;
+  return MS_ENTRE_BASICOS;
+}
 const PAUSA_ENTRE_RONDAS_MS = 1400;
+// Lo que se deja ver la subida de nivel antes de tapar la pantalla con la
+// transformación. Sin esta espera, el overlay salía encima del cartel y el
+// jugador no llegaba a ver que había subido — que es lo que la explica.
+const MS_CELEBRAR_NIVEL = 1500;
 
 function colorBarraHp(porcentaje) {
   if (porcentaje > 0.5) return 'bg-fuuton';
@@ -54,6 +78,44 @@ function estadoDelEquipo(resultado, indiceRonda, hpJugadorEnVivo) {
 }
 
 /**
+ * Los enemigos del nodo y en qué estado está cada uno, para pintarlos igual que
+ * al equipo. Un nodo de entrenador encadena varios combates (N genins y luego el
+ * nombrado), y hasta ahora el panel enemigo enseñaba solo al de turno con un
+ * "Battle 1/3" encima: el jugador no sabía a qué se enfrentaba ni cuánto le
+ * quedaba. Con la cadena entera a la vista, ese texto sobra.
+ *
+ * Los ya derrotados se quedan en la lista, apagados. Es información: dice cuánto
+ * llevas del nodo.
+ */
+function estadoDeLosEnemigos(cadenaEnemigos, ronda, hpEnemigoEnVivo) {
+  const actual = {
+    id: ronda.enemigo.id,
+    nombre: ronda.enemigo.nombre,
+    nivel: ronda.enemigo.nivel,
+    hpActual: hpEnemigoEnVivo,
+    hpMaximo: ronda.enemigo.hpMaximo,
+    estado: hpEnemigoEnVivo <= 0 ? 'caido' : 'activo',
+    modoActivoNombre: ronda.enemigo.modoActivoNombre,
+  };
+  if (!cadenaEnemigos) return [actual];
+
+  return cadenaEnemigos.enemigos.map((eslabon, i) => {
+    if (i === cadenaEnemigos.indiceActual) return actual;
+    const luchador = crearLuchador(eslabon.enemigoBase, eslabon.nivel);
+    const yaCayo = i < cadenaEnemigos.indiceActual;
+    return {
+      id: eslabon.enemigoBase.id,
+      nombre: eslabon.enemigoBase.nombre,
+      nivel: eslabon.nivel,
+      hpActual: yaCayo ? 0 : luchador.hpMaximo,
+      hpMaximo: luchador.hpMaximo,
+      estado: yaCayo ? 'caido' : 'espera',
+      modoActivoNombre: luchador.modoActivo?.nombre ?? null,
+    };
+  });
+}
+
+/**
  * Las pasivas que han saltado en el último golpe impactado, repartidas por
  * luchador. Sin esto el sistema entero de pasivas es invisible: un golpe que
  * hace 0 o un atacante que de pronto sube de HP se veían como números raros
@@ -88,6 +150,14 @@ function pasivasDelUltimoGolpe(ronda, golpe) {
  * de todos. Quien no tenga jutsu dibujado lanza kunai también en su jutsu — se
  * distingue igual por tamaño y halo.
  *
+ * **Sale del centro del que lanza y llega al centro del que recibe.** Esas dos
+ * posiciones no se pueden escribir en el CSS: la tarjeta activa del equipo puede
+ * ser la primera, la segunda o la tercera, así que su altura cambia de una ronda
+ * a otra. Se miden aquí con `getBoundingClientRect` y se inyectan como variables
+ * CSS **antes del primer pintado** (`useLayoutEffect`), que es lo que evita que
+ * se vea un fotograma en la posición equivocada. No pasan por estado de React a
+ * propósito: sería un render de más por cada golpe y no lo necesita nadie más.
+ *
  * El jutsu **no rota** mientras vuela: un Rasengan dando vueltas de campana se
  * lee como un error, mientras que un kunai girando es justo lo que se espera.
  *
@@ -95,20 +165,51 @@ function pasivasDelUltimoGolpe(ronda, golpe) {
  * React remonta el elemento y el CSS vuelve a empezar. Con una clase que se
  * quita y se pone, el segundo golpe no animaría.
  */
-function Proyectil({ atacanteId, hacia, esJutsu }) {
+function Proyectil({ atacanteId, hacia, esJutsu: esJutsuEsteGolpe, refContenedor, refOrigen, refDestino }) {
+  const nodo = useRef(null);
+
+  useLayoutEffect(() => {
+    const contenedor = refContenedor.current;
+    const origen = refOrigen.current;
+    const destino = refDestino.current;
+    if (!nodo.current || !contenedor || !origen || !destino) return;
+
+    const caja = contenedor.getBoundingClientRect();
+    const centro = (elemento) => {
+      const r = elemento.getBoundingClientRect();
+      return {
+        x: r.left - caja.left + r.width / 2,
+        y: r.top - caja.top + r.height / 2,
+      };
+    };
+    const desde = centro(origen);
+    const hasta = centro(destino);
+
+    // El proyectil mide ~28-48 px y se coloca por su esquina, así que hay que
+    // restarle la mitad para que sea su centro el que viaje entre los dos.
+    const mitad = nodo.current.offsetWidth / 2;
+    nodo.current.style.setProperty('--desde-x', `${desde.x - mitad}px`);
+    nodo.current.style.setProperty('--desde-y', `${desde.y - mitad}px`);
+    nodo.current.style.setProperty('--hasta-x', `${hasta.x - mitad}px`);
+    nodo.current.style.setProperty('--hasta-y', `${hasta.y - mitad}px`);
+    nodo.current.style.setProperty('--giro', esJutsuEsteGolpe ? '0deg' : hacia === 'derecha' ? '540deg' : '-540deg');
+    // La duración manda desde JS: el reloj del replay la varía por tipo de golpe
+    // y si el CSS se quedara con la suya, el impacto y la llegada se separarían.
+    nodo.current.style.animationDuration = `${msDeVuelo({ tipoAtaque: esJutsuEsteGolpe ? 'jutsu' : 'basico' })}ms`;
+  }, [refContenedor, refOrigen, refDestino, esJutsuEsteGolpe, hacia]);
+
   return (
-    <div
-      aria-hidden="true"
-      className={`absolute top-1/2 z-10 pointer-events-none ${
-        hacia === 'derecha' ? 'proyectil-derecha' : 'proyectil-izquierda'
-      } ${esJutsu ? 'proyectil-sin-giro' : ''}`}
-    >
+    <div ref={nodo} aria-hidden="true" className="proyectil z-10 pointer-events-none">
       <img
-        src={spriteDeProyectil(atacanteId, esJutsu)}
+        src={spriteDeProyectil(atacanteId, esJutsuEsteGolpe)}
         alt=""
-        className={esJutsu
-          ? 'w-12 h-12 object-contain drop-shadow-[0_0_10px_rgba(233,178,58,0.75)]'
-          : 'w-7 h-7 object-contain'}
+        className={[
+          esJutsuEsteGolpe ? 'w-12 h-12 drop-shadow-[0_0_10px_rgba(233,178,58,0.75)]' : 'w-7 h-7',
+          'object-contain',
+          // Solo el jutsu se voltea: como no gira, si no miraría hacia atrás al
+          // volar hacia la izquierda. El kunai da vueltas y da igual.
+          esJutsuEsteGolpe && hacia === 'izquierda' ? '-scale-x-100' : '',
+        ].join(' ')}
         style={{ imageRendering: 'pixelated' }}
       />
     </div>
@@ -120,38 +221,137 @@ function Proyectil({ atacanteId, hacia, esJutsu }) {
  * que la animación se entienda sin leer el registro: sin el número, un kunai que
  * cruza la pantalla no dice cuánto ha dolido.
  *
+ * Se coloca midiendo la tarjeta del objetivo, por el mismo motivo que el
+ * proyectil: la tarjeta que recibe puede estar a tres alturas distintas según
+ * quién esté peleando, y con una posición fija el número salía sobre el
+ * personaje equivocado.
+ *
  * Un golpe de 0 se enseña igual, con otro texto: es justo el caso en el que el
  * jugador necesita una explicación (lo ha parado una pasiva), no menos.
  */
-function DanoFlotante({ dano, lado, esJutsu }) {
+/**
+ * Color del número según lo que la tabla de tipos ha hecho con el golpe: verde
+ * flojo, amarillo normal, rojo fuerte. Es una escala de calor, no un semáforo —
+ * habla de cuánto ha dolido, no de si es bueno o malo, porque el mismo número
+ * sale sobre tu personaje y sobre el enemigo.
+ *
+ * El azul de `Blocked` se queda aparte a propósito: un golpe anulado por una
+ * pasiva no es "poco efectivo", es otra cosa, y mezclarlo en la escala lo haría
+ * pasar por un golpe flojo.
+ */
+function colorDelDano(dano, eficacia) {
+  if (dano === 0) return 'text-suiton';
+  if (eficacia > 1) return 'text-katon';
+  if (eficacia < 1) return 'text-fuuton';
+  return 'text-raiton';
+}
+
+/**
+ * Un número que sale flotando sobre la tarjeta de un luchador. La posición se
+ * mide, no se escribe: la tarjeta puede estar a tres alturas distintas según
+ * quién esté peleando, y con una fija el número salía sobre el personaje
+ * equivocado.
+ */
+function NumeroFlotante({ refContenedor, refObjetivo, className, children }) {
+  const nodo = useRef(null);
+
+  useLayoutEffect(() => {
+    const contenedor = refContenedor.current;
+    const objetivo = refObjetivo.current;
+    if (!nodo.current || !contenedor || !objetivo) return;
+    const caja = contenedor.getBoundingClientRect();
+    const r = objetivo.getBoundingClientRect();
+    nodo.current.style.left = `${r.left - caja.left + r.width / 2}px`;
+    nodo.current.style.top = `${r.top - caja.top + r.height * 0.35}px`;
+  }, [refContenedor, refObjetivo]);
+
   return (
-    <div
-      aria-hidden="true"
-      className="absolute top-[38%] z-20 pointer-events-none dano-flotante"
-      style={{ left: lado === 'jugador' ? '25%' : '75%' }}
-    >
-      <span className={`font-naruto text-2xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${
-        dano === 0 ? 'text-suiton' : esJutsu ? 'text-raiton' : 'text-pergamino-100'
-      }`}
-      >
-        {dano === 0 ? 'Blocked' : `-${dano}`}
-      </span>
+    <div ref={nodo} aria-hidden="true" className="absolute z-20 pointer-events-none dano-flotante">
+      <span className={`drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${className}`}>{children}</span>
     </div>
   );
 }
 
-function EtiquetasPasivas({ nombres }) {
-  if (nombres.length === 0) return null;
+function DanoFlotante({ dano, eficacia, esJutsu, refContenedor, refObjetivo }) {
   return (
-    <div className="flex flex-wrap gap-1 mt-1 justify-center">
-      {nombres.map((nombre) => (
-        <span
-          key={nombre}
-          className="text-[10px] font-display uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-raiton/20 text-raiton border border-raiton/40"
-        >
-          {nombre}
-        </span>
-      ))}
+    // El jutsu ya no se distingue por color —el color lo ha ocupado la eficacia—
+    // sino por tamaño, que además pega más con "ha sido un golpe gordo".
+    <NumeroFlotante
+      refContenedor={refContenedor}
+      refObjetivo={refObjetivo}
+      className={`font-naruto ${esJutsu ? 'text-3xl' : 'text-2xl'} ${colorDelDano(dano, eficacia)}`}
+    >
+      {dano === 0 ? 'Blocked' : `-${dano}`}
+    </NumeroFlotante>
+  );
+}
+
+/**
+ * La vida que un luchador acaba de recuperar DENTRO del combate. Hoy solo pasa
+ * por `heal_on_kill` (curarse al rematar), que es una pasiva de transformación o
+ * de objeto.
+ *
+ * Va en verde y en la tipografía de la interfaz, no en la de los daños: es otra
+ * cosa que un golpe y tiene que leerse distinto de un vistazo. La curación por
+ * subir de nivel NO sale aquí — esa ocurre después del combate y ya la cuenta el
+ * cartel de "Lv. N!".
+ */
+function CuracionFlotante({ cantidad, refContenedor, refObjetivo }) {
+  return (
+    <NumeroFlotante
+      refContenedor={refContenedor}
+      refObjetivo={refObjetivo}
+      className="font-display text-lg text-fuuton"
+    >
+      +{cantidad}
+    </NumeroFlotante>
+  );
+}
+
+/**
+ * Las pasivas que lleva el luchador —de su transformación y de su objeto—, con
+ * la que acaba de dispararse encendida.
+ *
+ * Se enseñan SIEMPRE, no solo cuando saltan: enseñando solo las que saltaban, la
+ * fila aparecía y desaparecía en cada golpe y no daba tiempo a leer qué tenía tu
+ * personaje. Lo que se conserva de aquello es el resalte, que sigue contando
+ * *cuándo* ha hecho algo — sin eso el sistema entero volvía a ser invisible.
+ */
+function EtiquetasPasivas({ pasivas, activadas }) {
+  if (pasivas.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-1.5">
+      {pasivas.map((pasiva) => {
+        const salta = activadas.includes(pasiva.id);
+        return (
+          <HoverTooltip
+            key={pasiva.id}
+            posicion="arriba"
+            contenido={(
+              <div className="w-48 bg-pergamino-100 text-tinta-950 rounded-md border-2 border-tinta-950 shadow-xl px-2 py-1.5">
+                <p className="font-display text-[10px] uppercase tracking-wide">{nombrePasiva(pasiva.id)}</p>
+                <p className="text-[10px] leading-snug mt-0.5">{describirPasiva(pasiva)}</p>
+                {pasiva.fuentes > 1 && (
+                  <p className="text-[10px] leading-snug mt-1 text-sello-600">
+                    La tienes por {pasiva.fuentes} vías y todas cuentan.
+                  </p>
+                )}
+              </div>
+            )}
+          >
+            <span className={[
+              'block text-[10px] font-display uppercase tracking-wide px-1.5 py-0.5 rounded-full border transition-all',
+              salta
+                ? 'bg-raiton text-tinta-950 border-raiton scale-105 shadow-[0_0_10px_rgba(217,178,60,0.8)]'
+                : 'bg-raiton/15 text-raiton border-raiton/40',
+            ].join(' ')}
+            >
+              {nombrePasiva(pasiva.id)}
+              {pasiva.fuentes > 1 && <span className="ml-1 opacity-70">×{pasiva.fuentes}</span>}
+            </span>
+          </HoverTooltip>
+        );
+      })}
     </div>
   );
 }
@@ -171,12 +371,16 @@ function EtiquetasPasivas({ nombres }) {
  */
 function TarjetaLuchador({
   id, nombre, nivel, hpActual, hpMaximo, carga, cargaMaxima,
-  modoActivoNombre, estado, pasivas = [],
+  modoActivoNombre, estado, objetoEquipadoId = null, pasivasActivadas = [], subioANivel = null,
+  cayendoAhora = false,
 }) {
   const porcentaje = hpMaximo > 0 ? Math.max(0, hpActual / hpMaximo) : 0;
   const porcentajeCarga = cargaMaxima ? Math.min(1, Math.max(0, carga / cargaMaxima)) : 0;
+
   const jutsuListo = porcentajeCarga >= 1;
   const activo = estado === 'activo';
+  const sprite = spriteDeCombate(id, nivel);
+  const pasivasPropias = pasivasDeLuchador(id, nivel, objetoEquipadoId);
 
   const estilo = estado === 'caido'
     ? 'border-pergamino-100/10 opacity-40'
@@ -184,18 +388,41 @@ function TarjetaLuchador({
       ? 'border-sello-500 shadow-[0_0_18px_rgba(201,74,60,0.5)]'
       : 'border-pergamino-100/15 opacity-80';
 
+  // Sin `PersonajeHoverCard`: en combate la tarjeta ya enseña nombre, nivel, HP,
+  // tipo, transformación y pasivas, así que el hover solo repetía lo mismo en una
+  // ventana encima. El hover sigue donde sí aporta — mapa, tienda, reclutar.
   return (
-    <PersonajeHoverCard
-      id={id}
-      nivel={nivel}
-      hpActual={hpActual}
-      hpMaximo={hpMaximo}
-      posicion="arriba"
-      className="block"
+    <div className={[
+      'relative bg-tinta-900 border rounded-lg px-3 pt-2 pb-1 transition-all',
+      estilo,
+      subioANivel ? 'halo-subida-nivel' : '',
+    ].join(' ')}
     >
-      <div className={`bg-tinta-900 border rounded-lg px-3 pt-2 pb-1 transition-all ${estilo}`}>
+      {/* El cartel va sobre el sprite y no en una esquina: es donde el jugador
+          está mirando cuando acaba el combate. */}
+      {subioANivel && (
+        <span
+          aria-hidden="true"
+          className="absolute left-1/2 top-1/3 z-20 font-naruto text-2xl text-raiton drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] cartel-subida-nivel"
+        >
+          Lv. {subioANivel}!
+        </span>
+      )}
+        {/* El icono de la naturaleza de chakra va junto al nombre, igual que en
+            la tarjeta de hover: el tipo decide el daño y tiene que poder leerse
+            sin abrir nada. Antes esto era un halo de color bajo los pies, pero
+            competía con el resto del suelo y no se sabía qué significaba. */}
+        {/* El nivel del título es el de ANTES del combate: la tarjeta se pinta
+            con la foto del equipo previa. Si ha subido, se enseña ya el nuevo con
+            su marca — el sprite y las pasivas siguen calculándose con el viejo, a
+            propósito, para no destripar la transformación que viene detrás. */}
         <p className="font-display text-sm text-center text-pergamino-100 truncate">
-          {nombre} <span className="text-pergamino-200/60">Lv.{nivel}</span>
+          {emojiDeTipo(id)} {nombre}{' '}
+          {subioANivel ? (
+            <span className="text-raiton">Lv.{subioANivel} ▲</span>
+          ) : (
+            <span className="text-pergamino-200/60">Lv.{nivel}</span>
+          )}
         </p>
         {modoActivoNombre && (
           <p className="text-[10px] text-center text-sello-500 uppercase tracking-wide truncate">
@@ -203,49 +430,74 @@ function TarjetaLuchador({
           </p>
         )}
 
-        <div className="h-3 w-full bg-tinta-800 rounded-sm overflow-hidden mt-1 border border-tinta-950">
+        {/* Dos barras con el MISMO porcentaje: la pálida de detrás va lenta y con
+            retraso, así que el hueco entre las dos es el mordisco del último
+            golpe. Ver `.estela-hp` en index.css. */}
+        <div className="relative h-3 w-full bg-tinta-800 rounded-sm overflow-hidden mt-1 border border-tinta-950">
           <div
-            className={`h-full ${colorBarraHp(porcentaje)} transition-all duration-300`}
+            className="absolute inset-y-0 left-0 bg-pergamino-100/45 estela-hp"
+            style={{ width: `${porcentaje * 100}%` }}
+          />
+          <div
+            className={`absolute inset-y-0 left-0 ${colorBarraHp(porcentaje)} transition-all duration-150`}
             style={{ width: `${porcentaje * 100}%` }}
           />
         </div>
         <p className="text-[10px] text-pergamino-200/50 mt-0.5">{Math.max(0, hpActual)} / {hpMaximo}</p>
 
-        {/* El sprite se apoya en una sombra elíptica que hace de suelo: sin ella
-            los personajes flotan sueltos dentro de la tarjeta. */}
+        {/* Todas las tarjetas miden lo mismo: el que pelea se distingue por el
+            borde encendido y el halo, no por ser más grande. Se probó a pintarlo
+            al doble y las cajas dejaban de cuadrar entre sí.
+
+            El sprite va a un múltiplo ENTERO de su lienzo (96 px), aquí ×1. El
+            pixel art solo se ve limpio así: antes los lienzos iban de 70 a 94 px
+            y se pintaban todos a 80, o sea factores como ×1,07 donde unas
+            columnas de píxeles se duplican y otras no — se veía sucio por mucho
+            que se agrandara.
+
+            Debajo, el suelo en dos capas: el disco de pergamino (el "claro de
+            tierra" tipo Pokelike) y la sombra de contacto encima, para que el
+            personaje se apoye en algo en vez de flotar suelto. */}
         <div className="relative h-24 flex items-end justify-center">
-          <div className="absolute bottom-1 w-20 h-3 rounded-[50%] bg-tinta-950/50 blur-[2px]" />
-          {spriteDeLuchador(id) && (
+          <div className="absolute bottom-1 w-20 h-5 rounded-[50%] bg-pergamino-200/25 border border-pergamino-100/15" />
+          <div className="absolute bottom-1.5 w-12 h-2 rounded-[50%] bg-tinta-950/55 blur-[2px]" />
+          {sprite && (
             <img
-              src={spriteDeLuchador(id)}
+              src={sprite}
               alt=""
               aria-hidden="true"
-              className={`relative w-20 h-20 object-contain ${activo ? '' : 'saturate-75'}`}
+              className={[
+                'relative w-24 h-24 object-contain',
+                activo ? '' : 'saturate-75',
+                // Solo se desploma el que cae PELEANDO, no todo el que esté
+                // caído: al cambiar de ronda se remontan las tres tarjetas, y
+                // con `estado === 'caido'` los que ya habían caído repetían su
+                // animación cada vez que entraba el relevo.
+                cayendoAhora ? 'caida-ko' : '',
+                // Solo avisa quien PUEDE lanzarlo ya: en el banquillo la barra ni
+                // se carga, y en un caído sería absurdo.
+                activo && jutsuListo ? 'telegrafia-jutsu' : '',
+              ].join(' ')}
               style={{ imageRendering: 'pixelated' }}
             />
           )}
         </div>
 
-        {/* Barra de jutsu solo en quien pelea: en el banquillo no se carga, y
-            enseñarla vacía en las tres tarjetas era ruido. Sin números a
-            propósito (ver documentacion/29). */}
+        {/* Barra de chakra solo en quien pelea: en el banquillo no se carga, y
+            enseñarla vacía en las tres tarjetas era ruido. Va en tonos de agua y
+            sin rótulo — el color ya la separa de la de HP, y el pulso al llenarse
+            dice "lista" sin escribirlo (ver documentacion/29). */}
         {activo && cargaMaxima > 0 && (
-          <>
-            <div className="h-1.5 w-full bg-tinta-800 rounded-full overflow-hidden border border-pergamino-100/10">
-              <div
-                className={`h-full transition-all duration-300 ${jutsuListo ? 'bg-raiton animate-pulse' : 'bg-sello-500'}`}
-                style={{ width: `${porcentajeCarga * 100}%` }}
-              />
-            </div>
-            <p className={`text-[10px] mt-0.5 ${jutsuListo ? 'text-raiton' : 'text-pergamino-200/40'}`}>
-              {jutsuListo ? 'JUTSU READY' : 'Jutsu'}
-            </p>
-          </>
+          <div className="h-1.5 w-full bg-tinta-800 rounded-full overflow-hidden border border-pergamino-100/10">
+            <div
+              className={`h-full transition-all duration-300 ${jutsuListo ? 'bg-fuuton animate-pulse' : 'bg-suiton'}`}
+              style={{ width: `${porcentajeCarga * 100}%` }}
+            />
+          </div>
         )}
 
-        <EtiquetasPasivas nombres={pasivas} />
-      </div>
-    </PersonajeHoverCard>
+        <EtiquetasPasivas pasivas={pasivasPropias} activadas={pasivasActivadas} />
+    </div>
   );
 }
 
@@ -285,13 +537,27 @@ export default function CombatScreen() {
   const [golpesEmpezados, setGolpesEmpezados] = useState(0);
   const [impactado, setImpactado] = useState(true);
   const [resultadoPrevio, setResultadoPrevio] = useState(resultado);
+  // Cuántas transformaciones de este combate ha visto ya el jugador. Se guarda el
+  // CONTADOR y la cola se deriva en el render, en vez de copiar la lista a un
+  // estado: copiarla obligaba a sembrarla desde un efecto, y hacer `setState`
+  // síncrono dentro de un efecto es justo el patrón que ya nos mordió una vez
+  // (ver el comentario del reset de abajo y CLAUDE.md).
+  const [transformacionesVistas, setTransformacionesVistas] = useState(0);
+  const [nivelYaCelebrado, setNivelYaCelebrado] = useState(false);
   const finDelRegistro = useRef(null);
+  // Cajas de las que el proyectil necesita saber el centro: el contenedor de los
+  // dos bandos y las dos tarjetas que están peleando.
+  const refContenedor = useRef(null);
+  const refTarjetaJugador = useRef(null);
+  const refTarjetaEnemigo = useRef(null);
 
   if (resultado !== resultadoPrevio) {
     setResultadoPrevio(resultado);
     setIndiceRonda(0);
     setGolpesEmpezados(0);
     setImpactado(true);
+    setTransformacionesVistas(0);
+    setNivelYaCelebrado(false);
   }
 
   const ronda = resultado?.rondas[indiceRonda] ?? null;
@@ -305,19 +571,20 @@ export default function CombatScreen() {
   // Lanza el siguiente golpe, una vez el anterior ha impactado.
   useEffect(() => {
     if (!ronda || rondaCompleta || !impactado) return undefined;
+    const espera = msEntreGolpes(golpes[golpesEmpezados - 1], golpes[golpesEmpezados]);
     const temporizador = setTimeout(() => {
       setGolpesEmpezados((n) => n + 1);
       setImpactado(false);
-    }, MS_ENTRE_GOLPES);
+    }, espera);
     return () => clearTimeout(temporizador);
-  }, [ronda, rondaCompleta, impactado, golpesEmpezados]);
+  }, [ronda, rondaCompleta, impactado, golpesEmpezados, golpes]);
 
   // El proyectil llega: aquí es donde el golpe cuenta.
   useEffect(() => {
     if (!ronda || impactado) return undefined;
-    const temporizador = setTimeout(() => setImpactado(true), MS_VUELO_PROYECTIL);
+    const temporizador = setTimeout(() => setImpactado(true), msDeVuelo(golpes[golpesEmpezados - 1]));
     return () => clearTimeout(temporizador);
-  }, [ronda, impactado, golpesEmpezados]);
+  }, [ronda, impactado, golpesEmpezados, golpes]);
 
   // Lleva el registro de desarrollo a su última línea. En el build de producción
   // ese bloque no existe (`import.meta.env.DEV`), así que la ref queda a null y
@@ -337,9 +604,13 @@ export default function CombatScreen() {
   }, [transicionRonda]);
 
   // Reproduce los golpes ya impactados para saber cómo estaban HP y barra de
-  // jutsu en ese momento. La carga no se acumula sumando: cada evento ya trae el
-  // valor resultante (cargaAtacante/cargaDefensor), porque lanzar el jutsu la
-  // pone a cero y eso no se puede reconstruir sumando incrementos.
+  // jutsu en ese momento.
+  //
+  // Nada se reconstruye con aritmética: el HP de los dos y la carga de los dos
+  // vienen ya resueltos en cada evento. Con la carga es obligatorio (lanzar el
+  // jutsu la pone a cero, no se puede sumar incrementos) y con el HP también en
+  // cuanto algo cura a mitad de combate — hoy `heal_on_kill`, mañana un jutsu con
+  // robo de vida o una pasiva que cure al recibir. Restar daño ya falló una vez.
   const estadoEnTurnoActual = useMemo(() => {
     if (!ronda) return null;
     let hpJugador = ronda.jugador.hpInicial;
@@ -347,28 +618,52 @@ export default function CombatScreen() {
     let cargaJugador = ronda.jugador.cargaInicial ?? 0;
     let cargaEnemigo = ronda.enemigo.cargaInicial ?? 0;
 
-    for (const evento of golpes.slice(0, Math.max(0, golpesAplicados))) {
-        if (evento.atacanteId === ronda.jugador.id) {
-          hpEnemigo -= evento.dano;
-          // El HP del ATACANTE no se deduce restando: con `heal_on_kill` sube al
-          // rematar. Por eso el evento lo trae ya resuelto. Mismo caso que la
-          // barra de carga, que tampoco se puede reconstruir sumando porque
-          // lanzar el jutsu la pone a cero.
-          if (evento.hpAtacante != null) hpJugador = evento.hpAtacante;
-          cargaJugador = evento.cargaAtacante;
-          cargaEnemigo = evento.cargaDefensor;
-        } else {
-          hpJugador -= evento.dano;
-          if (evento.hpAtacante != null) hpEnemigo = evento.hpAtacante;
-          cargaEnemigo = evento.cargaAtacante;
+    // Curación del ÚLTIMO golpe aplicado, para el número flotante. Se saca aquí
+    // porque hace falta el HP de cada uno justo ANTES de ese golpe, y eso solo lo
+    // sabe quien está reproduciendo el historial. Mira la DIFERENCIA de HP, no el
+    // mecanismo, así que sirve para cualquier cosa que cure dentro del combate.
+    let curacion = null;
+    const aplicados = golpes.slice(0, Math.max(0, golpesAplicados));
+
+    aplicados.forEach((evento, indice) => {
+      const esElUltimo = indice === aplicados.length - 1;
+      const anotar = (lado, hpAntes, hpDespues) => {
+        if (hpDespues == null) return;
+        const recuperado = hpDespues - hpAntes;
+        if (esElUltimo && recuperado > 0) curacion = { lado, cantidad: recuperado };
+      };
+
+      const jugadorAtaca = evento.atacanteId === ronda.jugador.id;
+      const [hpAtacanteAntes, hpDefensorAntes] = jugadorAtaca
+        ? [hpJugador, hpEnemigo]
+        : [hpEnemigo, hpJugador];
+
+      anotar(jugadorAtaca ? 'jugador' : 'enemigo', hpAtacanteAntes, evento.hpAtacante);
+      anotar(jugadorAtaca ? 'enemigo' : 'jugador', hpDefensorAntes, evento.hpDefensor);
+
+      // El `??` es la red por si algún historial no trae los campos nuevos.
+      const hpAtacanteDespues = evento.hpAtacante ?? hpAtacanteAntes;
+      const hpDefensorDespues = evento.hpDefensor ?? hpDefensorAntes - evento.dano;
+
+      if (jugadorAtaca) {
+        hpJugador = hpAtacanteDespues;
+        hpEnemigo = hpDefensorDespues;
+        cargaJugador = evento.cargaAtacante;
+        cargaEnemigo = evento.cargaDefensor;
+      } else {
+        hpEnemigo = hpAtacanteDespues;
+        hpJugador = hpDefensorDespues;
+        cargaEnemigo = evento.cargaAtacante;
         cargaJugador = evento.cargaDefensor;
       }
-    }
+    });
+
     return {
       hpJugador: Math.max(0, hpJugador),
       hpEnemigo: Math.max(0, hpEnemigo),
       cargaJugador,
       cargaEnemigo,
+      curacion,
     };
   }, [ronda, golpes, golpesAplicados]);
 
@@ -379,6 +674,27 @@ export default function CombatScreen() {
     notificarLogros(resultado?.logrosDesbloqueados ?? []);
   }, [combateTotalTerminado, resultado, notificarLogros]);
 
+  // La transformación aparece al TERMINAR la animación, no al recibir el
+  // resultado: el store la desbloqueó antes de que el combate se reprodujera, y
+  // sacarla entonces destriparía que has ganado. Mismo criterio que los logros.
+  // Es una cola porque el banquillo también gana XP: dos personajes pueden cruzar
+  // el umbral de su modo en la misma victoria.
+  const subidasDeNivel = combateTotalTerminado ? resultado?.subidasDeNivel ?? [] : [];
+  const nivelAlQueSubio = (personajeId) =>
+    subidasDeNivel.find((s2) => s2.personajeId === personajeId)?.nivel ?? null;
+
+  const transformacionEnPantalla = combateTotalTerminado && nivelYaCelebrado
+    ? (resultado?.transformacionesDesbloqueadas ?? [])[transformacionesVistas] ?? null
+    : null;
+
+  // La transformación espera a que la subida de nivel se haya visto.
+  useEffect(() => {
+    if (!combateTotalTerminado || nivelYaCelebrado) return undefined;
+    const espera = (resultado?.subidasDeNivel ?? []).length > 0 ? MS_CELEBRAR_NIVEL : 0;
+    const t = setTimeout(() => setNivelYaCelebrado(true), espera);
+    return () => clearTimeout(t);
+  }, [combateTotalTerminado, nivelYaCelebrado, resultado]);
+
   const hayMasEnCadena = cadenaEnemigos
     ? cadenaEnemigos.indiceActual < cadenaEnemigos.enemigos.length - 1
     : false;
@@ -387,9 +703,13 @@ export default function CombatScreen() {
     if (!resultado?.jugadorGanoFinal) return undefined;
     if (!hayMasEnCadena) return undefined;
     if (runTerminada || resultado.arcoCompletado || recompensaMiniJefe) return undefined;
+    // No encadenar mientras haya una transformación en pantalla: si no, el
+    // siguiente combate empezaría por detrás del overlay.
+    if (transformacionEnPantalla) return undefined;
     const t = setTimeout(continuarCadena, 1600);
     return () => clearTimeout(t);
-  }, [combateTotalTerminado, resultado, hayMasEnCadena, runTerminada, recompensaMiniJefe, continuarCadena]);
+  }, [combateTotalTerminado, resultado, hayMasEnCadena, runTerminada, recompensaMiniJefe,
+    continuarCadena, transformacionEnPantalla]);
 
   if (!resultado || !ronda || !estadoEnTurnoActual) {
     return (
@@ -404,6 +724,7 @@ export default function CombatScreen() {
   const ultimoImpacto = golpesAplicados > 0 ? golpes[golpesAplicados - 1] : null;
   const equipoEnPantalla = estadoDelEquipo(resultado, indiceRonda, estadoEnTurnoActual.hpJugador);
   const pasivasEnPantalla = pasivasDelUltimoGolpe(ronda, ultimoImpacto);
+  const enemigosEnPantalla = estadoDeLosEnemigos(cadenaEnemigos, ronda, estadoEnTurnoActual.hpEnemigo);
   // Solo se sacude quien acaba de recibir daño de verdad: un golpe bloqueado a 0
   // por una pasiva no debe verse igual que uno que ha dolido.
   const sacudeA = ultimoImpacto && ultimoImpacto.dano > 0
@@ -412,12 +733,15 @@ export default function CombatScreen() {
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col">
+      {transformacionEnPantalla && (
+        <TransformationScreen
+          key={`${transformacionEnPantalla.personajeId}-${transformacionEnPantalla.indiceModo}`}
+          personajeId={transformacionEnPantalla.personajeId}
+          indiceModo={transformacionEnPantalla.indiceModo}
+          onContinuar={() => setTransformacionesVistas((n) => n + 1)}
+        />
+      )}
       <div className="max-w-4xl mx-auto w-full">
-        {cadenaEnemigos && cadenaEnemigos.enemigos.length > 1 && (
-          <p className="text-center text-xs text-sello-500/70 mb-1 font-display uppercase tracking-widest">
-            Battle {cadenaEnemigos.indiceActual + 1} / {cadenaEnemigos.enemigos.length}
-          </p>
-        )}
         {resultado.rondas.length > 1 && (
           <p className="text-center text-xs text-pergamino-200/50 mb-3">
             Round {indiceRonda + 1} of {resultado.rondas.length}
@@ -428,13 +752,23 @@ export default function CombatScreen() {
             y las dos mitades se sacuden cuando les toca recibir. */}
         {/* Los dos bandos, cada uno en su caja, estilo Pokelike. `relative` para
             que el proyectil pueda cruzar de una caja a la otra por encima. */}
-        <div className="relative flex gap-4 mb-4">
+        <div ref={refContenedor} className="relative flex gap-4 mb-4">
           {ultimoImpacto && (
             <DanoFlotante
               key={`d${golpesAplicados}`}
               dano={ultimoImpacto.dano}
-              lado={ultimoImpacto.atacanteId === ronda.jugador.id ? 'enemigo' : 'jugador'}
+              eficacia={ultimoImpacto.eficacia}
               esJutsu={ultimoImpacto.tipoAtaque === 'jutsu'}
+              refContenedor={refContenedor}
+              refObjetivo={ultimoImpacto.atacanteId === ronda.jugador.id ? refTarjetaEnemigo : refTarjetaJugador}
+            />
+          )}
+          {estadoEnTurnoActual.curacion && (
+            <CuracionFlotante
+              key={`c${golpesAplicados}`}
+              cantidad={estadoEnTurnoActual.curacion.cantidad}
+              refContenedor={refContenedor}
+              refObjetivo={estadoEnTurnoActual.curacion.lado === 'jugador' ? refTarjetaJugador : refTarjetaEnemigo}
             />
           )}
           {golpeEnVuelo && (
@@ -443,6 +777,9 @@ export default function CombatScreen() {
               atacanteId={golpeEnVuelo.atacanteId}
               hacia={golpeEnVuelo.atacanteId === ronda.jugador.id ? 'derecha' : 'izquierda'}
               esJutsu={golpeEnVuelo.tipoAtaque === 'jutsu'}
+              refContenedor={refContenedor}
+              refOrigen={golpeEnVuelo.atacanteId === ronda.jugador.id ? refTarjetaJugador : refTarjetaEnemigo}
+              refDestino={golpeEnVuelo.atacanteId === ronda.jugador.id ? refTarjetaEnemigo : refTarjetaJugador}
             />
           )}
 
@@ -450,8 +787,17 @@ export default function CombatScreen() {
             {equipoEnPantalla.map((miembro) => {
               const esElQuePelea = miembro.peleando;
               return (
+                // Dos envoltorios y no uno: el de fuera se remonta al cambiar de
+                // RONDA (y ahí anima el relevo), el de dentro al recibir un golpe
+                // (y ahí sacude). Con uno solo, cada impacto reiniciaba la
+                // animación de entrada del personaje que acababa de salir.
                 <div
-                  key={`${miembro.id}-${sacudeA === 'jugador' && esElQuePelea ? golpesAplicados : 'quieto'}`}
+                  key={`${miembro.id}-r${indiceRonda}`}
+                  ref={esElQuePelea ? refTarjetaJugador : null}
+                  className={esElQuePelea && indiceRonda > 0 ? 'entrada-relevo' : ''}
+                >
+                <div
+                  key={sacudeA === 'jugador' && esElQuePelea ? golpesAplicados : 'quieto'}
                   className={sacudeA === 'jugador' && esElQuePelea ? 'sacudida' : ''}
                 >
                   <TarjetaLuchador
@@ -464,31 +810,49 @@ export default function CombatScreen() {
                     cargaMaxima={esElQuePelea ? ronda.cargaMaxima : 0}
                     modoActivoNombre={esElQuePelea ? ronda.jugador.modoActivoNombre : null}
                     estado={miembro.derrotado ? 'caido' : esElQuePelea ? 'activo' : 'espera'}
-                    pasivas={esElQuePelea ? pasivasEnPantalla.jugador : []}
+                    objetoEquipadoId={miembro.objetoEquipadoId}
+                    pasivasActivadas={esElQuePelea ? pasivasEnPantalla.jugador : []}
+                    subioANivel={nivelAlQueSubio(miembro.id)}
+                    cayendoAhora={esElQuePelea && miembro.derrotado}
                   />
+                </div>
                 </div>
               );
             })}
           </PanelBando>
 
           <PanelBando titulo="Enemy">
-            <div
-              key={`e${sacudeA === 'enemigo' ? golpesAplicados : 'quieto'}`}
-              className={sacudeA === 'enemigo' ? 'sacudida' : ''}
-            >
-              <TarjetaLuchador
-                id={ronda.enemigo.id}
-                nombre={ronda.enemigo.nombre}
-                nivel={ronda.enemigo.nivel}
-                hpActual={estadoEnTurnoActual.hpEnemigo}
-                hpMaximo={ronda.enemigo.hpMaximo}
-                carga={estadoEnTurnoActual.cargaEnemigo}
-                cargaMaxima={ronda.cargaMaxima}
-                modoActivoNombre={ronda.enemigo.modoActivoNombre}
-                estado={estadoEnTurnoActual.hpEnemigo <= 0 ? 'caido' : 'activo'}
-                pasivas={pasivasEnPantalla.enemigo}
-              />
-            </div>
+            {enemigosEnPantalla.map((enemigo, i) => {
+              // `estadoDeLosEnemigos` pone al que pelea justo en ese índice.
+              const esElQuePelea = i === (cadenaEnemigos?.indiceActual ?? 0);
+              return (
+                // Mismo reparto que en el equipo: el envoltorio de fuera es
+                // estable (identidad y ref) y el de dentro se remonta con cada
+                // impacto para relanzar la sacudida. Con un solo `div`, dos
+                // golpes seguidos al mismo enemigo no la reiniciaban: la clase no
+                // llegaba a quitarse entre uno y otro.
+                <div key={`${enemigo.id}-${i}`} ref={esElQuePelea ? refTarjetaEnemigo : null}>
+                <div
+                  key={sacudeA === 'enemigo' && esElQuePelea ? golpesAplicados : 'quieto'}
+                  className={sacudeA === 'enemigo' && esElQuePelea ? 'sacudida' : ''}
+                >
+                  <TarjetaLuchador
+                    id={enemigo.id}
+                    nombre={enemigo.nombre}
+                    nivel={enemigo.nivel}
+                    hpActual={enemigo.hpActual}
+                    hpMaximo={enemigo.hpMaximo}
+                    carga={estadoEnTurnoActual.cargaEnemigo}
+                    cargaMaxima={esElQuePelea ? ronda.cargaMaxima : 0}
+                    modoActivoNombre={enemigo.modoActivoNombre}
+                    estado={enemigo.estado}
+                    pasivasActivadas={esElQuePelea ? pasivasEnPantalla.enemigo : []}
+                    cayendoAhora={esElQuePelea && enemigo.estado === 'caido'}
+                  />
+                </div>
+                </div>
+              );
+            })}
           </PanelBando>
         </div>
 
@@ -596,9 +960,9 @@ export default function CombatScreen() {
                 </button>
               </div>
             ) : hayMasEnCadena ? (
-              <p className="text-pergamino-200/60 text-sm animate-pulse">
-                Next enemy ({cadenaEnemigos.indiceActual + 2} / {cadenaEnemigos.enemigos.length})...
-              </p>
+              // Sin texto: el panel de la derecha ya enseña la cadena entera y a
+              // quién le toca. Solo el respiro antes de que entre el siguiente.
+              <p className="text-pergamino-200/50 text-sm animate-pulse">Next up...</p>
             ) : (
               <button
                 type="button"

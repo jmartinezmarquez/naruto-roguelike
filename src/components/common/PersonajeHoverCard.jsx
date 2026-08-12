@@ -3,6 +3,7 @@ import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import HoverTooltip from './HoverTooltip';
+import { emojiDeTipo } from './nombres';
 
 function encontrarBase(id) {
   return (
@@ -11,14 +12,6 @@ function encontrarBase(id) {
     ?? null
   );
 }
-
-const EMOJI_TIPO = {
-  katon: '🔥',
-  fuuton: '🌪️',
-  raiton: '⚡',
-  doton: '🪨',
-  suiton: '💧',
-};
 
 /**
  * Ritmo de carga del jutsu, en 3 puntitos. Es cualitativo a propósito: el
@@ -70,7 +63,7 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, className = '' }
     <div className={`bg-tinta-900 text-pergamino-100 rounded-lg text-left border border-pergamino-100/15 ${className}`}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-display font-bold text-sm leading-tight">
-          {EMOJI_TIPO[base.tipo] ?? ''} {base.nombre}
+          {emojiDeTipo(id)} {base.nombre}
         </p>
         {nivel != null && <p className="text-[10px] text-pergamino-200/50 shrink-0">Lv. {nivel}</p>}
       </div>

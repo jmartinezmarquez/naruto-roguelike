@@ -229,6 +229,9 @@ describe('pasivas al derrotar', () => {
     expect(atacante.hpActual).toBeGreaterThan(10);
     expect(evento.pasivasActivadas).toContain('heal_on_kill');
     expect(evento.hpAtacante).toBe(atacante.hpActual);
+    // El del defensor también: sin él, quien reproduce el combate tendría que
+    // deducirlo restando daño, y eso deja de valer en cuanto algo lo cure.
+    expect(evento.hpDefensor).toBe(moribundo.hpActual);
   });
 
   it('la curación no pasa del HP máximo', () => {

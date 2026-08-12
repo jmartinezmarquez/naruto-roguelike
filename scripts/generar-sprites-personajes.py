@@ -80,6 +80,19 @@ MARGEN_PANEL = 8
 # cualquiera que salga mucho más grande es una fusión y se recorta al calibre,
 # anclado arriba a la izquierda (que es donde empieza el sprite bueno).
 FACTOR_FUSION = 1.4
+# Todos los sprites salen en un lienzo del MISMO tamaño, con el dibujo centrado y
+# sin reescalar. Dos motivos, y los dos se veían en pantalla:
+#
+# - **Proporciones.** Recortando a la caja justa, un dibujo pequeño acababa en un
+#   lienzo pequeño; al pintarlos todos al mismo tamaño CSS, el pequeño se ampliaba
+#   más y Chōji salía del tamaño de Naruto.
+# - **Nitidez.** El pixel art solo se ve limpio a escalas ENTERAS. Con lienzos de
+#   70 a 94 px pintados a un tamaño fijo, cada personaje caía en un factor
+#   distinto y ninguno era x2 — se duplicaban unas columnas de píxeles si y otras
+#   no. Con un lienzo comun basta con pintar a un múltiplo suyo.
+#
+# 96 cubre el dibujo mas grande de las dos hojas (el Susanoo de Sasuke) con margen.
+LADO_LIENZO = 96
 
 
 def agrupar(indices):
@@ -149,6 +162,20 @@ def bandas_con_dibujo(w, ch, px, rect, papel, por_filas):
     return [b for b in agrupar([n for n in eje if hay_dibujo(n)]) if b[1] - b[0] >= MINIMO_BANDA]
 
 
+def encuadrar(lado, px, ladoDestino=None):
+    """Centra un lienzo RGBA cuadrado dentro de otro mayor, sin reescalar nada."""
+    destino = ladoDestino or LADO_LIENZO
+    if lado > destino:
+        raise SystemExit(f'Un sprite de {lado}px no cabe en el lienzo comun de {destino}px')
+    salida = bytearray(destino * destino * 4)
+    desplazamiento = (destino - lado) // 2
+    for y in range(lado):
+        origen = y * lado * 4
+        fila = ((y + desplazamiento) * destino + desplazamiento) * 4
+        salida[fila:fila + lado * 4] = px[origen:origen + lado * 4]
+    return destino, bytes(salida)
+
+
 def caja_del_primer_sprite(w, ch, px, panel, papel):
     """Caja del primer fotograma de la primera fila del panel."""
     x0, y0, x1, y1 = panel
@@ -211,7 +238,7 @@ def main():
             ancho, alto = min(ancho, anchoTipico), min(alto, altoTipico)
             print(f'  {identificador}: fotogramas pegados, recortado al calibre')
         caja = (x, y, ancho, alto)
-        lado, salida = recortar(w, h, ch, px, caja, papel)
+        lado, salida = encuadrar(*recortar(w, h, ch, px, caja, papel))
         escribir_png_rgba(os.path.join(DESTINO, f'{identificador}.png'), lado, lado, salida)
         generados[identificador] = (caja, lado)
         print(f'  {identificador}: caja {caja} → {lado}×{lado}')
@@ -222,7 +249,7 @@ def main():
             continue
         caja, _ = generados[origen]
         papel = color_del_papel(w, ch, px, (caja[0], caja[1], caja[0] + caja[2], caja[1] + caja[3]))
-        lado, salida = recortar(w, h, ch, px, caja, papel)
+        lado, salida = encuadrar(*recortar(w, h, ch, px, caja, papel))
         escribir_png_rgba(os.path.join(DESTINO, f'{destino}.png'), lado, lado, salida)
         print(f'  {destino}: placeholder, copia de {origen}')
 
