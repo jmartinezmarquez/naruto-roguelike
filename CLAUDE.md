@@ -106,13 +106,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 187 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 189 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 187 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 189 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -220,6 +220,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   común/inicial/raro, dorado = legendario; lo que las separa es cómo se consigue al ninja, no lo bueno
   que sea), el desafío **no suelta el objeto** de su jefe y el legendario entra al **nivel medio** del
   equipo sin bonus de reemplazo. Ver `documentacion/28-nodo-reclutar.md`.
+- [x] **El final del combate** (punto 12 del roadmap): `PanelRecompensas` con el oro y el objeto,
+  entre el rótulo de victoria y el botón. Viaja en el resumen (`recompensas`) y **no se lee del
+  store**: cuando la animación empieza, el store ya tiene el estado final. El objeto solo se anuncia
+  si ha entrado de verdad en la mochila — el del mini-jefe tiene su propia pantalla.
+  **La XP no se enseña a propósito**: casi cada combate sube un nivel, así que el número no cambia
+  ninguna decisión; se ve su consecuencia (cartel de subida de nivel). Se probó con barra de XP y se
+  quitó.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 
@@ -233,6 +240,9 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   **el simulador medía unos números y el juego corría con otros**. Si una función transforma datos y
   alguien puede llamarla dos veces sobre lo mismo, tiene que ser idempotente — y si hay un script que
   mide balance, comprobar que construye los objetos por el mismo camino que el juego.
+- **Guard numérico en JSX**: `{progresoXp && <barra/>}` con `progresoXp === 0` **pinta un `0`** en
+  pantalla. Salió un cero suelto en las tarjetas del primer combate de cada run, donde todos tienen
+  0 de XP. Con números hay que comparar (`> 0`) o normalizar a booleano, nunca usar el valor de guard.
 - **Comparar ids contra nombres**: `pasivasDelUltimoGolpe` devolvía nombres de pasiva y
   `EtiquetasPasivas` comparaba contra `pasiva.id`. No coincidían nunca, así que la pastilla no se
   encendía jamás y toda la fase de "pasivas visibles" pintaba la lista pero no el momento en que una

@@ -428,15 +428,16 @@ salieron abiertos por defecto en todas las pantallas.
 
 ## Próximos pasos (en orden sugerido)
 
-> **Por dónde seguir ahora mismo: el punto 12, y después el 11 junto con el 8.** Cerrados el 1
-> (motor y balance), el 2 (combate), el 3 (reclutar con rareza y desafío legendario) y el 4
-> (transformación). **Con el 3 se acabó el trabajo de motor, store y datos: todo lo que queda de aquí
-> en adelante es interfaz o contenido.**
+> **Por dónde seguir ahora mismo: el 11 junto con el 8.** Cerrados el 1 (motor y balance), el 2
+> (combate), el 3 (reclutar con rareza y desafío legendario), el 4 (transformación) y el 12 (el final
+> del combate). **Con el 3 se acabó el trabajo de motor, store y datos: todo lo que queda de aquí en
+> adelante es interfaz o contenido.**
 >
-> El 12 va primero porque el 3 acaba de añadir un final de combate nuevo ("has ganado, se une a tu
-> equipo") y ahora hay dos cierres distintos conviviendo con el mismo `Victory` de texto: es el mejor
-> momento para diseñarlos de una vez y no dos. Detrás van el **11** y el **8** juntos, porque los dos
-> rediseñan la misma tarjeta de personaje y hacerlos por separado significa tocarla dos veces.
+> El 11 y el 8 van **juntos y no seguidos**: los dos rediseñan la misma tarjeta de personaje —el 11
+> le mete el sprite, el 8 el drag and drop, el tipo como etiqueta y el objeto equipado— y hacerlos por
+> separado significa tocarla dos veces. Ahí entra también la **barra de XP** fuera del combate, que el
+> punto 12 dejó a propósito sin poner por esto mismo. El 11 arrastra además el ⚠️ de que ninguna
+> transformación de jefe se activa jamás, que sí toca datos y pide re-simular.
 >
 > **Lo único grande que le sigue faltando al MVP y no es un punto de la lista: el sonido.** No es un
 > retoque de pantalla sino un sistema entero (assets, precarga, mezcla, ajuste de volumen), y por eso
@@ -518,15 +519,30 @@ salieron abiertos por defecto en todas las pantallas.
     los jefes se vuelven más fuertes, así que hay que volver a mirar el bloque de jefes en cadena.
     El test de invariante que protege esto solo mira `modosDePersonajes`, por eso no saltó.
 
-12. **El final del combate** — todo lo de dentro de la pelea está cuidado y el cierre es un
-    `Victory` de texto con un botón. Ahora mismo es el eslabón más flojo de la pantalla: el momento
-    de la recompensa no se celebra. Lo que hay y no se enseña: la XP ganada (el store la aplica y
-    solo se ve el resultado si además subes de nivel), el oro, y el objeto en los nodos que lo dan.
-    Encaja con la barra de XP que tampoco existe en ninguna tarjeta.
-    **Ya no es un cierre sino tres**: al "Continue" de siempre y al "Claim reward" del mini-jefe se
-    les ha sumado el "Recruit them" del desafío legendario (punto 3). Los tres comparten el mismo
-    `Victory` de texto y se diferencian solo en el botón — es justo el momento de diseñarlos de una
-    vez, antes de que sean cuatro.
+12. [x] **El final del combate** — el cierre era un `Victory` de texto con un botón: la XP se
+    aplicaba en el store y solo se notaba si además subías de nivel, el oro cambiaba en un panel de
+    otra pantalla y el objeto aparecía en la mochila sin que nadie lo dijera. Ganar no se celebraba
+    en ningún sitio. Ahora:
+
+    - **`PanelRecompensas`** entre el rótulo y el botón, que es donde el ojo ya está: `+N Gold` y el
+      objeto con su sprite. El objeto **solo sale si ha entrado de verdad en la mochila**: el del
+      mini-jefe tiene su propia pantalla de recogida y anunciarlo aquí además sería contarlo dos veces.
+      Viaja en el resumen del combate (`recompensas`) y no se lee del store, misma regla que
+      `equipoAlEmpezar`.
+    - **La XP no se enseña, y es una decisión tomada probándola.** Hubo una barra de XP en la tarjeta
+      y un `+N XP` en el panel, y se quitaron los dos: con la economía de XP actual **casi cada
+      combate sube un nivel**, así que la barra vivía siempre a punto de llenarse y el número no
+      cambiaba ninguna decisión. Lo que se ve de la XP es su consecuencia — el cartel de subida de
+      nivel y, detrás, la transformación.
+    - ⚠️ De aquella barra salió un bug que conviene no repetir: `{progresoXp && <barra/>}` con
+      `progresoXp === 0` **pinta un `0`**. En el primer combate de la run todos tienen 0 de XP, así
+      que aparecía un cero suelto en la tarjeta sin explicación. En JSX un guard numérico con `&&`
+      renderiza el número cuando vale 0.
+    - 189 tests (eran 187): que el resumen trae el oro y coincide con el que se suma, que la XP **no**
+      viaja en él, y que el objeto del mini-jefe no se anuncia ahí.
+
+    **Sin hacer, a propósito**: cualquier barra de XP fuera del combate. Las tarjetas de personaje las
+    rehacen los puntos 11 y 8, y si algún día se decide que la XP merece verse, ese es el sitio.
 
 13. **Añadir personaje y objeto** - Creo que es buen momento para probar como se sentiría añadir un nuevo personaje al elenco. Como el primer arco no tiene muchos personajes jugables y ninguno es legendario hasta que superas el boss final, me gustaría añadir a Kakashi. Dale un jutsu apropiado para esta altura de la historia, una transfomracion acorde y unas pasivas que se sientan del estilo de Kakashi. Dale tipo legendario y haz que sus números se sientan fuertes, pero sin desbalancear la run. Con él, añade también el objeto de los cascabeles, simplemente por ver como de difícil sería añadir un parche a futuro añadiendo cosas al juego. Si no tienes sprites, buscalos en internet, crealos tu o usa placeholders si no tienes suerte
 

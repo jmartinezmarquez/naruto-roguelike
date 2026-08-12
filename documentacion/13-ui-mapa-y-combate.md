@@ -31,10 +31,16 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
     y destino de una arista están ambos visitados, esa es exactamente la arista que se tomó — sin
     ambigüedad.
   - **Elegible ahora** (sale del nodo actual): pergamino sólido y opaco.
-  - **Descartado** (sale de un nodo ya visitado, pero no es la rama que se tomó): negro sólido
-    (`tinta-950`) — simboliza que ya no se puede volver atrás a por esa rama.
-  - **Todavía fuera de alcance** (más adelante en el mapa, ninguno de los dos extremos visitado ni
-    es el nodo actual): línea de puntos, muy tenue.
+  - **Alcanzable más adelante** (sale de un nodo al que todavía se puede llegar): pergamino
+    discontinuo a media opacidad. Se ven **bien**, no insinuados: son los que dejan leer el mapa por
+    delante y decidir a dónde te lleva cada rama. Lo que los distingue de un camino elegible no es
+    que se vean menos, sino que van discontinuos.
+  - **Inalcanzable** (ni por detrás ni por delante se puede llegar ya): pergamino sólido muy tenue.
+    Aquí entran dos cosas que antes se trataban distinto: la rama que descartaste al pasar de piso
+    y **el subárbol entero que colgaba de ella**. Ese segundo caso no se detectaba —solo se miraba
+    si el origen estaba visitado—, así que medio mapa muerto seguía pintándose como futuro. Ahora
+    los dos salen de la misma pregunta, `alcanzables`: un BFS hacia adelante desde `nodoActualId`
+    que responde *¿puedo llegar todavía al nodo del que sale este camino?*
 - Nodos: **sprite pixel art por tipo** (`SPRITE_NODO` en `MapScreen.jsx`), recortado en círculo,
   con borde de color según tipo. Sustituye a los glifos kanji provisionales (`⚔ ? ¥ ♨ ✚ ☠ 危`), que
   eran un apaño hasta tener arte propio. 4 estados igual de diferenciados que las aristas: nodo
@@ -72,13 +78,15 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
     hoja** (ver [28](./28-nodo-reclutar.md)).
   - **Reclutar va en marco cuadrado**, no circular: el pergamino no es redondo y un recorte
     circular le cortaría las varillas de arriba y abajo.
-  - **Un pergamino por rareza** (`SPRITE_RECLUTAR`, keyed por `nodo.rareza`): verde común, azul raro
-    y dorado legendario, cada uno con su color de borde (`COLOR_RECLUTAR`) y su etiqueta de hover
-    (`ETIQUETA_RECLUTAR`: Recruit / Rare Recruit / **Legendary Challenge**). El dorado no es un premio
-    más gordo, es un **combate** contra el ninja que hay dentro, así que el jugador tiene que poder
-    verlo venir desde el mapa y decidir si va — por eso la rareza se sortea al generar el mapa y no
-    al entrar en el nodo. Un nodo sin `rareza` (mapas viejos, tests que montan el nodo a mano) se lee
-    como el pergamino común de siempre.
+  - **Un pergamino por rareza** (`SPRITE_RECLUTAR`, keyed por `nodo.rareza`): verde y dorado, cada
+    uno con su color de borde (`COLOR_RECLUTAR`) y su etiqueta de hover (`ETIQUETA_RECLUTAR`:
+    Recruit / **Legendary Challenge**). El dorado no es un premio más gordo, es un **combate** contra
+    el ninja que hay dentro, así que el jugador tiene que poder verlo venir desde el mapa y decidir
+    si va — por eso la rareza se sortea al generar el mapa y no al entrar en el nodo. Un nodo sin
+    `rareza` (mapas viejos, tests que montan el nodo a mano) se lee como el pergamino común.
+    El azul de la hoja (`reclutar-raro.png`) se sigue generando pero **no se usa**: común, inicial y
+    raro comparten pergamino, porque lo que separa los dos no es el poder del ninja sino cómo se
+    consigue — ver [28](./28-nodo-reclutar.md).
   - **Mini-jefe y jefe pintan el sprite del personaje que hay dentro** (`spriteDeLuchador`, del
     `miniJefeId`/`jefeFinalId` del arco), con `image-rendering: pixelated` porque se amplían. El
     **entrenador no puede**: su enemigo nombrado se sortea al ENTRAR en el nodo
@@ -347,6 +355,29 @@ propósito de las tarjetas de personaje, para que fueran una sorpresa (ver
 - El estado es un **contador** de cuántas ha visto el jugador, y la cola se deriva en el render.
   Guardar la lista en estado obligaba a sembrarla desde un `useEffect`, y hacer `setState` síncrono
   dentro de un efecto es un patrón que ya nos mordió una vez (está en CLAUDE.md, y el linter lo caza).
+
+### El final del combate (`PanelRecompensas`)
+
+Todo lo de dentro de la pelea estaba cuidado y el cierre era un `Victory` de texto con un botón: el
+oro cambiaba en un panel de otra pantalla y el objeto aparecía en la mochila sin que nadie lo
+dijera. Ganar no se celebraba en ningún sitio.
+
+`PanelRecompensas` va entre el rótulo de victoria y el botón, que es donde el ojo ya está: `+N Gold`
+y el objeto con su sprite. El objeto **solo se anuncia si ha entrado de verdad en la mochila** — el
+del mini-jefe tiene su propia pantalla de recogida (`ItemRewardScreen`), así que ahí se calla:
+prometerlo en los dos sitios sería contarlo dos veces. Viaja en el resumen del combate
+(`recompensas`) y no se lee del store, misma regla que `equipoAlEmpezar`.
+
+**La XP no se enseña, y es una decisión.** Hubo una barra de XP en la tarjeta y un `+N XP` en el
+panel, y se quitaron los dos tras probarlo: con la economía de XP actual **casi cada combate sube un
+nivel**, así que la barra vivía siempre a punto de llenarse y el número no cambiaba ninguna decisión.
+Lo que sí se ve es la consecuencia — el cartel de subida de nivel y, detrás, la transformación. La
+progresión de este juego se lee en el número de nivel, no en el trayecto hasta el siguiente.
+
+> ⚠️ De aquella barra salió un bug que conviene no repetir: `{progresoXp && <barra/>}` con
+> `progresoXp === 0` **pinta un `0`** en la tarjeta. En el primer combate de la run todos tienen 0 de
+> XP, así que aparecía un cero suelto sin explicación. En JSX, un guard numérico con `&&` renderiza
+> el número cuando vale 0 — hay que comparar (`> 0`) o normalizar a booleano.
 
 ## `components/Event/EventScreen.jsx` (nuevo)
 

@@ -590,6 +590,7 @@ export const useGameStore = create((set, get) => ({
     let logrosDesbloqueados = [];
     let transformacionesDesbloqueadas = [];
     let subidasDeNivel = [];
+    let recompensas = null;
     let arcoCompletado = false;
     // Quiénes ya estaban caídos ANTES de este combate (no curados desde
     // entonces) — esos no ganan XP al ganar. Quien caiga DURANTE este mismo
@@ -670,7 +671,9 @@ export const useGameStore = create((set, get) => ({
       });
 
       if (jugadorGanoRonda) {
-        ({ transformaciones: transformacionesDesbloqueadas, subidasDeNivel } = get()._aplicarVictoria(
+        ({
+          transformaciones: transformacionesDesbloqueadas, subidasDeNivel, recompensas,
+        } = get()._aplicarVictoria(
           activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate));
         // Se desbloquean ya (persisten y afectan a tienda/inventario desde
         // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
@@ -708,7 +711,7 @@ export const useGameStore = create((set, get) => ({
 
     const resumen = {
       rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado, equipoAlEmpezar,
-      transformacionesDesbloqueadas, subidasDeNivel,
+      transformacionesDesbloqueadas, subidasDeNivel, recompensas,
     };
     set({ ultimoResultadoCombate: resumen });
     return resumen;
@@ -1018,7 +1021,22 @@ export const useGameStore = create((set, get) => ({
       ...(recompensaNueva ? { recompensaMiniJefe: recompensaNueva } : {}),
     });
 
-    return { transformaciones, subidasDeNivel };
+    return {
+      transformaciones,
+      subidasDeNivel,
+      // Lo que se lleva el jugador por este combate, para que la pantalla pueda
+      // enseñarlo. `objeto` solo se rellena cuando el objeto ha entrado DE VERDAD
+      // en la mochila: el del mini-jefe tiene su propia pantalla de recogida
+      // (`recompensaMiniJefe`) y prometerlo aquí además sería contarlo dos veces.
+      //
+      // La XP no viaja aquí: casi cada combate sube un nivel, así que el número
+      // exacto no cambia ninguna decisión y la pantalla no lo enseña. Lo que sí
+      // se ve de la XP es su consecuencia — el cartel de subida de nivel.
+      recompensas: {
+        oro: oroGanado,
+        objeto: recompensaNueva ? null : objetoGanado ?? null,
+      },
+    };
   },
 
   /**

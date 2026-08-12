@@ -2,12 +2,13 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { crearLuchador } from '../../engine/combat';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
-import { nombrePersonaje, emojiDeTipo } from '../common/nombres';
+import { nombrePersonaje, emojiDeTipo, nombreObjeto } from '../common/nombres';
 import { nombrePasiva, duenoDePasiva, describirPasiva } from '../../engine/passives';
 import { spriteDeCombate, pasivasDeLuchador, nombreDeModo } from '../common/datosDeLuchador';
 import HoverTooltip from '../common/HoverTooltip';
 import { spriteDeProyectil } from '../common/projectileSprites';
 import TransformationScreen from './TransformationScreen';
+import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 
 // El replay avanza de GOLPE en golpe, no de turno en turno. Un turno trae 2-4
 // eventos (los dos luchadores, más algún ataque extra) y resolverlos todos de
@@ -452,6 +453,12 @@ function TarjetaLuchador({
         </div>
         <p className="text-[10px] text-pergamino-200/50 mt-0.5">{Math.max(0, hpActual)} / {hpMaximo}</p>
 
+        {/* Aquí hubo una barra de XP y se quitó a propósito: con la economía de
+            XP actual **casi cada combate sube un nivel**, así que la barra estaba
+            siempre a punto de llenarse y no contaba nada que el cartel de subida
+            de nivel no cuente mejor. La progresión de este juego se lee en el
+            número de nivel, no en el trayecto hasta el siguiente. */}
+
         {/* Todas las tarjetas miden lo mismo: el que pelea se distingue por el
             borde encendido y el halo, no por ser más grande. Se probó a pintarlo
             al doble y las cajas dejaban de cuadrar entre sí.
@@ -504,6 +511,45 @@ function TarjetaLuchador({
         )}
 
         <EtiquetasPasivas pasivas={pasivasPropias} activadas={pasivasActivadas} />
+    </div>
+  );
+}
+
+/**
+ * Lo que te llevas por ganar el combate: el oro y —si lo hay— el objeto.
+ *
+ * Existe porque el cierre del combate era un "Victory" de texto y un botón: el
+ * oro cambiaba en un panel de otra pantalla y el objeto aparecía en la mochila
+ * sin que nadie lo dijera. Ganar no se celebraba en ningún sitio.
+ *
+ * **La XP no está aquí a propósito.** Casi cada combate sube un nivel, así que
+ * el número exacto de XP no cambia ninguna decisión y el cartel de subida de
+ * nivel ya cuenta lo que importa.
+ *
+ * El objeto solo sale cuando ha entrado DE VERDAD en la mochila: el del mini-jefe
+ * tiene su propia pantalla de recogida, y prometerlo aquí además sería contarlo
+ * dos veces.
+ */
+function PanelRecompensas({ recompensas }) {
+  if (!recompensas) return null;
+  const { oro, objeto } = recompensas;
+
+  return (
+    <div className="inline-flex flex-wrap items-center justify-center gap-x-5 gap-y-2 bg-tinta-950/60 border border-pergamino-100/15 rounded-lg px-5 py-2.5 mb-4">
+      <span className="font-display text-sm text-doton">+{oro} Gold</span>
+      {objeto && (
+        <span className="flex items-center gap-2 font-display text-sm text-pergamino-100">
+          {SPRITE_OBJETO[objeto] && (
+            <img
+              src={SPRITE_OBJETO[objeto]}
+              alt=""
+              className="w-6 h-6"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          )}
+          {nombreObjeto(objeto)}
+        </span>
+      )}
     </div>
   );
 }
@@ -949,6 +995,12 @@ export default function CombatScreen() {
             <p className={`font-naruto text-4xl mb-4 ${resultado.jugadorGanoFinal ? 'text-fuuton' : 'text-sello-500'}`}>
               {resultado.jugadorGanoFinal ? 'Victory' : 'Defeat'}
             </p>
+
+            {/* Va entre el rótulo y el botón, que es donde el ojo ya está: el
+                jugador lee "Victory" y lo siguiente que ve es lo que ha ganado.
+                En una cadena de entrenador sale en cada combate de la cadena,
+                porque cada uno da su XP y su oro por separado. */}
+            {resultado.jugadorGanoFinal && <PanelRecompensas recompensas={resultado.recompensas} />}
 
             {runTerminada ? (
               <div>

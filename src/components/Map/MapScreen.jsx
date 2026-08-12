@@ -623,6 +623,27 @@ export default function MapScreen() {
 
   const posiciones = useMemo(() => (mapa ? calcularPosiciones(mapa) : {}), [mapa]);
   const disponibles = useMemo(() => new Set(obtenerNodosDisponibles()), [mapa, nodoActualId]);
+
+  /**
+   * Los nodos a los que **todavía se puede llegar** desde donde estás, siguiendo
+   * conexiones hacia adelante. No es lo mismo que "estar más adelante en el mapa":
+   * al elegir una rama, el subárbol de la otra queda muerto aunque siga estando en
+   * pisos que no has jugado. Sin esta cuenta, esos caminos se pintaban como
+   * futuros y el mapa prometía sitios a los que ya no se puede ir.
+   */
+  const alcanzables = useMemo(() => {
+    if (!mapa) return new Set();
+    const vistos = new Set();
+    const cola = nodoActualId === null ? [...mapa.nodosIniciales] : [nodoActualId];
+    while (cola.length > 0) {
+      const id = cola.pop();
+      if (vistos.has(id)) continue;
+      vistos.add(id);
+      cola.push(...(mapa.nodos[id]?.conexiones ?? []));
+    }
+    return vistos;
+  }, [mapa, nodoActualId]);
+
   const alturaLienzo = mapa ? ALTO_POR_PISO * mapa.pisos.length : 0;
 
   // Escala el lienzo (SVG + nodos) para que quepa en el espacio disponible
@@ -728,22 +749,28 @@ export default function MapScreen() {
                     //    visitado por piso, así que si origen Y destino están
                     //    visitados, esta es LA arista que se tomó entre ellos.
                     // 2) elegible ahora mismo desde donde estás (pergamino sólido).
-                    // 3) descartado — origen ya visitado (piso ya superado) pero
-                    //    esta rama en concreto no se tomó: ya no se puede volver.
-                    // 4) todavía fuera de alcance, más adelante en el mapa (punteado).
+                    // 3) alcanzable más adelante: sale de un nodo al que todavía
+                    //    puedes llegar, así que es un camino que aún existe.
+                    // 4) inalcanzable, por detrás o en una rama muerta.
                     //
-                    // Los del caso 4 se pintan en blanco y bien visibles, no
-                    // insinuados: son los que dejan **leer el mapa por delante** y
-                    // decidir a dónde te lleva cada rama. A opacidad 0,15 estaban
-                    // ahí sin verse y el mapa parecía terminar en el piso siguiente.
-                    // Lo que los distingue de un camino elegible ya no es que se
-                    // vean menos, sino que van discontinuos.
+                    // Los del caso 3 van en blanco y bien visibles, no insinuados:
+                    // son los que dejan **leer el mapa por delante** y decidir a
+                    // dónde te lleva cada rama. Lo que los distingue de un camino
+                    // elegible no es que se vean menos, sino que van discontinuos.
+                    //
+                    // Los del 4 sí se apagan, y ahí entran dos cosas que antes se
+                    // trataban distinto: la rama que descartaste al pasar de piso y
+                    // **el subárbol entero que cuelga de ella**. Ese segundo caso no
+                    // se detectaba —solo se miraba si el origen estaba visitado—, así
+                    // que medio mapa muerto seguía pintándose como futuro. Ahora los
+                    // dos se resuelven con la misma pregunta: ¿puedo llegar todavía
+                    // al nodo del que sale este camino?
                     const recorrido = nodo.visitado && mapa.nodos[destinoId]?.visitado;
                     const disponibleAhora = !recorrido && nodo.id === nodoActualId && disponibles.has(destinoId);
-                    const descartado = !recorrido && !disponibleAhora && nodo.visitado;
+                    const sigueEnJuego = alcanzables.has(nodo.id);
 
                     let stroke = 'var(--color-pergamino-100)';
-                    let strokeOpacity = 0.65;
+                    let strokeOpacity = 0.15;
                     let strokeWidth = 1.5;
                     let strokeDasharray;
 
@@ -754,10 +781,8 @@ export default function MapScreen() {
                     } else if (disponibleAhora) {
                       strokeOpacity = 0.95;
                       strokeWidth = 2;
-                    } else if (descartado) {
-                      stroke = 'var(--color-tinta-950)';
-                      strokeOpacity = 0.7;
-                    } else {
+                    } else if (sigueEnJuego) {
+                      strokeOpacity = 0.65;
                       strokeDasharray = '4 4';
                     }
 

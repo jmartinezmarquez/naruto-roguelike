@@ -19,7 +19,7 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (187 tests)
+## Cobertura actual (190 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -86,7 +86,11 @@ sin mocks ni DOM.
   pergamino, y ni el jefe ni el mini-jefe del arco en curso pueden salir como recluta — esto último
   porque ganarle al jefe final ahí habría marcado el arco como completado. Y la **Spare Ninja
   Headband dentro de un combate real** (`jugarCombate`, no `_aplicarDerrota` a mano): el que revive
-  pelea dos rondas seguidas, así que hay que comprobar que no revive en las dos.
+  pelea dos rondas seguidas, así que hay que comprobar que no revive en las dos. Y el **final del
+  combate**: el resumen trae XP, oro y XP de banquillo, el objeto del mini-jefe NO se anuncia ahí
+  (tiene su propia pantalla y contarlo dos veces sería mentir), y el progreso de XP trae el antes y el
+  después de los tres del equipo — la barra tiene que poder pintarse sin leer el store, que para
+  cuando la animación empieza ya tiene el estado final.
 - **`store/useAchievementsStore.test.js`** — desbloqueo y persistencia en `localStorage`, no repetir
   un logro ya conseguido, `cargarLogros()` recupera lo guardado en una sesión anterior.
 

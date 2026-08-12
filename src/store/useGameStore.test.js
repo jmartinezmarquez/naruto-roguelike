@@ -272,6 +272,39 @@ describe('jugarCombate — foto del equipo para la pantalla de combate', () => {
   });
 });
 
+describe('jugarCombate — recompensas en el resumen', () => {
+  // El final del combate era un "Victory" de texto: la XP se aplicaba en el store
+  // y solo se notaba si además subías de nivel, el oro cambiaba en otra pantalla y
+  // el objeto aparecía en la mochila sin que nadie lo dijera. Todo eso ya viaja en
+  // el resumen para que `CombatScreen` pueda enseñarlo (punto 12 del roadmap).
+  it('el resumen dice cuánto oro ha dado el combate, y coincide con el que se suma', () => {
+    const oroAntes = useGameStore.getState().oro;
+
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+
+    expect(resumen.recompensas.oro).toBeGreaterThan(0);
+    expect(useGameStore.getState().oro).toBe(oroAntes + resumen.recompensas.oro);
+    // La XP no viaja en el resumen a propósito: casi cada combate sube un nivel,
+    // así que el número exacto no cambia ninguna decisión y la pantalla no lo
+    // enseña. Lo que se ve de la XP es su consecuencia (`subidasDeNivel`).
+    expect(resumen.recompensas.xp).toBeUndefined();
+  });
+
+  it('el objeto del mini-jefe NO se anuncia en el resumen: tiene su propia pantalla', () => {
+    // Anunciarlo aquí y volver a darlo en `ItemRewardScreen` sería contarlo dos veces.
+    // El stub de Haku no lleva recompensa, así que se le pone una aquí: lo que se
+    // prueba es el reparto, no los datos del arco.
+    const miniJefeConObjeto = {
+      ...enemigoHakuDePrueba,
+      recompensa: { xp: 100, objetoGarantizado: 'pergamino_viento' },
+    };
+    const resumen = useGameStore.getState().jugarCombate(miniJefeConObjeto, 1);
+    expect(useGameStore.getState().recompensaMiniJefe).not.toBeNull();
+    expect(resumen.recompensas.objeto).toBeNull();
+  });
+
+});
+
 describe('jugarCombate — transformaciones desbloqueadas', () => {
   // No hay ningún evento de "subir de modo": el modo activo es una función del
   // nivel (`obtenerModoActivo`), así que la única forma de saber que se ha
