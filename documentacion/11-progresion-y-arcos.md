@@ -156,3 +156,25 @@ dentro del arco 1 (5-9) y el tier 2 dentro del arco 3 (34-38).
 Hay un test de invariante por cada uno de los dos errores: que ningún modo pase del nivel final de
 la run, y que todo personaje con dos modos desbloquee el primero dentro del arco 1. Sai y Yamato
 tienen un único modo, tardío a propósito, y quedan fuera del segundo.
+
+## Nivel del desafío legendario (`nivelDesafioLegendario`)
+
+El pergamino dorado del nodo de reclutar es un combate contra un legendario
+(ver [28](./28-nodo-reclutar.md)), y su nivel es **fijo por arco** como el de cualquier jefe: 6, 23
+y 41. Un desafío que escalara con el equipo sería siempre igual de difícil, y entonces dejaría de
+ser una decisión para ser un peaje.
+
+Medido con el bloque **"Desafío legendario"** de `scripts/simular-combates.mjs`, con el mismo método
+que los jefes (trío en cadena y con el HP que deje el camino):
+
+| Arco | Nivel | Piso 3 | Piso 6 |
+|---|---|---|---|
+| País de las Olas | 6 | 40-53% | 71-84% |
+| Examen Chunin | 23 | 44-65% | 54-77% |
+| Invasión de Pain | 41 | 40-61% | 68-89% |
+
+El abanico entre el piso 3 y el 6 es enorme y **es inherente al nivel fijo**: el mismo pergamino es
+una trampa temprano y casi un regalo tarde. Se acepta —y no se corrige escalando— porque el nodo es
+opcional y se ve desde el mapa antes de entrar: el jugador decide con la información delante. Si
+alguna vez se quiere aplanar, la palanca no es el nivel sino los pesos de `poolRarezaReclutar` por
+piso, que hoy son iguales para todo el arco.

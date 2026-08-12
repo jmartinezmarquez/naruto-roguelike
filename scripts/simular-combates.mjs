@@ -357,6 +357,55 @@ function triosDelRoster() {
 }
 
 // ---------------------------------------------------------------------------
+// 1c. Desafío legendario (nodo de reclutar dorado)
+// ---------------------------------------------------------------------------
+
+/**
+ * El pergamino dorado no es una elección, es un combate: ganas y el legendario
+ * se une, pierdes y se acabó la run. Se mide igual que un jefe —con el trío en
+ * cadena y el HP que deje el camino— porque mecánicamente ES un jefe metido en
+ * mitad del arco, y a un nivel FIJO (`nivelDesafioLegendario`) como todo lo demás.
+ *
+ * La referencia no es la del jefe final (82-88%): esto es opcional y saltable,
+ * así que puede permitirse ser más duro. Por debajo del 50% deja de ser una
+ * decisión interesante y pasa a ser una trampa, porque el jugador no tiene forma
+ * de saber que va a perder antes de aceptar.
+ */
+{
+  console.log('\n\n=== Desafío legendario (pergamino dorado) ===');
+  console.log('  (mismo método que los jefes: trío en cadena, HP el que deje el camino)\n');
+
+  const azar = azarConSemilla(SEMILLA);
+  const PISOS_MUESTRA = [3, 6];
+  for (const arco of ARCOS) {
+    // Los mismos que puede ofrecer el store: legendarios que no son el jefe ni
+    // el mini-jefe de este arco (ver `candidatosReclutables`).
+    const legendarios = enemigosData.jefes.filter(
+      (j) => j.rareza === 'legendario' && j.id !== arco.jefeFinalId && j.id !== arco.miniJefeId,
+    );
+    for (const piso of PISOS_MUESTRA) {
+      for (const legendario of legendarios) {
+        const rs = triosDelRoster().map((trio) => {
+          const hpDeEntrada = hpAlLlegarAlPiso(trio, arco, piso, azar);
+          return simularNodoDeJefe(
+            trio, arco, piso, legendario, arco.nivelDesafioLegendario, azar, hpDeEntrada,
+          );
+        });
+        const ganados = rs.filter((r) => r.gano);
+        console.log(
+          `  ${arco.nombre.padEnd(16)} piso ${piso}  ` +
+            `${legendario.nombre.padEnd(20)} Nv.${String(arco.nivelDesafioLegendario).padEnd(3)} ` +
+            `ganado ${porcentaje(ganados.length / rs.length).padStart(4)}  ` +
+            `personajes gastados ${(ganados.length ? media(ganados.map((r) => r.caidos + 1)) : 0).toFixed(1)}`,
+        );
+      }
+    }
+  }
+  console.log('\n  Objetivo: entre el 45% y el 70%. Es opcional, así que puede doler — pero si el\n' +
+    '  jugador nunca lo gana, el pergamino dorado es un cartel de "no entres".');
+}
+
+// ---------------------------------------------------------------------------
 // 2. Peso de los objetos en combate real
 // ---------------------------------------------------------------------------
 

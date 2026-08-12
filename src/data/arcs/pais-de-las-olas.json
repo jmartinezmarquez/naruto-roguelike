@@ -15,21 +15,29 @@
     },
     {
       "tipo": "evento",
-      "peso": 20
-    },
-    {
-      "tipo": "reclutar",
-      "peso": 22
+      "peso": 34
     },
     {
       "tipo": "tienda",
-      "peso": 13
+      "peso": 18
     },
     {
       "tipo": "descanso",
-      "peso": 7
+      "peso": 10
     }
   ],
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 80
+    },
+    {
+      "rareza": "legendario",
+      "peso": 20
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 6,
   "pisoMiniJefe": 4,
   "miniJefeId": "haku",
   "pisoJefeFinal": 8,

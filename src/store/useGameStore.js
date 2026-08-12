@@ -182,11 +182,35 @@ function generarOfertaTienda() {
 }
 
 /**
- * Genera la oferta del nodo de reclutar: hasta 3 personajes disponibles
- * (pool del arco + desbloqueados por logro + iniciales no elegidos), sin
- * coste para el jugador — elegir uno es la acción principal de este nodo.
+ * Qué rarezas de PERSONAJE ofrece cada rareza de PERGAMINO. Solo hay dos
+ * pergaminos, y la línea que los separa no es el poder sino **cómo se consiguen**:
+ * el verde es una elección entre tres cartas, el dorado es un combate.
+ *
+ * Por eso `raro` va con los comunes en vez de tener pergamino propio: un ninja
+ * raro no cambia la naturaleza de la decisión, solo es una carta mejor entre las
+ * tres. Con tres pergaminos y un único nodo de reclutar por arco, el azul además
+ * casi no aparecía. Los `inicial` (Naruto/Sasuke/Sakura) van también aquí: son
+ * genin novatos, y son la red de seguridad que garantiza candidatos en la primera
+ * run, cuando no hay ningún logro desbloqueado.
+ * Ver documentacion/28-nodo-reclutar.md.
  */
-function generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento) {
+const RAREZAS_POR_PERGAMINO = {
+  comun: ['comun', 'inicial', 'raro'],
+  legendario: ['legendario'],
+};
+
+/**
+ * Todos los candidatos a reclutar en este arco: pool del arco + desbloqueados
+ * por logro + iniciales no elegidos, menos los que ya están en el equipo.
+ *
+ * **El jefe y el mini-jefe del arco en curso quedan fuera**, y no es una
+ * floritura: el desafío legendario resuelve un combate de verdad, y ganarle al
+ * `jefeFinalId` del arco en un nodo de reclutar habría disparado
+ * `arcoCompletado` en `jugarCombate` — la run habría saltado al arco siguiente
+ * desde un pergamino. Aparte de eso, reclutar a quien te espera al final del
+ * arco no se sostiene ni jugando ni en la ficción.
+ */
+function candidatosReclutables(equipoActual, arcoActualDatos) {
   const idsDesbloqueadosPorLogro = obtenerPersonajesReclutablesDesbloqueados(
     achievementsData.logros,
     useAchievementsStore.getState().logrosDesbloqueados,
@@ -201,16 +225,76 @@ function generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento
   ];
 
   const idsEnEquipo = new Set(equipoActual.map((p) => p.id));
-  const disponibles = idsReclutablesTotal
-    .filter((id) => !idsEnEquipo.has(id))
+  const idsDelArco = new Set([arcoActualDatos.jefeFinalId, arcoActualDatos.miniJefeId]);
+
+  return [...new Set(idsReclutablesTotal)]
+    .filter((id) => !idsEnEquipo.has(id) && !idsDelArco.has(id))
     .map((id) => {
       const base = encontrarPersonajeBase(id);
       return { personajeId: id, nombre: base.nombre, rareza: base.rareza };
     });
+}
+
+/**
+ * Las rarezas de pergamino que de verdad tienen a alguien detrás en esta run.
+ * Se la pasa el store a `generarMapa`, que la necesita para no pintar un
+ * pergamino dorado en el mapa y luego no tener ningún legendario que ofrecer.
+ */
+function rarezasReclutarDisponibles(equipoActual, arcoActualDatos) {
+  const candidatos = candidatosReclutables(equipoActual, arcoActualDatos);
+  return Object.entries(RAREZAS_POR_PERGAMINO)
+    .filter(([, rarezasPersonaje]) => candidatos.some((c) => rarezasPersonaje.includes(c.rareza)))
+    .map(([rarezaPergamino]) => rarezaPergamino);
+}
+
+/**
+ * Genera la oferta de un nodo de reclutar, filtrada por la rareza del pergamino
+ * que pinta el mapa. Sin coste para el jugador — elegir es la acción del nodo.
+ *
+ * El pergamino **legendario no es una elección, es un desafío**: ofrece a un
+ * único ninja y hay que ganarle un combate para reclutarlo (`esDesafio`).
+ *
+ * Si la rareza pedida se ha quedado sin candidatos a mitad de arco (pasa: dos
+ * pergaminos dorados y un solo legendario en la pool), la oferta **degrada** a
+ * lo que quede en vez de salir vacía, y devuelve la rareza que realmente ha
+ * usado para que la pantalla no mienta. El mapa sí se queda con el pergamino
+ * dorado dibujado — es el único punto donde el icono puede prometer de más.
+ */
+function generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento, rarezaNodo = 'comun') {
+  const candidatos = candidatosReclutables(equipoActual, arcoActualDatos);
+  const deLaRareza = (rareza) =>
+    candidatos.filter((c) => (RAREZAS_POR_PERGAMINO[rareza] ?? []).includes(c.rareza));
+
+  let rareza = rarezaNodo;
+  let elegibles = deLaRareza(rareza);
+  if (elegibles.length === 0 && rareza !== 'comun') {
+    rareza = 'comun';
+    elegibles = deLaRareza(rareza);
+  }
+  if (elegibles.length === 0) elegibles = candidatos;
+
+  const esDesafio = rareza === 'legendario' && elegibles.length > 0;
+
+  // Un legendario entra al nivel **medio** del equipo, no al del más fuerte como
+  // el resto de reclutas. Sus stats base ya son de jefe (90 de HP y 14 de ataque
+  // contra los 38 y 8,5 de un común), así que darle además el nivel del mejor del
+  // equipo lo convertía en un personaje que gana él solo lo que queda de run —
+  // sobre todo si el pergamino sale pronto. Redondeo hacia abajo, que es el
+  // "incluso menos" de la nota de playtest.
+  const nivelMedioDelEquipo = equipoActual.length > 0
+    ? Math.max(1, Math.floor(equipoActual.reduce((acc, p) => acc + p.nivel, 0) / equipoActual.length))
+    : 1;
 
   return {
-    personajes: elegirVariosAlAzar(disponibles, 3),
-    nivelReclutamiento,
+    personajes: elegirVariosAlAzar(elegibles, esDesafio ? 1 : 3),
+    nivelReclutamiento: esDesafio ? nivelMedioDelEquipo : nivelReclutamiento,
+    rareza,
+    esDesafio,
+    // Nivel FIJO del arco, no relativo al equipo: es la misma regla que rige a
+    // los jefes (ver documentacion/11-progresion-y-arcos.md). Un desafío que
+    // escalara contigo sería siempre igual de difícil, y entonces no sería una
+    // decisión — sería un peaje.
+    nivelDesafio: arcoActualDatos.nivelDesafioLegendario ?? arcoActualDatos.nivelMiniJefe,
   };
 }
 
@@ -229,7 +313,8 @@ export const useGameStore = create((set, get) => ({
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
   tiendaActual: null, // { items: [{id, precio}] } — oferta de 3 objetos al entrar al nodo de tienda
-  reclutarActual: null, // { personajes: [{personajeId, nombre, rareza}], nivelReclutamiento } — oferta del nodo de reclutar
+  reclutarActual: null, // { personajes, nivelReclutamiento, rareza, esDesafio, nivelDesafio } — oferta del nodo de reclutar
+  desafioRecluta: null, // { personajeId } — desafío legendario en curso; sobrevive al combate para poder reclutarlo al ganar
   recompensaMiniJefe: null, // { item: id } — objeto aleatorio tras derrotar al mini-jefe
   cadenaEnemigos: null, // { enemigos: [{enemigoBase, nivel}], indiceActual: 0 } — combate de entrenador con genins previos
   avisoUltimoNodo: null, // texto breve para la UI (ej. "Equipo curado en el descanso"), no persistente
@@ -250,7 +335,9 @@ export const useGameStore = create((set, get) => ({
       achievementsData.logros,
       useAchievementsStore.getState().logrosDesbloqueados,
     );
-    const mapaInicial = generarMapa(arco);
+    const mapaInicial = generarMapa(arco, {
+      rarezasReclutarDisponibles: rarezasReclutarDisponibles(equipoInicial, arco),
+    });
 
     set({
       equipo: equipoInicial,
@@ -268,6 +355,7 @@ export const useGameStore = create((set, get) => ({
       eventoActual: null,
       tiendaActual: null,
       reclutarActual: null,
+      desafioRecluta: null,
       recompensaMiniJefe: null,
       cadenaEnemigos: null,
       avisoUltimoNodo: null,
@@ -331,8 +419,10 @@ export const useGameStore = create((set, get) => ({
     if (nodo.tipo === 'reclutar') {
       const equipoActual = get().equipo;
       const nivelReclutamiento = Math.max(1, ...equipoActual.map((p) => p.nivel));
-      const oferta = generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento);
-      set({ reclutarActual: oferta, pantalla: 'reclutar' });
+      const oferta = generarOfertaReclutar(
+        equipoActual, arcoActualDatos, nivelReclutamiento, nodo.rareza ?? 'comun',
+      );
+      set({ reclutarActual: oferta, desafioRecluta: null, pantalla: 'reclutar' });
       return null;
     }
 
@@ -360,7 +450,7 @@ export const useGameStore = create((set, get) => ({
    * llevaba algo equipado, el objeto vuelve al inventario — no desaparece
    * con él.
    */
-  reclutarPersonaje(id, nivelInicial = 1, idAReemplazar = null) {
+  reclutarPersonaje(id, nivelInicial = 1, idAReemplazar = null, conBonusAlReemplazar = true) {
     const { equipo, inventario } = get();
     if (equipo.some((p) => p.id === id)) return false; // ya está en el equipo
 
@@ -378,7 +468,13 @@ export const useGameStore = create((set, get) => ({
       ? [...inventario, reemplazado.objetoEquipadoId]
       : inventario;
 
-    const nivelConBonus = nivelInicial + configGlobal.equipo.bonusNivelAlReemplazar;
+    // El bonus existe para que reemplazar a alguien compense frente a rellenar un
+    // hueco vacío. Un legendario no necesita ese incentivo —ya es la mejora— y
+    // sumárselo le devolvía justo el nivel que se le acaba de quitar al hacerle
+    // entrar por la media del equipo en vez de por el máximo.
+    const nivelConBonus = conBonusAlReemplazar
+      ? nivelInicial + configGlobal.equipo.bonusNivelAlReemplazar
+      : nivelInicial;
     const nuevaInstancia = crearInstanciaPersonaje(id, nivelConBonus);
     const equipoActualizado = [...equipo];
     equipoActualizado[indiceAReemplazar] = nuevaInstancia;
@@ -626,6 +722,7 @@ export const useGameStore = create((set, get) => ({
       eventoActual: null,
       tiendaActual: null,
       reclutarActual: null,
+      desafioRecluta: null,
       recompensaMiniJefe: null,
       cadenaEnemigos: null,
       mochilaItemId: null,
@@ -659,7 +756,9 @@ export const useGameStore = create((set, get) => ({
     const siguienteArco = indiceActual === -1 ? null : ORDEN_ARCOS[indiceActual + 1];
     if (!siguienteArco) return false;
 
-    const mapaSiguiente = generarMapa(siguienteArco);
+    const mapaSiguiente = generarMapa(siguienteArco, {
+      rarezasReclutarDisponibles: rarezasReclutarDisponibles(get().equipo, siguienteArco),
+    });
     set({
       arcoActualId: siguienteArco.id,
       arcoActualDatos: siguienteArco,
@@ -670,6 +769,7 @@ export const useGameStore = create((set, get) => ({
       eventoActual: null,
       tiendaActual: null,
       reclutarActual: null,
+      desafioRecluta: null,
       recompensaMiniJefe: null,
       cadenaEnemigos: null,
       avisoUltimoNodo: null,
@@ -727,7 +827,43 @@ export const useGameStore = create((set, get) => ({
     const opcion = reclutarActual.personajes.find((p) => p.personajeId === personajeId);
     if (!opcion) return false;
 
-    return get().reclutarPersonaje(personajeId, reclutarActual.nivelReclutamiento, idAReemplazar);
+    return get().reclutarPersonaje(
+      personajeId, reclutarActual.nivelReclutamiento, idAReemplazar, !reclutarActual.esDesafio,
+    );
+  },
+
+  /**
+   * Acepta el desafío del pergamino legendario: pelea contra el ninja que hay
+   * dentro, al nivel FIJO del arco (`nivelDesafioLegendario`). Es un combate
+   * normal y corriente, con sus rondas encadenadas y su riesgo real — si cae
+   * todo el equipo, la run se acaba ahí, igual que en cualquier otro nodo.
+   *
+   * `desafioRecluta` sobrevive al combate a propósito: es lo que le dice a
+   * `CombatScreen` que al ganar hay un ninja que reclutar y no solo un "Continue".
+   */
+  iniciarDesafioLegendario() {
+    const { reclutarActual } = get();
+    if (!reclutarActual?.esDesafio) return false;
+    const opcion = reclutarActual.personajes[0];
+    if (!opcion) return false;
+
+    const base = encontrarPersonajeBase(opcion.personajeId);
+    set({ desafioRecluta: { personajeId: opcion.personajeId }, cadenaEnemigos: null });
+    get().jugarCombate(base, reclutarActual.nivelDesafio, true);
+    set({ pantalla: 'combate' });
+    return true;
+  },
+
+  /** Vuelve del combate ganado al pergamino, ya en modo "recluta a tu rival". */
+  irAReclutaDesafio() {
+    const { reclutarActual } = get();
+    if (!reclutarActual) return get().volverAlMapa();
+    set({
+      pantalla: 'reclutar',
+      ultimoResultadoCombate: null,
+      reclutarActual: { ...reclutarActual, desafioGanado: true },
+    });
+    return true;
   },
 
   /** Navega a la pantalla de recompensa del mini-jefe (llamado desde CombatScreen al pulsar Continuar). */
@@ -762,6 +898,7 @@ export const useGameStore = create((set, get) => ({
       eventoActual: null,
       tiendaActual: null,
       reclutarActual: null,
+      desafioRecluta: null,
       recompensaMiniJefe: null,
     });
   },
@@ -850,7 +987,14 @@ export const useGameStore = create((set, get) => ({
       return conXp; // vivo y no participó: gana su XP de banquillo, HP sin cambios
     });
 
-    const objetoGanado = enemigoBase.recompensa?.objetoGarantizado;
+    // El desafío legendario NO suelta el objeto característico de su jefe. Ya
+    // paga con el propio legendario, que es el premio más gordo del juego; darle
+    // encima su objeto (el Kubikiribōchō de Zabuza, la calabaza de Gaara) es un
+    // pico de poder que se lleva por delante el resto del arco. Además esos
+    // objetos están puestos como recompensa de un **nodo de jefe**, y este no lo
+    // es: se llega por un pergamino opcional.
+    const esDesafioLegendario = get().desafioRecluta?.personajeId === enemigoBase.id;
+    const objetoGanado = esDesafioLegendario ? null : enemigoBase.recompensa?.objetoGarantizado;
     const esMiniJefe = enemigoBase.id === get().arcoActualDatos?.miniJefeId;
 
     let inventarioActualizado = inventario;

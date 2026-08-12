@@ -19,7 +19,7 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (162 tests)
+## Cobertura actual (187 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -49,7 +49,10 @@ sin mocks ni DOM.
   y objeto se acumulan, que los contadores no se reinician entre atacantes distintos (el caso de la
   cadena de rondas), y el **invariante** de que `engine/passives.js` y `data/passives.json` tienen
   los mismos ids. La aleatoriedad de `repeat_basic_chance` se inyecta (`azar`) para no depender de la
-  suerte. Además, **invariantes de datos** que protegen decisiones de contenido que se romperían sin
+  suerte. Más las dos reglas que salieron del playtest: una pasiva que dan el modo **y** el objeto se
+  aplica una sola vez quedándose la más fuerte, y **normalizar dos veces no tira la cantidad
+  declarada** — sin idempotencia ningún objeto estaba aplicando su valor real, solo el del catálogo.
+  Además, **invariantes de datos** que protegen decisiones de contenido que se romperían sin
   hacer ruido: todo modo declara pasivas válidas, **todo modo se desbloquea dentro de la run**
   (estaban a nivel 60-85 con la run acabando en 49, así que no se veían nunca), todo personaje tiene
   transformación, y ningún objeto da bonificaciones planas de estadísticas.
@@ -60,7 +63,13 @@ sin mocks ni DOM.
 - **`engine/mapGenerator.test.js`** — el piso 1 nunca tiene descanso (el bug real, repetido 30
   veces por la aleatoriedad), el último piso siempre 1 nodo `jefe`, el piso de mini-jefe siempre
   tiene exactamente un nodo `miniJefe`, todo nodo (salvo el inicial) tiene conexión entrante,
-  `calcularNivelPorPiso` y `resolverEnemigoDeNodo` con niveles fijos correctos.
+  `calcularNivelPorPiso` y `resolverEnemigoDeNodo` con niveles fijos correctos. Más la **rareza de
+  los nodos de reclutar**: todo `reclutar` sale del generador con una, nunca se sortea una rareza sin
+  candidatos en la run (la invariante que impide que el mapa pinte un pergamino dorado vacío), sin
+  `opciones` se asume que solo hay comunes, y con muchas tiradas aparecen las dos. Y la **colocación**:
+  todo arco tiene entre uno y dos nodos de reclutar, nunca pisan `inicio`/`jefe`/`miniJefe`/`descanso`
+  (las garantías anteriores siguen en pie después de colocarlos) y cuando hay dos van en pisos
+  distintos.
 - **`engine/achievements.test.js`** — qué condiciones desbloquean qué logros, no repetir un logro
   ya desbloqueado, extraer las recompensas de personaje reclutable/objeto inicial de los logros ya
   conseguidos.
@@ -71,7 +80,13 @@ sin mocks ni DOM.
   y la integración con logros (desbloqueo al derrotar un jefe, `completarArcoSinDerrotas` con y sin
   derrota previa, el reclutable/objeto desbloqueados apareciendo en tienda/inventario). También que
   el enemigo **conserva su barra de jutsu** entre rondas encadenadas (igual que el HP) mientras que
-  cada personaje del jugador entra con la suya a cero.
+  cada personaje del jugador entra con la suya a cero. Y el **desafío legendario**: el pergamino
+  dorado ofrece a uno solo y como desafío, degrada a común si no queda ningún legendario, pelea de
+  verdad al nivel fijo del arco, perderlo termina la run, ganar deja reclutarlo desde el mismo
+  pergamino, y ni el jefe ni el mini-jefe del arco en curso pueden salir como recluta — esto último
+  porque ganarle al jefe final ahí habría marcado el arco como completado. Y la **Spare Ninja
+  Headband dentro de un combate real** (`jugarCombate`, no `_aplicarDerrota` a mano): el que revive
+  pelea dos rondas seguidas, así que hay que comprobar que no revive en las dos.
 - **`store/useAchievementsStore.test.js`** — desbloqueo y persistencia en `localStorage`, no repetir
   un logro ya conseguido, `cargarLogros()` recupera lo guardado en una sesión anterior.
 

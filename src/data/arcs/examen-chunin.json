@@ -15,21 +15,29 @@
     },
     {
       "tipo": "evento",
-      "peso": 22
-    },
-    {
-      "tipo": "reclutar",
-      "peso": 16
+      "peso": 32
     },
     {
       "tipo": "tienda",
-      "peso": 15
+      "peso": 19
     },
     {
       "tipo": "descanso",
-      "peso": 7
+      "peso": 9
     }
   ],
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 75
+    },
+    {
+      "rareza": "legendario",
+      "peso": 25
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 23,
   "pisoMiniJefe": 4,
   "miniJefeId": "kabuto",
   "pisoJefeFinal": 8,

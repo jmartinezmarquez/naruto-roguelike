@@ -42,6 +42,25 @@ pasiva que no hace nada en silencio es el peor fallo posible aquí, porque el pe
 funcionar y estaría desbalanceado sin que nada lo delatara. Y revienta al **crear el luchador**, no a
 mitad de la pelea.
 
+### Una pasiva por id, y `normalizarPasivas` es idempotente
+
+Dos reglas que viven en `normalizarPasivas` y que salieron las dos del mismo playtest:
+
+- **Si el modo y el objeto dan la misma pasiva, se aplica UNA vez** — se queda la de mayor
+  `cantidad`. Pasa de verdad: el Manto de Chakra de Naruto y el Sello de Chakra dan los dos
+  `first_jutsu_bonus`, y antes se aplicaban las dos (`aplicarModificadores` pliega todas las del
+  enganche, una detrás de otra). Eso multiplicaba el efecto y convertía esa combinación concreta en
+  la única jugada buena del juego, sin que nada lo dijera. Se queda la más fuerte y no la primera
+  para que equipar un objeto nunca pueda empeorar a un personaje: o mejora, o no hace nada.
+- **Normalizar dos veces no puede tirar la cantidad declarada.** Era un bug real y silencioso: el
+  store normaliza las pasivas del objeto equipado (`pasivasDeObjetoEquipado`) y `crearLuchador` las
+  vuelve a normalizar al juntarlas con las del modo. La segunda pasada metía
+  `{enganche, objetivo, parametros}` **dentro** de `parametros`, así que `parametros.cantidad`
+  acababa siendo la del catálogo. Traducido: **ningún objeto estaba aplicando su valor real** — el
+  `heal_on_kill: 0.28` de la Semilla del Sabio curaba 0,10. Y no saltó en ningún sitio porque
+  `simular-combates.mjs` pasa las pasivas **en crudo** y normaliza una sola vez: el simulador medía
+  los números buenos y el juego corría con otros. Hay un test por cada una de las dos reglas.
+
 ## Enganches
 
 Cada pasiva vive en un solo enganche, y el enganche determina la forma de su función.

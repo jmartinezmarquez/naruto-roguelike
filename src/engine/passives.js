@@ -212,19 +212,47 @@ export function idsDelCatalogo() {
  * funcionar y estaría desbalanceado sin que nada lo delatara.
  */
 export function normalizarPasivas(declaraciones = []) {
-  return declaraciones.map((declaracion) => {
-    const { id, ...parametros } = typeof declaracion === 'string' ? { id: declaracion } : declaracion;
+  const porId = new Map();
+
+  for (const declaracion of declaraciones) {
+    // Una pasiva ya normalizada se reconoce por su `parametros`, y sus valores
+    // se leen de ahí en vez de del objeto entero. Sin esto, normalizar dos veces
+    // metía `{enganche, objetivo, parametros}` DENTRO de `parametros` y la
+    // `cantidad` declarada quedaba tapada por la del catálogo — un objeto con
+    // `heal_on_kill: 0.28` curaba 0.10, el valor por defecto. Pasaba de verdad:
+    // el store normaliza las del objeto equipado y `crearLuchador` las vuelve a
+    // normalizar al juntarlas con las del modo, así que **ningún objeto estaba
+    // aplicando su cantidad real**.
+    const yaNormalizada = declaracion !== null
+      && typeof declaracion === 'object'
+      && typeof declaracion.parametros === 'object';
+    const { id, ...resto } = typeof declaracion === 'string' ? { id: declaracion } : declaracion;
     const entrada = CATALOGO[id];
     if (!entrada) {
       throw new Error(`Pasiva desconocida: "${id}". Ids válidos: ${idsDelCatalogo().join(', ')}`);
     }
-    return {
+    const declarados = yaNormalizada ? declaracion.parametros : resto;
+
+    const normalizada = {
       id,
       enganche: entrada.enganche,
-      objetivo: parametros.objetivo ?? entrada.objetivo,
-      parametros: { ...entrada.parametros, ...parametros },
+      objetivo: declarados.objetivo ?? declaracion.objetivo ?? entrada.objetivo,
+      parametros: { ...entrada.parametros, ...declarados },
     };
-  });
+
+    // **Una pasiva por id, aunque la den dos fuentes.** Pasa de verdad: el Manto
+    // de Chakra de Naruto y el Sello de Chakra dan los dos `first_jutsu_bonus`.
+    // Aplicarla dos veces multiplicaba el efecto y convertía esa combinación
+    // concreta en la única jugada buena del juego, sin que nada lo dijera.
+    // Se queda la más fuerte, no la primera: así equipar un objeto nunca puede
+    // empeorar a un personaje, solo mejorarlo o no hacer nada.
+    const previa = porId.get(id);
+    const gana = !previa
+      || (normalizada.parametros.cantidad ?? 0) > (previa.parametros.cantidad ?? 0);
+    if (gana) porId.set(id, normalizada);
+  }
+
+  return [...porId.values()];
 }
 
 function pasivasDe(portador, enganche) {

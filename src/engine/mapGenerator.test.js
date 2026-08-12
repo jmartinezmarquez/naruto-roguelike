@@ -100,6 +100,91 @@ describe('generarMapa', () => {
   });
 });
 
+describe('nodos de reclutar', () => {
+  const arcoConReclutar = {
+    ...arcoDePrueba,
+    poolRarezaReclutar: [
+      { rareza: 'comun', peso: 70 },
+      { rareza: 'legendario', peso: 30 },
+    ],
+    probabilidadSegundoNodoReclutar: 0.15,
+  };
+
+  const nodosReclutar = (mapa) => Object.values(mapa.nodos).filter((n) => n.tipo === 'reclutar');
+
+  it('todo arco tiene siempre al menos un nodo de reclutar, y nunca más de dos', () => {
+    // No salen del sorteo por peso: se colocan a mano porque el equipo tiene 3
+    // huecos para toda la run y a partir del segundo pergamino la decisión ya no
+    // existe. El número tiene que ser exacto, no una esperanza estadística.
+    for (let i = 0; i < 40; i++) {
+      const mapa = generarMapa(arcoConReclutar);
+      const cuantos = nodosReclutar(mapa).length;
+      expect(cuantos).toBeGreaterThanOrEqual(1);
+      expect(cuantos).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it('el nodo de reclutar nunca pisa el inicio, el jefe, el mini-jefe ni un descanso', () => {
+    for (let i = 0; i < 40; i++) {
+      const mapa = generarMapa(arcoConReclutar);
+      // Las garantías que ya había siguen en pie después de colocar los pergaminos.
+      expect(mapa.nodos[mapa.nodoInicialId].tipo).toBe('inicio');
+      const pisoJefe = mapa.pisos[arcoConReclutar.pisoJefeFinal - 1];
+      expect(pisoJefe.map((id) => mapa.nodos[id].tipo)).toEqual(['jefe']);
+      const pisoMini = mapa.pisos[arcoConReclutar.pisoMiniJefe - 1];
+      expect(pisoMini.map((id) => mapa.nodos[id].tipo)).toContain('miniJefe');
+      const pisoPrevio = mapa.pisos[arcoConReclutar.pisoJefeFinal - 2];
+      expect(pisoPrevio.map((id) => mapa.nodos[id].tipo)).toContain('descanso');
+    }
+  });
+
+  it('cuando hay dos, están en pisos distintos', () => {
+    for (let i = 0; i < 60; i++) {
+      const mapa = generarMapa(arcoConReclutar);
+      const pisos = nodosReclutar(mapa).map((n) => n.piso);
+      expect(new Set(pisos).size).toBe(pisos.length);
+    }
+  });
+
+  it('todo nodo de reclutar sale del generador con una rareza', () => {
+    for (let i = 0; i < 20; i++) {
+      const mapa = generarMapa(arcoConReclutar, {
+        rarezasReclutarDisponibles: ['comun', 'legendario'],
+      });
+      nodosReclutar(mapa).forEach((nodo) => {
+        expect(['comun', 'legendario']).toContain(nodo.rareza);
+      });
+    }
+  });
+
+  it('nunca sortea una rareza que no esté disponible en la run', () => {
+    // Es la invariante que hace que el mapa no mienta: si nadie legendario puede
+    // salir en esta run, el mapa no debe pintar un pergamino dorado. La lista de
+    // rarezas con candidatos se la pasa el store, que es quien sabe de equipo y
+    // logros — el motor no.
+    for (let i = 0; i < 20; i++) {
+      const mapa = generarMapa(arcoConReclutar, { rarezasReclutarDisponibles: ['comun'] });
+      nodosReclutar(mapa).forEach((nodo) => expect(nodo.rareza).toBe('comun'));
+    }
+  });
+
+  it('sin decirle nada, asume que solo hay pergaminos comunes', () => {
+    const mapa = generarMapa(arcoConReclutar);
+    nodosReclutar(mapa).forEach((nodo) => expect(nodo.rareza).toBe('comun'));
+  });
+
+  it('con muchas tiradas aparecen las dos rarezas', () => {
+    const vistas = new Set();
+    for (let i = 0; i < 60; i++) {
+      const mapa = generarMapa(arcoConReclutar, {
+        rarezasReclutarDisponibles: ['comun', 'legendario'],
+      });
+      nodosReclutar(mapa).forEach((nodo) => vistas.add(nodo.rareza));
+    }
+    expect([...vistas].sort()).toEqual(['comun', 'legendario']);
+  });
+});
+
 describe('calcularNivelPorPiso', () => {
   it('el nivel sube de forma aditiva con el piso', () => {
     expect(calcularNivelPorPiso(1, arcoDePrueba)).toBe(1);

@@ -1,6 +1,6 @@
 # Generador de mapa (`src/engine/mapGenerator.js`)
 
-## `generarMapa(arco)`
+## `generarMapa(arco, opciones)`
 
 Genera un grafo de nodos por pisos a partir de la config de un arco (cualquiera de los 3 del MVP):
 
@@ -35,6 +35,26 @@ Genera un grafo de nodos por pisos a partir de la config de un arco (cualquiera 
   trazar un único camino concreto desde el inicio y forzar un descanso en algún punto de ese
   camino — funcionaba, pero no se correspondía con el patrón real de un Pokelike (el descanso está
   siempre pegado al jefe, no en cualquier punto del recorrido).
+
+- **`colocarNodosDeReclutar`**: los pergaminos **no salen del sorteo por peso**. Se coloca uno
+  seguro por arco, y un segundo solo con `arco.probabilidadSegundoNodoReclutar` (0,15). El equipo
+  tiene 3 huecos para toda la run, así que a partir del segundo pergamino la decisión ya no existe:
+  con `reclutar` en `poolTiposNodo` salían cuatro y cinco por arco y casi todos se saltaban.
+  Colocándolos aquí el número es **exacto**, no una esperanza estadística. Van después del descanso
+  garantizado, nunca pisan `inicio`/`jefe`/`miniJefe`/`descanso`, y cuando hay dos van en pisos
+  distintos. Ver [28](./28-nodo-reclutar.md).
+- **Rareza de los nodos de `reclutar`** (`elegirRarezaReclutar`): cada pergamino nace verde
+  (`comun`) o dorado (`legendario`), sorteado con los pesos de `arco.poolRarezaReclutar`.
+  Se decide **aquí y no al entrar en el nodo** porque el mapa pinta el pergamino: el jugador tiene
+  que ver qué le espera antes de elegir a dónde va — y el dorado, además, es un combate
+  (ver [28](./28-nodo-reclutar.md)).
+  El reparto va en una pasada **al final**, cuando el tipo de cada nodo ya no va a cambiar: hasta
+  entonces un `reclutar` todavía podía nacer del reparto de tiendas sobrantes o convertirse en el
+  descanso garantizado.
+  `opciones.rarezasReclutarDisponibles` son las rarezas que de verdad tienen candidatos en esta run.
+  Las calcula el **store** (`rarezasReclutarDisponibles`), que es quien conoce equipo y logros; el
+  motor no puede saberlo y sigue siendo agnóstico del contenido. Por defecto solo `comun`, para que
+  un mapa generado a ciegas no prometa lo que no puede cumplir.
 
 Devuelve `{ arcoId, pisos, nodos, nodosIniciales }`.
 

@@ -10,7 +10,8 @@ import spriteCombate from '../../assets/nodes/combate.png';
 import spriteEvento from '../../assets/nodes/evento.png';
 import spriteTienda from '../../assets/nodes/tienda.png';
 import spriteDescanso from '../../assets/nodes/descanso.png';
-import spriteReclutar from '../../assets/nodes/reclutar.png';
+import spriteReclutarComun from '../../assets/nodes/reclutar-comun.png';
+import spriteReclutarLegendario from '../../assets/nodes/reclutar-legendario.png';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
 import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
@@ -33,10 +34,35 @@ const SPRITE_NODO = {
   combateEntrenador: spriteCombate, 
   evento: spriteEvento,
   tienda: spriteTienda,
-  reclutar: spriteReclutar,
+  // `reclutar` no está aquí: su sprite depende de la rareza del pergamino y sale
+  // de SPRITE_RECLUTAR, justo debajo.
   descanso: spriteDescanso,
   miniJefe: spriteCombate,
   jefe: spriteCombate,
+};
+
+// Un pergamino por rareza (`nodo.rareza`, decidida al generar el mapa — ver
+// `elegirRarezaReclutar` en engine/mapGenerator.js). El dorado no es solo un
+// premio más gordo: es un COMBATE contra el ninja que hay dentro, así que el
+// jugador tiene que poder verlo venir desde el mapa y decidir si va.
+//
+// Solo se usan dos de los tres pergaminos de la hoja: el azul (raro) se retiró al
+// fusionar común/inicial/raro en un mismo nodo — lo que separa los dos pergaminos
+// es cómo se consigue al ninja, no lo bueno que sea. `assets/nodes/reclutar-raro.png`
+// sigue generándose por si vuelve a hacer falta.
+const SPRITE_RECLUTAR = {
+  comun: spriteReclutarComun,
+  legendario: spriteReclutarLegendario,
+};
+
+const COLOR_RECLUTAR = {
+  comun: 'border-fuuton/60 text-fuuton',
+  legendario: 'border-raiton text-raiton',
+};
+
+const ETIQUETA_RECLUTAR = {
+  comun: 'Recruit',
+  legendario: 'Legendary Challenge',
 };
 
 // Glifo de rango superpuesto al sprite, solo en los combates que no son el
@@ -54,7 +80,6 @@ const ETIQUETA_NODO = {
   combateEntrenador: 'Elite',
   evento: 'Event',
   tienda: 'Shop',
-  reclutar: 'Recruit',
   descanso: 'Rest',
   miniJefe: 'Mini-Boss',
   jefe: 'Boss',
@@ -69,7 +94,6 @@ const COLOR_NODO = {
   combateEntrenador: 'border-katon/60 text-katon',
   evento: 'border-raiton/50 text-raiton',
   tienda: 'border-doton/50 text-doton',
-  reclutar: 'border-fuuton/60 text-fuuton',
   descanso: 'border-suiton/50 text-suiton',
   miniJefe: 'border-sello-500 text-sello-500',
   jefe: 'border-sello-500 text-pergamino-100',
@@ -129,7 +153,11 @@ function calcularPosiciones(mapa) {
 
 function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onClick, arco }) {
   const tipoEfectivo = nodo.tipo === 'combate' && nodo.subtipo === 'entrenador' ? 'combateEntrenador' : nodo.tipo;
-  const estilo = COLOR_NODO[tipoEfectivo] ?? COLOR_NODO.combate;
+  // Los mapas generados antes de que existiera la rareza (y los tests que montan
+  // un nodo a mano) no la traen: se leen como el pergamino común de siempre.
+  const rarezaReclutar = nodo.tipo === 'reclutar' ? (nodo.rareza ?? 'comun') : null;
+  const estilo = (rarezaReclutar ? COLOR_RECLUTAR[rarezaReclutar] : COLOR_NODO[tipoEfectivo])
+    ?? COLOR_NODO.combate;
   // `in` y no `??`: el nodo de inicio tiene sprite `null` a propósito, y con
   // `??` habría caído al de combate.
   // Con el nivel al que se pelea, para que el nodo enseñe al jefe tal y como te
@@ -142,8 +170,11 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
     : nodo.tipo === 'jefe' ? spriteDeCombate(arco?.jefeFinalId, arco?.nivelJefeFinal)
       : null;
   const sprite = spriteDelJefe
+    ?? (rarezaReclutar ? SPRITE_RECLUTAR[rarezaReclutar] ?? SPRITE_RECLUTAR.comun : null)
     ?? (tipoEfectivo in SPRITE_NODO ? SPRITE_NODO[tipoEfectivo] : SPRITE_NODO.combate);
   const badge = BADGE_NODO[tipoEfectivo];
+  const etiqueta = (rarezaReclutar ? ETIQUETA_RECLUTAR[rarezaReclutar] : ETIQUETA_NODO[tipoEfectivo])
+    ?? nodo.tipo;
   const esJefe = nodo.tipo === 'jefe';
   // El pergamino de reclutar no es circular: recortarlo en círculo le cortaría
   // las varillas de arriba y abajo, así que ese va en marco cuadrado.
@@ -179,7 +210,7 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
   // aprende jugando; el tooltip solo tiene que recordar cuál es cuál.
   const contenidoTooltip = (
     <div className="bg-tinta-900 text-pergamino-100 rounded-md border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap">
-      <p className="font-display text-[11px] leading-none">{ETIQUETA_NODO[tipoEfectivo] ?? nodo.tipo}</p>
+      <p className="font-display text-[11px] leading-none">{etiqueta}</p>
     </div>
   );
 
@@ -200,7 +231,7 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
             estadoClases,
             esActual && 'ring-2 ring-sello-500 ring-offset-2 ring-offset-tinta-950 scale-110',
           ].filter(Boolean).join(' ')}
-          aria-label={`${ETIQUETA_NODO[tipoEfectivo] ?? nodo.tipo} node${visitado ? ' — visited' : disponible ? ' — available' : ' — not yet reachable'}`}
+          aria-label={`${etiqueta} node${visitado ? ' — visited' : disponible ? ' — available' : ' — not yet reachable'}`}
         >
           {sprite && (
             <img
@@ -700,12 +731,19 @@ export default function MapScreen() {
                     // 3) descartado — origen ya visitado (piso ya superado) pero
                     //    esta rama en concreto no se tomó: ya no se puede volver.
                     // 4) todavía fuera de alcance, más adelante en el mapa (punteado).
+                    //
+                    // Los del caso 4 se pintan en blanco y bien visibles, no
+                    // insinuados: son los que dejan **leer el mapa por delante** y
+                    // decidir a dónde te lleva cada rama. A opacidad 0,15 estaban
+                    // ahí sin verse y el mapa parecía terminar en el piso siguiente.
+                    // Lo que los distingue de un camino elegible ya no es que se
+                    // vean menos, sino que van discontinuos.
                     const recorrido = nodo.visitado && mapa.nodos[destinoId]?.visitado;
                     const disponibleAhora = !recorrido && nodo.id === nodoActualId && disponibles.has(destinoId);
                     const descartado = !recorrido && !disponibleAhora && nodo.visitado;
 
                     let stroke = 'var(--color-pergamino-100)';
-                    let strokeOpacity = 0.15;
+                    let strokeOpacity = 0.65;
                     let strokeWidth = 1.5;
                     let strokeDasharray;
 
@@ -714,7 +752,7 @@ export default function MapScreen() {
                       strokeOpacity = 0.8;
                       strokeWidth = 2.5;
                     } else if (disponibleAhora) {
-                      strokeOpacity = 0.9;
+                      strokeOpacity = 0.95;
                       strokeWidth = 2;
                     } else if (descartado) {
                       stroke = 'var(--color-tinta-950)';

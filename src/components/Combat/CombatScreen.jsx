@@ -4,7 +4,7 @@ import { crearLuchador } from '../../engine/combat';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import { nombrePersonaje, emojiDeTipo } from '../common/nombres';
 import { nombrePasiva, duenoDePasiva, describirPasiva } from '../../engine/passives';
-import { spriteDeCombate, pasivasDeLuchador } from '../common/datosDeLuchador';
+import { spriteDeCombate, pasivasDeLuchador, nombreDeModo } from '../common/datosDeLuchador';
 import HoverTooltip from '../common/HoverTooltip';
 import { spriteDeProyectil } from '../common/projectileSprites';
 import TransformationScreen from './TransformationScreen';
@@ -58,10 +58,13 @@ function colorBarraHp(porcentaje) {
  */
 function estadoDelEquipo(resultado, indiceRonda, hpJugadorEnVivo) {
   return (resultado.equipoAlEmpezar ?? []).map((miembro) => {
-    const suRonda = resultado.rondas.findIndex((r) => r.jugador.id === miembro.id);
-
-    if (suRonda === indiceRonda) {
-      const ronda = resultado.rondas[suRonda];
+    // Quién pelea AHORA se mira contra la ronda en curso, no buscando su primera
+    // ronda con `findIndex`: un personaje puede pelear dos rondas del mismo
+    // combate si revive con la Spare Ninja Headband, y con `findIndex` la segunda
+    // vez seguía apuntando a la primera — su tarjeta salía muerta mientras él
+    // estaba peleando. Se leía como que el objeto no había funcionado.
+    const ronda = resultado.rondas[indiceRonda];
+    if (ronda?.jugador.id === miembro.id) {
       return {
         ...miembro,
         hpActual: hpJugadorEnVivo,
@@ -70,7 +73,10 @@ function estadoDelEquipo(resultado, indiceRonda, hpJugadorEnVivo) {
         peleando: true,
       };
     }
-    if (suRonda !== -1 && suRonda < indiceRonda) {
+    const peleoAntes = resultado.rondas
+      .slice(0, indiceRonda)
+      .some((r) => r.jugador.id === miembro.id);
+    if (peleoAntes) {
       return { ...miembro, hpActual: 0, derrotado: true, peleando: false };
     }
     return { ...miembro, peleando: false };
@@ -136,10 +142,13 @@ function pasivasDelUltimoGolpe(ronda, golpe) {
 
   const ladoAtacante = golpe.atacanteId === ronda.jugador.id ? 'jugador' : 'enemigo';
   const ladoDefensor = ladoAtacante === 'jugador' ? 'enemigo' : 'jugador';
+  // Devuelve **ids**, no nombres. Devolvía nombres y quien los recibe
+  // (`EtiquetasPasivas`) comparaba contra `pasiva.id`, así que no coincidía nunca
+  // y la pastilla no se encendía jamás: la fase de "pasivas visibles" estaba
+  // pintando la lista pero no el momento en que una hace algo.
   for (const id of golpe.pasivasActivadas ?? []) {
     const lado = duenoDePasiva(id) === 'defensor' ? ladoDefensor : ladoAtacante;
-    const nombre = nombrePasiva(id);
-    if (nombre && !porLado[lado].includes(nombre)) porLado[lado].push(nombre);
+    if (!porLado[lado].includes(id)) porLado[lado].push(id);
   }
   return porLado;
 }
@@ -276,10 +285,14 @@ function DanoFlotante({ dano, eficacia, esJutsu, refContenedor, refObjetivo }) {
   return (
     // El jutsu ya no se distingue por color —el color lo ha ocupado la eficacia—
     // sino por tamaño, que además pega más con "ha sido un golpe gordo".
+    //
+    // Fuente 2p (`font-display`) y no la de Naruto: esa se reserva para
+    // titulares —"Victory", el nombre del arco—, y estos números son anotaciones
+    // sobre el sprite. Un tamaño menos, porque la pixel art llena más caja.
     <NumeroFlotante
       refContenedor={refContenedor}
       refObjetivo={refObjetivo}
-      className={`font-naruto ${esJutsu ? 'text-3xl' : 'text-2xl'} ${colorDelDano(dano, eficacia)}`}
+      className={`font-display ${esJutsu ? 'text-2xl' : 'text-xl'} ${colorDelDano(dano, eficacia)}`}
     >
       {dano === 0 ? 'Blocked' : `-${dano}`}
     </NumeroFlotante>
@@ -331,11 +344,6 @@ function EtiquetasPasivas({ pasivas, activadas }) {
               <div className="w-48 bg-pergamino-100 text-tinta-950 rounded-md border-2 border-tinta-950 shadow-xl px-2 py-1.5">
                 <p className="font-display text-[10px] uppercase tracking-wide">{nombrePasiva(pasiva.id)}</p>
                 <p className="text-[10px] leading-snug mt-0.5">{describirPasiva(pasiva)}</p>
-                {pasiva.fuentes > 1 && (
-                  <p className="text-[10px] leading-snug mt-1 text-sello-600">
-                    La tienes por {pasiva.fuentes} vías y todas cuentan.
-                  </p>
-                )}
               </div>
             )}
           >
@@ -347,7 +355,6 @@ function EtiquetasPasivas({ pasivas, activadas }) {
             ].join(' ')}
             >
               {nombrePasiva(pasiva.id)}
-              {pasiva.fuentes > 1 && <span className="ml-1 opacity-70">×{pasiva.fuentes}</span>}
             </span>
           </HoverTooltip>
         );
@@ -403,7 +410,7 @@ function TarjetaLuchador({
       {subioANivel && (
         <span
           aria-hidden="true"
-          className="absolute left-1/2 top-1/3 z-20 font-naruto text-2xl text-raiton drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] cartel-subida-nivel"
+          className="absolute left-1/2 top-1/3 z-20 font-display text-base text-raiton drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] cartel-subida-nivel whitespace-nowrap"
         >
           Lv. {subioANivel}!
         </span>
@@ -523,6 +530,8 @@ export default function CombatScreen() {
   const avanzarSiguienteArco = useGameStore((s) => s.avanzarSiguienteArco);
   const irARecompensaMiniJefe = useGameStore((s) => s.irARecompensaMiniJefe);
   const recompensaMiniJefe = useGameStore((s) => s.recompensaMiniJefe);
+  const desafioRecluta = useGameStore((s) => s.desafioRecluta);
+  const irAReclutaDesafio = useGameStore((s) => s.irAReclutaDesafio);
   const cadenaEnemigos = useGameStore((s) => s.cadenaEnemigos);
   const continuarCadena = useGameStore((s) => s.continuarCadena);
   const runTerminada = useGameStore((s) => s.runTerminada);
@@ -687,6 +696,22 @@ export default function CombatScreen() {
     ? (resultado?.transformacionesDesbloqueadas ?? [])[transformacionesVistas] ?? null
     : null;
 
+  // Cuántas transformaciones de este combate ya se han enseñado. En cuanto una
+  // sale de su pantalla, la tarjeta de ese personaje pasa a pintarse con su
+  // nivel NUEVO: sprite transformado y nombre del modo, sin esperar al siguiente
+  // combate. Antes la tarjeta se quedaba con el nivel de `equipoAlEmpezar`, así
+  // que la transformación se celebraba en una pantalla y acto seguido el
+  // personaje volvía a salir igual que antes — y si el que subía era del
+  // banquillo, no se actualizaba nunca hasta que le tocaba pelear.
+  const transformacionesYaContadas = (resultado?.transformacionesDesbloqueadas ?? [])
+    .slice(0, transformacionesVistas)
+    .map((t) => t.personajeId);
+  const nivelEnPantalla = (miembro) => (
+    transformacionesYaContadas.includes(miembro.id)
+      ? nivelAlQueSubio(miembro.id) ?? miembro.nivel
+      : miembro.nivel
+  );
+
   // La transformación espera a que la subida de nivel se haya visto.
   useEffect(() => {
     if (!combateTotalTerminado || nivelYaCelebrado) return undefined;
@@ -742,12 +767,6 @@ export default function CombatScreen() {
         />
       )}
       <div className="max-w-4xl mx-auto w-full">
-        {resultado.rondas.length > 1 && (
-          <p className="text-center text-xs text-pergamino-200/50 mb-3">
-            Round {indiceRonda + 1} of {resultado.rondas.length}
-          </p>
-        )}
-
         {/* `relative` para que el proyectil pueda cruzar de un luchador al otro,
             y las dos mitades se sacuden cuando les toca recibir. */}
         {/* Los dos bandos, cada uno en su caja, estilo Pokelike. `relative` para
@@ -786,15 +805,25 @@ export default function CombatScreen() {
           <PanelBando titulo="Your team">
             {equipoEnPantalla.map((miembro) => {
               const esElQuePelea = miembro.peleando;
+              // El relevo es que entre OTRO, no que cambie el número de ronda: un
+              // personaje que revive con la Spare Ninja Headband pelea dos rondas
+              // seguidas y no se está relevando a sí mismo.
+              const entraDeRelevo = esElQuePelea && indiceRonda > 0
+                && resultado.rondas[indiceRonda - 1]?.jugador.id !== miembro.id;
               return (
                 // Dos envoltorios y no uno: el de fuera se remonta al cambiar de
                 // RONDA (y ahí anima el relevo), el de dentro al recibir un golpe
                 // (y ahí sacude). Con uno solo, cada impacto reiniciaba la
                 // animación de entrada del personaje que acababa de salir.
+                //
+                // El `key` solo cambia para el que pelea: con la ronda en el key de
+                // los tres, las tarjetas del banquillo se remontaban en cada relevo
+                // y sus barras de HP y estelas volvían a empezar de cero. Ese era
+                // el tirón que se veía, más que la propia animación de entrada.
                 <div
-                  key={`${miembro.id}-r${indiceRonda}`}
+                  key={`${miembro.id}-${esElQuePelea ? indiceRonda : 'espera'}`}
                   ref={esElQuePelea ? refTarjetaJugador : null}
-                  className={esElQuePelea && indiceRonda > 0 ? 'entrada-relevo' : ''}
+                  className={entraDeRelevo ? 'entrada-relevo' : ''}
                 >
                 <div
                   key={sacudeA === 'jugador' && esElQuePelea ? golpesAplicados : 'quieto'}
@@ -803,12 +832,15 @@ export default function CombatScreen() {
                   <TarjetaLuchador
                     id={miembro.id}
                     nombre={nombrePersonaje(miembro.id)}
-                    nivel={miembro.nivel}
+                    nivel={nivelEnPantalla(miembro)}
                     hpActual={miembro.hpActual}
                     hpMaximo={miembro.hpMaximo}
                     carga={estadoEnTurnoActual.cargaJugador}
                     cargaMaxima={esElQuePelea ? ronda.cargaMaxima : 0}
-                    modoActivoNombre={esElQuePelea ? ronda.jugador.modoActivoNombre : null}
+                    // El rótulo se calcula del nivel, no se lee del resumen del
+                    // combate: así lo tienen los tres del equipo y no solo el que
+                    // pelea (ver `nombreDeModo`).
+                    modoActivoNombre={nombreDeModo(miembro.id, nivelEnPantalla(miembro))}
                     estado={miembro.derrotado ? 'caido' : esElQuePelea ? 'activo' : 'espera'}
                     objetoEquipadoId={miembro.objetoEquipadoId}
                     pasivasActivadas={esElQuePelea ? pasivasEnPantalla.jugador : []}
@@ -957,6 +989,21 @@ export default function CombatScreen() {
                   className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
                 >
                   Claim reward
+                </button>
+              </div>
+            ) : desafioRecluta && resultado.jugadorGanoFinal ? (
+              // El desafío del pergamino dorado: se ha ganado, así que la vuelta
+              // no es al mapa sino al pergamino, ya en modo "recluta a tu rival".
+              <div>
+                <p className="text-pergamino-200/80 text-sm mb-4">
+                  You have earned their respect.
+                </p>
+                <button
+                  type="button"
+                  onClick={irAReclutaDesafio}
+                  className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
+                >
+                  Recruit them
                 </button>
               </div>
             ) : hayMasEnCadena ? (

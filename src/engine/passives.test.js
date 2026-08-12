@@ -259,6 +259,36 @@ describe('origen de las pasivas', () => {
     expect(luchador.pasivas.map((p) => p.id)).toEqual(['priority', 'heal_on_kill']);
   });
 
+  it('una pasiva que dan el modo Y el objeto se aplica UNA vez, la más fuerte', () => {
+    // El Manto de Chakra de Naruto y el Sello de Chakra dan los dos
+    // `first_jutsu_bonus`. Aplicarla dos veces multiplicaba el efecto y hacía de
+    // esa combinación la única jugada buena del juego, sin que nada lo dijera.
+    const personajeConModo = {
+      ...base,
+      modos: [{
+        nombre: 'Modo', nivelDesbloqueo: 1, multiplicadores: {},
+        pasivas: [{ id: 'first_jutsu_bonus', cantidad: 0.2 }],
+      }],
+    };
+    const luchador = crearLuchador(
+      personajeConModo, 1, null, null, 1, [{ id: 'first_jutsu_bonus', cantidad: 0.5 }],
+    );
+    expect(luchador.pasivas).toHaveLength(1);
+    expect(luchador.pasivas[0].parametros.cantidad).toBe(0.5);
+  });
+
+  it('normalizar una pasiva ya normalizada no le tira la cantidad declarada', () => {
+    // El store normaliza las pasivas del objeto equipado y `crearLuchador` las
+    // vuelve a normalizar al juntarlas con las del modo. Sin idempotencia, la
+    // segunda pasada metía `{enganche, objetivo, parametros}` dentro de
+    // `parametros` y la cantidad quedaba tapada por la del catálogo: **ningún
+    // objeto estaba aplicando su valor real**, todos usaban el por defecto.
+    const unaVez = normalizarPasivas([{ id: 'heal_on_kill', cantidad: 0.28 }]);
+    const dosVeces = normalizarPasivas(unaVez);
+    expect(dosVeces).toEqual(unaVez);
+    expect(dosVeces[0].parametros.cantidad).toBe(0.28);
+  });
+
   // Los contadores viven en el luchador, y el enemigo de un nodo es UNO solo
   // para toda la cadena de rondas: no puede volver a bloquear un primer golpe
   // cada vez que entra un personaje nuevo del equipo.

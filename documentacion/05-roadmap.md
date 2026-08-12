@@ -259,171 +259,198 @@
   Los de arco existen porque los niveles fijos que declara un arco solo significan algo si alguien
   comprueba que el jugador llega ahí, y se dio por supuesto durante meses.
 
+**Interfaz de combate (punto 2, las 6 fases) — ver [13](./13-ui-mapa-y-combate.md)**
+
+Fueron en este orden porque el riesgo crecía: las dos primeras solo añadían, la tercera reescribía el
+reloj de la pantalla. **Ninguna tocó el motor** — todo lo que hacía falta ya viajaba en los eventos
+desde la fase 3 del punto 1 (`pasivasActivadas`, `esAtaqueExtra`, `hpAtacante`,
+`cargaAtacante`/`cargaDefensor`, `tipoAtaque`, `eficacia`). Si algún día hace falta tocar
+`engine/combat.js` para esta pantalla, es señal de que se está inventando un suceso nuevo: parar y
+replantear.
+
+- [x] **Equipo entero en pantalla.** Antes `CombatScreen` pintaba un 1 vs 1 y de los otros dos
+  personajes no había ni rastro, ni siquiera cuando entraban por la cadena de rondas. Ahora las tres
+  tarjetas con HP y nivel: la activa resaltada, las caídas apagadas, las que esperan en tono normal.
+- [x] **Pasivas visibles.** La fase con más valor por línea escrita y la que justificaba el punto
+  entero: `pasivasActivadas` venía en cada evento y **no se leía en ninguna parte**, así que el
+  sistema del punto 1 era invisible. Etiqueta sobre el luchador cuando salta, con el nombre y la
+  frase de `data/passives.json` (`describirPasiva`, el mismo texto de los hovers de objeto). Aquí
+  entró también el `esAtaqueExtra`, que se pintaba como un golpe normal y confundía.
+- [x] **Animación en vez de registro de texto.** El trabajo real no fue la animación sino **cambiar
+  la unidad del replay**: se avanzaba de turno en turno y un turno trae 2-4 eventos, así que se
+  resolvían todos de golpe. Pasó a granularidad de golpe (`golpesEmpezados` + `impactado`), con el
+  daño aplicándose en el impacto y no al lanzar.
+  ⚠️ Dos sitios que ya han mordido: el HP del atacante **no** se reconstruye restando daño
+  (`heal_on_kill` lo sube) y la barra de carga tampoco se reconstruye sumando (lanzar el jutsu la
+  pone a cero). Y el reset de estado al cambiar de combate se hace **durante el render**, no en un
+  `useEffect` — está comentado en el propio archivo.
+- [x] **Sprites por personaje.** `scripts/generar-sprites-personajes.py` recorta los 25 sprites de
+  `map-sprites-idle-all-characters.png` a `assets/characters/<id>.png`, mapeados por
+  `components/common/characterSprites.js`. Se usan en el luchador que pelea (el enemigo volteado para
+  que se miren), en las tarjetas de equipo y —desbloqueando un pendiente de arte— en los nodos de
+  **mini-jefe y jefe** del mapa. El de **entrenador** no puede: su enemigo nombrado se sortea al
+  ENTRAR en el nodo, no al generar el mapa.
+  El script **no lleva ni una coordenada escrita a mano**. Tres cosas que costaron y conviene no
+  repetir: el borde interior del panel no es papel y aparecía en *todas* las filas y columnas, así
+  que no se separaba ninguna banda (`MARGEN_PANEL` lo arregla); el papel está texturizado (decenas
+  de variantes de 237,225,204) y contando color a color el "fondo" ganador salía el NEGRO de los
+  contornos, con lo que el borrado se llevaba los contornos y dejaba el papel; y en tres paneles
+  (Sakura, Gaara, Kiba) los fotogramas se tocan, resuelto con la **mediana** de las cajas como
+  calibre y `FACTOR_FUSION` en vez de escribir la caja a mano.
+  También se recortaron los enemigos nombrados (Zaku, Dosu, Kin) y, de `projectile-sprites.png`, el
+  proyectil de jutsu de cada personaje además del kunai. Lo que falta de arte está en "Pendiente de
+  arte", no aquí: un apartado marcado `[x]` no es sitio donde nadie vaya a buscar trabajo por hacer.
+- [x] **Rediseño de la distribución, estilo Pokelike.** Los dos bandos en cajas a izquierda y
+  derecha en vez de una fila de duelo con el banquillo debajo, y una sola `TarjetaLuchador` para
+  equipo y enemigo — antes eran dos componentes con el mismo diseño duplicado. El **registro de
+  texto pasó a ser solo de desarrollo** (`import.meta.env.DEV`, que Vite convierte en `false` y
+  elimina del bundle): la partida la cuenta la animación.
+- [x] **Juiciness.** La tanda que convierte el combate en algo que se mira: **estela de HP** (dos
+  barras al mismo porcentaje, la de detrás lenta y con retraso, así que el hueco es el mordisco);
+  **telegrafiado del jutsu**, que se llena un turno ANTES de disparar
+  ([29](./29-sistema-de-jutsus-automaticos.md)) y ese hueco no se veía; **ritmo variable** (el jutsu
+  vuela más lento y con aire antes y después — con todo a la misma velocidad sonaba a metrónomo);
+  **desplome al caer** y **entrada deslizante del relevo**, que era el momento más dramático y se
+  contaba con una línea de texto; **números flotantes** de daño coloreados por eficacia (escala de
+  calor, no semáforo — el mismo número sale sobre los dos bandos) y de **curación en verde**,
+  detectada por la diferencia de HP y no por el mecanismo, así que un futuro jutsu con robo de vida
+  saldría solo; y **subida de nivel** con cartel, destello dorado y el nivel nuevo en el título, con
+  la pantalla de transformación esperando a que se vea (el orden cuenta la historia: subes de nivel,
+  *por eso* desbloqueas el modo).
+- [x] De aquí salió una regla para el motor, ya escrita en [09](./09-motor-engine.md): **el evento de
+  ataque lleva el estado resuelto, no los deltas**. La carga se pone a cero al lanzar el jutsu y el
+  HP sube con `heal_on_kill`, así que ninguno de los dos se reconstruye con aritmética. Rompió el
+  replay una vez cada uno; ahora el evento trae `hpAtacante` y `hpDefensor` y el replay no calcula.
+
+⚠️ **La red de seguridad de esta pantalla es la prueba manual, no `npm test`** (los tests son de
+`engine/` y `store/`). Lo concreto que mirar al tocarla: que una cadena de rondas encadene bien las
+tres tarjetas, que una pasiva salte visiblemente al menos una vez (Naruto o Sakura con
+`heal_on_kill` es la más fácil de provocar), y que "Skip animation" siga saltando al final sin dejar
+barras a medias.
+
+⚠️ Y una que **no** cubre `npm run build`: si tocas `index.css`, comprueba que la regla llega al
+bundle (`grep -o "mi-clase[^{]*{[^}]*}" dist/assets/*.css`). Un comentario mal cerrado hizo que
+Tailwind descartara en silencio todas las reglas siguientes —el build daba OK— y los tooltips
+salieron abiertos por defecto en todas las pantallas.
+
+**Nodo de reclutar con rareza y desafío legendario (punto 3) — ver [28](./28-nodo-reclutar.md)**
+
+- [x] Los tres pergaminos de `assets/sprite-nodos-mapa.png` (verde común, azul raro, dorado
+  legendario) ya se usan los tres: la rareza se sortea **al generar el mapa** (`elegirRarezaReclutar`,
+  pesos en `poolRarezaReclutar` de cada arco) y no al entrar en el nodo, que era exactamente lo que
+  impedía pintar el pergamino correcto.
+- [x] **El motor no puede saber qué rarezas hay**: quién está disponible depende del equipo y de los
+  logros, y `engine/` es puro y agnóstico del contenido. Se lo pasa el store
+  (`generarMapa(arco, { rarezasReclutarDisponibles })`), y por defecto solo `comun` — sin eso, la
+  primera run pintaría pergaminos dorados que al abrirlos no tienen a nadie dentro.
+- [x] **El dorado no es una elección, es un combate**: un solo rival, con su sprite y sus stats al
+  nivel al que va a pelear, y el aviso de que si cae el equipo entero se acaba la run. Al ganar,
+  `CombatScreen` no ofrece "Continue" sino "Recruit them" y vuelve al pergamino
+  (`iniciarDesafioLegendario` / `irAReclutaDesafio` / `desafioRecluta`).
+- [x] **Nivel FIJO por arco** (`nivelDesafioLegendario`: 6 / 23 / 41), como los jefes. Un desafío que
+  escalara con el equipo sería siempre igual de difícil, y entonces no sería una decisión sino un
+  peaje. Medido con un bloque nuevo del simulador ("Desafío legendario"): 40-53% en el piso 3 y
+  71-89% en el 6. El abanico es inherente al nivel fijo, y se acepta porque el nodo es **opcional y
+  se ve desde el mapa** — el jugador decide con la información delante.
+- [x] **El jefe y el mini-jefe del arco en curso quedan fuera del pool de reclutas.** No es estética:
+  ganarle al `jefeFinalId` en un nodo de reclutar habría disparado `arcoCompletado` dentro de
+  `jugarCombate` y la run habría saltado de arco desde un pergamino.
+- [x] Sprites con `scripts/generar-sprites-nodo-reclutar.py`, que **mide las tres posiciones sobre la
+  propia hoja** en vez de llevarlas escritas.
+- [x] 181 tests (eran 175): rareza siempre presente, nunca una rareza sin candidatos, degradación a
+  común, el desafío como combate real, perderlo termina la run, y el jefe del arco excluido.
+
+**Pantalla de transformación (punto 4) — ver [13](./13-ui-mapa-y-combate.md)**
+
+- [x] ⚠️ **No era opcional.** Desde que las transformaciones se quitaron de las tarjetas (son una
+  sorpresa, ver [30](./30-sistema-de-pasivas.md)), esta pantalla y el punto 2 son los **únicos**
+  sitios donde el jugador se entera de que existen. Sin ellas, medio rediseño del balance vivía solo
+  en los JSON: un personaje alcanzaba el nivel de su modo y **no pasaba absolutamente nada** — de
+  repente tenía el Manto del Kyūbi, sin aviso, sin pantalla, sin una línea de texto.
+- [x] Pantalla propia al terminar el combate en que sube, estilo evolución de Pokémon: carga de
+  chakra con parpadeo de silueta, estallido, y luego quietud con el nombre del modo y **aquí sí** la
+  descripción de lo que hace, que se quitó de la tarjeta a propósito — es el momento en que esa
+  información importa y en que el jugador está mirando.
+- [x] El store detecta el desbloqueo comparando `obtenerModoActivo` antes y después de aplicar la XP
+  (no hay evento de "subir de modo") y lo manda en el resumen del combate como
+  `transformacionesDesbloqueadas`, igual que los logros. Sprites en `assets/transformations/`,
+  generados con `scripts/generar-sprites-transformaciones.py`.
+
+**Tanda de playtest tras el punto 3 (bugs y ajustes de una partida real)**
+
+- [x] **Los caminos que aún no están a tu alcance se ven.** Iban a opacidad 0,15, o sea que estaban
+  ahí sin verse, y el mapa parecía terminar en el piso siguiente. Ahora van en blanco a 0,65: lo que
+  los distingue de un camino elegible ya no es que se vean menos, sino que van discontinuos.
+- [x] **El desafío legendario no suelta el objeto característico de su jefe.** Ya paga con el propio
+  legendario; darle encima el Kubikiribōchō o la calabaza de arena es un pico de poder que se lleva
+  por delante el resto del arco. Además esos objetos son recompensa de un **nodo de jefe**, y este
+  no lo es.
+- [x] **El legendario entra al nivel MEDIO del equipo y sin `bonusNivelAlReemplazar`**, no al del más
+  fuerte como el resto de reclutas. Sus stats base ya son de jefe (90 de HP contra 38); con el nivel
+  del mejor del equipo ganaba él solo lo que quedaba de run, sobre todo saliendo pronto.
+- [x] **Uno o dos nodos de reclutar por arco, no cinco.** `reclutar` sale de `poolTiposNodo` y pasa a
+  colocarse a mano (`colocarNodosDeReclutar`): uno garantizado y un segundo con probabilidad 0,15. El
+  equipo tiene 3 huecos para toda la run, así que a partir del segundo pergamino la decisión ya no
+  existe. El peso liberado se repartió entre evento/tienda/descanso **sin tocar el de combate**,
+  porque `nivelesEstimadosDeLaRun` calcula la XP esperada de un piso como `pesoCombate / pesoTotal` —
+  moverlo habría descolocado la curva de niveles entera, y de hecho el primer intento lo hizo y los
+  invariantes de arco lo cazaron al momento.
+- [x] **Dos pergaminos en vez de tres**: verde (común + inicial + raro) y dorado (legendario). Lo que
+  los separa no es el poder sino cómo se consigue al ninja — el verde es una elección entre tres
+  cartas, el dorado un combate. El azul se retira; con un solo nodo por arco casi no aparecía.
+- [x] **Una pasiva que dan el modo Y el objeto se aplica una sola vez**, la de mayor cantidad. Antes
+  se aplicaban las dos, lo que multiplicaba el efecto y hacía de esa combinación la única jugada
+  buena del juego sin que nada lo dijera. Fuera también el marcador "×2" de la pastilla: la
+  explicación va a la enciclopedia (punto 10).
+- [x] **Bug gordo encontrado de camino: `normalizarPasivas` no era idempotente.** El store normaliza
+  las pasivas del objeto equipado y `crearLuchador` las volvía a normalizar al juntarlas con las del
+  modo; la segunda pasada enterraba `parametros` dentro de sí mismo y la `cantidad` acababa siendo la
+  del catálogo. **Ningún objeto estaba aplicando su valor real.** No saltó nunca porque
+  `simular-combates.mjs` pasa las pasivas en crudo y normaliza una sola vez: el simulador medía los
+  números buenos y el juego corría con otros. Ver [30](./30-sistema-de-pasivas.md).
+- [x] **Spare Ninja Headband**: el store siempre estuvo bien (revive una vez y se consume, con dos
+  tests). Lo que fallaba era la tarjeta — `estadoDelEquipo` buscaba la ronda del personaje con
+  `findIndex`, y quien revive pelea **dos** rondas del mismo combate, así que en la segunda su tarjeta
+  salía muerta mientras él estaba peleando. Se leía como que el objeto no había funcionado.
+- [x] **Otro de camino: la pastilla de pasiva no se encendía nunca.** `pasivasDelUltimoGolpe` devolvía
+  nombres y `EtiquetasPasivas` comparaba contra ids, así que no coincidían jamás. La fase de "pasivas
+  visibles" pintaba la lista pero no el momento en que una hace algo.
+- [x] **Textos flotantes con la fuente 2p**, no con la de Naruto: esa se reserva para titulares
+  ("Victory", el nombre del arco) y estos números son anotaciones sobre el sprite.
+- [x] **La transformación se ve en la tarjeta al salir de su pantalla**, no en el combate siguiente, y
+  **también en el banquillo**. El rótulo salía de `ronda.jugador.modoActivoNombre`, que solo tiene al
+  que peleó; ahora se calcula del nivel (`nombreDeModo`), igual que el sprite, así que no pueden
+  discrepar.
+- [x] **Deslizado del relevo más corto** (28 px/420 ms → 12 px/260 ms) y solo cuando entra OTRO
+  personaje. El tirón de verdad, eso sí, no era la animación: el `key` de las tres tarjetas llevaba el
+  número de ronda, así que en cada relevo se remontaban también las del banquillo y sus barras y
+  estelas volvían a empezar de cero.
+
 ## Próximos pasos (en orden sugerido)
 
-> **Por dónde seguir ahora mismo: el punto 3.** Cerrados el 1 (motor y balance), el 2 (combate) y
-> el 4 (transformación). Con eso **el combate ya tiene el nivel de acabado que pide un MVP** y todo
-> lo del rediseño de balance es visible para el jugador, que era lo que quedaba pendiente de fondo.
+> **Por dónde seguir ahora mismo: el punto 12, y después el 11 junto con el 8.** Cerrados el 1
+> (motor y balance), el 2 (combate), el 3 (reclutar con rareza y desafío legendario) y el 4
+> (transformación). **Con el 3 se acabó el trabajo de motor, store y datos: todo lo que queda de aquí
+> en adelante es interfaz o contenido.**
 >
-> El 3 es el único que queda tocando motor, store y datos; el resto de la lista es interfaz o
-> contenido. Después iría el **11** junto con el **8**, porque los dos rediseñan la misma tarjeta de
-> personaje y hacerlos por separado significa tocarla dos veces.
+> El 12 va primero porque el 3 acaba de añadir un final de combate nuevo ("has ganado, se une a tu
+> equipo") y ahora hay dos cierres distintos conviviendo con el mismo `Victory` de texto: es el mejor
+> momento para diseñarlos de una vez y no dos. Detrás van el **11** y el **8** juntos, porque los dos
+> rediseñan la misma tarjeta de personaje y hacerlos por separado significa tocarla dos veces.
 >
-> **Lo que le falta al combate para dejar de ser un MVP** (y no está en ningún punto de arriba
-> porque no es "terminar" nada, es añadir):
-> - **Sonido.** Es, con diferencia, lo que más notaría el jugador, y es lo único grande que falta.
->   No es un retoque: el proyecto no tiene nada de audio, así que son assets, precarga, mezcla y un
->   ajuste de volumen. Está en el backlog.
-> - **El final del combate.** Todo lo de dentro está cuidado y el cierre es un "Victory" de texto.
->   El momento de la recompensa —XP ganada, oro, objeto— no se celebra. Es el eslabón más flojo de
->   la pantalla ahora mismo. Punto 12.
+> **Lo único grande que le sigue faltando al MVP y no es un punto de la lista: el sonido.** No es un
+> retoque de pantalla sino un sistema entero (assets, precarga, mezcla, ajuste de volumen), y por eso
+> vive en el backlog. Es, con diferencia, lo que más notaría el jugador.
 >
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas
 > por comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar.
-> La lista empieza en 2 porque el 1 está hecho, no por error.
+> La lista empieza en 5 porque los puntos 1 a 4 están hechos y se han movido a "Hecho" —
+> **conservando su número en el título** para que esas referencias sigan encontrando su sitio.
 >
 > Lo único que el punto 1 deja abierto a propósito es el peso de los objetos: se quedaron en el
 > 21-24% del poder, no en el 40% del doc 27. Llegar al 40% exigiría que un solo objeto pesara más
 > que la transformación entera, y solo hay un hueco de equipo. Revisable si algún día hay más
 > huecos o categoría económica. Frente al 1,5% de partida, el objetivo de fondo está cumplido.
-
-2. [x] **Actualizar interfaz de combate** — Todo el equipo debería aparecer en pantalla aunque solo
-   el primero esté peleando. Sprites de los personajes visibles. Los logs de texto se sustituyen
-   por una animación: el ninja lanza un kunai al enemigo y al impactar la barra de HP baja.
-   Personajes caídos → card apagada (estilo Pokelike). Efecto de sacudida al recibir golpe.
-   Y **enseñar las pasivas cuando saltan** (`pasivasActivadas` viene en cada evento): sin eso el
-   sistema entero del punto 1 es invisible — ver [30](./30-sistema-de-pasivas.md).
-
-   **No toca el motor.** Todo lo que hace falta ya viaja en los eventos desde la fase 3 del punto 1:
-   `pasivasActivadas`, `esAtaqueExtra`, `hpAtacante`, `cargaAtacante`/`cargaDefensor`, `tipoAtaque`
-   y `eficacia`. Si en algún momento hace falta tocar `engine/combat.js` para esta pantalla, es
-   señal de que se está inventando un suceso nuevo — parar y replantear.
-
-   ### Plan, en cuatro fases
-
-   Cada una deja el juego jugable y se puede parar entre medias. Van en este orden porque el riesgo
-   crece: las dos primeras solo añaden, la tercera reescribe el reloj de la pantalla.
-
-   1. [x] **Equipo entero en pantalla.** Hoy `CombatScreen` pinta un 1 vs 1 y de los otros dos
-      personajes no hay ni rastro, ni siquiera cuando entran por la cadena de rondas. Tres tarjetas
-      del equipo con HP y nivel: la activa resaltada, las caídas apagadas (estilo Pokelike), las
-      que esperan en tono normal. El dato ya está: `resultado.rondas[i].jugador` dice quién pelea
-      cada ronda y el equipo vive en el store. Sin lógica nueva, solo layout.
-   2. [x] **Pasivas visibles.** Es la fase con más valor por línea escrita y la que justifica el punto
-      entero: `pasivasActivadas` viene en cada evento y hoy **no se lee en ninguna parte**. Etiqueta
-      flotante sobre el luchador cuando salta ("¡Susanoo!") más una línea en el registro, con el
-      nombre y la frase que ya están en `data/passives.json` (`describirPasiva`, el mismo texto que
-      usan los hovers de objeto — sin duplicar textos). Aquí también entra el `esAtaqueExtra`, que
-      ahora mismo se pinta como un golpe normal y confunde.
-   3. [x] **Animación en vez de registro de texto.** La parte de verdad. El kunai vuela, impacta, la
-      barra baja, el objetivo se sacude. `assets/projectile-sprites.png` ya existe.
-      **El trabajo real no es la animación, es cambiar la unidad del replay**: hoy `turnosRevelados`
-      avanza de turno en turno y un turno puede traer 2-4 eventos (los dos luchadores, más un
-      ataque extra), así que todos se resuelven de golpe. Para animar hay que pasar a granularidad
-      de evento, lo que toca `estadoEnTurnoActual` y los dos `useEffect` de autoplay.
-      ⚠️ Con cuidado en dos sitios que ya han mordido: el HP del atacante **no** se reconstruye
-      restando daño (`heal_on_kill` lo sube, por eso el evento trae `hpAtacante`) y la barra de
-      carga tampoco se reconstruye sumando (lanzar el jutsu la pone a cero). Y el reset de estado al
-      cambiar de combate se hace **durante el render**, no en un `useEffect` — está comentado en el
-      propio archivo.
-   4. [x] **Sprites por personaje.** `scripts/generar-sprites-personajes.py` recorta los 25 sprites
-      de `map-sprites-idle-all-characters.png` a `assets/characters/<id>.png`, y
-      `components/common/characterSprites.js` los mapea por id. Se usan en la tarjeta del luchador
-      que pelea (el enemigo volteado para que se miren), en las tres tarjetas de equipo y —
-      desbloqueando el pendiente de arte que había— en los nodos de **mini-jefe y jefe** del mapa,
-      que hasta ahora compartían el icono genérico de combate. El nodo de **entrenador** no puede:
-      su enemigo nombrado se sortea al ENTRAR en el nodo, no al generar el mapa, así que al pintarlo
-      todavía no se sabe quién es.
-
-      **Placeholders declarados** (no descuidos), en `PLACEHOLDERS` del script: Sai y Yamato no están
-      en la hoja y llevan el genin de su naturaleza de chakra (fuuton y doton); Camino Animal
-      comparte sprite con Camino Deva, el único Pain que hay. Pendientes de arte propio.
-
-      El script **no lleva ni una coordenada escrita a mano** — mide la rejilla buscando los
-      separadores oscuros, luego las bandas de fotograma dentro de cada panel. Tres cosas que
-      costaron y conviene no repetir:
-      - El borde interior del panel no es papel, así que aparecía en *todas* las filas y columnas y
-        no se separaba ninguna banda: cada sprite salía siendo el panel entero. Se arregla metiendo
-        el análisis unos píxeles hacia dentro (`MARGEN_PANEL`).
-      - **El papel está texturizado**, son decenas de variantes de (237,225,204). Contando color a
-        color, el "color de fondo" ganador salía el NEGRO plano de los contornos, y el borrado se
-        llevaba los contornos dejando el papel. Hay que agrupar los tonos antes de contar.
-      - En tres paneles (Sakura, Gaara, Kiba) los fotogramas se tocan y la banda se comía dos o tres
-        filas. En vez de escribir la caja a mano, se usa la **mediana** de todas las cajas como
-        calibre y se recorta lo que se pase de `FACTOR_FUSION`.
-
-      También se recortaron los enemigos nombrados (Zaku, Dosu, Kin) y, de
-      `projectile-sprites.png`, **el proyectil de jutsu de cada personaje** (Rasengan, Gran Bola de
-      Fuego, Agujas de Hielo...) además del kunai, que es el ataque básico de todos. Lo que falta de
-      arte está abajo, en "Pendiente de arte", no aquí: un apartado marcado `[x]` no es sitio donde
-      nadie vaya a buscar trabajo por hacer.
-
-   5. [x] **Rediseño de la distribución, estilo Pokelike.** Los dos bandos en cajas a izquierda y
-      derecha en vez de una fila de duelo con el banquillo debajo, y una sola `TarjetaLuchador` para
-      equipo y enemigo — antes eran dos componentes con el mismo diseño duplicado. El **registro de
-      texto pasa a ser solo de desarrollo** (`import.meta.env.DEV`, que Vite convierte en `false` y
-      elimina del bundle): la partida la cuenta la animación.
-
-   6. [x] **Juiciness.** La tanda de golpe a golpe que convierte el combate en algo que se mira:
-      - **Estela de HP**: dos barras con el mismo porcentaje, la de detrás lenta y con retraso, así
-        que el hueco entre ambas es el mordisco del golpe. Sin estado en React.
-      - **Telegrafiado del jutsu**: la barra se llena un turno ANTES de disparar (regla del motor,
-        [29](./29-sistema-de-jutsus-automaticos.md)) y ese hueco no se veía. Ahora quien lo tiene
-        listo brilla, y el turno pasa a ser tensión.
-      - **Ritmo variable**: el jutsu vuela más lento y con aire antes y después; los básicos se
-        encadenan rápido. Con todo a la misma velocidad el combate sonaba a metrónomo.
-      - **Desplome al caer** y **entrada deslizante del relevo**, que era el momento más dramático
-        del combate y se contaba con una línea de texto.
-      - **Números flotantes**: daño coloreado por eficacia (verde flojo / amarillo normal / rojo
-        fuerte, escala de calor y no semáforo — el mismo número sale sobre los dos bandos) y
-        **curación en verde**, que se detecta por la diferencia de HP y no por el mecanismo, así
-        que un futuro jutsu con robo de vida saldría solo.
-      - **Subida de nivel**: cartel sobre el sprite, destello dorado y el nivel nuevo en el título.
-        La pantalla de transformación espera a que se vea — el orden cuenta la historia (subes de
-        nivel, *por eso* desbloqueas el modo).
-
-      De aquí salió una regla para el motor, ya escrita en [09](./09-motor-engine.md): **el evento de
-      ataque lleva el estado resuelto, no los deltas**. La carga se pone a cero al lanzar el jutsu y
-      el HP sube con `heal_on_kill`, así que ni una ni otro se pueden reconstruir con aritmética.
-      Ya rompió el replay una vez cada uno; ahora el evento trae `hpAtacante` y `hpDefensor` y el
-      replay no calcula nada.
-
-   ### Verificación
-
-   `npm test` no cubre componentes (los tests son de `engine/` y `store/`), así que aquí la red de
-   seguridad es **prueba manual tuya**, no automática. Lo concreto que hay que mirar: que una cadena
-   de rondas encadene bien las tres tarjetas, que una pasiva salte visiblemente al menos una vez
-   (Naruto o Sakura con `heal_on_kill` es la más fácil de provocar), y que "Skip animation" siga
-   saltando al final sin dejar barras a medias.
-
-   ⚠️ Y una que **no** cubre `npm run build`: si tocas `index.css`, comprueba que la regla llega al
-   bundle (`grep -o "mi-clase[^{]*{[^}]*}" dist/assets/*.css`). Un comentario mal cerrado hizo que
-   Tailwind descartara en silencio todas las reglas siguientes —el build daba OK— y los tooltips
-   salieron abiertos por defecto en todas las pantallas.
-
-3. **Nodo de reclutar con rareza visible y recluta legendario por combate** — la hoja
-   `assets/sprite-nodos-mapa.png` trae tres pergaminos (verde común, azul raro, dorado legendario) y
-   hoy solo se usa uno, porque el nodo no sabe qué rareza ofrece: `generarOfertaReclutar` sortea los
-   candidatos al **entrar** en el nodo, no al generar el mapa. Hay que subir la rareza al nodo
-   (`mapGenerator.js`) para poder pintar el pergamino correcto desde el mapa.
-   Encima, el legendario deja de ser una elección: se convierte en un combate contra ese personaje y
-   solo se recluta si lo ganas — flujo nuevo (pantalla de combate con `alGanar: reclutar`), no una
-   variante de `RecruitScreen`. Es el único de los ajustes visuales de esta tanda que toca motor,
-   store y datos, por eso va aparte.
-   **Va detrás del 2 a propósito**: reutiliza la pantalla de combate nueva, no la vieja.
-
-4. [x] **Pantalla de transformación**. ⚠️ **No era opcional**: desde que las transformaciones se quitaron
-   de las tarjetas (son una sorpresa, ver [30](./30-sistema-de-pasivas.md)), esta pantalla y el
-   punto 2 son los **únicos** sitios donde el jugador se entera de que existen. Sin ellos, medio
-   rediseño del balance vive solo en los JSON.
-   Hoy, cuando un personaje alcanza el nivel de su modo, **no pasa
-   absolutamente nada**: sube de nivel y de repente tiene el Manto del Kyūbi, sin aviso, sin pantalla,
-   sin una línea de texto. Es el momento más importante de la progresión de un personaje y ahora
-   mismo es invisible. Debería ser una pantalla propia al terminar el combate en que sube (estilo
-   evolución de Pokémon): sprite del personaje, nombre de la transformación, y **aquí sí** la
-   descripción de lo que hace, que se ha quitado de la tarjeta a propósito — es el momento en que
-   esa información importa y en que el jugador está mirando.
-   Va después del punto 2 porque encadena con el final del combate, que esa pantalla reescribe.
 
 5. **Actualizar interfaz de logros** — (Leer MVP [25](./25-diseño-pantalla-logros.md))
 
@@ -496,8 +523,12 @@
     de la recompensa no se celebra. Lo que hay y no se enseña: la XP ganada (el store la aplica y
     solo se ve el resultado si además subes de nivel), el oro, y el objeto en los nodos que lo dan.
     Encaja con la barra de XP que tampoco existe en ninguna tarjeta.
-    Va después del 3 porque el recluta legendario añade un final de combate nuevo ("has ganado, se
-    une a tu equipo") y conviene diseñarlos juntos y no dos veces.
+    **Ya no es un cierre sino tres**: al "Continue" de siempre y al "Claim reward" del mini-jefe se
+    les ha sumado el "Recruit them" del desafío legendario (punto 3). Los tres comparten el mismo
+    `Victory` de texto y se diferencian solo en el botón — es justo el momento de diseñarlos de una
+    vez, antes de que sean cuatro.
+
+13. **Añadir personaje y objeto** - Creo que es buen momento para probar como se sentiría añadir un nuevo personaje al elenco. Como el primer arco no tiene muchos personajes jugables y ninguno es legendario hasta que superas el boss final, me gustaría añadir a Kakashi. Dale un jutsu apropiado para esta altura de la historia, una transfomracion acorde y unas pasivas que se sientan del estilo de Kakashi. Dale tipo legendario y haz que sus números se sientan fuertes, pero sin desbalancear la run. Con él, añade también el objeto de los cascabeles, simplemente por ver como de difícil sería añadir un parche a futuro añadiendo cosas al juego. Si no tienes sprites, buscalos en internet, crealos tu o usa placeholders si no tienes suerte
 
 ### Pendiente de arte
 

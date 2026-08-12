@@ -447,12 +447,45 @@ describe('logros (a través de jugarCombate)', () => {
     expect(useAchievementsStore.getState().estaDesbloqueado('run_sin_bajas')).toBe(false);
   });
 
-  it('un personaje reclutable desbloqueado por logro aparece en la oferta de un nodo de reclutar', () => {
+  it('un personaje raro desbloqueado por logro aparece en el pergamino VERDE', () => {
+    // Kabuto es `raro` y es el mini-jefe del arco 2, no del que se está jugando
+    // aquí: se puede ofrecer sin chocar con la regla de "en su propio arco, no".
+    // Los raros comparten pergamino con comunes e iniciales — lo que separa los
+    // dos pergaminos es cómo se consigue al ninja, no lo bueno que sea.
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'kabuto' });
+
+    useGameStore.setState({
+      mapa: {
+        nodos: { reclutar_test: { tipo: 'reclutar', rareza: 'comun', piso: 2, conexiones: [], visitado: false } },
+        nodosIniciales: ['reclutar_test'],
+      },
+      nodoActualId: null,
+    });
+
+    // Con equipo de 3 y muchos candidatos comunes, la oferta de 3 puede no
+    // sacarlo por azar: lo que se comprueba es que ESTÁ en la pool, así que se
+    // deja el equipo en 1 y se repite hasta verlo.
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.filter((p) => p.id === 'naruto') }));
+    let salioKabuto = false;
+    for (let i = 0; i < 60 && !salioKabuto; i += 1) {
+      useGameStore.getState().avanzarANodo('reclutar_test');
+      const { reclutarActual } = useGameStore.getState();
+      expect(reclutarActual.rareza).toBe('comun');
+      salioKabuto = reclutarActual.personajes.some((p) => p.personajeId === 'kabuto');
+    }
+    expect(salioKabuto).toBe(true);
+  });
+
+  it('el mini-jefe del arco en curso NO se ofrece como recluta en ese mismo arco', () => {
+    // Haku es `raro` y desbloqueable por logro, pero es el mini-jefe del arco 1:
+    // reclutarlo aquí sería reclutar a quien te espera en el piso 4. Y con el
+    // jefe final la regla no es solo estética — ganarle en un nodo de reclutar
+    // habría marcado el arco como completado.
     useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'haku' });
 
     useGameStore.setState({
       mapa: {
-        nodos: { reclutar_test: { tipo: 'reclutar', piso: 2, conexiones: [], visitado: false } },
+        nodos: { reclutar_test: { tipo: 'reclutar', rareza: 'comun', piso: 2, conexiones: [], visitado: false } },
         nodosIniciales: ['reclutar_test'],
       },
       nodoActualId: null,
@@ -460,7 +493,7 @@ describe('logros (a través de jugarCombate)', () => {
 
     useGameStore.getState().avanzarANodo('reclutar_test');
     const { reclutarActual } = useGameStore.getState();
-    expect(reclutarActual.personajes.some((p) => p.personajeId === 'haku')).toBe(true);
+    expect(reclutarActual.personajes.some((p) => p.personajeId === 'haku')).toBe(false);
   });
 
   it('los "inicial" no elegidos aparecen en el nodo de reclutar del primer arco', () => {
@@ -586,6 +619,110 @@ describe('nodo de reclutar', () => {
     fijarReclutarDePrueba();
     const exito = useGameStore.getState().elegirReclutaDeNodo('kakashi');
     expect(exito).toBe(false);
+  });
+});
+
+describe('desafío legendario (pergamino dorado)', () => {
+  function entrarEnNodoDorado() {
+    useGameStore.setState({
+      mapa: {
+        nodos: {
+          reclutar_test: {
+            tipo: 'reclutar', rareza: 'legendario', piso: 2, conexiones: [], visitado: false,
+          },
+        },
+        nodosIniciales: ['reclutar_test'],
+      },
+      nodoActualId: null,
+    });
+    useGameStore.getState().avanzarANodo('reclutar_test');
+  }
+
+  it('un pergamino dorado ofrece a UN solo legendario, y como desafío', () => {
+    // Gaara es legendario y es el jefe final del arco 2, no del que se juega aquí.
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    entrarEnNodoDorado();
+
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.rareza).toBe('legendario');
+    expect(reclutarActual.esDesafio).toBe(true);
+    expect(reclutarActual.personajes).toHaveLength(1);
+    expect(reclutarActual.personajes[0].personajeId).toBe('gaara');
+    expect(reclutarActual.nivelDesafio).toBe(arcoDePrueba.nivelDesafioLegendario);
+  });
+
+  it('sin ningún legendario disponible, el nodo degrada a común en vez de quedarse vacío', () => {
+    // Sin logros desbloqueados no hay ni un legendario en la pool: el pergamino
+    // dorado del mapa no puede cumplir lo que promete, así que ofrece lo que hay.
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.filter((p) => p.id === 'naruto') }));
+    entrarEnNodoDorado();
+
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.rareza).toBe('comun');
+    expect(reclutarActual.esDesafio).toBe(false);
+    expect(reclutarActual.personajes.length).toBeGreaterThan(0);
+  });
+
+  it('iniciarDesafioLegendario pelea contra el legendario al nivel FIJO del arco', () => {
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    entrarEnNodoDorado();
+
+    const aceptado = useGameStore.getState().iniciarDesafioLegendario();
+    expect(aceptado).toBe(true);
+
+    const estado = useGameStore.getState();
+    expect(estado.pantalla).toBe('combate');
+    expect(estado.desafioRecluta).toEqual({ personajeId: 'gaara' });
+    // Se ha peleado de verdad: hay un resumen de combate contra él.
+    expect(estado.ultimoResultadoCombate.rondas[0].enemigo.id).toBe('gaara');
+    expect(estado.ultimoResultadoCombate.rondas[0].enemigo.nivel)
+      .toBe(arcoDePrueba.nivelDesafioLegendario);
+  });
+
+  it('perder el desafío termina la run, como cualquier otro combate', () => {
+    // El equipo del beforeEach es de nivel 1 y Gaara pelea a `nivelDesafioLegendario`:
+    // pierde las tres rondas. Ese es el riesgo real que hace que el pergamino
+    // dorado sea una decisión y no un regalo, y por eso la pantalla lo avisa.
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    entrarEnNodoDorado();
+    useGameStore.getState().iniciarDesafioLegendario();
+
+    const estado = useGameStore.getState();
+    expect(estado.ultimoResultadoCombate.jugadorGanoFinal).toBe(false);
+    expect(estado.runTerminada).toBe(true);
+  });
+
+  it('ganar el desafío deja reclutarlo desde el mismo pergamino', () => {
+    // El combate no se juega aquí (a nivel 1 no se le gana a un legendario, ver
+    // el test de arriba): lo que se comprueba es el camino de vuelta, que es lo
+    // que enlaza `CombatScreen` con la pantalla de reclutar.
+    useGameStore.setState({
+      reclutarActual: {
+        personajes: [{ personajeId: 'gaara', nombre: 'Gaara', rareza: 'legendario' }],
+        nivelReclutamiento: 10,
+        rareza: 'legendario',
+        esDesafio: true,
+        nivelDesafio: 6,
+      },
+      desafioRecluta: { personajeId: 'gaara' },
+    });
+
+    useGameStore.getState().irAReclutaDesafio();
+    expect(useGameStore.getState().pantalla).toBe('reclutar');
+    expect(useGameStore.getState().reclutarActual.desafioGanado).toBe(true);
+
+    useGameStore.getState().elegirReclutaDeNodo('gaara', 'sasuke');
+    expect(useGameStore.getState().equipo.map((p) => p.id)).toContain('gaara');
+  });
+
+  it('el jefe final del arco en curso nunca puede ser el desafío', () => {
+    // Si pudiera, ganarle en un nodo de reclutar habría disparado `arcoCompletado`
+    // en jugarCombate y la run habría saltado de arco desde un pergamino.
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'zabuza' });
+    entrarEnNodoDorado();
+
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.personajes.some((p) => p.personajeId === 'zabuza')).toBe(false);
   });
 });
 
@@ -735,6 +872,22 @@ describe('revivirUnaVez (equipado) — a través de _aplicarDerrota', () => {
     const naruto = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
     expect(naruto.derrotado).toBe(true);
     expect(naruto.hpActual).toBe(0);
+  });
+
+  it('dentro de un combate perdido revive UNA sola vez, no una por ronda', () => {
+    // Por la vía real (`jugarCombate`, no `_aplicarDerrota` a mano): el que
+    // revive vuelve a entrar contra el mismo enemigo, así que pelea dos rondas
+    // seguidas. Lo que no puede es revivir en las dos.
+    useGameStore.setState({ inventario: ['banda_repuesto'] });
+    useGameStore.getState().equiparObjeto('banda_repuesto', 'naruto');
+
+    const resultado = useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+
+    const rondasDeNaruto = resultado.rondas.filter((r) => r.jugador.id === 'naruto');
+    expect(rondasDeNaruto).toHaveLength(2); // la suya y la que le da el objeto
+    expect(rondasDeNaruto[1].jugador.hpInicial).toBe(1); // vuelve con el HP del objeto
+    expect(useGameStore.getState().equipo.find((p) => p.id === 'naruto').derrotado).toBe(true);
+    expect(useGameStore.getState().runTerminada).toBe(true);
   });
 });
 

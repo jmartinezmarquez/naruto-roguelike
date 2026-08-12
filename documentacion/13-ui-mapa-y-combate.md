@@ -67,9 +67,18 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
     (~100 px, se pintan a 48) para no arrastrar 1,4 MB de hoja entera por 5 iconos de 48 px.
     Coordenadas del recorte sobre la hoja original, por si hay que rehacerlo con una hoja nueva:
     combate `(60, 27) 200×198`, evento `(60, 537) 200×197`, tienda `(60, 746) 200×197`,
-    descanso `(58, 947) 201×197`, reclutar (pergamino común) `(438, 283) 244×245`.
+    descanso `(58, 947) 201×197`. Los tres pergaminos de reclutar ya no llevan coordenadas escritas:
+    los recorta `scripts/generar-sprites-nodo-reclutar.py`, que **mide sus posiciones sobre la propia
+    hoja** (ver [28](./28-nodo-reclutar.md)).
   - **Reclutar va en marco cuadrado**, no circular: el pergamino no es redondo y un recorte
     circular le cortaría las varillas de arriba y abajo.
+  - **Un pergamino por rareza** (`SPRITE_RECLUTAR`, keyed por `nodo.rareza`): verde común, azul raro
+    y dorado legendario, cada uno con su color de borde (`COLOR_RECLUTAR`) y su etiqueta de hover
+    (`ETIQUETA_RECLUTAR`: Recruit / Rare Recruit / **Legendary Challenge**). El dorado no es un premio
+    más gordo, es un **combate** contra el ninja que hay dentro, así que el jugador tiene que poder
+    verlo venir desde el mapa y decidir si va — por eso la rareza se sortea al generar el mapa y no
+    al entrar en el nodo. Un nodo sin `rareza` (mapas viejos, tests que montan el nodo a mano) se lee
+    como el pergamino común de siempre.
   - **Mini-jefe y jefe pintan el sprite del personaje que hay dentro** (`spriteDeLuchador`, del
     `miniJefeId`/`jefeFinalId` del arco), con `image-rendering: pixelated` porque se amplían. El
     **entrenador no puede**: su enemigo nombrado se sortea al ENTRAR en el nodo

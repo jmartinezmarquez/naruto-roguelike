@@ -259,11 +259,17 @@ img {
 /* --- Relevo en la cadena de rondas ------------------------------------------
    Cuando cae tu personaje activo entra el siguiente, y ese es el momento más
    dramático del combate: se contaba con una línea de texto. Ahora su tarjeta
-   entra deslizándose desde la izquierda. */
+   entra deslizándose desde la izquierda.
+
+   El primer intento recorría 28 px en 420 ms y se veía como un tirón: es una
+   tarjeta con barras y sprite dentro, no un cartel, y a esa distancia el bloque
+   entero da un salto. Ahora es la mitad de recorrido y más corto — se lee como
+   "ha entrado alguien" sin que la caja se mueva de sitio. Va con `ease-out`
+   puro, sin rebote: el rebote era la otra mitad del stutter. */
 
 @keyframes entrada-relevo {
-  from { opacity: 0; transform: translateX(-28px); }
+  from { opacity: 0; transform: translateX(-12px); }
   to { opacity: 1; transform: translateX(0); }
 }
 
-.entrada-relevo { animation: entrada-relevo 420ms ease-out; }
+.entrada-relevo { animation: entrada-relevo 260ms ease-out; }

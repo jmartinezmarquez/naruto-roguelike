@@ -15,21 +15,29 @@
     },
     {
       "tipo": "evento",
-      "peso": 18
-    },
-    {
-      "tipo": "reclutar",
-      "peso": 12
+      "peso": 25
     },
     {
       "tipo": "tienda",
-      "peso": 15
+      "peso": 18
     },
     {
       "tipo": "descanso",
-      "peso": 10
+      "peso": 12
     }
   ],
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 70
+    },
+    {
+      "rareza": "legendario",
+      "peso": 30
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 41,
   "pisoMiniJefe": 4,
   "miniJefeId": "camino_animal_pain",
   "pisoJefeFinal": 8,

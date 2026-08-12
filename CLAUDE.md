@@ -64,6 +64,10 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   objetos los declaran por id y comparten implementación. Un id que no esté en el catálogo **revienta**
   al crear el luchador, no se ignora. Las declaran los 31 modos y los 10 objetos (fases 1-3 de las 4
   del rediseño de balance). Ver `documentacion/30-sistema-de-pasivas.md`.
+- **Una pasiva por id**: si el modo y el objeto dan la misma, se aplica UNA vez (la de mayor
+  cantidad), y `normalizarPasivas` es **idempotente** — normalizar dos veces enterraba `parametros`
+  dentro de sí mismo y todos los objetos acababan usando la cantidad por defecto del catálogo en vez
+  de la suya. Ver `documentacion/30-sistema-de-pasivas.md`.
 - **Los objetos NO dan estadísticas**, dan pasivas. Un bonus plano se diluye con el nivel (+4 de
   ataque contra 80 al final de la run) y hacía que los objetos valieran más al empezar la partida
   que al acabarla. Hay un test de invariante que lo protege. `engine/items.js` se borró al quedarse
@@ -102,13 +106,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 162 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 187 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 162 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 187 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -203,11 +207,39 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   de aplicar la XP (no hay evento de "subir de modo"), y lo manda en el resumen del combate como
   `transformacionesDesbloqueadas`, igual que los logros. Sprites en `assets/transformations/`,
   generados con `scripts/generar-sprites-transformaciones.py`.
+- [x] **Nodo de reclutar con rareza y desafío legendario** (punto 3 del roadmap): el pergamino del
+  mapa es verde, azul o dorado según `nodo.rareza`, sorteada **al generar el mapa**
+  (`elegirRarezaReclutar`, pesos en `poolRarezaReclutar` de cada arco) porque el icono se pinta antes
+  de que el jugador elija. Como el motor no sabe de equipo ni de logros, el store le pasa qué rarezas
+  tienen candidatos (`generarMapa(arco, { rarezasReclutarDisponibles })`). El dorado **no es una
+  elección sino un combate**: se pelea contra el legendario al nivel FIJO del arco
+  (`nivelDesafioLegendario`) y solo se recluta al ganar. El jefe y el mini-jefe del arco en curso
+  quedan fuera del pool — ganarle al jefe final en un nodo de reclutar habría marcado el arco como
+  completado. Tras el playtest: **uno o dos pergaminos por arco** (`colocarNodosDeReclutar`, no salen
+  del sorteo por peso — el equipo tiene 3 huecos para toda la run), **solo dos rarezas** (verde =
+  común/inicial/raro, dorado = legendario; lo que las separa es cómo se consigue al ninja, no lo bueno
+  que sea), el desafío **no suelta el objeto** de su jefe y el legendario entra al **nivel medio** del
+  equipo sin bonus de reemplazo. Ver `documentacion/28-nodo-reclutar.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 
 ## Bugs ya resueltos (para no repetirlos)
 
+- **Función de normalización no idempotente** (`normalizarPasivas`): el store normalizaba las pasivas
+  del objeto equipado y `crearLuchador` las volvía a normalizar al juntarlas con las del modo. La
+  segunda pasada metía `{enganche, objetivo, parametros}` DENTRO de `parametros`, así que la
+  `cantidad` declarada quedaba tapada por la del catálogo y **ningún objeto aplicaba su valor real**.
+  No saltó en meses porque `simular-combates.mjs` pasa las pasivas en crudo y normaliza una sola vez:
+  **el simulador medía unos números y el juego corría con otros**. Si una función transforma datos y
+  alguien puede llamarla dos veces sobre lo mismo, tiene que ser idempotente — y si hay un script que
+  mide balance, comprobar que construye los objetos por el mismo camino que el juego.
+- **Comparar ids contra nombres**: `pasivasDelUltimoGolpe` devolvía nombres de pasiva y
+  `EtiquetasPasivas` comparaba contra `pasiva.id`. No coincidían nunca, así que la pastilla no se
+  encendía jamás y toda la fase de "pasivas visibles" pintaba la lista pero no el momento en que una
+  hace algo. Nada falla en un fallo así: solo no pasa nunca nada.
+- **`findIndex` para "en qué ronda pelea este personaje"**: devuelve la PRIMERA, y un personaje puede
+  pelear dos rondas del mismo combate si revive con la Spare Ninja Headband. En la segunda su tarjeta
+  salía muerta mientras él estaba peleando, y se leía como que el objeto estaba roto.
 - `resolverTurno` borrado por accidente al introducir `resolverCombateCompleto` — verificar llamadas internas antes de reemplazar una función.
 - `EventScreen` sin importar en `App.jsx` — la pantalla nunca se renderizaba, ningún error visible.
 - Piso 1 podía generar un nodo de `descanso` (desventaja de partida) — ahora hay un test específico para esto.

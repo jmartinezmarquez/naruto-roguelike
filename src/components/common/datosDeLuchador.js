@@ -40,6 +40,22 @@ export function spriteDeCombate(id, nivel) {
 }
 
 /**
+ * El nombre de la transformación activa a ese nivel, o null si todavía no tiene
+ * ninguna. Misma cuenta que `spriteDeCombate` —el modo es función del nivel, no
+ * un estado que alguien encienda— para que sprite y rótulo no puedan discrepar.
+ *
+ * Existe porque el rótulo del modo salía del resumen de combate
+ * (`ronda.jugador.modoActivoNombre`), que solo tiene al que peleó: un personaje
+ * del banquillo que desbloqueaba su transformación no la enseñaba hasta que le
+ * tocaba pelear.
+ */
+export function nombreDeModo(id, nivel) {
+  if (!id) return null;
+  const base = encontrarBase(id);
+  return base ? obtenerModoActivo(base, nivel)?.nombre ?? null : null;
+}
+
+/**
  * Las pasivas que lleva un luchador: las de su transformación activa más las de
  * su objeto equipado. Es la misma suma que hace el store al crear al luchador
  * (`crearLuchador` recibe las del modo y las del objeto por separado), aquí solo
@@ -56,25 +72,9 @@ export function pasivasDeLuchador(id, nivel, objetoEquipadoId) {
   const delObjeto = objetoEquipadoId
     ? itemsData.objetos.find((o) => o.id === objetoEquipadoId)?.pasivas ?? []
     : [];
-  const todas = normalizarPasivas([...(modo?.pasivas ?? []), ...delObjeto]);
-
-  // Una pasiva por id, aunque la den dos fuentes. Pasa de verdad: el Manto de
-  // Chakra de Naruto y el Sello de Chakra dan los dos `first_jutsu_bonus`, y la
-  // tarjeta enseñaba "FOCUSED CHAKRA" dos veces sin explicar por qué.
-  //
-  // Se queda la de mayor cantidad y se cuenta cuántas fuentes hay, porque en el
-  // motor **las dos se aplican** (`aplicarModificadores` pliega todas las del
-  // enganche, una detrás de otra). Ocultar la segunda sin decirlo sería mentir
-  // sobre lo fuerte que es el personaje, así que la pastilla lleva su marca.
-  const porId = new Map();
-  for (const pasiva of todas) {
-    const previa = porId.get(pasiva.id);
-    if (!previa) {
-      porId.set(pasiva.id, { ...pasiva, fuentes: 1 });
-      continue;
-    }
-    const gana = (pasiva.parametros.cantidad ?? 0) > (previa.parametros.cantidad ?? 0);
-    porId.set(pasiva.id, { ...(gana ? pasiva : previa), fuentes: previa.fuentes + 1 });
-  }
-  return [...porId.values()];
+  // `normalizarPasivas` ya deduplica por id quedándose con la más fuerte, que es
+  // exactamente lo que hace el motor al crear el luchador. Esta lista y la que se
+  // aplica en combate salen de la misma función a propósito: cuando eran dos
+  // reglas distintas, la tarjeta enseñaba una cosa y la pelea hacía otra.
+  return normalizarPasivas([...(modo?.pasivas ?? []), ...delObjeto]);
 }
