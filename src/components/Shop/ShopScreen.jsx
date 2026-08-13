@@ -81,7 +81,7 @@ function TarjetaItem({ entrada, oro, onComprar }) {
         type="button"
         disabled={!puedeComprar}
         onClick={onComprar}
-        className="w-full py-2 text-[10px] font-display rounded-sm border border-sello-500/50 transition-colors bg-sello-600 hover:bg-sello-500 disabled:bg-tinta-800 disabled:border-marco disabled:text-pergamino-200/40 disabled:cursor-not-allowed text-pergamino-100"
+        className="w-full py-2 text-[10px] font-display rounded-sm border border-sello-500/50 transition-colors bg-sello-600 hover:bg-sello-500 disabled:bg-tinta-800 disabled:border-marco disabled:text-pergamino-200/40 disabled:cursor-not-allowed text-sobre-sello"
       >
         Buy
       </button>

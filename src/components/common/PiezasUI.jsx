@@ -190,11 +190,11 @@ export function VentanaModal({
             debajo, alinearla arriba la dejaba visiblemente descolgada. */}
         <div className="shrink-0 flex items-center justify-between gap-3 bg-sello-600 border-b-2 border-marco px-4 pt-5 pb-3">
           <div className="min-w-0">
-            <h1 className="font-naruto text-2xl leading-none text-pergamino-100 drop-shadow-[0_2px_0_rgba(0,0,0,0.6)]">
+            <h1 className="font-naruto contorno-fijo text-2xl leading-none text-sobre-sello">
               {titulo}
             </h1>
             {subtitulo && (
-              <p className="font-display text-[9px] text-pergamino-100/80 mt-2">{subtitulo}</p>
+              <p className="font-display text-[9px] text-sobre-sello/80 mt-2">{subtitulo}</p>
             )}
           </div>
           {cerrable && <BotonCerrar onClick={onCerrar} />}
@@ -231,7 +231,7 @@ export function CabeceraPantalla({ antetitulo, titulo, contador = null }) {
       {antetitulo && (
         <p className="text-sello-500 text-[10px] tracking-[0.35em] uppercase mb-1">{antetitulo}</p>
       )}
-      <h1 className="font-naruto text-4xl text-pergamino-100 drop-shadow-[0_2px_0_rgba(0,0,0,0.85)]">
+      <h1 className="font-naruto text-4xl text-pergamino-100">
         {titulo}
       </h1>
       {contador && <p className="text-[10px] text-pergamino-200/60 mt-1">{contador}</p>}
@@ -372,7 +372,7 @@ export function BotonPrincipal({ onClick, children, className = '' }) {
       onClick={onClick}
       className={[
         'px-6 py-2 bg-sello-600 hover:bg-sello-500 border border-sello-500/50',
-        'rounded-full font-display text-[11px] text-pergamino-100 transition-colors',
+        'rounded-full font-display text-[11px] text-sobre-sello transition-colors',
         className,
       ].join(' ')}
     >

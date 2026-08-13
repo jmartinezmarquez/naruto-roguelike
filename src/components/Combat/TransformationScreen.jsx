@@ -123,7 +123,7 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
           mientras el sprite parpadea es imposible, y son lo que importa. */}
       {fase === 'listo' && (
         <div className="mt-6 text-center max-w-md">
-          <p className="font-naruto text-3xl text-oro drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)]">
+          <p className="font-naruto contorno-fijo text-3xl text-oro">
             {modo.nombre}
           </p>
           <p className="font-display text-[11px] uppercase tracking-widest text-pergamino-200/40 mt-1">
@@ -144,7 +144,7 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
           <button
             type="button"
             onClick={onContinuar}
-            className="mt-6 px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
+            className="mt-6 px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-sobre-sello transition-colors"
           >
             Continue
           </button>

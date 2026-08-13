@@ -48,6 +48,42 @@ temas**, `sobre-acento`: es el texto que va encima de un color vivo (el botón R
 pastilla de pasiva sobre oro, la X de `BotonCerrar`), y si siguiera a `tinta-*` se volvería claro sobre
 claro al cambiar de tema.
 
+## El contorno de la fuente de Naruto
+
+El logo de la serie son letras de color con un **contorno grueso alrededor**, y es lo que las hace
+legibles encima de un cielo, de una calle o de lo que sea. Nuestros títulos van casi siempre sobre el
+fondo de juego o sobre una barra de color, así que llevan el mismo tratamiento.
+
+Va **en la propia clase `font-naruto`**, no en una clase de adorno: así lo tiene todo título por el hecho
+de usar la fuente, y no es algo que haya que acordarse de añadir en la siguiente pantalla. Antes cada
+título llevaba su propio `drop-shadow-[...]` a mano, con tres valores distintos entre cinco usos.
+
+⚠️ **La regla es que el contorno es el negativo del RELLENO, no del fondo.** De ahí las dos variantes, y
+elegir mal la variante es lo único que puede salir mal:
+
+| Relleno | Contorno | Quién |
+|---|---|---|
+| Sigue al tema (`text-pergamino-100`) | Por defecto: `tinta-950`, que sigue al tema también | `CabeceraPantalla`, el nombre del arco en el mapa |
+| Fijo (oro, verde, rojo, crema) | `.contorno-fijo`: tinta oscura constante | Victory/Defeat, el nombre de una transformación, la barra de título |
+
+Que el caso por defecto funcione no es casualidad: `tinta-*` y `pergamino-*` son **las dos caras** de la
+misma decisión de tema, así que `tinta-950` es siempre el lado opuesto a `pergamino-100`, en los dos
+modos. Y si el relleno es constante, su contorno tiene que serlo también.
+
+Se hace con `text-shadow` en ocho direcciones y no con `-webkit-text-stroke`, que daría una línea más
+limpia: el `stroke` se pinta **encima** del relleno salvo que el navegador soporte `paint-order`, y donde
+no lo soporte adelgaza la letra en vez de rodearla. Ocho sombras sin difuminado funcionan en todas partes
+y además son nítidas, que es lo que pide el resto de la interfaz.
+
+### `sobre-sello`, la pareja de `sobre-acento`
+
+Hizo falta un token más al hacer esto: `--color-sobre-sello` (`#EDE3CC`, **igual en los dos temas**), el
+contenido que va encima del **rojo de sello** — el único acento oscuro de la paleta. `sobre-acento` cubría
+el caso contrario (tinta sobre verde u oro), y este faltaba: con `pergamino-100`, en modo claro la barra de
+título de las ventanas, el botón principal, BUY y los tres botones de la mochila salían con **tinta oscura
+sobre granate**, que es la peor de las dos combinaciones que caben. Son seis sitios, todos con el mismo
+patrón `bg-sello-600 text-…`.
+
 ## Las seis piezas
 
 ### `PanelMarco`

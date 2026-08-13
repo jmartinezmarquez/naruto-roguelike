@@ -113,7 +113,7 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
           <button
             type="button"
             onClick={() => onAplicar(entrada, personajeAConfirmar.id)}
-            className="font-display text-[9px] px-3 py-2 rounded-sm bg-sello-600 text-pergamino-100 hover:bg-sello-500 transition-colors"
+            className="font-display text-[9px] px-3 py-2 rounded-sm bg-sello-600 text-sobre-sello hover:bg-sello-500 transition-colors"
           >
             Replace
           </button>
@@ -157,7 +157,7 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
           <button
             type="button"
             onClick={() => onDesequipar(entrada.equipadoPor)}
-            className="font-display text-[9px] px-3 py-1.5 rounded-sm bg-sello-600 text-pergamino-100 hover:bg-sello-500 transition-colors shrink-0"
+            className="font-display text-[9px] px-3 py-1.5 rounded-sm bg-sello-600 text-sobre-sello hover:bg-sello-500 transition-colors shrink-0"
           >
             Unequip
           </button>
@@ -202,7 +202,7 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
                     'font-display text-[9px] px-3 py-1.5 rounded-sm transition-colors shrink-0',
                     yaLoLleva
                       ? 'bg-pergamino-100/10 text-pergamino-200/40 cursor-not-allowed'
-                      : 'bg-sello-600 text-pergamino-100 hover:bg-sello-500',
+                      : 'bg-sello-600 text-sobre-sello hover:bg-sello-500',
                   ].join(' ')}
                 >
                   {yaLoLleva

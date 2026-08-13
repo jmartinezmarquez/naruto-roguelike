@@ -135,6 +135,14 @@ Invertir los tokens destapa todo sitio que asumía un fondo fijo. Se limpiaron a
 - El **destello** de la transformación pasa a un color fijo: un destello es claro en los dos modos, y con
   `pergamino-100` se habría convertido en un fogonazo de tinta oscura.
 
+### El texto que va encima de un acento oscuro
+
+`sobre-acento` (tinta constante) resolvía el texto sobre verde y sobre oro, pero faltaba su pareja: el
+**rojo de sello** es el único acento oscuro, y encima de él el texto tiene que ser **crema constante**. Con
+`pergamino-100` se invertía y en modo claro salía tinta oscura sobre granate —la peor de las dos
+combinaciones que caben— en la barra de título de las ventanas, el botón principal, el BUY de la tienda y
+los tres botones de la mochila. Token nuevo `--color-sobre-sello`, ver [33](./33-direccion-visual.md).
+
 ### Los bordes que no eran `marco`
 
 `marco` se creó para que el borde de los paneles se tocara en un sitio, pero quedaban **ocho bordes

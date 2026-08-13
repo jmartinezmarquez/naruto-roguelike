@@ -444,7 +444,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                       <button
                         type="button"
                         onClick={() => desequiparObjeto(p.id)}
-                        className="shrink-0 w-4 h-4 rounded-full bg-pergamino-100/10 hover:bg-sello-600 hover:text-pergamino-100 text-[9px] leading-none flex items-center justify-center transition-colors"
+                        className="shrink-0 w-4 h-4 rounded-full bg-pergamino-100/10 hover:bg-sello-600 hover:text-sobre-sello text-[9px] leading-none flex items-center justify-center transition-colors"
                         title="Unequip (returns to inventory)"
                         aria-label={`Unequip ${nombreObjeto(p.objetoEquipadoId)}`}
                       >

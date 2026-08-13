@@ -57,6 +57,55 @@
      también en modo claro. Antes esto era `text-tinta-950`, y al invertir los
      tokens del tema se habría vuelto claro sobre claro — ilegible. */
   --color-sobre-acento: #151210;
+
+  /* Y su pareja: el contenido que va encima del ROJO de sello, que es el único
+     acento oscuro que hay. Aquí hace falta lo contrario —crema fija— y por el mismo
+     motivo: el rojo no cambia con el tema, así que su texto tampoco puede. Con
+     `pergamino-100` la barra de título de las ventanas y los botones rojos salían en
+     modo claro con tinta oscura sobre granate, que es la peor combinación de las dos
+     que caben. */
+  --color-sobre-sello: #EDE3CC;
+}
+
+/* --- El contorno de la fuente de Naruto -------------------------------------
+   El logo de la serie son letras de color con un contorno grueso alrededor, y es lo
+   que las hace legibles encima de un cielo, de una calle o de lo que sea. Nuestros
+   títulos van casi siempre sobre el fondo de juego o sobre una barra de color, así
+   que llevan el mismo tratamiento, y va en la propia clase `font-naruto` para que lo
+   tenga TODO título por el hecho de usar la fuente — no un adorno que haya que
+   acordarse de añadir en cada pantalla nueva.
+
+   ⚠️ La regla: **el contorno es el negativo del RELLENO, no del fondo.** De ahí las
+   dos variantes, y elegir mal la variante es lo único que puede salir mal aquí:
+
+   - por defecto, el relleno sigue al tema (`text-pergamino-100`), así que el contorno
+     también: `tinta-950` es siempre del lado opuesto a `pergamino-*`, por definición
+     de las dos familias. Letras crema con contorno de tinta en oscuro, letras de tinta
+     con contorno de pergamino en claro.
+   - `.contorno-fijo` para los rellenos que NO cambian con el tema (el oro de una
+     transformación, el verde de Victory, el rojo de Defeat, el crema fijo de la barra
+     de título): si el relleno es constante, su contorno tiene que serlo también.
+
+   Se hace con `text-shadow` en ocho direcciones y no con `-webkit-text-stroke`, que
+   sería una línea más limpia: el `stroke` se pinta encima del relleno salvo que el
+   navegador soporte `paint-order`, y donde no lo soporte adelgaza la letra en vez de
+   rodearla. Ocho sombras a 0 de difuminado funcionan en todas partes y además son
+   nítidas, que es lo que pide el resto de la interfaz. */
+.font-naruto {
+  --contorno-titulo: var(--color-tinta-950);
+  text-shadow:
+    2px 0 0 var(--contorno-titulo),
+    -2px 0 0 var(--contorno-titulo),
+    0 2px 0 var(--contorno-titulo),
+    0 -2px 0 var(--contorno-titulo),
+    2px 2px 0 var(--contorno-titulo),
+    -2px 2px 0 var(--contorno-titulo),
+    2px -2px 0 var(--contorno-titulo),
+    -2px -2px 0 var(--contorno-titulo);
+}
+
+.contorno-fijo {
+  --contorno-titulo: var(--color-sobre-acento);
 }
 
 /* --- Modo claro -------------------------------------------------------------

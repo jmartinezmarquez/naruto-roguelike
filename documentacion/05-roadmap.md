@@ -720,7 +720,9 @@ No valía por lo que añade sino por **lo que retira**: tres cosas a medias se c
   `[data-tema='claro']` en `index.css` redefine los tokens y cambia las ocho pantallas sin tocar un
   componente, porque las utilidades de Tailwind v4 compilan a `var()`. ⚠️ Desde que hay dos temas los
   nombres significan el **rol**: `tinta-*` es superficie y `pergamino-*` contenido, así que en modo claro
-  `tinta-950` es el color más claro. Se conservaron los nombres en vez de renombrar ~240 usos.
+  `pergamino-100` es tinta oscura. Se conservaron los nombres en vez de renombrar ~240 usos. **Las
+  correcciones que hicieron falta después de verlo funcionando están en el bloque siguiente**, y una de
+  ellas es de fondo.
 - [x] ⚠️ **Lo que hubo que limpiar antes de que el tema fuera posible**, porque invertir los tokens
   destapa todo sitio con un fondo fijo: un **bug real que ya se veía** (`COLOR_RAREZA.comun` era crema
   sobre crema, así que la rareza era casi invisible en la ficha de cualquier objeto común), los **últimos
@@ -741,6 +743,46 @@ No valía por lo que añade sino por **lo que retira**: tres cosas a medias se c
   el idioma (exigiría construir i18n), los efectos de clima (no existen), los atajos de teclado (solo hay
   Escape) y saltar la confirmación de reiniciar run.
 - [x] 225 tests (eran 215): los diez del store de ajustes.
+
+**Segundo pase del modo claro, y el contorno de la fuente de Naruto — ver [34](./34-ajustes.md) y [33](./33-direccion-visual.md)**
+
+El tema claro se entregó "funcionando" y al jugarlo se veía **plano en las ocho pantallas**. La causa no
+era ningún color suelto: era haber tratado como valores unos tokens que son relaciones.
+
+- [x] ⚠️ **La rampa de superficies conserva su DIRECCIÓN, no sus valores.** `tinta-950 → 900 → 800` no son
+  tres oscuros: son **hundido → panel → realzado**. El primer pase invirtió los tres uno a uno, y eso no le
+  da la vuelta al tema sino a las relaciones — el panel salía más oscuro que la página (se hundía en ella
+  en vez de despegarse), `tono="hueco"` más claro que el panel que lo contiene y `hover:bg-tinta-800`
+  oscurecía. **Se leía como "en claro los bordes no resaltan", y el borde no tenía nada que ver: lo que no
+  separaba era la superficie.** La regla que queda: preguntarse si un token es un valor o una relación.
+- [x] **El marco tampoco se invierte**: es siempre del lado opuesto a la superficie, así que `--color-marco`
+  **no aparece** en el bloque de modo claro. Un único `#4D463B` se lee como línea que aclara sobre tinta y
+  como línea oscura sobre pergamino. Aclararlo a un tostado dejaba un tema sin bordes.
+- [x] **`.escena-oscura`: lo que se pinta encima de un DIBUJO no sigue al tema.** El lienzo del mapa (el
+  fondo del nodo salía como un disco crema y las líneas de camino en tinta sobre roca oscura), la columna
+  del menú vertical (el realce del hover tiene que aclarar el dibujo) y la pantalla de transformación (es
+  espectáculo, y su destello ya iba en un claro fijo). Se resuelve **redefiniendo los tokens en ese
+  subárbol**, no cambiando una docena de clases a colores fijos.
+- [x] **Los ocho bordes que no eran `marco`**, escritos a mano con un `pergamino-*` a poca opacidad de antes
+  de que el token existiera: el botón `sobreFondo` (el SKIP de reclutar y el LEAVE de la tienda), las barras
+  de HP y de jutsu, la sombra del sprite en combate, la pastilla de tipo neutra y el registro de desarrollo.
+  Regla nueva: **`pergamino-*` es para texto y glifos; un borde es `marco` o un color de acento.**
+- [x] 🐛 **`AdornoMarco` no abrazaba al mapa**: sus piezas son `absolute` y el contenedor de fuera no es
+  `relative`, así que se anclaban al div raíz y los cuatro corchetes se pintaban en las esquinas de la
+  **pantalla**. Llevaba así desde que se compuso a mano.
+- [x] **Contorno en todo título en `font-naruto`**, como el logo de la serie, y **dentro de la propia clase**
+  para que lo tenga cualquier título nuevo sin acordarse. ⚠️ **El contorno es el negativo del RELLENO, no
+  del fondo**: por defecto sigue al tema (`tinta-950`, que es siempre el lado opuesto a `pergamino-*`) y los
+  rellenos fijos —oro, verde, rojo, crema— llevan `.contorno-fijo`. Con `text-shadow` a 8 direcciones y no
+  con `-webkit-text-stroke`, que sin `paint-order` adelgaza la letra en vez de rodearla. Sustituye a los
+  `drop-shadow-[...]` puestos a mano, que eran tres valores distintos entre cinco títulos.
+- [x] **Token `sobre-sello`** (crema constante), la pareja de `sobre-acento`: el rojo de sello es el único
+  acento **oscuro**, y encima de él el texto tiene que ser crema fijo. Con `pergamino-100` la barra de
+  título de las ventanas, el botón principal, el BUY de la tienda y los tres botones de la mochila salían en
+  modo claro con **tinta oscura sobre granate**.
+- [x] Fuera el rótulo **"Rewards"** de la tarjeta de recompensas: va debajo de un "Victory" enorme y sus dos
+  líneas son "+N Gold" y el nombre de un objeto. Un `TituloBloque` sirve para distinguir bloques dentro de
+  una caja con varios, y ahí no hay más que uno.
 
 ## Próximos pasos (en orden sugerido)
 

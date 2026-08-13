@@ -282,6 +282,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   variables** en `index.css`, no repasar pantallas: las utilidades de Tailwind v4 compilan a `var()`. Desde
   que hay dos temas, `tinta-*` significa *superficie* y `pergamino-*` *contenido* — en modo claro
   `pergamino-100` es tinta oscura.
+- **Todo título en `font-naruto` lleva contorno**, como el logo de la serie, y va en la propia clase
+  `font-naruto` (`index.css`) para que lo tenga cualquier título nuevo sin acordarse de añadirlo. **El
+  contorno es el negativo del RELLENO, no del fondo**: por defecto sigue al tema (`tinta-950`, que es
+  siempre el lado opuesto a `pergamino-*`), y los rellenos fijos —oro, verde, rojo, crema— llevan
+  `.contorno-fijo`. Con `text-shadow` a 8 direcciones y no con `-webkit-text-stroke`, que sin
+  `paint-order` adelgaza la letra en vez de rodearla. Token nuevo `sobre-sello` (crema constante) para el
+  texto encima del rojo de sello, que es el único acento oscuro — la pareja de `sobre-acento`. Ver
+  `documentacion/33-direccion-visual.md`.
 - **La regla del tema que costó dos intentos** (`documentacion/34-ajustes.md`): un token puede ser un
   **valor** o una **relación**, y una relación no se invierte. `tinta-950 → 900 → 800` no son tres
   oscuros, son *hundido → panel → realzado*; el primer pase invirtió los tres uno a uno y con eso el

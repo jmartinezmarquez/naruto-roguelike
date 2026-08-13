@@ -558,6 +558,11 @@ function TarjetaLuchador({
  *
  * En una cadena de entrenador **solo se pinta al terminarla**, con el total que
  * acumula el store en `cadenaEnemigos`.
+ *
+ * Sin rótulo "Rewards": va justo debajo de un "Victory" enorme y sus dos líneas ya
+ * son "+N Gold" y el nombre de un objeto, así que la palabra solo repetía lo que la
+ * pantalla ya dice. Los `TituloBloque` valen para distinguir bloques dentro de una
+ * caja con varios; aquí no hay más que este.
  */
 function PanelRecompensas({ recompensas }) {
   if (!recompensas) return null;
@@ -565,7 +570,6 @@ function PanelRecompensas({ recompensas }) {
 
   return (
     <PanelMarco className="mx-auto w-fit min-w-[13rem] px-5 py-3 flex flex-col gap-2.5">
-      <TituloBloque className="text-center">Rewards</TituloBloque>
       <div className="flex items-center gap-3">
         <IconoEnmarcado tamano="w-10 h-10" colorMarco="border-oro/50" vacio="🪙" />
         <span className="font-display text-xs text-oro">+{oro} Gold</span>
@@ -1045,7 +1049,7 @@ export default function CombatScreen() {
 
         {combateTotalTerminado && (
           <div className="mt-6 text-center flex flex-col items-center gap-4">
-            <p className={`font-naruto text-4xl ${resultado.jugadorGanoFinal ? 'text-exito' : 'text-sello-500'}`}>
+            <p className={`font-naruto contorno-fijo text-4xl ${resultado.jugadorGanoFinal ? 'text-exito' : 'text-sello-500'}`}>
               {resultado.jugadorGanoFinal ? 'Victory' : 'Defeat'}
             </p>
 
