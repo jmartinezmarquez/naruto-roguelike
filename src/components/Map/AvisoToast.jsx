@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
+import { PanelMarco } from '../common/PiezasUI';
 
 const DURACION_VISIBLE_MS = 3000;
 const DURACION_DESVANECIDO_MS = 500;
@@ -39,9 +40,14 @@ export default function AvisoToast() {
       className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-opacity pointer-events-none ${visible ? 'opacity-100' : 'opacity-0'}`}
       style={{ transitionDuration: `${DURACION_DESVANECIDO_MS}ms` }}
     >
-      <div className="bg-exito text-tinta-950 rounded-full px-5 py-2 shadow-lg font-display text-sm text-center">
-        {aviso}
-      </div>
+      {/* Del pastillón redondo de color plano al marco del kit. Era lo único que
+          quedaba con forma de notificación web. El verde se queda, pero como
+          acento —el borde y el texto— en vez de como fondo: un bloque verde sólido
+          sobre el paisaje nocturno era lo más luminoso de la pantalla, y esto es un
+          aviso, no el suceso principal. */}
+      <PanelMarco className="px-5 py-2.5 border-exito/60 shadow-xl shadow-black/50">
+        <p className="font-display text-[10px] text-exito text-center">{aviso}</p>
+      </PanelMarco>
     </div>
   );
 }

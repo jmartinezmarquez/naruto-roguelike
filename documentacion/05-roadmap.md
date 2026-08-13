@@ -608,7 +608,7 @@ punto 13 le añadió cuatro textos de golpe.
   índice reconstruido por nombre daría siempre el primero y la segunda transformación no se
   desbloquearía jamás.
 
-**Lavado de cara: el kit de piezas compartidas — ver [33](./33-direccion-visual.md)**
+**Lavado de cara: el kit de piezas compartidas (incluye el punto 5c, la pantalla de logros) — ver [33](./33-direccion-visual.md)**
 
 Salió de comparar las dos maquetas (`layoutPantallaLogros.png` y la de enciclopedia) con lo que había:
 ocho pantallas que compartían paleta pero **ningún lenguaje** — bordes de tres grosores, cabeceras con
@@ -641,6 +641,37 @@ tres jerarquías, y en ningún sitio las esquinas en corchete de las maquetas.
   carácter `✕`, que en `PressStart2P` sale fino al lado de un borde de 2 px.
 - [x] **Renombradas de cara al jugador**: Achievements → **Missions**, Encyclopedia → **Bingo Book** (el
   registro de ninjas fichados de la serie). Los ids internos no se tocan: son claves lógicas, no texto.
+- [x] **El tooltip vuelve al marco crema** y se extrae a `EtiquetaFlotante`, compartida por el hover de
+  nodo del mapa y por los cuatro botones del menú vertical (a la izquierda, porque el menú vive pegado al
+  borde derecho). El crema aquí no es un despiste del kit: una anotación que aparece **encima** de otra
+  cosa —a veces encima del propio lienzo— necesita despegarse de lo que tiene debajo, y con el borde fino
+  en color de marco se perdía. Sustituye de paso al `title` del navegador en el menú, que tardaba un
+  segundo en salir y no se parecía al juego.
+- [x] **Las tres piezas que quedaban sueltas**: el **lienzo del mapa** (el elemento más grande de la
+  pantalla y el único sin marco — no puede ser un `PanelMarco` porque mide exactamente `ANCHO × escala` y
+  un borde real le comería ancho útil, así que su marco es un `box-shadow` y los corchetes salen de
+  `AdornoMarco`, extraído para no duplicarlos), **`EventScreen`** (solo el kit: su rediseño es el punto 6
+  y necesita documento MVP antes) y **los dos toasts**, que eran lo último con forma de notificación web
+  — el color pasa al borde y al texto en vez de al fondo.
+- [x] **La ficha de personaje y el combate.** `FichaPersonaje` —la tarjeta de personaje de TODO el juego:
+  hover del mapa, las tres cartas de reclutar, el desafío legendario, la selección inicial y el Bingo
+  Book— pasa a `PanelMarco` con esquinas. Y en combate, las dos cajas de bando llevan corchetes y las
+  tarjetas de luchador de dentro no: ⚠️ **los corchetes marcan el contenedor, no cada cosa que hay
+  dentro**. Era la pantalla que daba miedo por sobrecarga y resultó que el problema no era el marco sino
+  anidarlo (`esquinas={false}` en `PanelMarco`).
+- [x] ⚠️ **Los títulos de panel pasan de rojo a crema.** `TituloBloque` gana dos jerarquías: `panel`
+  (crema) para el título DE una caja y `seccion` (rojo) para una etiqueta DENTRO de una tarjeta que ya
+  tiene título, que es el único uso que le dan las maquetas al rojo en versalitas. Con todo en rojo el
+  mapa tenía **cuatro rojos compitiendo** y, peor, el rojo **ya significa algo** en esta paleta: es el
+  mini-jefe y la derrota. Un título de panel no es una alarma.
+- [x] **Los tres paneles del mapa y el menú.** Equipo y objetos estaban en crema y la rueda de chakra
+  en oscuro; los tres pasan a `PanelMarco`, así que el mapa comparte por fin lenguaje con las ventanas.
+  Y el menú de iconos pasa de horizontal a **vertical** estilo Pokelike, siguiendo
+  `LayoutMenuVertical.png`. ⚠️ La columna es **una imagen** con cuatro botones transparentes encima, no
+  cuatro sprites: esa hoja no es una hoja de sprites sino un menú ya terminado, y todo intento de
+  recortar los iconos se llevaba el marco o agujereaba el sombreado (de paso: la columna **no está
+  centrada** en la hoja, así que un margen lateral simétrico no vale). El precio es que los huecos van
+  pintados — añadir una entrada exige redibujar la columna.
 - [x] **Las ocho pantallas ya llevan el kit.** Al aplicarlo salió el criterio de forma, que vale para la
   siguiente que se añada: **ventana sobre el mapa** si es una consulta o una decisión corta dentro de un
   nodo (Missions, Bingo Book, Mochila, Recompensa de mini-jefe); **pantalla completa** si es un momento
@@ -676,67 +707,98 @@ tres jerarquías, y en ningún sitio las esquinas en corchete de las maquetas.
 
 ## Próximos pasos (en orden sugerido)
 
-> 📋 **El plan de trabajo de estos puntos —orden, fases, verificación y las decisiones que hacen
-> falta antes de tocar código— está en [31](./31-plan-siguientes-pasos.md).** Esta sección se queda
-> como el enunciado de cada punto; el cómo y el en-qué-orden viven allí.
+> 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
+> de tocar código— está en [31](./31-plan-siguientes-pasos.md).** Esta sección se queda como el
+> enunciado de cada punto; el cómo vive allí.
 >
-> **Por dónde seguir ahora mismo: el 7 (playtest).** Todo lo cerrado —del 1 al 4, el 8, el 10, el 11,
-> el 12 y el 13— está arriba, en "Hecho", con su número en el título para que las referencias a "punto N del
-> roadmap" repartidas por el código sigan encontrando su sitio.
->
-> **Ya no queda nada que toque motor**, y las dos pantallas que el jugador mira todo el rato —mapa y
-> combate— están hechas. Lo que queda es pulir pantallas secundarias: 5 logros, 6 eventos y 9 columna
-> central.
->
-> **El 7 va primero, y no como formalidad.** Las dos últimas tandas de mejoras salieron enteras de
-> partidas tuyas, no de la lista; y desde el último playtest han cambiado el balance de los jefes, la
-> frecuencia y la rareza de los reclutas, el final del combate y todas las tarjetas de personaje.
-> Cualquier punto que se elija ahora sin haber jugado se elige a ciegas.
->
-> **Lo único grande que le sigue faltando al MVP y no es un punto de la lista: el sonido.** No es un
-> retoque de pantalla sino un sistema entero (assets, precarga, mezcla, ajuste de volumen), y por eso
-> vive en el backlog. Es, con diferencia, lo que más notaría el jugador.
->
-> **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas
-> por comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar.
-> La lista se queda con **5, 6, 7 y 9**: los huecos (1-4, 8, 10, 11, 12, 13) son puntos hechos que
-> se han movido a "Hecho" **conservando su número en el título**, no errores de numeración.
->
-> Lo único que el punto 1 deja abierto a propósito es el peso de los objetos: se quedaron en el
-> 21-24% del poder, no en el 40% del doc 27. Llegar al 40% exigiría que un solo objeto pesara más
-> que la transformación entera, y solo hay un hueco de equipo. Revisable si algún día hay más
-> huecos o categoría económica. Frente al 1,5% de partida, el objetivo de fondo está cumplido.
+> **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas por
+> comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar. Los
+> huecos (1-4, 8, 10-13) son puntos hechos que se han movido a "Hecho" **conservando su número en el
+> título**, no errores de numeración.
 
-5. **Actualizar interfaz de logros** — (Leer MVP [25](./25-diseño-pantalla-logros.md))
+### Por dónde seguir
 
-6. **Actualizar interfaz de eventos** — es el único punto **sin documento MVP**. Antes de poder
-   planificarlo hay que escribir qué se quiere de esa pantalla, como se hizo con
-   [23](./23-diseño-tarjeta-de-inventario.md) o [25](./25-diseño-pantalla-logros.md).
+**1.º — el 7 (playtest), y no como formalidad.** Es lo único de esta lista que no puedo hacer yo, y
+nada de lo demás lo sustituye: las tres últimas tandas de mejoras salieron enteras de partidas reales,
+no de la lista. Desde el último playtest han cambiado el balance de los jefes, el roster (Kakashi), la
+frecuencia y rareza de los reclutas, el final del combate y **las ocho pantallas del juego**. Cualquier
+punto que se elija sin haber jugado se elige a ciegas. Los hallazgos van al roadmap con la plantilla del
+[31](./31-plan-siguientes-pasos.md) y su triaje entra por delante de cualquier punto empezado.
 
-7. **Playtest jugando** — la recalibración numérica ya está hecha (punto 1, fase 4, con el
-    simulador contra los datos rediseñados). Lo que queda aquí es lo que un script no puede medir:
-    sentarse a jugar runs enteras y ver qué se siente mal. Con lo ya detectado como lista de
-    sospechosos:
-    - Los combates normales se ganan al 94-99%. Los jefes ya no se miden 1 vs 1 sino con el equipo
-      de 3 en cadena, que es como se pelean, y llegando al mini-jefe con el HP que deje el camino:
-      mini-jefes al 80-93% y jefes finales al 82-88%. El nodo más justo es Haku (80%), y cuesta ~2
-      de los 3 personajes.
+**2.º — el 5a (contenido de logros).** La pantalla ya está hecha y en estilo; lo que le falta no es
+diseño, es **material que enseñar**: hay 7 logros y su documento MVP está escrito para 38. Es también
+lo que más rendimiento le saca a lo ya construido, porque el registro de vistos del Bingo Book ya metió
+contadores persistidos en `useAchievementsStore`, que es exactamente donde 5a necesita los suyos.
+
+**3.º — el 6 (eventos).** Le falta lo mismo que al 5 pero al revés: aquí el diseño está sin decidir. Es
+el único punto **sin documento MVP**, y una de sus preguntas es de diseño de juego y no de pantalla.
+
+**4.º — el 9 (columna central).** Cosmético y acotado; buen relleno cuando quede medio hueco.
+
+**Lo más grande que le falta al MVP y no es un punto de esta lista: el sonido.** Está en el backlog
+porque no es un retoque de pantalla sino un sistema entero (assets, precarga, mezcla, volumen). Es, con
+diferencia, lo que más notaría el jugador ahora que lo visual está resuelto.
+
+**De la interfaz solo quedan tres cosas, y las tres esperan algo externo**: los **cuatro sprites del menú
+vertical** (ver "Pendiente de arte" — su etiqueta flotante ya está hecha), el **modo claro/oscuro**, que
+llega con la pantalla de ajustes y es lo que por fin le dará algo real que hacer al engranaje del menú
+(ver [33](./33-direccion-visual.md)), y el rediseño de fondo de eventos, que es el punto 6.
+
+---
+
+5. **Interfaz de logros** — (MVP en [25](./25-diseño-pantalla-logros.md)). ⚠️ **Partido en tres, y solo
+   la pantalla está hecha.** El documento está escrito para un juego que todavía no existe: pide 38
+   logros, categorías, recompensas de oro y una barra de hitos permanentes, y hoy hay **7 logros**, dos
+   tipos de condición y dos de recompensa, las dos de desbloqueo.
+   - **5a — contenido y condiciones** (*lo siguiente a hacer*): más logros, y los tipos de condición que
+     necesitan **contadores acumulados entre runs** (combates ganados, reclutas, oro total). Sin esto la
+     pantalla es una interfaz de meta-progresión con siete tarjetas. Las **categorías por acto NO hacen
+     falta como campo**: se calculan de los JSON de arco, ya está hecho.
+   - **5b — recompensas numéricas permanentes** (+% oro, +% XP, +1 hueco de inventario). **Decidido:
+     fuera del MVP.** Mueven la curva de niveles que vigilan los invariantes de arco de
+     `leveling.test.js`, y el raíl de la maqueta no se pinta hasta que se decida — pintar premios que no
+     existen es peor que no tenerlos.
+   - **5c — la pantalla**: hecha (ver "Hecho"), incluidas las pestañas por acto con su contador y el
+     icono de cada logro sacado de su recompensa.
+
+6. **Interfaz de eventos** — el kit visual ya está aplicado, así que la pantalla no desentona; lo que
+   falta es el **rediseño de fondo**, y es el único punto **sin documento MVP**. Hay que escribirlo antes
+   (como se hizo con el [23](./23-diseño-tarjeta-de-inventario.md) o el
+   [25](./25-diseño-pantalla-logros.md)), y tiene que contestar cuatro preguntas anotadas en
+   `EventScreen.jsx` y en el [31](./31-plan-siguientes-pasos.md). Una de ellas **no es de pantalla sino
+   de diseño de juego**: si la pista del efecto se sigue viendo antes de elegir. Hoy sí, y eso hace del
+   evento una decisión informada en vez de una apuesta.
+
+7. **Playtest jugando** — la recalibración numérica está hecha (punto 1 fase 4, con el simulador contra
+    los datos rediseñados). Lo que queda es lo que un script no puede medir: jugar runs enteras y ver
+    qué se siente mal. Lista de sospechosos, que es para mirar activamente y no solo "jugar a ver":
+    - Los combates normales se ganan al 94-99%. Los jefes se miden con el equipo de 3 en cadena, que es
+      como se pelean, y llegando al mini-jefe con el HP que deje el camino: mini-jefes al 80-93% y jefes
+      finales al 82-88%. El nodo más justo es Haku (80%), y cuesta ~2 de los 3 personajes.
     - Los combates duran ~4,5 turnos, tan poco que el jutsu apenas sale una vez
-      (ver [29](./29-sistema-de-jutsus-automaticos.md)). Y con combates tan cortos **cargar lento
-      castiga más de lo que dice la media** — un jefe con `T`=4 se come tres básicos flojos antes de
-      su golpe gordo y el combate ya se acabó. Los perfiles de carga mueven la dificultad real, no
-      son solo sabor.
-    - El simulador da la run promedio: usa la XP **esperada** de cada piso, no un sorteo. Un camino
-      real con dos tiendas seguidas llega al mini-jefe bastante más flojo, y eso solo se ve jugando.
+      (ver [29](./29-sistema-de-jutsus-automaticos.md)). Con combates tan cortos **cargar lento castiga
+      más de lo que dice la media**: un jefe con `T`=4 se come tres básicos flojos antes de su golpe
+      gordo y la pelea ya se acabó. Los perfiles de carga mueven la dificultad real, no son sabor.
+    - El simulador da la run **promedio**: usa la XP esperada de cada piso, no un sorteo. Un camino real
+      con dos tiendas seguidas llega al mini-jefe bastante más flojo, y eso solo se ve jugando.
     - En el arco 1 se empieza con **un solo personaje** y el equipo se completa reclutando, pero el
-      simulador da por hecho un trío desde el principio. Zabuza es el jefe con menos margen y puede
-      ser el que peor se sienta.
+      simulador da por hecho un trío desde el principio. Zabuza es el jefe con menos margen y puede ser
+      el que peor se sienta.
+    - **Kakashi, nuevo**: en el arco 1 el pergamino dorado ya sale en la primera run y es él. Ese combate
+      se gana el **52% en el piso 3 y el 87% en el 6**. ¿Se siente como una apuesta justa? ¿Y compensa el
+      premio, sabiendo que los dos jefes del arco 1 son suiton y él raiton — o sea que no ayuda con
+      Zabuza sino con los arcos 2 y 3?
     - El salto de dificultad cuando un personaje de banquillo entra en una ronda encadenada contra un
-      jefe (ver nota en [11](./11-progresion-y-arcos.md)).
-    - El ritmo de empezar solo (1 personaje) en un arco sin reclutas (`pais_de_las_olas` tiene
-      `personajesReclutablesIds: []`).
+      jefe con la barra de jutsu ya cargada (la conserva a propósito, ver [11](./11-progresion-y-arcos.md)).
+    - Y ahora también **las ocho pantallas rediseñadas en una partida entera**, no en capturas: si el
+      mapa en oscuro resulta lúgubre, eso decide cuánta prisa tiene el modo claro.
 
-9. **Diseño de la columna central** — Con unos nodos mas grandes la columna central puede volver a su tamaño anterior, manteniendo las proporciones y ajustandose a la pantalla. También el sprite usado en la columna central tiene que ser mas sencillo y representativo del arco actual. El nombre del arco actual tendría uqe estar con ese estilo caracteristico de Naruto en el que la fuente tiene color negro con ese reborde blanco tan caracteristico
+9. **Diseño de la columna central** — Con unos nodos más grandes la columna central puede volver a su
+   tamaño anterior, manteniendo las proporciones y ajustándose a la pantalla. El sprite de la columna
+   tiene que ser más sencillo y más representativo del arco actual. Y el nombre del arco debería llevar
+   ese estilo tan característico de Naruto: fuente negra con reborde blanco.
+   *(Del punto, ya hecho: el lienzo del mapa lleva el marco del kit con sus esquinas en corchete y se le
+   quitó el redondeo — ver [33](./33-direccion-visual.md). Lo de arriba sigue pendiente.)*
 
 ### Pendiente de arte
 
@@ -744,6 +806,16 @@ Cosas que no están hechas por falta de dibujo, no por falta de código. Van jun
 del punto que las dejó a medias, porque los puntos terminados se marcan `[x]` y nadie vuelve a
 leerlos buscando trabajo.
 
+- **El menú vertical no tiene sprites propios de icono.** Usa la maqueta entera
+  (`assets/menu/columna-menu.png`) con cuatro botones transparentes encima, porque esa hoja es un menú
+  ya dibujado —marco, huecos e iconos juntos— y recortarla se lleva el marco o agujerea el sombreado.
+  **Lo que hace falta**: cuatro PNG en `src/assets/menu/` (pergamino, libro, engranaje, torii) en un
+  lienzo común y con fondo transparente. Lo que se gana con ellos:
+  - el marco de la columna pasa a CSS, así que el menú deja de depender de que haya **exactamente
+    cuatro** entradas (hoy los huecos van pintados: añadir una exige redibujar la hoja);
+  - el hover puede realzar **el icono** en vez de su hueco, que es lo que se realza ahora.
+  La etiqueta flotante de cada botón **ya está hecha** (`EtiquetaFlotante`, a la izquierda porque el menú
+  vive pegado al borde derecho): no depende de los sprites y no hay que volver a ella.
 - **Sai y Yamato no tienen sprite propio.** Llevan de placeholder el genin rival de su naturaleza de
   chakra (fuuton y doton). Declarado en `PLACEHOLDERS` de `scripts/generar-sprites-personajes.py`.
 - **Kakashi tampoco**, y con él un copia-y-pega no valía: es legendario y se pelea contra él en el

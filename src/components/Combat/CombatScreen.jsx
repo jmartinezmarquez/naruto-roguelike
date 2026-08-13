@@ -395,20 +395,28 @@ function TarjetaLuchador({
   const pasivasPropias = pasivasDeLuchador(id, nivel, objetoEquipadoId);
 
   const estilo = estado === 'caido'
-    ? 'border-pergamino-100/10 opacity-40'
+    ? 'border-marco/60 opacity-40'
     : activo
       ? 'border-sello-500 shadow-[0_0_18px_rgba(201,74,60,0.5)]'
-      : 'border-pergamino-100/15 opacity-80';
+      : 'border-marco opacity-80';
 
   // Sin `PersonajeHoverCard`: en combate la tarjeta ya enseña nombre, nivel, HP,
   // tipo, transformación y pasivas, así que el hover solo repetía lo mismo en una
   // ventana encima. El hover sigue donde sí aporta — mapa, tienda, reclutar.
+  // **Sin esquinas en corchete** (`esquinas={false}`), y es la decisión que evita
+  // que esta pantalla se vea abarrotada: hasta cuatro tarjetas viven DENTRO de las
+  // dos cajas de bando, que sí las llevan. Corchetes dentro de corchetes es
+  // exactamente lo que convierte un marco bonito en ruido — los lleva el
+  // contenedor, lo anidado se queda con el borde fino. Ver
+  // documentacion/33-direccion-visual.md.
   return (
-    <div className={[
-      'relative bg-tinta-900 border rounded-lg px-3 pt-2 pb-1 transition-all',
-      estilo,
-      subioANivel ? 'halo-subida-nivel' : '',
-    ].join(' ')}
+    <PanelMarco
+      esquinas={false}
+      className={[
+        'relative px-3 pt-2 pb-1 transition-all',
+        estilo,
+        subioANivel ? 'halo-subida-nivel' : '',
+      ].join(' ')}
     >
       {/* El cartel va sobre el sprite y no en una esquina: es donde el jugador
           está mirando cuando acaba el combate. */}
@@ -515,7 +523,7 @@ function TarjetaLuchador({
         )}
 
         <EtiquetasPasivas pasivas={pasivasPropias} activadas={pasivasActivadas} />
-    </div>
+    </PanelMarco>
   );
 }
 
@@ -573,15 +581,15 @@ function PanelRecompensas({ recompensas }) {
 /** La caja de un bando, con su rótulo y sus luchadores apilados. */
 function PanelBando({ titulo, children }) {
   return (
-    <div className="flex-1 min-w-0 bg-tinta-950/60 border border-pergamino-100/10 rounded-xl p-3 flex flex-col">
-      <p className="font-display text-xs uppercase tracking-[0.2em] text-pergamino-200/50 mb-2">
-        {titulo}
-      </p>
+    // El contenedor SÍ lleva las esquinas en corchete: es la caja, y dentro van las
+    // tarjetas de luchador con el borde fino.
+    <PanelMarco className="flex-1 min-w-0 p-3 flex flex-col">
+      <TituloBloque className="mb-2">{titulo}</TituloBloque>
       {/* El contenido se centra en vertical para que las dos cajas, que tienen
           distinto número de tarjetas, dejen a los luchadores activos más o menos
           a la misma altura: es por donde cruza el proyectil. */}
       <div className="flex-1 flex flex-col justify-center gap-2">{children}</div>
-    </div>
+    </PanelMarco>
   );
 }
 

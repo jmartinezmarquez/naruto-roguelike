@@ -19,11 +19,15 @@ const POSICION_CLASES = {
 export default function HoverTooltip({
   posicion = 'derecha',
   className = 'inline-block',
+  // `style` existe para los triggers que se colocan por posición calculada, como
+  // los botones del menú vertical (top y alto en % según su índice): sin él habría
+  // que envolverlos en otro div solo para posicionarlos.
+  style,
   contenido,
   children,
 }) {
   return (
-    <div className={`relative hover-envoltorio ${className}`}>
+    <div className={`relative hover-envoltorio ${className}`} style={style}>
       {children}
       <div
         className={[

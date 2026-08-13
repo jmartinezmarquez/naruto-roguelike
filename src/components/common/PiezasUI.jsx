@@ -27,23 +27,50 @@ import { useEffect } from 'react';
  *   - `panel`  → el panel de contenido de siempre.
  *   - `hueco`  → más apagado, para lo que está bloqueado o vacío.
  *   - `activo` → corchetes en rojo de sello, para lo seleccionado.
+ *
+ * `esquinas={false}` quita los corchetes. **Los corchetes marcan el contenedor, no
+ * cada cosa que hay dentro**: una caja con corchetes que contiene cuatro tarjetas
+ * con corchetes cada una es exactamente lo que hace que un pixel art se vea
+ * abarrotado. La regla: los lleva el panel de fuera; lo anidado se queda con el
+ * borde fino.
  */
-export function PanelMarco({ tono = 'panel', className = '', children }) {
+export function PanelMarco({ tono = 'panel', esquinas = true, className = '', children }) {
   const fondo = {
     panel: 'bg-tinta-900 border-marco',
     hueco: 'bg-tinta-950/60 border-marco/60',
     activo: 'bg-tinta-900 border-sello-600/70',
   }[tono];
 
-  const colorCorchete = tono === 'activo' ? 'border-sello-500' : 'border-pergamino-200/45';
-
   return (
     <div className={`relative border ${fondo} ${className}`}>
-      {/* La línea interior. `inset-[3px]` en vez de un segundo borde en el mismo
-          elemento: dos bordes concéntricos con hueco entre ellos no se pueden
-          hacer con una sola caja. */}
+      <AdornoMarco esquinas={esquinas} activo={tono === 'activo'} />
+      {children}
+    </div>
+  );
+}
+
+/**
+ * La línea interior y las esquinas en corchete, sueltas del panel.
+ *
+ * Va aparte porque hay una caja que **no puede** ser un `PanelMarco` y sí necesita
+ * el adorno: el lienzo del mapa. Ese mide exactamente `ANCHO × escala` y un `border`
+ * real le comería píxeles del ancho útil, así que su marco es un `box-shadow`. Con
+ * el adorno extraído, el mapa lo compone a mano sin duplicar el marcado de los
+ * corchetes, que es lo que garantiza que no se separen visualmente el día que se
+ * toque uno.
+ *
+ * El contenedor tiene que ser `relative`, y los corchetes se pintan en tamaño real
+ * aunque la caja esté escalada — si el escalado fuera un `transform`, irían dentro
+ * y se deformarían con él.
+ */
+export function AdornoMarco({ esquinas = true, activo = false }) {
+  const colorCorchete = activo ? 'border-sello-500' : 'border-pergamino-200/45';
+  return (
+    <>
+      {/* `inset-[3px]` en vez de un segundo borde en el mismo elemento: dos bordes
+          concéntricos con hueco entre ellos no se pueden hacer con una sola caja. */}
       <span aria-hidden="true" className="pointer-events-none absolute inset-[3px] border border-marco/40" />
-      {[
+      {esquinas && [
         'top-0 left-0 border-t-2 border-l-2',
         'top-0 right-0 border-t-2 border-r-2',
         'bottom-0 left-0 border-b-2 border-l-2',
@@ -55,8 +82,7 @@ export function PanelMarco({ tono = 'panel', className = '', children }) {
           className={`pointer-events-none absolute w-2.5 h-2.5 ${posicion} ${colorCorchete}`}
         />
       ))}
-      {children}
-    </div>
+    </>
   );
 }
 
@@ -284,10 +310,41 @@ export function IconoEnmarcado({
   );
 }
 
-/** Título de bloque dentro de una ficha ("AFINIDAD", "MODOS"), en versalitas rojas. */
-export function TituloBloque({ children, className = '' }) {
+/**
+ * La etiqueta flotante de un hover: caja oscura con **marco crema**, para una línea
+ * de texto. La usan el hover de nodo del mapa y los botones del menú vertical.
+ *
+ * El marco crema es a propósito y no un despiste del kit: esto no es un panel de
+ * contenido, es una anotación que aparece encima de otra cosa —a veces encima del
+ * propio mapa— y necesita despegarse de lo que tiene debajo. Con el borde fino en
+ * color de marco se perdía sobre el lienzo.
+ */
+export function EtiquetaFlotante({ children }) {
   return (
-    <h3 className={`font-display text-[9px] text-sello-500 tracking-[0.2em] uppercase ${className}`}>
+    <div className="bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap">
+      <p className="font-display text-[11px] leading-none">{children}</p>
+    </div>
+  );
+}
+
+/**
+ * Rótulo en versalitas espaciadas, en dos jerarquías — y la distinción importa más
+ * de lo que parece:
+ *
+ * - `panel` (por defecto, **crema**): el título DE una caja, lo más fuerte que hay
+ *   dentro de ella. "TEAM", "ITEMS", "CHAKRA", "REWARDS".
+ * - `seccion` (**rojo**): una etiqueta DENTRO de una tarjeta que ya tiene título, y
+ *   subordinada a él. Es el uso de las maquetas: "AFINIDAD", "STATS BASE", "MODOS".
+ *
+ * La primera versión pintaba de rojo las dos cosas, y en el mapa acabó habiendo
+ * cuatro rojos compitiendo —"CURRENT ARC" más los tres paneles— con el agravante de
+ * que en esta paleta el rojo **ya significa algo**: es el color del mini-jefe y de
+ * la derrota. Un título de panel no es una alarma.
+ */
+export function TituloBloque({ children, tono = 'panel', className = '' }) {
+  const color = tono === 'seccion' ? 'text-sello-500' : 'text-pergamino-200/80';
+  return (
+    <h3 className={`font-display text-[9px] ${color} tracking-[0.2em] uppercase ${className}`}>
       {children}
     </h3>
   );

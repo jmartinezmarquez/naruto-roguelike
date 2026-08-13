@@ -7,6 +7,7 @@ import {
 } from './nombres';
 import { spriteDeCombate, encontrarBaseDeLuchador } from './datosDeLuchador';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
+import { PanelMarco, TituloBloque } from './PiezasUI';
 
 // La búsqueda del personaje base vive en `datosDeLuchador.js` y no aquí: esta
 // copia solo miraba personajes y jefes, así que la ficha devolvía null para un
@@ -185,12 +186,17 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
   const sprite = spriteDeCombate(id, nivel ?? 1);
 
   return (
-    <div className={`bg-tinta-900 text-pergamino-100 rounded-lg text-left border border-pergamino-100/20 flex flex-col gap-2.5 ${className}`}>
+    // `PanelMarco` con sus esquinas en corchete: esta ficha es la tarjeta de
+    // personaje de TODO el juego (hover del mapa, las tres cartas de reclutar, el
+    // desafío legendario, la selección inicial y el Bingo Book), así que es la que
+    // más veces se ve y la que más gana con el marco. Ver
+    // documentacion/33-direccion-visual.md.
+    <PanelMarco className={`text-pergamino-100 text-left flex flex-col gap-2.5 ${className}`}>
       {/* Sprite sobre su claro de tierra, igual que en la tarjeta de combate:
           el disco de pergamino y la sombra de contacto para que se apoye en algo
           en vez de flotar suelto. */}
       <div className="relative h-24 flex items-end justify-center">
-        <div className="absolute bottom-1 w-20 h-5 rounded-[50%] bg-pergamino-200/25 border border-pergamino-100/15" />
+        <div className="absolute bottom-1 w-20 h-5 rounded-[50%] bg-pergamino-200/25 border border-marco" />
         <div className="absolute bottom-1.5 w-12 h-2 rounded-[50%] bg-tinta-950/55 blur-[2px]" />
         {sprite && (
           <img
@@ -230,11 +236,16 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
         </div>
       </div>
 
-      <div className="border-t border-pergamino-100/10 pt-2.5">
+      <div className="border-t border-marco pt-2.5">
         <BarraHp actual={hpActualMostrado} maximo={hpMostrado} />
       </div>
 
-      <div className="border-t border-pergamino-100/10 pt-2.5">
+      {/* Aquí el rótulo SÍ va en rojo (`tono="seccion"`): es una etiqueta dentro de
+          una tarjeta que ya tiene título —el nombre del ninja— y subordinada a él,
+          que es el uso que le dan las maquetas a las versalitas rojas. Los títulos
+          de panel ("TEAM", "ITEMS") van en crema por lo contrario. */}
+      <div className="border-t border-marco pt-2.5 flex flex-col gap-1.5">
+        <TituloBloque tono="seccion">Base stats</TituloBloque>
         <Estadisticas stats={luchador.statsBase} />
       </div>
 
@@ -257,7 +268,7 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
 
           Sin `truncate`: los nombres llegan a 29 caracteres ("Super Beast
           Imitation Drawing") y son nombres propios, no hay forma de abreviarlos. */}
-      <div className="border-t border-pergamino-100/10 pt-2.5 flex items-center gap-2 min-h-[2.25rem]">
+      <div className="border-t border-marco pt-2.5 flex items-center gap-2 min-h-[2.25rem]">
         <span className="shrink-0 text-[11px]" aria-hidden="true">🌀</span>
         <p className="flex-1 min-w-0 text-[11px] font-display text-pergamino-100 leading-tight">
           {base.jutsu.nombre}
@@ -266,7 +277,7 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
       </div>
 
       {objetoEquipadoId && (
-        <div className="border-t border-pergamino-100/10 pt-2.5 flex items-center gap-2">
+        <div className="border-t border-marco pt-2.5 flex items-center gap-2">
           {SPRITE_OBJETO[objetoEquipadoId] && (
             <img
               src={SPRITE_OBJETO[objetoEquipadoId]}
@@ -278,7 +289,7 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
           <p className="text-[11px] text-pergamino-200/80 truncate">{nombreObjeto(objetoEquipadoId)}</p>
         </div>
       )}
-    </div>
+    </PanelMarco>
   );
 }
 

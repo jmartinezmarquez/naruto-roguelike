@@ -384,6 +384,16 @@ propósito de las tarjetas de personaje, para que fueran una sorpresa (ver
   Guardar la lista en estado obligaba a sembrarla desde un `useEffect`, y hacer `setState` síncrono
   dentro de un efecto es un patrón que ya nos mordió una vez (está en CLAUDE.md, y el linter lo caza).
 
+### Los paneles del mapa y el menú vertical
+
+Equipo, objetos y rueda de chakra usan las piezas compartidas
+(`PanelMarco` + `TituloBloque`, ver [33](./33-direccion-visual.md)). Antes equipo y objetos iban en
+crema con texto oscuro y la rueda en oscuro: tres paneles pegados y ninguno del mismo estilo.
+
+El menú es vertical, como el de Pokelike, y su columna es **una sola imagen**
+(`assets/menu/columna-menu.png`) con cuatro botones transparentes por encima. El porqué —y por qué no
+son cuatro sprites recortados— está en el [33](./33-direccion-visual.md).
+
 ### El final del combate (`PanelRecompensas`)
 
 Todo lo de dentro de la pelea estaba cuidado y el cierre era un `Victory` de texto con un botón: el

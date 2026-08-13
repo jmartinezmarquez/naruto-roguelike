@@ -54,6 +54,13 @@ con una sola caja.
 Tres tonos: `panel` (contenido), `hueco` (bloqueado o vacío, más apagado) y `activo` (corchetes en rojo
 de sello para lo seleccionado).
 
+⚠️ **`esquinas={false}` quita los corchetes, y hace falta más de lo que parece: los corchetes marcan el
+CONTENEDOR, no cada cosa que hay dentro.** Una caja con corchetes que contiene cuatro tarjetas con
+corchetes cada una es exactamente lo que convierte un marco bonito en ruido. Se vio al llevar el kit a
+la pantalla de combate, que era la que daba miedo por sobrecarga: las dos cajas de bando llevan
+corchetes y las hasta cuatro tarjetas de luchador de dentro se quedan con el borde fino. Con eso la
+pantalla no se abarrota — el problema no era el marco, era anidarlo.
+
 ### `VentanaModal`
 Ventana flotante con barra de título y X en la esquina, estilo sistema operativo antiguo — la forma en
 que Pokelike abre sus pantallas de Logros y Pokédex. Tres cosas la definen:
@@ -116,9 +123,30 @@ entradas en rejilla, el color del marco se lee antes que cualquier nombre.
 promete que ahí haya alguien.
 
 ### `TituloBloque` y `CampoDato`
-El título de sección dentro de una ficha ("AFINIDAD", "MODOS") en versalitas rojas, y el par
-etiqueta-valor con la etiqueta apagada y el valor no. Son las dos piezas que hacen que una ficha se
-parezca a una ficha de personaje de JRPG y no a una lista de `<dl>`.
+El rótulo en versalitas espaciadas y el par etiqueta-valor. Son las dos piezas que hacen que una ficha
+se parezca a una ficha de personaje de JRPG y no a una lista de `<dl>`.
+
+⚠️ **`TituloBloque` tiene dos jerarquías y confundirlas se ve enseguida:**
+
+| `tono` | Color | Para qué |
+|---|---|---|
+| `panel` (por defecto) | crema | el título **DE** una caja, lo más fuerte que hay dentro: "TEAM", "ITEMS", "REWARDS" |
+| `seccion` | rojo | una etiqueta **DENTRO** de una tarjeta que ya tiene título, subordinada a él: "BASE STATS", y en las maquetas "AFINIDAD" / "MODOS" |
+
+La primera versión pintaba de rojo las dos cosas, porque el rojo en versalitas es lo que se ve en las
+maquetas — pero ahí es siempre una etiqueta subordinada. Aplicado a títulos de panel, el mapa acabó con
+**cuatro rojos compitiendo** ("CURRENT ARC" más los tres paneles) y con un problema de fondo: en esta
+paleta el rojo **ya significa algo** — es el color del mini-jefe y de la derrota. Un título de panel no
+es una alarma.
+
+### `EtiquetaFlotante`
+La cajita de una línea que sale al pasar por encima de algo: hover de nodo del mapa y botones del menú
+vertical. **Va con marco crema**, no con el borde fino de los paneles, y no es un despiste: esto no es un
+panel de contenido, es una anotación que aparece **encima** de otra cosa —a veces encima del propio
+lienzo del mapa— y necesita despegarse de lo que tiene debajo. Con el borde en color de marco se perdía.
+
+Sustituye al `title` del navegador donde se use: el nativo tarda un segundo en aparecer y no se parece al
+juego. En el menú va a la **izquierda**, porque la columna está pegada al borde derecho de la pantalla.
 
 ### `BotonPrincipal` y `BotonSecundario`
 El rojo de sello para la acción de la pantalla; el de borde fino para volver atrás. Ninguno lleva
@@ -178,6 +206,49 @@ entero para cerrar.
 - **Los números de las maquetas** (68 ninjas, 28 logros): hay 29 luchadores y 7 logros. Los contadores
   dicen la verdad en vez de imitar la maqueta — una rejilla con 39 siluetas vacías cuenta una mentira.
 
+## Los paneles del mapa y el menú vertical
+
+**Los tres paneles del mapa ya son del kit.** Iban cada uno por su cuenta —equipo y objetos en
+`bg-pergamino-100` (crema, con texto oscuro), la rueda de chakra en oscuro— y al lado de las ventanas de
+Missions y el Bingo Book se veía que no eran del mismo juego. Ahora los tres son `PanelMarco` +
+`TituloBloque`, con lo que el mapa entero comparte lenguaje con el resto.
+
+**El menú pasó de horizontal a vertical**, como el de Pokelike, siguiendo `LayoutMenuVertical.png`.
+Con cuatro entradas cabe algo bastante más grande que los iconos de 36 px de antes.
+
+**Los sprites propios del menú están por llegar** (ver "Pendiente de arte" del roadmap): cuando existan,
+esto vuelve a ser cuatro iconos sueltos con el marco de la columna dibujado por CSS, que es más flexible
+—se puede añadir o quitar una entrada— y permite realzar el icono y no su hueco.
+
+⚠️ Mientras tanto, **la columna es UNA imagen con cuatro botones transparentes encima**, uno por cuarto de alto, y no
+cuatro sprites recortados. El primer intento fue recortarlos como el resto de los sprites del juego y
+era pelearse con el dibujo: esa hoja **no es una hoja de sprites** con separaciones limpias, es un menú
+ya terminado —marco, huecos e iconos dibujados juntos—, así que cualquier recorte se llevaba trozos del
+marco o agujereaba el sombreado del icono. Tres intentos de detección (por color exacto, por
+luminosidad, por mínimo de píxeles en línea) fallaron por lo mismo, más un detalle que costó ver: **la
+columna no está centrada en la hoja** (rail izquierdo en x=13-20, derecho en x=104-112), así que un
+margen lateral simétrico dejaba fuera uno y se comía medio del otro.
+
+El precio de usarla entera: los cuatro huecos están **pintados**. Añadir o quitar una entrada exige
+redibujar la columna. Los botones se reparten por índice sobre el número de entradas, así que el código
+no se rompería — pero los iconos dejarían de coincidir con los huecos, y eso se ve.
+
+El engranaje hace de **pantalla completa** y el torii de **reiniciar la run**: la maqueta traía
+engranaje de "ajustes" y torii de "salir", y ajustes sigue sin tener ninguna opción real que ofrecer. Un
+torii es una puerta por la que se sale, que es lo que se hace al abandonar una run.
+
+## Pendiente decidido: modo claro y modo oscuro
+
+Con todo en oscuro el mapa puede quedar algo lúgubre, y existe `game-background-light-theme.png` sin
+usar. **Decisión tomada: no ahora.** Va a ser una opción de ajustes (claro / oscuro), y entonces el
+engranaje del menú tendrá por fin algo real que ofrecer.
+
+Lo que hace que eso sea viable sin rehacer nada es el trabajo de tokens de este documento: si los
+colores fueran `bg-tinta-900` escritos por todas partes no habría tema que cambiar, pero al estar el
+significado separado del elemento —`exito`, `oro`, `marco`— y el marco concentrado en `PanelMarco`, un
+tema es redefinir un puñado de variables en `index.css`, no repasar ocho pantallas. **Cuando se haga:
+los colores de elemento (katon…) NO cambian entre temas** — son del contenido, no de la interfaz.
+
 ## Ventana o pantalla completa: el criterio
 
 Las ocho pantallas ya llevan el kit, y al aplicarlo hubo que decidir una por una si va como ventana
@@ -208,6 +279,26 @@ Tres detalles que salieron de aplicarlo:
   objeto, los dos que quedaban se agarraban a las columnas 1 y 2 y el escaparate se iba a la izquierda
   con un hueco a la derecha. Va con `flex flex-wrap justify-center` y ancho fijo por tarjeta, así lo que
   quede se centra solo.
+
+## Las tres últimas piezas sueltas
+
+- **El lienzo del mapa** era el elemento más grande de la pantalla y el único sin el lenguaje del marco:
+  un rectángulo con 12 px de radio y el borde a hueso. Ahora lleva el borde en color de marco y las
+  esquinas en corchete. ⚠️ **No puede ser un `PanelMarco`**: mide exactamente `ANCHO × escala` y un
+  `border` real le comería píxeles del ancho útil (`box-sizing: border-box`), así que su marco es un
+  `box-shadow` de dos anillos. Para no duplicar el marcado de los corchetes se extrajo `AdornoMarco`,
+  que es lo que `PanelMarco` usa por dentro. Va **después** del contenido para pintarse por encima de los
+  nodos, y sus piezas llevan `pointer-events-none` para no robarles el clic.
+- **`EventScreen`** era la única pantalla que no hablaba el idioma de las demás. Ahora lleva el kit.
+  ⚠️ **Esto es el kit, no el rediseño**: el punto 6 del roadmap sigue abierto y es el único sin
+  documento MVP. Lo que hay que decidir antes de tocarlo de verdad está anotado en el propio archivo,
+  incluida la única pregunta que es de **diseño de juego** y no de pantalla: si la pista del efecto se
+  sigue viendo antes de elegir (hoy sí, y eso hace del evento una decisión informada en vez de una
+  apuesta).
+- **Los dos toasts** eran lo último con forma de notificación web: una pastilla verde de color plano y
+  un recuadro crema con texto oscuro —el último sitio del juego que invertía la paleta—. Los dos pasan a
+  `PanelMarco`, y el color va al **borde y al texto** en vez de al fondo: un bloque verde sólido sobre el
+  paisaje nocturno era lo más luminoso de la pantalla, y un aviso no es el suceso principal.
 
 ## Contraste: `tono="hueco"` no vale para "no puedes comprarlo"
 

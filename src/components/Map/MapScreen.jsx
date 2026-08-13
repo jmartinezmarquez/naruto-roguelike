@@ -16,6 +16,8 @@ import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
 import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
 import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
+import COLUMNA_MENU from '../../assets/menu/columna-menu.png';
+import { PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante } from '../common/PiezasUI';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
@@ -207,11 +209,7 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
   // Solo el título, como en Pokelike: la descripción larga de cada tipo de nodo
   // ocupaba media pantalla y se lee una vez en la vida. Lo que hace un nodo se
   // aprende jugando; el tooltip solo tiene que recordar cuál es cuál.
-  const contenidoTooltip = (
-    <div className="bg-tinta-900 text-pergamino-100 rounded-md border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap">
-      <p className="font-display text-[11px] leading-none">{etiqueta}</p>
-    </div>
-  );
+  const contenidoTooltip = <EtiquetaFlotante>{etiqueta}</EtiquetaFlotante>;
 
   return (
     <div className="absolute" style={{ left: posicion.x - lado / 2, top: posicion.y - lado / 2 }}>
@@ -334,8 +332,12 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
 
   return (
     <div className="w-40 shrink-0">
-      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-2">
-        <p className="font-display font-bold text-[10px] mb-2 tracking-wide">TEAM</p>
+      {/* Del crema al marco oscuro del kit. Los tres paneles del mapa iban cada uno
+          por su cuenta —equipo y objetos en `bg-pergamino-100`, la rueda de chakra en
+          oscuro— y al lado de las ventanas de Missions y el Bingo Book se veía que no
+          eran del mismo juego. Ver documentacion/33-direccion-visual.md. */}
+      <PanelMarco className="p-2.5 flex flex-col gap-2">
+        <TituloBloque>Team</TituloBloque>
         <div className="flex flex-col gap-1.5">
           {equipo.map((p, index) => {
             const hpMaximo = obtenerHpMaximo(p.id) ?? p.hpActual ?? 1;
@@ -360,11 +362,11 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                   onDragLeave={() => setEncima((actual) => (actual === p.id ? null : actual))}
                   onDrop={(e) => { e.preventDefault(); soltarSobre(p.id); setEncima(null); }}
                   className={[
-                    'w-full text-left rounded-md p-1.5 border transition-colors',
-                    esActivo ? 'border-sello-600 bg-sello-600/10' : 'border-tinta-950/15 bg-tinta-950/5',
+                    'w-full text-left rounded-sm p-1.5 border transition-colors',
+                    esActivo ? 'border-sello-500 bg-sello-600/15' : 'border-marco bg-tinta-950/40',
                     p.derrotado ? 'opacity-40' : 'cursor-grab active:cursor-grabbing',
                     arrastrando === p.id ? 'opacity-50' : '',
-                    encima === p.id && arrastrando && arrastrando !== p.id ? 'border-fuuton border-dashed' : '',
+                    encima === p.id && arrastrando && arrastrando !== p.id ? 'border-oro border-dashed' : '',
                   ].join(' ')}
                 >
                   {/* El nombre va en su propia línea, a lo ancho de la
@@ -381,7 +383,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                         el pixel art. El nivel va encima, en la esquina — es un
                         dato de una o dos cifras y no merece una columna. */}
                     <div className="relative w-12 h-12 shrink-0 flex items-end justify-center">
-                      <div className="absolute bottom-0 w-9 h-2 rounded-[50%] bg-tinta-950/20" />
+                      <div className="absolute bottom-0 w-9 h-2 rounded-[50%] bg-pergamino-200/20" />
                       {sprite && (
                         <img
                           src={sprite}
@@ -397,7 +399,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-tinta-950 border border-marco rounded-full overflow-hidden">
                         <div
                           className={`h-full ${porcentaje > 0.4 ? 'bg-exito' : 'bg-sello-600'}`}
                           style={{ width: `${porcentaje * 100}%` }}
@@ -426,7 +428,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                       objeto le caía encima con su botón de quitar. Aquí abajo
                       cabe entero, con su nombre, y la X no pisa nada. */}
                   {p.objetoEquipadoId && (
-                    <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-tinta-950/10">
+                    <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-marco">
                       {SPRITE_OBJETO[p.objetoEquipadoId] && (
                         <img
                           src={SPRITE_OBJETO[p.objetoEquipadoId]}
@@ -442,7 +444,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                       <button
                         type="button"
                         onClick={() => desequiparObjeto(p.id)}
-                        className="shrink-0 w-4 h-4 rounded-full bg-tinta-950/15 hover:bg-sello-600 hover:text-pergamino-100 text-[9px] leading-none flex items-center justify-center transition-colors"
+                        className="shrink-0 w-4 h-4 rounded-full bg-pergamino-100/10 hover:bg-sello-600 hover:text-pergamino-100 text-[9px] leading-none flex items-center justify-center transition-colors"
                         title="Unequip (returns to inventory)"
                         aria-label={`Unequip ${nombreObjeto(p.objetoEquipadoId)}`}
                       >
@@ -455,10 +457,10 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
             );
           })}
         </div>
-        <p className="text-[8px] opacity-50 mt-2 leading-snug">
+        <p className="text-[8px] text-pergamino-200/45 leading-snug">
           Drag to reorder. The first one fights.
         </p>
-      </div>
+      </PanelMarco>
     </div>
   );
 }
@@ -482,7 +484,7 @@ function PanelObjetos({ inventario, oro, abrirMochila }) {
   const idsUnicos = Object.keys(conteoPorId);
 
   return (
-    <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-2">
+    <PanelMarco className="p-2.5 flex flex-col gap-2">
       {/* Cabecera informativa, no clicable: la mochila se abre tocando un
           objeto concreto, y hacer que "ITEMS" u "oro" también la abrieran
           solo provocaba aperturas sin querer.
@@ -490,16 +492,16 @@ function PanelObjetos({ inventario, oro, abrirMochila }) {
           de la mochila, es el contador de la run. Dentro del panel solo entran
           sprites de objeto. */}
       <div className="flex items-baseline justify-between gap-1">
-        <p className="font-display font-bold text-[10px] tracking-wide">ITEMS</p>
-        <p className="text-[10px] text-sello-600 font-display">{oro}g</p>
+        <TituloBloque>Items</TituloBloque>
+        <p className="text-[10px] text-oro font-display">{oro}g</p>
       </div>
 
       {idsUnicos.length === 0 ? (
-        <p className="text-[10px] opacity-50 leading-snug mt-2">Empty bag.</p>
+        <p className="text-[9px] text-pergamino-200/45 leading-snug">Empty bag.</p>
       ) : (
         // Rejilla de sprites sin nombre: el nombre lo cuenta el hover, y la
         // lista con texto obligaba a una fila por objeto y crecía sin parar.
-        <div className="grid grid-cols-3 gap-1 mt-2">
+        <div className="grid grid-cols-3 gap-1">
           {idsUnicos.map((id) => (
             <ItemHoverCard key={id} id={id} posicion="izquierda" compacto className="block">
               <button
@@ -507,15 +509,15 @@ function PanelObjetos({ inventario, oro, abrirMochila }) {
                 onClick={() => abrirMochila(id)}
                 title={nombreObjeto(id)}
                 aria-label={nombreObjeto(id)}
-                className="elevar-hover relative w-full aspect-square flex items-center justify-center rounded-md border border-tinta-950/15 bg-tinta-950/5 hover:border-sello-600/60 hover:bg-tinta-950/10"
+                className="elevar-hover relative w-full aspect-square flex items-center justify-center rounded-sm border border-marco bg-tinta-950/50 hover:border-oro/60 hover:bg-tinta-950/80"
               >
                 {SPRITE_OBJETO[id] ? (
                   <img src={SPRITE_OBJETO[id]} alt="" aria-hidden="true" className="w-7 h-7 object-contain" />
                 ) : (
-                  <span className="text-[10px] font-display opacity-60">?</span>
+                  <span className="text-[10px] font-display text-pergamino-200/40">?</span>
                 )}
                 {conteoPorId[id] > 1 && (
-                  <span className="absolute bottom-0 right-0 text-[8px] font-display leading-none px-1 py-0.5 rounded bg-tinta-950 text-pergamino-100">
+                  <span className="absolute bottom-0 right-0 text-[8px] font-display leading-none px-1 py-0.5 rounded-sm bg-tinta-950 border border-marco text-pergamino-100">
                     {conteoPorId[id]}
                   </span>
                 )}
@@ -524,7 +526,7 @@ function PanelObjetos({ inventario, oro, abrirMochila }) {
           ))}
         </div>
       )}
-    </div>
+    </PanelMarco>
   );
 }
 
@@ -558,9 +560,9 @@ function RuedaChakra() {
   const puntos = ORDEN_CICLO_CHAKRA.map((_, i) => puntoRuedaChakra(i, total));
 
   return (
-    <div className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-2">
-      <p className="font-display font-bold text-[10px] text-pergamino-100 tracking-wide">CHAKRA</p>
-      <p className="text-[8px] text-pergamino-200/50 mt-0.5 mb-2 leading-snug">
+    <PanelMarco className="p-2.5 flex flex-col gap-1">
+      <TituloBloque>Chakra</TituloBloque>
+      <p className="text-[8px] text-pergamino-200/45 mb-1 leading-snug">
         → is strong against
       </p>
       <svg viewBox="0 0 110 110" className="w-full">
@@ -631,7 +633,7 @@ function RuedaChakra() {
           </g>
         ))}
       </svg>
-    </div>
+    </PanelMarco>
   );
 }
 
@@ -641,13 +643,31 @@ function hayPantallaCompleta() {
 }
 
 /**
- * Menú de iconos junto al mapa, estilo Pokelike: Logros, Pantalla completa
- * (Fullscreen API del navegador) y Reiniciar Run (con confirmación nativa,
- * porque borra el progreso de la run actual sin posibilidad de deshacerlo).
- * "Ajustes" se queda fuera a propósito — no hay ninguna opción real que
- * poner ahí todavía.
+ * Menú vertical junto al mapa, como el de Pokelike: Missions, Bingo Book,
+ * Pantalla completa (Fullscreen API) y Reiniciar Run (con confirmación nativa,
+ * porque borra el progreso de la run sin posibilidad de deshacerlo).
+ *
+ * **La columna es UNA imagen** (`assets/menu/columna-menu.png`, la maqueta del
+ * artista) con cuatro botones transparentes encima, uno por cuarto de alto. La
+ * primera versión intentaba recortar los cuatro iconos a PNG sueltos como el resto
+ * de los sprites, y era pelearse con el dibujo: la hoja no es una hoja de sprites
+ * con separaciones limpias, es un **menú ya terminado** —marco, huecos e iconos
+ * dibujados juntos—, así que cualquier recorte se llevaba trozos del marco o
+ * agujereaba el sombreado del icono. Usarla entera sale idéntica a la maqueta y sin
+ * detección frágil que mantener.
+ *
+ * ⚠️ El precio de eso: los cuatro huecos están **pintados** en la imagen. Añadir o
+ * quitar una entrada del menú exige redibujar la columna (o entonces sí recortar
+ * los iconos). Los botones se reparten por índice sobre `ENTRADAS.length`, así que
+ * el código no se rompería — pero los iconos dejarían de coincidir con los huecos,
+ * y eso se ve.
+ *
+ * El icono del engranaje hace de **pantalla completa** y el torii de **reiniciar la
+ * run**: la maqueta traía engranaje de "ajustes" y torii de "salir", y ajustes sigue
+ * sin tener ninguna opción real que ofrecer. Un torii es una puerta por la que se
+ * sale, que es lo que se hace al abandonar una run.
  */
-function MenuIconos({ abrirLogros, abrirEnciclopedia, reiniciarRun }) {
+function MenuVertical({ abrirLogros, abrirEnciclopedia, reiniciarRun }) {
   const [pantallaCompleta, setPantallaCompleta] = useState(false);
 
   useEffect(() => {
@@ -670,30 +690,51 @@ function MenuIconos({ abrirLogros, abrirEnciclopedia, reiniciarRun }) {
     }
   }
 
-  const botonClase = 'w-9 h-9 flex items-center justify-center rounded-full border border-pergamino-100/20 '
-    + 'text-pergamino-100/80 hover:text-pergamino-100 hover:border-sello-600/60 transition-colors';
+  // En el mismo orden en que están dibujados los huecos, de arriba abajo.
+  const ENTRADAS = [
+    { etiqueta: 'Missions', onClick: abrirLogros },
+    { etiqueta: 'Bingo Book', onClick: abrirEnciclopedia },
+    { etiqueta: pantallaCompleta ? 'Exit fullscreen' : 'Fullscreen', onClick: alternarPantallaCompleta },
+    { etiqueta: 'Restart run', onClick: manejarReiniciar },
+  ];
 
   return (
-    <div className="absolute top-4 right-4 flex gap-2">
-      <button type="button" onClick={abrirLogros} className={botonClase} title="Missions" aria-label="Missions">
-        🏆
-      </button>
-      <button type="button" onClick={abrirEnciclopedia} className={botonClase} title="Bingo Book" aria-label="Bingo Book">
-        📖
-      </button>
-      <button
-        type="button"
-        onClick={alternarPantallaCompleta}
-        className={botonClase}
-        title={pantallaCompleta ? 'Exit fullscreen' : 'Fullscreen'}
-        aria-label="Fullscreen"
-      >
-        ⛶
-      </button>
-      <button type="button" onClick={manejarReiniciar} className={botonClase} title="Restart run" aria-label="Restart run">
-        ⟲
-      </button>
-    </div>
+    <nav
+      className="absolute top-4 right-4 w-14 select-none"
+      style={{ aspectRatio: '133 / 655' }}
+      aria-label="Game menu"
+    >
+      <img
+        src={COLUMNA_MENU}
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+        className="absolute inset-0 w-full h-full"
+      />
+      {ENTRADAS.map((entrada, indice) => (
+        // La etiqueta flotante va a la IZQUIERDA: el menú vive pegado al borde
+        // derecho de la pantalla y a la derecha se saldría. Sustituye al `title` del
+        // navegador, que tardaba un segundo en salir y no se parecía al juego.
+        <HoverTooltip
+          key={entrada.etiqueta}
+          posicion="izquierda"
+          className="absolute left-0 w-full"
+          style={{ top: `${(indice * 100) / ENTRADAS.length}%`, height: `${100 / ENTRADAS.length}%` }}
+          contenido={<EtiquetaFlotante>{entrada.etiqueta}</EtiquetaFlotante>}
+        >
+          <button
+            type="button"
+            onClick={entrada.onClick}
+            aria-label={entrada.etiqueta}
+            // Lo que se realza al pasar por encima es el HUECO, no el icono: el
+            // icono está dentro de la imagen de fondo de la columna y no se puede
+            // tocar por separado. Cuando existan los sprites propios (ver "Pendiente
+            // de arte" del roadmap) el realce podrá ir en el icono.
+            className="w-full h-full rounded-full transition-colors hover:bg-pergamino-100/15 active:bg-pergamino-100/25"
+          />
+        </HoverTooltip>
+      ))}
+    </nav>
   );
 }
 
@@ -775,7 +816,7 @@ export default function MapScreen() {
 
   return (
     <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
-      <MenuIconos abrirLogros={abrirLogros} abrirEnciclopedia={abrirEnciclopedia} reiniciarRun={reiniciarRun} />
+      <MenuVertical abrirLogros={abrirLogros} abrirEnciclopedia={abrirEnciclopedia} reiniciarRun={reiniciarRun} />
 
       <header className="text-center mb-1 shrink-0">
         <p className="text-sello-500 text-[9px] tracking-[0.3em] uppercase">Current Arc</p>
@@ -808,11 +849,16 @@ export default function MapScreen() {
               height: alturaLienzo * escala,
               position: 'relative',
               zIndex: 1,
-              borderRadius: 12,
+              // Sin redondeo: los paneles del kit son de esquina viva, y el lienzo
+              // es la caja más grande de la pantalla — con 12 px de radio era el
+              // único elemento redondeado y se leía como de otro juego.
+              borderRadius: 0,
               // Marco por `box-shadow` y no por `border`: un borde real se comería
-              // 8 px del ancho útil (box-sizing: border-box) y el lienzo escalado,
-              // que mide exactamente ANCHO*escala, se saldría por los lados.
-              boxShadow: '0 0 0 4px var(--color-tinta-950)',
+              // píxeles del ancho útil (box-sizing: border-box) y el lienzo escalado,
+              // que mide exactamente ANCHO*escala, se saldría por los lados. Dos
+              // anillos para imitar el borde del kit: el fino en color de marco y el
+              // grueso oscuro por fuera, que lo separa del fondo del juego.
+              boxShadow: '0 0 0 1px var(--color-marco), 0 0 0 5px var(--color-tinta-950)',
               // `100% 100%` y no `cover`: las columnas se generan a 520×960,
               // que es exactamente el lienzo (ANCHO × ALTO_POR_PISO × 8 pisos),
               // así que encajan sin recortar ni deformar. Si algún arco dejara
@@ -825,9 +871,8 @@ export default function MapScreen() {
                 lisa el contraste ya lo da el propio fondo, y sólo hace falta
                 bajarle un punto de brillo para que las líneas del mapa se lean.
                 Con el paisaje completo detrás hacía falta el triple de velo. */}
-            {fondoColumna && (
-              <div className="absolute inset-0 bg-tinta-950/15" style={{ borderRadius: 12 }} />
-            )}
+            {fondoColumna && <div className="absolute inset-0 bg-tinta-950/15" />}
+
             <div
               className="relative"
               style={{ width: ANCHO, height: alturaLienzo, transform: `scale(${escala})`, transformOrigin: 'top left' }}
@@ -911,6 +956,13 @@ export default function MapScreen() {
               ))}
             </div>
           </div>
+
+          {/* El adorno del kit —línea interior y esquinas en corchete— compuesto a
+              mano porque este lienzo no puede ser un `PanelMarco`: su marco es un
+              `box-shadow` (ver arriba). Va DESPUÉS del contenido para pintarse por
+              encima de los nodos, y sus piezas llevan `pointer-events-none` para no
+              robarles el clic. */}
+          <AdornoMarco />
         </div>
 
         {/* Columna derecha: mochila arriba, chuleta de chakra debajo. Los dos
