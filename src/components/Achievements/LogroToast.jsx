@@ -51,7 +51,7 @@ export default function LogroToast() {
     >
       <div className="bg-pergamino-100 text-tinta-950 border-2 border-sello-600 rounded-lg px-4 py-3 shadow-lg max-w-xs text-center">
         <p className="text-[10px] uppercase tracking-wide text-sello-600 font-display font-bold">
-          Achievement unlocked
+          Mission complete
         </p>
         <p className="font-display font-bold text-sm mt-0.5">{notificacion.nombre}</p>
         <p className="text-xs text-tinta-950/70 mt-0.5">{notificacion.descripcion}</p>

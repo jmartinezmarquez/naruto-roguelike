@@ -112,7 +112,7 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
           mientras el sprite parpadea es imposible, y son lo que importa. */}
       {fase === 'listo' && (
         <div className="mt-6 text-center max-w-md">
-          <p className="font-naruto text-3xl text-raiton drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)]">
+          <p className="font-naruto text-3xl text-oro drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)]">
             {modo.nombre}
           </p>
           <p className="font-display text-[11px] uppercase tracking-widest text-pergamino-200/40 mt-1">

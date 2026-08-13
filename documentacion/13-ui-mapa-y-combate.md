@@ -391,7 +391,13 @@ oro cambiaba en un panel de otra pantalla y el objeto aparecía en la mochila si
 dijera. Ganar no se celebraba en ningún sitio.
 
 `PanelRecompensas` va entre el rótulo de victoria y el botón, que es donde el ojo ya está: `+N Gold`
-y el objeto con su sprite. El objeto **solo se anuncia si ha entrado de verdad en la mochila** — el
+y el objeto con su sprite.
+
+⚠️ **Era un `inline-flex`, y el botón de "Continue" también es inline**, así que los dos acababan en la
+MISMA línea: la recompensa parecía otro botón puesto al lado del botón. Ahora es un `PanelMarco` de
+bloque centrado con el oro y el objeto en `IconoEnmarcado`, y todo el bloque de cierre es una columna
+con separación propia, así que nada depende del flujo inline. Ver
+[33](./33-direccion-visual.md). El objeto **solo se anuncia si ha entrado de verdad en la mochila** — el
 del mini-jefe tiene su propia pantalla de recogida (`ItemRewardScreen`), así que ahí se calla:
 prometerlo en los dos sitios sería contarlo dos veces. Viaja en el resumen del combate
 (`recompensas`) y no se lee del store, misma regla que `equipoAlEmpezar`.

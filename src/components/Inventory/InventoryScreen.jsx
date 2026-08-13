@@ -4,6 +4,7 @@ import itemsData from '../../data/items.json';
 import { nombrePersonaje, nombreCorto } from '../common/nombres';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import { SPRITE_OBJETO, COLOR_RAREZA, ETIQUETA_RAREZA, lineasDeEfecto } from './itemSprites';
+import { VentanaModal, BotonSecundario } from '../common/PiezasUI';
 
 /**
  * Mochila: una sola tarjeta estrecha y centrada, estilo menú de GBA — ver
@@ -43,18 +44,6 @@ function SpriteObjeto({ id, className = '' }) {
   );
 }
 
-function BotonSecundario({ children, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="font-display text-[9px] px-3 py-2 rounded-md border border-pergamino-100/20 text-pergamino-200/60 hover:border-pergamino-100/40 hover:text-pergamino-100 transition-colors"
-    >
-      {children}
-    </button>
-  );
-}
-
 /** Vista 1: la lista. Sprite, nombre y rareza — nada más, la ficha ya cuenta el resto. */
 function ListaObjetos({ entradas, onElegir }) {
   if (entradas.length === 0) {
@@ -62,13 +51,13 @@ function ListaObjetos({ entradas, onElegir }) {
   }
 
   return (
-    <div className="flex flex-col gap-1 max-h-[46vh] overflow-y-auto">
+    <div className="flex flex-col gap-1">
       {entradas.map((entrada) => (
         <button
           key={entrada.clave}
           type="button"
           onClick={() => onElegir(entrada.clave)}
-          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md bg-pergamino-100/5 hover:bg-pergamino-100/12 transition-colors text-left"
+          className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-sm bg-pergamino-100/5 hover:bg-pergamino-100/12 transition-colors text-left"
         >
           <SpriteObjeto id={entrada.objeto.id} className="w-7 h-7 shrink-0" />
           <span className="min-w-0 flex-1">
@@ -113,7 +102,7 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
           <SpriteObjeto id={objeto.id} className="w-12 h-12 shrink-0" />
           <p className="font-display text-[11px] text-pergamino-100 leading-tight">{objeto.nombre}</p>
         </div>
-        <p className="text-[9px] text-pergamino-200/70 leading-relaxed border-t border-pergamino-100/10 pt-3">
+        <p className="text-[9px] text-pergamino-200/70 leading-relaxed border-t border-marco pt-3">
           <span className="text-pergamino-100">{nombrePersonaje(personajeAConfirmar.id)}</span> is
           already carrying{' '}
           <span className="text-pergamino-100">{objetoSaliente?.nombre ?? 'another item'}</span>.
@@ -124,7 +113,7 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
           <button
             type="button"
             onClick={() => onAplicar(entrada, personajeAConfirmar.id)}
-            className="font-display text-[9px] px-3 py-2 rounded-md bg-sello-600 text-pergamino-100 hover:bg-sello-500 transition-colors"
+            className="font-display text-[9px] px-3 py-2 rounded-sm bg-sello-600 text-pergamino-100 hover:bg-sello-500 transition-colors"
           >
             Replace
           </button>
@@ -149,7 +138,7 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
           {efectos.map((efecto) => (
             <p
               key={efecto.texto}
-              className={`text-[9px] font-display mt-1 ${efecto.positivo ? 'text-fuuton' : 'text-sello-500'}`}
+              className={`text-[9px] font-display mt-1 ${efecto.positivo ? 'text-exito' : 'text-sello-500'}`}
             >
               {efecto.icono} {efecto.texto}
             </p>
@@ -161,20 +150,20 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
           decisión. Va a la enciclopedia (punto 10 del roadmap). */}
 
       {entrada.equipadoPor ? (
-        <div className="flex items-center justify-between gap-2 border-t border-pergamino-100/10 pt-3">
+        <div className="flex items-center justify-between gap-2 border-t border-marco pt-3">
           <p className="text-[9px] text-pergamino-200/60">
             Worn by <span className="text-pergamino-100">{nombrePersonaje(entrada.equipadoPor)}</span>
           </p>
           <button
             type="button"
             onClick={() => onDesequipar(entrada.equipadoPor)}
-            className="font-display text-[9px] px-3 py-1.5 rounded-md bg-sello-600 text-pergamino-100 hover:bg-sello-500 transition-colors shrink-0"
+            className="font-display text-[9px] px-3 py-1.5 rounded-sm bg-sello-600 text-pergamino-100 hover:bg-sello-500 transition-colors shrink-0"
           >
             Unequip
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-1 border-t border-pergamino-100/10 pt-3">
+        <div className="flex flex-col gap-1 border-t border-marco pt-3">
           {equipo.map((p) => {
             const hpMaximo = obtenerHpMaximo(p.id) ?? p.hpActual ?? 1;
             const yaLoLleva = p.objetoEquipadoId === objeto.id;
@@ -210,7 +199,7 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
                   disabled={yaLoLleva}
                   onClick={() => alPulsar(p)}
                   className={[
-                    'font-display text-[9px] px-3 py-1.5 rounded-md transition-colors shrink-0',
+                    'font-display text-[9px] px-3 py-1.5 rounded-sm transition-colors shrink-0',
                     yaLoLleva
                       ? 'bg-pergamino-100/10 text-pergamino-200/40 cursor-not-allowed'
                       : 'bg-sello-600 text-pergamino-100 hover:bg-sello-500',
@@ -283,38 +272,29 @@ export default function InventoryScreen() {
     volverAlMapa();
   }
 
-  // Capa encima del mapa, no una pantalla que lo sustituya: el jugador sigue
-  // viendo dónde está mientras decide. Tocar fuera de la tarjeta cierra.
+  // Ventana encima del mapa, no una pantalla que lo sustituya: el jugador sigue
+  // viendo dónde está mientras decide. Pasó de diálogo suelto a `VentanaModal`
+  // como Missions y el Bingo Book, así que **dejó de cerrarse al tocar fuera**:
+  // ahora hay una X y Escape, y dentro se elige personaje con clics que antes
+  // podían escaparse al borde y cerrar la mochila a mitad de la decisión.
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-center justify-center px-4 bg-tinta-950/40 text-pergamino-100 font-body"
-      onClick={volverAlMapa}
+    <VentanaModal
+      titulo="Bag"
+      subtitulo={`🪙 ${oro} gold`}
+      onCerrar={volverAlMapa}
+      ancho="max-w-sm"
     >
-      <div
-        className="w-full max-w-[360px] bg-tinta-900 border-2 border-pergamino-100/15 rounded-xl p-4 flex flex-col gap-3 shadow-2xl shadow-black/60"
-        onClick={(evento) => evento.stopPropagation()}
-      >
-        <div className="flex items-baseline justify-between gap-3">
-          <h1 className="font-naruto text-lg tracking-wide">Bag</h1>
-          <p className="font-display text-[9px] text-[#e0b64a]">🪙 {oro}</p>
-        </div>
-
-        {elegida ? (
-          <FichaObjeto
-            entrada={elegida}
-            equipo={equipo}
-            obtenerHpMaximo={obtenerHpMaximo}
-            onAplicar={aplicar}
-            onDesequipar={desequipar}
-          />
-        ) : (
-          <ListaObjetos entradas={entradas} onElegir={setClaveElegida} />
-        )}
-
-        <div className="flex justify-end pt-1">
-          <BotonSecundario onClick={volverAlMapa}>Close</BotonSecundario>
-        </div>
-      </div>
-    </div>
+      {elegida ? (
+        <FichaObjeto
+          entrada={elegida}
+          equipo={equipo}
+          obtenerHpMaximo={obtenerHpMaximo}
+          onAplicar={aplicar}
+          onDesequipar={desequipar}
+        />
+      ) : (
+        <ListaObjetos entradas={entradas} onElegir={setClaveElegida} />
+      )}
+    </VentanaModal>
   );
 }

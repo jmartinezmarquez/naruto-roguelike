@@ -56,8 +56,8 @@ const SPRITE_RECLUTAR = {
 };
 
 const COLOR_RECLUTAR = {
-  comun: 'border-fuuton/60 text-fuuton',
-  legendario: 'border-raiton text-raiton',
+  comun: 'border-exito/60 text-exito',
+  legendario: 'border-oro text-oro',
 };
 
 const ETIQUETA_RECLUTAR = {
@@ -399,7 +399,7 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                     <div className="min-w-0 flex-1">
                       <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden">
                         <div
-                          className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
+                          className={`h-full ${porcentaje > 0.4 ? 'bg-exito' : 'bg-sello-600'}`}
                           style={{ width: `${porcentaje * 100}%` }}
                         />
                       </div>
@@ -675,10 +675,10 @@ function MenuIconos({ abrirLogros, abrirEnciclopedia, reiniciarRun }) {
 
   return (
     <div className="absolute top-4 right-4 flex gap-2">
-      <button type="button" onClick={abrirLogros} className={botonClase} title="Achievements" aria-label="Achievements">
+      <button type="button" onClick={abrirLogros} className={botonClase} title="Missions" aria-label="Missions">
         🏆
       </button>
-      <button type="button" onClick={abrirEnciclopedia} className={botonClase} title="Encyclopedia" aria-label="Encyclopedia">
+      <button type="button" onClick={abrirEnciclopedia} className={botonClase} title="Bingo Book" aria-label="Bingo Book">
         📖
       </button>
       <button

@@ -35,9 +35,20 @@ Campos añadidos a `enemigosNombrados`:
 Los genins son elegidos al azar de `plantillasGenericas` (sin repetir) con
 el mismo nivel de piso que el nombrado.
 
-**Estado:** `cadenaEnemigos: { enemigos: [...], indiceActual: 0 }` — persiste
-mientras dure el nodo. Se limpia en `volverAlMapa`, `avanzarSiguienteArco` e
-`iniciarRun`.
+**Estado:** `cadenaEnemigos: { enemigos: [...], indiceActual: 0, recompensasAcumuladas }` —
+persiste mientras dure el nodo. Se limpia en `volverAlMapa`, `avanzarSiguienteArco` e `iniciarRun`.
+
+**Recompensas: se acumulan y se enseñan UNA vez, al final.** `recompensasAcumuladas`
+(`{ oro, objetos }`) va sumando lo de cada eslabón dentro de `jugarCombate`, y el resumen del combate
+lleva el total en curso en vez de solo lo de ese eslabón. Vive en `cadenaEnemigos` y no en la run
+porque es de la cadena: al limpiarla se tira con ella.
+
+Antes el resumen traía solo lo de ese combate y `CombatScreen` lo pintaba en cada eslabón — tres
+carteles de "+N Gold" que aparecían y se iban en 1,6 s, y ninguno decía cuánto llevabas ganado. No se
+notaba mientras la recompensa era una línea inline; al convertirla en un panel con marco quedó a la
+vista. `recompensas.objetos` es una **lista** justo por esto: hoy ningún enemigo encadenado lleva
+objeto, pero con un campo singular el segundo objeto de una cadena se habría perdido en silencio el
+día que lo lleve.
 
 **Buffs temporales:** `_consumirUsoBuffsTemporales` solo se llama al final del
 último combate de la cadena (`jugarCombate(..., consumirBuffs = true/false)`).
@@ -55,7 +66,8 @@ Cuando `cadenaEnemigos.enemigos.length > 1`:
 - Indicador en cabecera: "COMBATE 1 / 3" (en rojo tenue).
 - Al ganar un combate no final: mensaje pulsante "Siguiente enemigo (2/3)..." —
   **auto-avance** automático a los 1600 ms via `useEffect`, sin botón.
-- Al ganar el último combate: botón **Continuar** normal (vuelve al mapa).
+- Al ganar el último combate: botón **Continuar** normal (vuelve al mapa) y, ahí sí, el panel de
+  recompensas con el total de la cadena.
 - Si el jugador muere en cualquier pelea de la cadena, el flujo de Game Over
   normal tiene prioridad (`runTerminada` se chequea antes en la UI).
 

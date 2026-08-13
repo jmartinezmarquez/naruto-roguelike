@@ -608,6 +608,72 @@ punto 13 le añadió cuatro textos de golpe.
   índice reconstruido por nombre daría siempre el primero y la segunda transformación no se
   desbloquearía jamás.
 
+**Lavado de cara: el kit de piezas compartidas — ver [33](./33-direccion-visual.md)**
+
+Salió de comparar las dos maquetas (`layoutPantallaLogros.png` y la de enciclopedia) con lo que había:
+ocho pantallas que compartían paleta pero **ningún lenguaje** — bordes de tres grosores, cabeceras con
+tres jerarquías, y en ningún sitio las esquinas en corchete de las maquetas.
+
+- [x] **Seis piezas, no dos pantallas rediseñadas**: `PanelMarco` (con las esquinas en corchete),
+  `CabeceraPantalla`, `FilaPestanas` (con contador por pestaña), `IconoEnmarcado`, `TituloBloque` /
+  `CampoDato` y los dos botones. En `components/common/PiezasUI.jsx`. Rediseñar pantalla a pantalla
+  habría producido otros ocho dialectos.
+- [x] ⚠️ **Colores semánticos, que era el arreglo previo obligatorio**: la paleta tenía colores de
+  elemento y ninguno de significado, así que el verde de "desbloqueado / victoria / eficaz" era
+  `fuuton` —el chakra de viento— y el oro de "legendario" era `raiton`. Se rompía de verdad en la tabla
+  de eficacias, que pinta los cinco elementos y a la vez tiene que decir bueno/malo. Nuevos
+  `--color-exito`, `--color-oro` y `--color-marco`.
+- [x] Aplicado a **Logros** y **Enciclopedia**, las dos que tienen maqueta. En Logros, las
+  **categorías por acto se calculan** de los JSON de arco en vez de añadir un campo `categoria` a los
+  logros (dos copias del mismo dato se desincronizan), y el **icono de cada logro sale de su
+  recompensa** en vez de arte que no existe. En la Enciclopedia, **filtro por naturaleza de chakra**.
+- [x] **Fuera a propósito** (está razonado en el doc 33): el raíl de recompensas globales —que es el
+  punto 5b, no diseño—, el shell de navegación lateral/inferior, y los campos "Aldea"/"Afiliación",
+  que serían 29 entradas de contenido nuevo.
+- [x] **Logros y Enciclopedia se abren como ventana sobre el mapa** (`VentanaModal`), estilo Pokelike:
+  barra de título con la X en la esquina, el mapa visible detrás y **scroll propio del cuerpo** en vez
+  del de la página, así que las pestañas no se van hacia arriba al bajar. Se cierra con la X o con
+  Escape, y **no** al pulsar fuera: es una ventana grande con muchos clics dentro, y un clic perdido en
+  el borde no debe tirar por tierra dónde estabas. La barra de scroll va dibujada (`.scroll-pixel`).
+- [x] **Botón de cerrar propio** (`BotonCerrar`): caja crema con borde grueso y un bloque de sombra
+  **opaco** detrás —nunca un `box-shadow` difuso, que es lo único que no puede existir en una rejilla de
+  píxeles— que se separa al hacer hover y se hunde al pulsar. La X son dos barras giradas y no el
+  carácter `✕`, que en `PressStart2P` sale fino al lado de un borde de 2 px.
+- [x] **Renombradas de cara al jugador**: Achievements → **Missions**, Encyclopedia → **Bingo Book** (el
+  registro de ninjas fichados de la serie). Los ids internos no se tocan: son claves lógicas, no texto.
+- [x] **Las ocho pantallas ya llevan el kit.** Al aplicarlo salió el criterio de forma, que vale para la
+  siguiente que se añada: **ventana sobre el mapa** si es una consulta o una decisión corta dentro de un
+  nodo (Missions, Bingo Book, Mochila, Recompensa de mini-jefe); **pantalla completa** si es un momento
+  propio de la run (Combate, Tienda, Reclutar, Game Over, Selección). Dos consecuencias: la mochila
+  **dejó de cerrarse al tocar fuera** (dentro se eligen personajes con varios clics y uno escapado al
+  borde la cerraba a mitad de la decisión) y en la recompensa de mini-jefe **cerrar es saltar, no
+  coger** — cerrar una ventana nunca debe regalar nada.
+- [x] **Tanda de ajuste tras verlo en pantalla**: el panel de recompensas del combate era un
+  `inline-flex` y el botón "Continue" también es inline, así que salían **en la misma línea** y el premio
+  parecía otro botón; ahora es un panel de bloque centrado con el oro y el objeto enmarcados. La
+  recompensa de mini-jefe **pierde la X** (sus dos salidas ya son botones, y una X obliga a decidir qué
+  hace cerrar: si coge, regala un objeto; si salta, Escape lo tira sin avisar) y los pone **en fila**. Y
+  en la tienda, las tarjetas pasan de rejilla de 3 columnas a `flex justify-center`, porque al comprar
+  una las restantes se agarraban a las columnas 1 y 2 y el escaparate se iba a la izquierda.
+- [x] **Las recompensas de una cadena de entrenador se acumulan y salen una sola vez, al final**
+  (`recompensasAcumuladas` en `cadenaEnemigos`). Salían en cada eslabón con lo de ese combate: tres
+  carteles de 1,6 s y ninguno decía el total. **El comportamiento venía de antes** —el comentario del
+  código lo declaraba intencionado— y lo que lo destapó fue convertir la recompensa en un panel con
+  marco: mientras era una línea inline no se notaba. `recompensas.objeto` pasa a `objetos` (lista):
+  hoy ningún enemigo encadenado lleva objeto, pero con un campo singular el segundo se habría perdido
+  en silencio el día que lo lleve. 215 tests (eran 211).
+- [x] ⚠️ **`tono="hueco"` no vale para "deshabilitado"**: las tarjetas de tienda que no podías pagar
+  usaban `hueco` más `opacity-60` y sobre el fondo de Konoha salían casi transparentes — no se leía ni
+  el nombre. Que no puedas comprar algo no es motivo para no poder leerlo. `hueco` queda para contenido
+  que **no existe todavía** (una entrada sin descubrir), y lo deshabilitado se dice con el precio en
+  rojo y el botón apagado.
+- [x] **15 usos semánticos de `fuuton`/`raiton` sustituidos** por `exito`/`oro`: barras de HP, rareza,
+  victoria, curación, subida de nivel, pasiva que salta, transformación, pergamino del mapa y pastilla
+  de consumible. ⚠️ **No se tocó `colorDelDano`**: ahí los colores de elemento son una **escala de
+  calor** deliberada y documentada (katon = golpe eficaz, suiton = bloqueado), no un semáforo. Tampoco
+  la barra de carga del jutsu (juiciness afinada a ojo) ni el registro de texto, que solo existe en
+  desarrollo.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —orden, fases, verificación y las decisiones que hacen

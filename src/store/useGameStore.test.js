@@ -300,9 +300,68 @@ describe('jugarCombate — recompensas en el resumen', () => {
     };
     const resumen = useGameStore.getState().jugarCombate(miniJefeConObjeto, 1);
     expect(useGameStore.getState().recompensaMiniJefe).not.toBeNull();
-    expect(resumen.recompensas.objeto).toBeNull();
+    expect(resumen.recompensas.objetos).toEqual([]);
   });
 
+  it('el objeto del jefe final SÍ va en el resumen: se auto-añade a la mochila', () => {
+    // La otra cara del test anterior. El jefe final no tiene pantalla de recogida,
+    // así que su objeto entra directo y el resumen es el único sitio donde se
+    // anuncia — si no, aparecería en la mochila sin que nadie lo dijera.
+    const jefeConObjeto = {
+      ...enemigoZabuzaDePrueba,
+      recompensa: { xp: 100, objetoGarantizado: 'pergamino_viento' },
+    };
+    const resumen = useGameStore.getState().jugarCombate(jefeConObjeto, 1);
+    expect(resumen.recompensas.objetos).toEqual(['pergamino_viento']);
+  });
+
+});
+
+describe('recompensas de una cadena de entrenador', () => {
+  // El bug: el resumen traía solo lo de ESE combate, así que la pantalla pintaba un
+  // cartel de recompensa en cada eslabón —tres carteles de 1,6 s— y ninguno decía
+  // cuánto llevabas ganado en total.
+  function cadenaDeDosDePrueba() {
+    useGameStore.setState({
+      cadenaEnemigos: {
+        enemigos: [
+          { enemigoBase: enemigoDebilDePrueba, nivel: 1 },
+          { enemigoBase: enemigoDebilDePrueba, nivel: 1 },
+        ],
+        indiceActual: 0,
+      },
+    });
+  }
+
+  it('el resumen del primer eslabón trae solo lo de ese combate', () => {
+    cadenaDeDosDePrueba();
+    const primero = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, false);
+    expect(primero.recompensas.oro).toBeGreaterThan(0);
+    expect(useGameStore.getState().cadenaEnemigos.recompensasAcumuladas.oro)
+      .toBe(primero.recompensas.oro);
+  });
+
+  it('el resumen del último eslabón trae el TOTAL de la cadena, no solo su combate', () => {
+    cadenaDeDosDePrueba();
+    const primero = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, false);
+    const oroDelPrimero = primero.recompensas.oro;
+
+    useGameStore.getState().continuarCadena();
+    const segundo = useGameStore.getState().ultimoResultadoCombate;
+
+    expect(segundo.recompensas.oro).toBeGreaterThan(oroDelPrimero);
+  });
+
+  it('el acumulado muere con la cadena: el combate siguiente empieza de cero', () => {
+    cadenaDeDosDePrueba();
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, false);
+    useGameStore.setState({ cadenaEnemigos: null });
+
+    const suelto = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    // Sin cadena no hay acumulado: el resumen es exactamente lo de este combate.
+    expect(useGameStore.getState().oro - suelto.recompensas.oro).toBeGreaterThanOrEqual(0);
+    expect(suelto.recompensas.objetos).toEqual([]);
+  });
 });
 
 describe('jugarCombate — transformaciones desbloqueadas', () => {

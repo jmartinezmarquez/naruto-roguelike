@@ -56,9 +56,9 @@ export function RitmoCarga({ luchador, className = '' }) {
 // Ver documentacion/22-diseño-tarjeta-de-personaje.md.
 const RAREZA = {
   comun: { estrellas: '★', etiqueta: 'Common', color: 'text-pergamino-200/60' },
-  inicial: { estrellas: '★', etiqueta: 'Starter', color: 'text-fuuton' },
+  inicial: { estrellas: '★', etiqueta: 'Starter', color: 'text-exito' },
   raro: { estrellas: '★★', etiqueta: 'Rare', color: 'text-suiton' },
-  legendario: { estrellas: '★★★', etiqueta: 'Legendary', color: 'text-raiton' },
+  legendario: { estrellas: '★★★', etiqueta: 'Legendary', color: 'text-oro' },
 };
 
 /**
@@ -114,7 +114,7 @@ function NombreQueCabe({ id, className }) {
 /** La barra de HP, con el color por tramos igual que en combate. */
 function BarraHp({ actual, maximo }) {
   const porcentaje = Math.max(0, Math.min(1, actual / maximo));
-  const color = porcentaje > 0.5 ? 'bg-fuuton' : porcentaje > 0.2 ? 'bg-raiton' : 'bg-sello-500';
+  const color = porcentaje > 0.5 ? 'bg-exito' : porcentaje > 0.2 ? 'bg-oro' : 'bg-sello-500';
 
   return (
     <div>

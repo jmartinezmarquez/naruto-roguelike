@@ -1,4 +1,9 @@
-# Enciclopedia (`components/Encyclopedia/EncyclopediaScreen.jsx`)
+# Enciclopedia — "Bingo Book" (`components/Encyclopedia/EncyclopediaScreen.jsx`)
+
+> **En el juego se llama "Bingo Book"**, que es el registro de ninjas fichados de la propia serie. Los
+> ids y los nombres de fichero se quedan como `enciclopedia` / `Encyclopedia`: son claves lógicas, no
+> texto de display (misma regla que los JSON). La pantalla de Logros, por lo mismo, se llama
+> **"Missions"** de cara al jugador.
 
 Punto 10 del roadmap. Es el sitio donde vive todo lo que se fue **sacando** de las tarjetas para que
 cupieran en pantalla: la descripción narrativa de cada jutsu, su potencia, el ritmo exacto de carga,

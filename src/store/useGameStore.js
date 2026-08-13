@@ -612,7 +612,7 @@ export const useGameStore = create((set, get) => ({
     let logrosDesbloqueados = [];
     let transformacionesDesbloqueadas = [];
     let subidasDeNivel = [];
-    let recompensas = null;
+    let recompensas = null; // reasignada más abajo al acumular la cadena
     let arcoCompletado = false;
     // Quiénes ya estaban caídos ANTES de este combate (no curados desde
     // entonces) — esos no ganan XP al ganar. Quien caiga DURANTE este mismo
@@ -726,6 +726,24 @@ export const useGameStore = create((set, get) => ({
         get()._aplicarDerrota(activo.id);
         // Si queda alguien vivo, el bucle continúa automáticamente con él
         // contra luchadorEnemigo, que sigue con el HP que le quedó.
+      }
+    }
+
+    // **En una cadena de entrenador la recompensa se acumula y se enseña una sola
+    // vez, al final.** Antes el resumen traía solo lo de ESTE combate y la pantalla
+    // lo pintaba en cada eslabón: tres carteles de "+N Gold" que aparecían y
+    // desaparecían en 1,6 s cada uno, y ninguno decía cuánto habías ganado en
+    // total. El acumulado vive en `cadenaEnemigos` porque es de la cadena, no de la
+    // run: al terminarla se tira con ella.
+    if (recompensas) {
+      const cadena = get().cadenaEnemigos;
+      if (cadena) {
+        const acumuladas = {
+          oro: (cadena.recompensasAcumuladas?.oro ?? 0) + recompensas.oro,
+          objetos: [...(cadena.recompensasAcumuladas?.objetos ?? []), ...recompensas.objetos],
+        };
+        set({ cadenaEnemigos: { ...cadena, recompensasAcumuladas: acumuladas } });
+        recompensas = acumuladas;
       }
     }
 
@@ -1109,16 +1127,20 @@ export const useGameStore = create((set, get) => ({
       transformaciones,
       subidasDeNivel,
       // Lo que se lleva el jugador por este combate, para que la pantalla pueda
-      // enseñarlo. `objeto` solo se rellena cuando el objeto ha entrado DE VERDAD
-      // en la mochila: el del mini-jefe tiene su propia pantalla de recogida
-      // (`recompensaMiniJefe`) y prometerlo aquí además sería contarlo dos veces.
+      // enseñarlo. `objetos` es una LISTA aunque hoy nunca traiga más de uno: en
+      // una cadena de entrenador las recompensas se suman y se enseñan juntas al
+      // final, y con un campo singular el segundo objeto de una cadena se habría
+      // perdido en silencio el día que un enemigo encadenado lleve uno.
+      // Solo entra el objeto que ha llegado DE VERDAD a la mochila: el del
+      // mini-jefe tiene su propia pantalla de recogida (`recompensaMiniJefe`) y
+      // prometerlo aquí además sería contarlo dos veces.
       //
       // La XP no viaja aquí: casi cada combate sube un nivel, así que el número
       // exacto no cambia ninguna decisión y la pantalla no lo enseña. Lo que sí
       // se ve de la XP es su consecuencia — el cartel de subida de nivel.
       recompensas: {
         oro: oroGanado,
-        objeto: recompensaNueva ? null : objetoGanado ?? null,
+        objetos: !recompensaNueva && objetoGanado ? [objetoGanado] : [],
       },
     };
   },

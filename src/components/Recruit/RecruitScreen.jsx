@@ -4,13 +4,16 @@ import configGlobal from '../../data/config.json';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import { nombrePersonaje, nombreCorto } from '../common/nombres';
+import {
+  PanelMarco, CabeceraPantalla, BotonPrincipal, BotonSecundario,
+} from '../common/PiezasUI';
 
 // Rótulo de la pantalla según el pergamino que había en el mapa. Es la única
 // forma que tiene el jugador de confirmar que el nodo dorado que ha elegido es
 // el que ha abierto — ver documentacion/28-nodo-reclutar.md.
 const CABECERA_POR_RAREZA = {
-  comun: { titulo: 'Ninja Available!', color: 'text-pergamino-100' },
-  legendario: { titulo: 'Legendary Challenge', color: 'text-raiton' },
+  comun: { antetitulo: 'A ninja crosses your path', titulo: 'Recruit' },
+  legendario: { antetitulo: 'The golden scroll', titulo: 'Legendary Challenge' },
 };
 
 /**
@@ -25,12 +28,12 @@ function TarjetaPersonaje({ opcion, nivel, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="elevar-hover w-full h-full text-left rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-fuuton"
+      className="elevar-hover w-full h-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-oro"
     >
       <FichaPersonaje
         id={opcion.personajeId}
         nivel={nivel}
-        className="p-3 h-full hover:border-fuuton"
+        className="p-3 h-full hover:border-oro/70"
       />
     </button>
   );
@@ -46,7 +49,7 @@ function TarjetaPersonaje({ opcion, nivel, onClick }) {
  */
 function TarjetaDesafio({ opcion, nivelDesafio }) {
   return (
-    <div className="w-full max-w-xs rounded-xl border-2 border-raiton/60 shadow-lg shadow-raiton/10">
+    <div className="w-full max-w-xs border-2 border-oro/60 shadow-lg shadow-oro/10">
       <FichaPersonaje
         id={opcion.personajeId}
         nivel={nivelDesafio}
@@ -60,16 +63,16 @@ function TarjetaDesafio({ opcion, nivelDesafio }) {
 function PanelReemplazo({ nombreNuevo, equipo, onElegir, onCancelar }) {
   return (
     <div className="fixed inset-0 bg-tinta-950/80 flex items-center justify-center z-50 px-4">
-      <div className="bg-tinta-900 border border-pergamino-100/20 rounded-xl p-6 max-w-sm w-full">
-        <p className="font-display text-pergamino-100 text-center mb-1">Who does</p>
-        <p className="font-display text-fuuton text-center text-lg mb-4">{nombreNuevo} replace?</p>
+      <PanelMarco className="p-6 max-w-sm w-full">
+        <p className="font-display text-[10px] text-pergamino-100 text-center mb-1">Who does</p>
+        <p className="font-display text-oro text-center text-xs mb-4">{nombreNuevo} replace?</p>
         <div className="grid grid-cols-3 gap-2 mb-4">
           {equipo.map((p) => (
             <button
               key={p.id}
               type="button"
               onClick={() => onElegir(p.id)}
-              className="elevar-hover flex flex-col items-center gap-1 py-2 px-1 bg-tinta-800 hover:bg-sello-600/30 border border-pergamino-100/10 hover:border-sello-600/60 rounded-lg text-[10px] text-pergamino-100 font-display"
+              className="elevar-hover flex flex-col items-center gap-1 py-2 px-1 bg-tinta-800 hover:bg-sello-600/30 border border-marco hover:border-sello-600/60 rounded-sm text-[9px] text-pergamino-100 font-display"
             >
               {spriteDeCombate(p.id, p.nivel) && (
                 <img
@@ -86,11 +89,11 @@ function PanelReemplazo({ nombreNuevo, equipo, onElegir, onCancelar }) {
         <button
           type="button"
           onClick={onCancelar}
-          className="w-full text-xs text-pergamino-200/50 hover:text-pergamino-100 underline"
+          className="w-full text-[9px] font-display text-pergamino-200/50 hover:text-pergamino-100 underline"
         >
           Cancel
         </button>
-      </div>
+      </PanelMarco>
     </div>
   );
 }
@@ -106,7 +109,7 @@ export default function RecruitScreen() {
 
   if (!oferta) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
+      <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body text-[10px]">
         No active recruit node.
       </div>
     );
@@ -137,12 +140,15 @@ export default function RecruitScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-pergamino-100 font-body flex flex-col items-center justify-center px-4 py-8">
-      <header className="text-center mb-8">
-        <h1 className={`font-display text-3xl font-bold mb-1 ${cabecera.color}`}>
-          {desafioGanado ? 'They Yield' : cabecera.titulo}
-        </h1>
-        <p className="text-pergamino-200/60 text-sm font-display">
+    // A pantalla completa: reclutar es una decisión de la run —y el pergamino
+    // dorado, un combate— no una consulta sobre el mapa.
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body flex flex-col items-center justify-center px-4 py-8 gap-6">
+      <div className="flex flex-col gap-2">
+        <CabeceraPantalla
+          antetitulo={desafioGanado ? 'The scroll is yours' : cabecera.antetitulo}
+          titulo={desafioGanado ? 'They Yield' : cabecera.titulo}
+        />
+        <p className="text-[10px] text-pergamino-200/60 text-center max-w-md">
           {desafioPendiente
             ? 'Beat them in combat and they will join you'
             : desafioGanado
@@ -153,39 +159,40 @@ export default function RecruitScreen() {
                 ? 'Your team is full — tap one to choose who they replace'
                 : 'Tap a ninja to add them to your team'}
         </p>
-      </header>
+      </div>
 
       {oferta.esDesafio && rival ? (
-        <div className="flex flex-col items-center gap-5 mb-8">
+        <div className="flex flex-col items-center gap-5">
           <TarjetaDesafio opcion={rival} nivelDesafio={oferta.nivelDesafio} />
           {desafioPendiente ? (
             <>
               {/* El aviso va en rojo y sin rodeos: aceptar puede terminar la run
                   ahí mismo, y el jugador tiene que saberlo ANTES de pulsar. */}
-              <p className="text-sello-500 text-xs text-center max-w-md leading-relaxed">
+              <p className="text-sello-500 text-[10px] text-center max-w-md leading-relaxed">
                 Your whole team fights them in a row, with the HP they have now.
                 If everyone falls, the run ends.
               </p>
-              <button
-                type="button"
+              <BotonPrincipal
                 onClick={iniciarDesafioLegendario}
-                className="elevar-hover px-10 py-3 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 tracking-widest"
+                className="elevar-hover px-10 py-3 tracking-widest"
               >
                 FIGHT
-              </button>
+              </BotonPrincipal>
             </>
           ) : (
+            /* En `exito` y no en `fuuton`: es el verde de "lo has conseguido", no
+               el color del chakra de viento del rival de turno. */
             <button
               type="button"
               onClick={() => manejarClic(rival.personajeId)}
-              className="elevar-hover px-10 py-3 bg-fuuton hover:brightness-110 rounded-full font-display text-tinta-950 tracking-widest"
+              className="elevar-hover px-10 py-3 bg-exito hover:brightness-110 rounded-full font-display text-[11px] text-tinta-950 tracking-widest"
             >
               RECRUIT
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-3xl">
           {oferta.personajes.length > 0 ? (
             oferta.personajes.map((opcion) => (
               <TarjetaPersonaje
@@ -197,20 +204,16 @@ export default function RecruitScreen() {
               />
             ))
           ) : (
-            <p className="col-span-3 text-center text-pergamino-200/50 text-sm py-8">
+            <p className="col-span-3 text-center text-pergamino-200/50 text-[10px] py-8">
               No ninjas available to recruit here.
             </p>
           )}
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={volverAlMapa}
-        className="px-8 py-2.5 bg-tinta-800 hover:bg-tinta-700 border border-pergamino-100/20 rounded-full font-display text-pergamino-100 transition-colors text-sm tracking-widest"
-      >
+      <BotonSecundario onClick={volverAlMapa} sobreFondo className="px-8 tracking-widest">
         {desafioPendiente ? 'WALK AWAY' : 'SKIP'}
-      </button>
+      </BotonSecundario>
 
       {candidatoId && (
         <PanelReemplazo

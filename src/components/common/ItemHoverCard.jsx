@@ -46,7 +46,7 @@ function textoEfecto(objeto) {
 }
 
 const COLOR_TIPO_OBJETO = {
-  consumible: 'bg-raiton',
+  consumible: 'bg-oro',
   equipable: 'bg-suiton',
 };
 

@@ -1,6 +1,7 @@
 import { useGameStore } from '../../store/useGameStore';
 import { nombrePersonaje } from '../common/nombres';
 import { spriteDeCombate } from '../common/datosDeLuchador';
+import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
 
 export default function GameOverScreen() {
   const equipo = useGameStore((s) => s.equipo);
@@ -16,11 +17,16 @@ export default function GameOverScreen() {
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
-      <div className="max-w-md w-full text-center">
-        <p className={`font-naruto text-5xl mb-2 ${runGanada ? 'text-fuuton' : 'text-sello-500'}`}>
-          {runGanada ? 'Victory' : 'Game Over'}
-        </p>
-        <p className="text-pergamino-200/80 text-sm mb-6">
+      <div className="max-w-md w-full text-center flex flex-col gap-5">
+        {/* A pantalla completa y no como ventana: es el final de la run, no una
+            consulta. Que no haya mapa detrás es parte del mensaje.
+            El verde va en `exito` y no en `fuuton`: es "has ganado", no chakra de
+            viento (ver documentacion/33-direccion-visual.md). */}
+        <CabeceraPantalla
+          antetitulo={runGanada ? 'The Will of Fire' : 'End of the road'}
+          titulo={runGanada ? 'Victory' : 'Game Over'}
+        />
+        <p className="text-[11px] text-pergamino-200/80 leading-relaxed">
           {runGanada
             ? 'You have defeated Pain and completed all 3 arcs. Konoha is safe.'
             : (
@@ -31,15 +37,15 @@ export default function GameOverScreen() {
             )}
         </p>
 
-        <div className="bg-tinta-900 border border-pergamino-100/10 rounded-lg p-4 mb-6">
-          <p className="font-display font-bold text-sm mb-3 tracking-wide">TEAM</p>
+        <PanelMarco className="p-4 flex flex-col gap-3">
+          <TituloBloque>Team</TituloBloque>
           <div className="flex flex-col gap-2">
             {equipo.map((p) => {
               const hpMaximo = obtenerHpMaximo(p.id) ?? 1;
               return (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between rounded-md border border-pergamino-100/10 bg-tinta-950/40 px-3 py-2"
+                  className="flex items-center justify-between rounded-sm border border-marco bg-tinta-950/40 px-3 py-2"
                 >
                   <div className="flex items-center gap-3 text-left min-w-0">
                     {/* La pantalla de game over es la foto final de la run: sin
@@ -55,30 +61,26 @@ export default function GameOverScreen() {
                       />
                     )}
                     <div className="min-w-0">
-                      <p className="text-sm font-display truncate">{nombrePersonaje(p.id)}</p>
-                      <p className="text-xs text-pergamino-200/50">Lv. {p.nivel}</p>
+                      <p className="text-[11px] font-display truncate">{nombrePersonaje(p.id)}</p>
+                      <p className="text-[9px] text-pergamino-200/50">Lv. {p.nivel}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-xs ${p.derrotado ? 'text-sello-500' : 'text-fuuton'}`}>
+                    <p className={`text-[9px] font-display ${p.derrotado ? 'text-sello-500' : 'text-exito'}`}>
                       {p.derrotado ? 'Defeated' : 'Standing'}
                     </p>
-                    <p className="text-xs text-pergamino-200/60">{p.hpActual} / {hpMaximo} HP</p>
+                    <p className="text-[9px] text-pergamino-200/60">{p.hpActual} / {hpMaximo} HP</p>
                   </div>
                 </div>
               );
             })}
           </div>
-          <p className="text-xs text-pergamino-200/60 mt-3">Gold accumulated: {oro}</p>
-        </div>
+          <p className="text-[9px] text-oro/80 mt-1">Gold accumulated: {oro}</p>
+        </PanelMarco>
 
-        <button
-          type="button"
-          onClick={reiniciarRun}
-          className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
-        >
-          New Run
-        </button>
+        <div>
+          <BotonPrincipal onClick={reiniciarRun}>New Run</BotonPrincipal>
+        </div>
       </div>
     </div>
   );

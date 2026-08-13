@@ -35,6 +35,21 @@
   --color-raiton: #D9B23C;
   --color-doton: #8C6B47;
   --color-suiton: #3D7A9E;
+
+  /* --- Colores SEMÁNTICOS ----------------------------------------------------
+     Separados de los de elemento a propósito, y no es cosmético: hasta ahora el
+     verde de "desbloqueado / victoria / eficaz" era `fuuton` —el color del chakra
+     de viento— y el oro de "legendario" era `raiton`. Ocho sitios usaban un color
+     de elemento para decir algo que no tiene nada que ver con el elemento, y en
+     la tabla de eficacias de la enciclopedia los dos significados se pintan a la
+     vez y chocan.
+
+     `marco` le da nombre al borde de los paneles, que estaba escrito como
+     `pergamino-100/20` en cada pantalla: cambiarlo obligaba a un buscar y
+     reemplazar por todo el proyecto. */
+  --color-exito: #62B36F;
+  --color-oro: #D4A93A;
+  --color-marco: #4D463B;
 }
 
 body {
@@ -273,3 +288,37 @@ img {
 }
 
 .entrada-relevo { animation: entrada-relevo 260ms ease-out; }
+
+/* --- Barra de scroll dentro de una ventana ----------------------------------
+   El scroll de `VentanaModal` es del cuerpo de la ventana, no de la página, así
+   que su barra se ve siempre y con el aspecto por defecto del navegador rompe la
+   ilusión de "esto es un juego" más que cualquier otro detalle: es lo único en
+   pantalla que no está dibujado.
+
+   Cuadrada (`border-radius: 0`) y con los colores del marco. Solo WebKit/Blink
+   más `scrollbar-color` para Firefox — no hay forma estándar de darle forma, y no
+   pasa nada: donde no se aplique se ve la del sistema y la ventana sigue
+   funcionando igual. */
+
+.scroll-pixel {
+  scrollbar-color: var(--color-marco) var(--color-tinta-950);
+  scrollbar-width: thin;
+}
+
+.scroll-pixel::-webkit-scrollbar {
+  width: 12px;
+}
+
+.scroll-pixel::-webkit-scrollbar-track {
+  background: var(--color-tinta-950);
+  border-left: 2px solid var(--color-marco);
+}
+
+.scroll-pixel::-webkit-scrollbar-thumb {
+  background: var(--color-marco);
+  border: 2px solid var(--color-tinta-950);
+}
+
+.scroll-pixel::-webkit-scrollbar-thumb:hover {
+  background: var(--color-pergamino-200);
+}

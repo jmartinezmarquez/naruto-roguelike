@@ -14,8 +14,12 @@ import { spriteDeModo } from '../common/transformationSprites';
 import { encontrarBaseDeLuchador } from '../common/datosDeLuchador';
 import { SPRITE_OBJETO, COLOR_RAREZA, ETIQUETA_RAREZA, lineasDeEfecto } from '../Inventory/itemSprites';
 import {
-  nombreCorto, nombreObjeto, clasePastillaDeNaturaleza, emojiDeNaturaleza, emojiDeTipo,
+  nombreCorto, nombreObjeto, tipoDeLuchador, clasePastillaDeNaturaleza, emojiDeNaturaleza, emojiDeTipo,
 } from '../common/nombres';
+import {
+  PanelMarco, VentanaModal, FilaPestanas, IconoEnmarcado, TituloBloque, CampoDato,
+  BotonSecundario,
+} from '../common/PiezasUI';
 
 /**
  * Enciclopedia (punto 10 del roadmap): el sitio donde vive todo lo que se fue
@@ -43,12 +47,12 @@ import {
 // documentacion/28-mochila.md). Con 15 ninjas, 14 enemigos y 11 objetos, una
 // rejilla y una ficha a la vez obligaba a apretar las dos y no se leía ninguna.
 const SECCIONES = [
-  { id: 'ninjas', etiqueta: 'Ninjas', categoria: 'personajes' },
-  { id: 'enemigos', etiqueta: 'Enemies', categoria: 'enemigos' },
-  { id: 'objetos', etiqueta: 'Items', categoria: 'objetos' },
+  { id: 'ninjas', etiqueta: 'NINJA', icono: '🍥', categoria: 'personajes', porTipo: true },
+  { id: 'enemigos', etiqueta: 'ENEMIES', icono: '☠', categoria: 'enemigos', porTipo: true },
+  { id: 'objetos', etiqueta: 'ITEMS', icono: '🎒', categoria: 'objetos', porTipo: false },
   // La tabla de chakra no se desbloquea: son las REGLAS del juego, no contenido
   // que se descubra. Esconderla sería esconder cómo funciona el combate.
-  { id: 'chakra', etiqueta: 'Chakra', categoria: null },
+  { id: 'chakra', etiqueta: 'CHAKRA', icono: '🌀', categoria: null, porTipo: false },
 ];
 
 const MENSAJE_DESBLOQUEO = {
@@ -78,35 +82,24 @@ function entradasDeSeccion(seccionId) {
   return [];
 }
 
-/**
- * Sprite de una entrada, en silueta si está bloqueada.
- *
- * `brightness(0)` deja el dibujo entero en negro conservando su transparencia, o
- * sea la silueta exacta del personaje. No vale un cuadrado gris: la silueta es la
- * que dice "hay alguien aquí que todavía no conoces", que es el punto.
- */
-function SpriteEntrada({ src, bloqueada, className = '' }) {
-  if (!src) {
-    return (
-      <span className={`flex items-center justify-center text-pergamino-200/30 ${className}`}>
-        {bloqueada ? '?' : '—'}
-      </span>
-    );
-  }
-  return (
-    <img
-      src={src}
-      alt=""
-      aria-hidden="true"
-      draggable="false"
-      className={`object-contain select-none ${bloqueada ? 'opacity-40' : ''} ${className}`}
-      style={bloqueada ? { filter: 'brightness(0)' } : undefined}
-    />
-  );
-}
-
 function spriteDeEntrada(seccionId, id) {
   return seccionId === 'objetos' ? SPRITE_OBJETO[id] ?? null : spriteDeLuchador(id);
+}
+
+// El marco de cada casilla lleva el color de la naturaleza de chakra del luchador:
+// con 29 entradas en rejilla, el color del marco se lee antes que cualquier
+// nombre. Los objetos van por rareza, que es su eje equivalente.
+function claseMarcoDeEntrada(seccionId, entrada, bloqueada) {
+  if (bloqueada) return 'border-marco';
+  if (seccionId === 'objetos') {
+    return {
+      comun: 'border-[#7cbf5a]/60', raro: 'border-[#4f9dd9]/60', legendario: 'border-[#b07cd9]/60',
+    }[entrada.base.rareza] ?? 'border-marco';
+  }
+  return {
+    katon: 'border-katon/70', fuuton: 'border-fuuton/70', raiton: 'border-raiton/70',
+    doton: 'border-doton/70', suiton: 'border-suiton/70',
+  }[tipoDeLuchador(entrada.id)] ?? 'border-marco';
 }
 
 /**
@@ -130,19 +123,19 @@ function Casilla({ seccionId, entrada, bloqueada, onElegir }) {
     <button
       type="button"
       onClick={() => onElegir(entrada.id)}
-      className={[
-        'elevar-hover rounded-lg border p-2 flex flex-col items-center gap-1 transition-colors',
-        bloqueada
-          ? 'bg-tinta-950/60 border-pergamino-100/10 hover:border-pergamino-100/25'
-          : 'bg-tinta-900 border-pergamino-100/20 hover:border-sello-500/60',
-      ].join(' ')}
+      className="elevar-hover flex flex-col items-center gap-1"
       title={bloqueada ? MENSAJE_DESBLOQUEO[SECCIONES.find((s) => s.id === seccionId).categoria] : nombre}
     >
-      <SpriteEntrada src={sprite} bloqueada={bloqueada} className="w-14 h-14" />
+      <IconoEnmarcado
+        src={sprite}
+        bloqueado={bloqueada}
+        colorMarco={claseMarcoDeEntrada(seccionId, entrada, bloqueada)}
+        tamano="w-16 h-16"
+      />
       <span
         className={[
-          'font-display text-[8px] leading-tight text-center w-full truncate',
-          bloqueada ? 'text-pergamino-200/35' : 'text-pergamino-100',
+          'font-display text-[7px] leading-tight text-center w-full truncate',
+          bloqueada ? 'text-pergamino-200/30' : 'text-pergamino-100',
         ].join(' ')}
       >
         {bloqueada ? '???' : nombre}
@@ -154,13 +147,13 @@ function Casilla({ seccionId, entrada, bloqueada, onElegir }) {
 /** Ficha de una entrada bloqueada: la silueta grande y qué hacer para abrirla. */
 function FichaBloqueada({ seccionId, entrada, categoria }) {
   return (
-    <div className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-6 flex flex-col items-center gap-4 text-center">
-      <SpriteEntrada src={spriteDeEntrada(seccionId, entrada.id)} bloqueada className="w-24 h-24" />
-      <p className="font-display text-lg text-pergamino-200/40">???</p>
-      <p className="text-[11px] text-pergamino-200/70 max-w-[16rem] leading-relaxed">
+    <PanelMarco tono="hueco" className="p-6 flex flex-col items-center gap-4 text-center">
+      <IconoEnmarcado src={spriteDeEntrada(seccionId, entrada.id)} bloqueado tamano="w-24 h-24" />
+      <p className="font-display text-base text-pergamino-200/35">???</p>
+      <p className="text-[10px] text-pergamino-200/70 max-w-[16rem] leading-relaxed">
         {MENSAJE_DESBLOQUEO[categoria]}
       </p>
-    </div>
+    </PanelMarco>
   );
 }
 
@@ -177,29 +170,23 @@ function BloqueJutsu({ base }) {
   const turnos = turnosParaCargarJutsu(luchador);
 
   return (
-    <section className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-4 flex flex-col gap-2">
-      <h3 className="font-display text-[10px] text-sello-500 tracking-[0.2em] uppercase">Jutsu</h3>
-      <p className="font-display text-sm text-pergamino-100">🌀 {base.jutsu.nombre}</p>
+    <PanelMarco className="p-4 flex flex-col gap-2">
+      <TituloBloque>Jutsu</TituloBloque>
+      <p className="font-display text-xs text-pergamino-100">🌀 {base.jutsu.nombre}</p>
       {base.jutsu.descripcion && (
-        <p className="text-[11px] text-pergamino-200/70 leading-relaxed">{base.jutsu.descripcion}</p>
+        <p className="text-[10px] text-pergamino-200/70 leading-relaxed">{base.jutsu.descripcion}</p>
       )}
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] mt-1">
-        <div className="flex justify-between border-b border-pergamino-100/10 pb-1">
-          <dt className="text-pergamino-200/50">Power</dt>
-          <dd className="text-pergamino-100">×{base.jutsu.danoBase.toFixed(2)}</dd>
-        </div>
-        <div className="flex justify-between border-b border-pergamino-100/10 pb-1">
-          <dt className="text-pergamino-200/50">Charge</dt>
-          <dd className="text-pergamino-100">
-            {Number.isFinite(turnos) ? `${turnos} turn${turnos === 1 ? '' : 's'}` : '—'}
-          </dd>
-        </div>
-      </dl>
-      <p className="text-[9px] text-pergamino-200/40 leading-relaxed">
+      <div className="grid grid-cols-2 gap-x-4 mt-1">
+        <CampoDato etiqueta="Power">×{base.jutsu.danoBase.toFixed(2)}</CampoDato>
+        <CampoDato etiqueta="Charge">
+          {Number.isFinite(turnos) ? `${turnos} turn${turnos === 1 ? '' : 's'}` : '—'}
+        </CampoDato>
+      </div>
+      <p className="text-[8px] text-pergamino-200/40 leading-relaxed">
         Charge measured at level 1 with no item equipped. Taking hits fills the gauge too, so a real
         battle is usually faster.
       </p>
-    </section>
+    </PanelMarco>
   );
 }
 
@@ -213,20 +200,18 @@ function BloqueTransformaciones({ id, base, modosVistos }) {
   if (modos.length === 0) return null;
 
   return (
-    <section className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-4 flex flex-col gap-3">
-      <h3 className="font-display text-[10px] text-sello-500 tracking-[0.2em] uppercase">
-        Transformations
-      </h3>
+    <PanelMarco className="p-4 flex flex-col gap-3">
+      <TituloBloque>Transformations</TituloBloque>
       {modos.map((modo, indice) => {
         const visto = modosVistos.includes(`${id}_${indice}`);
         const sprite = spriteDeModo(id, indice);
 
         if (!visto) {
           return (
-            <div key={indice} className="flex items-center gap-3 opacity-70">
-              <SpriteEntrada src={sprite ?? spriteDeLuchador(id)} bloqueada className="w-10 h-10 shrink-0" />
+            <div key={indice} className="flex items-center gap-3">
+              <IconoEnmarcado src={sprite ?? spriteDeLuchador(id)} bloqueado tamano="w-11 h-11" />
               <div className="min-w-0">
-                <p className="font-display text-[11px] text-pergamino-200/40">???</p>
+                <p className="font-display text-[10px] text-pergamino-200/35">???</p>
                 <p className="text-[9px] text-pergamino-200/60 leading-relaxed">
                   {MENSAJE_MODO_BLOQUEADO}
                 </p>
@@ -244,19 +229,19 @@ function BloqueTransformaciones({ id, base, modosVistos }) {
 
         return (
           <div key={indice} className="flex items-start gap-3">
-            <SpriteEntrada src={sprite} bloqueada={false} className="w-10 h-10 shrink-0" />
+            <IconoEnmarcado src={sprite} colorMarco="border-oro/50" tamano="w-11 h-11" />
             <div className="min-w-0 flex flex-col gap-1">
-              <p className="font-display text-[11px] text-pergamino-100">{modo.nombre}</p>
-              <p className="text-[9px] text-pergamino-200/50">From level {modo.nivelDesbloqueo}</p>
+              <p className="font-display text-[10px] text-pergamino-100">{modo.nombre}</p>
+              <p className="text-[9px] text-pergamino-200/45">From level {modo.nivelDesbloqueo}</p>
               {multiplicadores.length > 0 && (
-                <p className="text-[9px] text-pergamino-200/70">
+                <p className="text-[9px] text-oro/80">
                   {multiplicadores
                     .map(([stat, valor]) => `${ABREVIATURA_STAT[stat] ?? stat} ×${valor}`)
                     .join('   ')}
                 </p>
               )}
               {pasivas.map((pasiva) => (
-                <p key={pasiva.id} className="text-[9px] text-fuuton/90 leading-relaxed">
+                <p key={pasiva.id} className="text-[9px] text-exito/90 leading-relaxed">
                   {nombrePasiva(pasiva.id)}: {describirPasiva(pasiva)}
                 </p>
               ))}
@@ -264,7 +249,7 @@ function BloqueTransformaciones({ id, base, modosVistos }) {
           </div>
         );
       })}
-    </section>
+    </PanelMarco>
   );
 }
 
@@ -287,26 +272,23 @@ function FichaObjetoEnciclopedia({ base }) {
   const lineas = lineasDeEfecto(base);
 
   return (
-    <div className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-4 flex flex-col items-center gap-3 text-center">
-      <SpriteEntrada src={SPRITE_OBJETO[base.id]} bloqueada={false} className="w-20 h-20" />
+    <PanelMarco className="p-5 flex flex-col items-center gap-3 text-center">
+      <IconoEnmarcado src={SPRITE_OBJETO[base.id]} tamano="w-20 h-20" colorMarco="border-oro/40" />
       <div>
-        <p className="font-display text-sm text-pergamino-100">{base.nombre}</p>
-        <p className={`font-display text-[9px] mt-1 ${COLOR_RAREZA[base.rareza] ?? ''}`}>
+        <p className="font-display text-xs text-pergamino-100">{base.nombre}</p>
+        <p className={`font-display text-[8px] mt-1 ${COLOR_RAREZA[base.rareza] ?? ''}`}>
           {ETIQUETA_RAREZA[base.rareza] ?? ''}
         </p>
       </div>
-      <p className="text-[11px] text-pergamino-200/70 leading-relaxed">{base.descripcion}</p>
-      <div className="w-full flex flex-col gap-1 border-t border-pergamino-100/10 pt-2">
+      <p className="text-[10px] text-pergamino-200/70 leading-relaxed">{base.descripcion}</p>
+      <div className="w-full flex flex-col gap-1 border-t border-marco pt-2">
         {lineas.map((linea, i) => (
-          <p
-            key={i}
-            className={`text-[10px] ${linea.positivo ? 'text-fuuton/90' : 'text-sello-500'}`}
-          >
+          <p key={i} className={`text-[10px] ${linea.positivo ? 'text-exito/90' : 'text-sello-500'}`}>
             {linea.icono} {linea.texto}
           </p>
         ))}
       </div>
-    </div>
+    </PanelMarco>
   );
 }
 
@@ -318,8 +300,8 @@ function TablaChakra() {
   const { elementos, tablaEficacias } = typesData;
 
   return (
-    <div className="bg-tinta-900 border border-pergamino-100/15 rounded-lg p-4 flex flex-col gap-3">
-      <p className="text-[10px] text-pergamino-200/60 leading-relaxed">
+    <PanelMarco className="p-4 flex flex-col gap-3">
+      <p className="text-[10px] text-pergamino-200/60 leading-relaxed text-center">
         Rows attack, columns defend. Matching the right nature is the only lever you have in a fight
         you do not control.
       </p>
@@ -330,7 +312,7 @@ function TablaChakra() {
               <th className="p-1" />
               {elementos.map((tipo) => (
                 <th key={tipo} className="p-1">
-                  <span className={`inline-block px-1.5 py-0.5 rounded border ${clasePastillaDeNaturaleza(tipo)}`}>
+                  <span className={`inline-block px-1.5 py-0.5 rounded-sm border ${clasePastillaDeNaturaleza(tipo)}`}>
                     {emojiDeNaturaleza(tipo)}
                   </span>
                 </th>
@@ -341,17 +323,21 @@ function TablaChakra() {
             {elementos.map((atacante) => (
               <tr key={atacante}>
                 <th className="p-1 text-right">
-                  <span className={`inline-block px-1.5 py-0.5 rounded border ${clasePastillaDeNaturaleza(atacante)}`}>
+                  <span className={`inline-block px-1.5 py-0.5 rounded-sm border ${clasePastillaDeNaturaleza(atacante)}`}>
                     {emojiDeNaturaleza(atacante)}
                   </span>
                 </th>
                 {elementos.map((defensor) => {
                   const eficacia = tablaEficacias[atacante][defensor];
+                  // Verde/rojo SEMÁNTICOS, no colores de elemento: esta tabla pinta
+                  // los cinco elementos a la vez, así que usar `fuuton` para decir
+                  // "bueno" haría chocar el significado con el elemento en la misma
+                  // casilla.
                   const color = eficacia > 1
-                    ? 'text-fuuton bg-fuuton/10'
+                    ? 'text-exito bg-exito/10'
                     : eficacia < 1 ? 'text-sello-500 bg-sello-600/10' : 'text-pergamino-200/40';
                   return (
-                    <td key={defensor} className={`p-1.5 text-center font-display rounded ${color}`}>
+                    <td key={defensor} className={`p-1.5 text-center font-display rounded-sm ${color}`}>
                       ×{eficacia}
                     </td>
                   );
@@ -361,10 +347,10 @@ function TablaChakra() {
           </tbody>
         </table>
       </div>
-      <p className="text-[9px] text-pergamino-200/40 text-center">
+      <p className="text-[8px] text-pergamino-200/40 text-center">
         Cycle: {elementos.map((t) => emojiDeNaturaleza(t)).join(' → ')} → {emojiDeNaturaleza(elementos[0])}
       </p>
-    </div>
+    </PanelMarco>
   );
 }
 
@@ -372,55 +358,87 @@ export default function EncyclopediaScreen() {
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const vistos = useAchievementsStore((s) => s.vistos);
   const [seccionId, setSeccionId] = useState('ninjas');
+  const [tipoFiltro, setTipoFiltro] = useState('todos');
   const [elegidoId, setElegidoId] = useState(null);
 
   const seccion = SECCIONES.find((s) => s.id === seccionId);
-  const entradas = useMemo(() => entradasDeSeccion(seccionId), [seccionId]);
+  const todasLasEntradas = useMemo(() => entradasDeSeccion(seccionId), [seccionId]);
   const vistosDeLaSeccion = seccion.categoria ? vistos[seccion.categoria] ?? [] : [];
+
+  // Filtro por naturaleza de chakra, como en la maqueta. Con 29 luchadores la
+  // rejilla se recorre mucho mejor por elemento que por orden de JSON, y de paso es
+  // la única vista del juego donde se pueden comparar los de un mismo tipo.
+  const entradas = seccion.porTipo && tipoFiltro !== 'todos'
+    ? todasLasEntradas.filter((e) => tipoDeLuchador(e.id) === tipoFiltro)
+    : todasLasEntradas;
 
   function cambiarSeccion(id) {
     setSeccionId(id);
     setElegidoId(null); // la ficha abierta no pertenece a la sección nueva
+    setTipoFiltro('todos');
   }
+
+  // Cada pestaña lleva su propio contador de descubiertas: eso es lo que las
+  // convierte en resumen de progreso y no en un filtro a ciegas, que es como
+  // funcionan en las dos maquetas.
+  const pestanasSeccion = SECCIONES.map((s) => {
+    if (!s.categoria) return { id: s.id, etiqueta: s.etiqueta, icono: s.icono };
+    const suyas = entradasDeSeccion(s.id);
+    const vistasAqui = (vistos[s.categoria] ?? []).filter((id) => suyas.some((e) => e.id === id));
+    return {
+      id: s.id,
+      etiqueta: s.etiqueta,
+      icono: s.icono,
+      contador: `${vistasAqui.length}/${suyas.length}`,
+    };
+  });
+
+  const pestanasTipo = [
+    { id: 'todos', etiqueta: 'ALL' },
+    ...typesData.elementos.map((tipo) => ({
+      id: tipo, etiqueta: tipo.toUpperCase(), icono: emojiDeNaturaleza(tipo),
+    })),
+  ];
 
   const elegida = elegidoId ? entradas.find((e) => e.id === elegidoId) : null;
   const elegidaBloqueada = elegida ? !vistosDeLaSeccion.includes(elegida.id) : false;
+  const descubiertas = vistosDeLaSeccion
+    .filter((id) => todasLasEntradas.some((e) => e.id === id)).length;
+  const porcentaje = todasLasEntradas.length > 0
+    ? Math.round((descubiertas / todasLasEntradas.length) * 100)
+    : 0;
+
+  // Las pestañas van en la cabecera FIJA de la ventana: mientras la rejilla corre
+  // debajo, en qué sección y con qué filtro estás no se pierde nunca de vista. La
+  // segunda fila desaparece al abrir una ficha, que ya no es una lista que filtrar.
+  const cabecera = (
+    <>
+      <FilaPestanas pestanas={pestanasSeccion} activaId={seccionId} onElegir={cambiarSeccion} />
+      {seccion.porTipo && !elegida && (
+        <FilaPestanas pestanas={pestanasTipo} activaId={tipoFiltro} onElegir={setTipoFiltro} />
+      )}
+    </>
+  );
 
   return (
-    <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8">
-      <div className="max-w-2xl mx-auto flex flex-col gap-4">
-        <header className="text-center">
-          <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Records</p>
-          <h1 className="font-naruto text-4xl text-pergamino-100">Encyclopedia</h1>
-          {seccion.categoria && (
-            <p className="text-xs text-pergamino-200/60 mt-1">
-              {vistosDeLaSeccion.filter((id) => entradas.some((e) => e.id === id)).length} / {entradas.length} discovered
-            </p>
-          )}
-        </header>
+    <VentanaModal
+      titulo="Bingo Book"
+      subtitulo={seccion.categoria
+        ? `${descubiertas} / ${todasLasEntradas.length} discovered (${porcentaje}%)`
+        : 'Chakra nature chart'}
+      onCerrar={volverAlMapa}
+      ancho="max-w-2xl"
+      cabeceraFija={cabecera}
+    >
+      {seccionId === 'chakra' && <TablaChakra />}
 
-        <nav className="flex justify-center gap-2 flex-wrap">
-          {SECCIONES.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => cambiarSeccion(s.id)}
-              className={[
-                'font-display text-[10px] px-3 py-1.5 rounded-full border transition-colors',
-                s.id === seccionId
-                  ? 'bg-sello-600 border-sello-600 text-pergamino-100'
-                  : 'border-pergamino-100/20 text-pergamino-200/60 hover:border-pergamino-100/40 hover:text-pergamino-100',
-              ].join(' ')}
-            >
-              {s.etiqueta}
-            </button>
-          ))}
-        </nav>
-
-        {seccionId === 'chakra' && <TablaChakra />}
-
-        {seccionId !== 'chakra' && !elegida && (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+      {seccionId !== 'chakra' && !elegida && (
+        entradas.length === 0 ? (
+          <p className="text-center text-[10px] text-pergamino-200/50 py-8">
+            No entries of this nature.
+          </p>
+        ) : (
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2.5">
             {entradas.map((entrada) => (
               <Casilla
                 key={entrada.id}
@@ -431,43 +449,29 @@ export default function EncyclopediaScreen() {
               />
             ))}
           </div>
-        )}
+        )
+      )}
 
-        {elegida && (
-          <div className="flex flex-col gap-3">
-            {elegidaBloqueada && (
-              <FichaBloqueada seccionId={seccionId} entrada={elegida} categoria={seccion.categoria} />
-            )}
-            {!elegidaBloqueada && seccionId === 'objetos' && (
-              <FichaObjetoEnciclopedia base={elegida.base} />
-            )}
-            {!elegidaBloqueada && seccionId !== 'objetos' && (
-              <FichaLuchador
-                id={elegida.id}
-                base={encontrarBaseDeLuchador(elegida.id) ?? elegida.base}
-                modosVistos={vistos.modos ?? []}
-              />
-            )}
-            <button
-              type="button"
-              onClick={() => setElegidoId(null)}
-              className="self-center font-display text-[9px] px-4 py-2 rounded-md border border-pergamino-100/20 text-pergamino-200/60 hover:border-pergamino-100/40 hover:text-pergamino-100 transition-colors"
-            >
-              ← Back to list
-            </button>
-          </div>
-        )}
-
-        <div className="text-center mt-2">
-          <button
-            type="button"
-            onClick={volverAlMapa}
-            className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
-          >
-            Back to map
-          </button>
+      {elegida && (
+        <div className="flex flex-col gap-3">
+          {elegidaBloqueada && (
+            <FichaBloqueada seccionId={seccionId} entrada={elegida} categoria={seccion.categoria} />
+          )}
+          {!elegidaBloqueada && seccionId === 'objetos' && (
+            <FichaObjetoEnciclopedia base={elegida.base} />
+          )}
+          {!elegidaBloqueada && seccionId !== 'objetos' && (
+            <FichaLuchador
+              id={elegida.id}
+              base={encontrarBaseDeLuchador(elegida.id) ?? elegida.base}
+              modosVistos={vistos.modos ?? []}
+            />
+          )}
+          <BotonSecundario onClick={() => setElegidoId(null)} className="self-center">
+            &larr; Back to list
+          </BotonSecundario>
         </div>
-      </div>
-    </div>
+      )}
+    </VentanaModal>
   );
 }

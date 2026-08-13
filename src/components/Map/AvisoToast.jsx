@@ -39,7 +39,7 @@ export default function AvisoToast() {
       className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-opacity pointer-events-none ${visible ? 'opacity-100' : 'opacity-0'}`}
       style={{ transitionDuration: `${DURACION_DESVANECIDO_MS}ms` }}
     >
-      <div className="bg-fuuton text-tinta-950 rounded-full px-5 py-2 shadow-lg font-display text-sm text-center">
+      <div className="bg-exito text-tinta-950 rounded-full px-5 py-2 shadow-lg font-display text-sm text-center">
         {aviso}
       </div>
     </div>

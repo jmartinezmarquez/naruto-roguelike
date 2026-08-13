@@ -9,6 +9,7 @@ import HoverTooltip from '../common/HoverTooltip';
 import { spriteDeProyectil } from '../common/projectileSprites';
 import TransformationScreen from './TransformationScreen';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
+import { PanelMarco, TituloBloque, IconoEnmarcado, BotonPrincipal } from '../common/PiezasUI';
 
 // El replay avanza de GOLPE en golpe, no de turno en turno. Un turno trae 2-4
 // eventos (los dos luchadores, más algún ataque extra) y resolverlos todos de
@@ -41,9 +42,12 @@ const PAUSA_ENTRE_RONDAS_MS = 1400;
 // jugador no llegaba a ver que había subido — que es lo que la explica.
 const MS_CELEBRAR_NIVEL = 1500;
 
+// Verde / oro / rojo son SEMÁNTICOS aquí: dicen cuánta vida queda, no de qué
+// naturaleza es el luchador. Ojo, `colorDelDano` de más abajo es lo contrario —
+// ahí los colores de elemento son una escala de calor a propósito.
 function colorBarraHp(porcentaje) {
-  if (porcentaje > 0.5) return 'bg-fuuton';
-  if (porcentaje > 0.2) return 'bg-raiton';
+  if (porcentaje > 0.5) return 'bg-exito';
+  if (porcentaje > 0.2) return 'bg-oro';
   return 'bg-sello-500';
 }
 
@@ -315,7 +319,7 @@ function CuracionFlotante({ cantidad, refContenedor, refObjetivo }) {
     <NumeroFlotante
       refContenedor={refContenedor}
       refObjetivo={refObjetivo}
-      className="font-display text-lg text-fuuton"
+      className="font-display text-lg text-exito"
     >
       +{cantidad}
     </NumeroFlotante>
@@ -351,8 +355,8 @@ function EtiquetasPasivas({ pasivas, activadas }) {
             <span className={[
               'block text-[10px] font-display uppercase tracking-wide px-1.5 py-0.5 rounded-full border transition-all',
               salta
-                ? 'bg-raiton text-tinta-950 border-raiton scale-105 shadow-[0_0_10px_rgba(217,178,60,0.8)]'
-                : 'bg-raiton/15 text-raiton border-raiton/40',
+                ? 'bg-oro text-tinta-950 border-oro scale-105 shadow-[0_0_10px_rgba(212,169,58,0.8)]'
+                : 'bg-oro/15 text-oro border-oro/40',
             ].join(' ')}
             >
               {nombrePasiva(pasiva.id)}
@@ -411,7 +415,7 @@ function TarjetaLuchador({
       {subioANivel && (
         <span
           aria-hidden="true"
-          className="absolute left-1/2 top-1/3 z-20 font-display text-base text-raiton drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] cartel-subida-nivel whitespace-nowrap"
+          className="absolute left-1/2 top-1/3 z-20 font-display text-base text-oro drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] cartel-subida-nivel whitespace-nowrap"
         >
           Lv. {subioANivel}!
         </span>
@@ -427,7 +431,7 @@ function TarjetaLuchador({
         <p className="font-display text-sm text-center text-pergamino-100 truncate">
           {emojiDeTipo(id)} {nombre}{' '}
           {subioANivel ? (
-            <span className="text-raiton">Lv.{subioANivel} ▲</span>
+            <span className="text-oro">Lv.{subioANivel} ▲</span>
           ) : (
             <span className="text-pergamino-200/60">Lv.{nivel}</span>
           )}
@@ -529,28 +533,40 @@ function TarjetaLuchador({
  * El objeto solo sale cuando ha entrado DE VERDAD en la mochila: el del mini-jefe
  * tiene su propia pantalla de recogida, y prometerlo aquí además sería contarlo
  * dos veces.
+ *
+ * ⚠️ Era un `inline-flex`, y como el botón de "Continue" también es inline acababan
+ * los dos **en la misma línea**: la recompensa parecía otro botón puesto al lado
+ * del botón. Ahora es un panel de bloque centrado, y el bloque de cierre entero es
+ * una columna con separación propia — nada depende del flujo inline.
+ *
+ * En una cadena de entrenador **solo se pinta al terminarla**, con el total que
+ * acumula el store en `cadenaEnemigos`.
  */
 function PanelRecompensas({ recompensas }) {
   if (!recompensas) return null;
-  const { oro, objeto } = recompensas;
+  const { oro, objetos = [] } = recompensas;
 
   return (
-    <div className="inline-flex flex-wrap items-center justify-center gap-x-5 gap-y-2 bg-tinta-950/60 border border-pergamino-100/15 rounded-lg px-5 py-2.5 mb-4">
-      <span className="font-display text-sm text-doton">+{oro} Gold</span>
-      {objeto && (
-        <span className="flex items-center gap-2 font-display text-sm text-pergamino-100">
-          {SPRITE_OBJETO[objeto] && (
-            <img
-              src={SPRITE_OBJETO[objeto]}
-              alt=""
-              className="w-6 h-6"
-              style={{ imageRendering: 'pixelated' }}
-            />
-          )}
-          {nombreObjeto(objeto)}
-        </span>
-      )}
-    </div>
+    <PanelMarco className="mx-auto w-fit min-w-[13rem] px-5 py-3 flex flex-col gap-2.5">
+      <TituloBloque className="text-center">Rewards</TituloBloque>
+      <div className="flex items-center gap-3">
+        <IconoEnmarcado tamano="w-10 h-10" colorMarco="border-oro/50" vacio="🪙" />
+        <span className="font-display text-xs text-oro">+{oro} Gold</span>
+      </div>
+      {objetos.map((objeto) => (
+        <div key={objeto} className="flex items-center gap-3">
+          <IconoEnmarcado
+            src={SPRITE_OBJETO[objeto]}
+            tamano="w-10 h-10"
+            colorMarco="border-oro/50"
+            vacio="📦"
+          />
+          <span className="font-display text-[10px] text-pergamino-100 text-left leading-tight">
+            {nombreObjeto(objeto)}
+          </span>
+        </div>
+      ))}
+    </PanelMarco>
   );
 }
 
@@ -991,85 +1007,70 @@ export default function CombatScreen() {
         )}
 
         {combateTotalTerminado && (
-          <div className="mt-6 text-center">
-            <p className={`font-naruto text-4xl mb-4 ${resultado.jugadorGanoFinal ? 'text-fuuton' : 'text-sello-500'}`}>
+          <div className="mt-6 text-center flex flex-col items-center gap-4">
+            <p className={`font-naruto text-4xl ${resultado.jugadorGanoFinal ? 'text-exito' : 'text-sello-500'}`}>
               {resultado.jugadorGanoFinal ? 'Victory' : 'Defeat'}
             </p>
 
             {/* Va entre el rótulo y el botón, que es donde el ojo ya está: el
                 jugador lee "Victory" y lo siguiente que ve es lo que ha ganado.
-                En una cadena de entrenador sale en cada combate de la cadena,
-                porque cada uno da su XP y su oro por separado. */}
-            {resultado.jugadorGanoFinal && <PanelRecompensas recompensas={resultado.recompensas} />}
+
+                En una cadena de entrenador **solo sale al terminarla**, y con el
+                total acumulado (lo suma el store en `cadenaEnemigos`). Salía en
+                cada eslabón, con lo de ese combate: tres carteles que aparecían y
+                se iban en 1,6 s y ninguno decía cuánto llevabas. */}
+            {resultado.jugadorGanoFinal && !hayMasEnCadena && (
+              <PanelRecompensas recompensas={resultado.recompensas} />
+            )}
 
             {runTerminada ? (
               <div>
-                <p className="text-pergamino-200/80 text-sm mb-4">
+                <p className="text-[10px] text-pergamino-200/80 leading-relaxed mb-3">
                   {runGanada
                     ? 'You completed the entire run! Konoha is safe.'
                     : 'Your entire team has fallen. The run is over.'}
                 </p>
-                <button
-                  type="button"
-                  onClick={irAGameOver}
-                  className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
-                >
+                <BotonPrincipal onClick={irAGameOver} className="elevar-hover">
                   See results
-                </button>
+                </BotonPrincipal>
               </div>
             ) : resultado.arcoCompletado ? (
               <div>
-                <p className="text-pergamino-200/80 text-sm mb-4">
+                <p className="text-[10px] text-pergamino-200/80 leading-relaxed mb-3">
                   You have beaten {arcoActualDatos?.nombre}. A new arc begins.
                 </p>
-                <button
-                  type="button"
-                  onClick={avanzarSiguienteArco}
-                  className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
-                >
+                <BotonPrincipal onClick={avanzarSiguienteArco} className="elevar-hover">
                   Continue to next arc
-                </button>
+                </BotonPrincipal>
               </div>
             ) : recompensaMiniJefe ? (
               <div>
-                <p className="text-pergamino-200/80 text-sm mb-4">
+                <p className="text-[10px] text-pergamino-200/80 leading-relaxed mb-3">
                   You defeated the mini-boss! A reward awaits you.
                 </p>
-                <button
-                  type="button"
-                  onClick={irARecompensaMiniJefe}
-                  className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
-                >
+                <BotonPrincipal onClick={irARecompensaMiniJefe} className="elevar-hover">
                   Claim reward
-                </button>
+                </BotonPrincipal>
               </div>
             ) : desafioRecluta && resultado.jugadorGanoFinal ? (
               // El desafío del pergamino dorado: se ha ganado, así que la vuelta
               // no es al mapa sino al pergamino, ya en modo "recluta a tu rival".
               <div>
-                <p className="text-pergamino-200/80 text-sm mb-4">
+                <p className="text-[10px] text-pergamino-200/80 leading-relaxed mb-3">
                   You have earned their respect.
                 </p>
-                <button
-                  type="button"
-                  onClick={irAReclutaDesafio}
-                  className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
-                >
+                <BotonPrincipal onClick={irAReclutaDesafio} className="elevar-hover">
                   Recruit them
-                </button>
+                </BotonPrincipal>
               </div>
             ) : hayMasEnCadena ? (
               // Sin texto: el panel de la derecha ya enseña la cadena entera y a
               // quién le toca. Solo el respiro antes de que entre el siguiente.
-              <p className="text-pergamino-200/50 text-sm animate-pulse">Next up...</p>
+              <p className="text-[10px] text-pergamino-200/50 animate-pulse">Next up...</p>
             ) : (
-              <button
-                type="button"
-                onClick={volverAlMapa}
-                className="px-6 py-2 bg-sello-600 hover:bg-sello-500 rounded-full font-display text-pergamino-100 transition-colors"
-              >
+              <BotonPrincipal onClick={volverAlMapa} className="elevar-hover">
                 Continue
-              </button>
+              </BotonPrincipal>
             )}
           </div>
         )}

@@ -22,17 +22,24 @@ function pantallaActual(pantalla) {
   if (pantalla === 'evento') return <EventScreen />;
   if (pantalla === 'tienda') return <ShopScreen />;
   if (pantalla === 'reclutar') return <RecruitScreen />;
-  if (pantalla === 'recompensaMiniJefe') return <ItemRewardScreen />;
   if (pantalla === 'gameover') return <GameOverScreen />;
-  if (pantalla === 'logros') return <AchievementsScreen />;
-  if (pantalla === 'enciclopedia') return <EncyclopediaScreen />;
-  // La mochila NO sustituye al mapa: se dibuja encima, como el diálogo de
-  // objeto de un Pokelike. El jugador sigue viendo dónde está mientras decide.
-  if (pantalla === 'mochila') {
+  // Estas cuatro NO sustituyen al mapa: se dibujan encima, como los diálogos de un
+  // Pokelike, así que el jugador sigue viendo dónde está mientras decide o consulta.
+  // El criterio para entrar en esta lista es que sean **consultas o decisiones
+  // cortas dentro de un nodo**; lo que es un momento propio de la run (combate,
+  // tienda, reclutar, game over) ocupa la pantalla entera a propósito.
+  // Ver documentacion/33-direccion-visual.md.
+  const encimaDelMapa = {
+    logros: <AchievementsScreen />,
+    enciclopedia: <EncyclopediaScreen />,
+    mochila: <InventoryScreen />,
+    recompensaMiniJefe: <ItemRewardScreen />,
+  }[pantalla];
+  if (encimaDelMapa) {
     return (
       <>
         <MapScreen />
-        <InventoryScreen />
+        {encimaDelMapa}
       </>
     );
   }

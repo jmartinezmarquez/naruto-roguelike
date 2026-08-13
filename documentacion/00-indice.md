@@ -38,5 +38,6 @@
 - [30 - Sistema de pasivas](./30-sistema-de-pasivas.md)
 - [31 - Plan de los siguientes pasos](./31-plan-siguientes-pasos.md)
 - [32 - Enciclopedia](./32-enciclopedia.md)
+- [33 - Dirección visual: el kit de piezas compartidas](./33-direccion-visual.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.
