@@ -106,13 +106,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 215 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 225 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 215 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 225 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -272,10 +272,29 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   tiene id propio en los JSON, con un test de invariante que prohíbe dos modos homónimos en el mismo
   personaje.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
-- [ ] **Quitar antes de publicar**: botón "[DEV] Reset progress" en `AchievementsScreen.jsx` (llama a
-  `useAchievementsStore.reiniciarLogros()`, que borra logros **y** el registro de vistos del Bingo Book) —
-  solo para probar el desbloqueo durante desarrollo. Su destino ya está decidido: pasa a ser una opción de
-  verdad ("reiniciar la meta-progresión") en la pantalla de ajustes, el punto 14 del roadmap.
+- [x] **Pantalla de ajustes** (punto 14): `components/Settings/SettingsScreen.jsx` + `useSettingsStore`
+  (store propio, clave propia de `localStorage`). Tema **claro/oscuro**, pantalla completa (mudada desde el
+  menú), velocidad de animación ×1/×2/instantánea, saltar la pantalla de transformación y reiniciar la
+  meta-progresión. **El engranaje del menú abre por fin lo que dibuja** y el botón `[DEV] Reset progress`
+  ya no existe: es una opción de verdad. Ver `documentacion/34-ajustes.md`.
+- **El store de ajustes NO toca el DOM**: `data-tema` y `--factor-animacion` los aplica un `useEffect` de
+  `App.jsx`. Los tests corren en `environment: 'node'` y no hay `document`. Y el **tema es redefinir
+  variables** en `index.css`, no repasar pantallas: las utilidades de Tailwind v4 compilan a `var()`. Desde
+  que hay dos temas, `tinta-*` significa *superficie* y `pergamino-*` *contenido* — en modo claro
+  `pergamino-100` es tinta oscura.
+- **La regla del tema que costó dos intentos** (`documentacion/34-ajustes.md`): un token puede ser un
+  **valor** o una **relación**, y una relación no se invierte. `tinta-950 → 900 → 800` no son tres
+  oscuros, son *hundido → panel → realzado*; el primer pase invirtió los tres uno a uno y con eso el
+  panel salía más oscuro que la página (se hundía en ella en vez de despegarse), `tono="hueco"` más claro
+  que el panel que lo contiene y `hover:bg-tinta-800` oscurecía. Se veía como "en claro los bordes no
+  resaltan", y el borde no tenía nada que ver: **lo que no separaba era la superficie.**
+- **Y las otras dos del tema**: el **marco NO
+  se invierte** (`--color-marco` no está en el bloque de modo claro a propósito — es siempre del lado
+  opuesto a la superficie, y aclararlo dejaba un tema claro sin bordes, todos los paneles fundidos en la
+  misma mancha crema); y **`.escena-oscura`**, para lo que se pinta encima de un DIBUJO —lienzo del mapa,
+  columna del menú vertical, pantalla de transformación—, que se queda oscuro en los dos temas porque el
+  PNG de debajo no cambia. Se hace redefiniendo los tokens en ese subárbol, no cambiando clases a colores
+  fijos.
 
 ## Bugs ya resueltos (para no repetirlos)
 

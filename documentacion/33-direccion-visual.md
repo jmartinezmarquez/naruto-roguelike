@@ -40,6 +40,14 @@ grosor o el tono obligaba a un buscar-y-reemplazar por todo el proyecto.
 ⚠️ Los colores de elemento **siguen usándose como elemento** (el marco de una casilla por naturaleza de
 chakra, la rueda, las pastillas de tipo). Lo que ya no se hace es usarlos como significado.
 
+⚠️ **Desde que hay dos temas (punto 14, ver [34](./34-ajustes.md)), los nombres de estos tokens
+significan el ROL y no el color**: `tinta-*` es la superficie y `pergamino-*` el contenido que va encima,
+así que en modo claro `pergamino-100` es tinta oscura. Se conservaron los nombres en vez de renombrar
+~240 usos en 15 archivos, y el precio es tenerlo escrito aquí. Hay un token más que **no cambia entre
+temas**, `sobre-acento`: es el texto que va encima de un color vivo (el botón RECRUIT sobre verde, la
+pastilla de pasiva sobre oro, la X de `BotonCerrar`), y si siguiera a `tinta-*` se volvería claro sobre
+claro al cambiar de tema.
+
 ## Las seis piezas
 
 ### `PanelMarco`
@@ -233,21 +241,48 @@ El precio de usarla entera: los cuatro huecos están **pintados**. Añadir o qui
 redibujar la columna. Los botones se reparten por índice sobre el número de entradas, así que el código
 no se rompería — pero los iconos dejarían de coincidir con los huecos, y eso se ve.
 
-El engranaje hace de **pantalla completa** y el torii de **reiniciar la run**: la maqueta traía
-engranaje de "ajustes" y torii de "salir", y ajustes sigue sin tener ninguna opción real que ofrecer. Un
-torii es una puerta por la que se sale, que es lo que se hace al abandonar una run.
+El engranaje abre **Ajustes** —lo que la maqueta dibujó— y el torii **reinicia la run**: la maqueta traía
+torii de "salir", y un torii es una puerta por la que se sale, que es lo que se hace al abandonar una run.
+Hasta el punto 14 el engranaje hacía de pantalla completa, que era un apaño mientras ajustes no tenía
+ninguna opción real que ofrecer; ahora pantalla completa vive dentro de ella (ver [34](./34-ajustes.md)).
 
-## Pendiente decidido: modo claro y modo oscuro
+## Modo claro y modo oscuro: hecho
 
-Con todo en oscuro el mapa puede quedar algo lúgubre, y existe `game-background-light-theme.png` sin
-usar. **Decisión tomada: no ahora, y ya tiene sitio** — es el ancla del **punto 14 del roadmap, la
-pantalla de ajustes**, donde el engranaje del menú tendrá por fin algo real que ofrecer.
+Es el ancla del **punto 14** y ya está — ver [34](./34-ajustes.md) para el cómo, incluido lo que hubo que
+limpiar antes de que invertir los tokens fuera posible (tres restos de la paleta anterior al kit, un bug
+de crema sobre crema y el token `sobre-acento`).
 
 Lo que hace que eso sea viable sin rehacer nada es el trabajo de tokens de este documento: si los
 colores fueran `bg-tinta-900` escritos por todas partes no habría tema que cambiar, pero al estar el
 significado separado del elemento —`exito`, `oro`, `marco`— y el marco concentrado en `PanelMarco`, un
-tema es redefinir un puñado de variables en `index.css`, no repasar ocho pantallas. **Cuando se haga:
-los colores de elemento (katon…) NO cambian entre temas** — son del contenido, no de la interfaz.
+tema es redefinir un puñado de variables en `index.css`, no repasar ocho pantallas. **Los colores de
+elemento (katon…) NO cambian entre temas** — son del contenido, no de la interfaz.
+
+### Las correcciones del primer pase, que son las que dejan el tema claro con carácter
+
+Tras verlo funcionando salieron tres cosas. Las dos primeras son la misma idea —**un token puede ser un
+valor o una relación, y una relación no se invierte**— y la tercera es que **no todo lo que hay en
+pantalla es interfaz**.
+
+- ⚠️ **La rampa `tinta-950 → 800` conserva su DIRECCIÓN** (hundido → panel → realzado), no sus valores.
+  El primer pase invirtió los tres uno a uno y con eso el panel salía más oscuro que la página —se hundía
+  en ella en vez de despegarse—, los huecos más claros que el panel que los contiene y el hover
+  oscurecía. Era la causa real de que el tema claro se viera plano en las ocho pantallas: el borde ya era
+  oscuro, lo que no separaba era la superficie. Detalle y tabla en [34](./34-ajustes.md).
+
+- ⚠️ **El marco NO se invierte: es siempre del lado opuesto a la superficie.** El primer pase aclaraba
+  `marco` a un tostado (`#A9906B`) por simetría con el resto de la tabla, y el resultado era un tema sin
+  bordes — todos los paneles fundidos en la misma mancha crema, sin el contraste que hace bonito al
+  oscuro. Ahora `marco` **no se redefine**: el mismo `#4D463B` se lee como una línea que aclara sobre
+  tinta y como una línea oscura sobre pergamino. Un solo color da las dos lecturas.
+- **`.escena-oscura`: lo que se pinta ENCIMA DE UN DIBUJO se queda oscuro en los dos temas.** Un PNG de
+  arte no cambia con el tema, así que lo superpuesto tampoco puede. Lo llevan el **lienzo del mapa** (el
+  fondo del nodo salía como un disco crema —se ve por los bordes del sprite, y entero en el nodo de
+  inicio, que no tiene— y las líneas de camino quedaban en tinta oscura sobre roca oscura), la **columna
+  del menú vertical** (el realce del hover tiene que aclarar el dibujo, no mancharlo) y la **pantalla de
+  transformación** (es espectáculo, no interfaz; su destello ya va en un claro fijo y sobre un velo crema
+  no existiría). Se resuelve **redefiniendo los tokens en ese subárbol**, no cambiando una docena de
+  clases a colores fijos: las utilidades ya leen `var()`, así que basta con darles otro valor.
 
 ## Ventana o pantalla completa: el criterio
 

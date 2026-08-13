@@ -324,7 +324,7 @@ export const useGameStore = create((set, get) => ({
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
   mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
-  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros' | 'mochila' | 'enciclopedia'
+  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros' | 'mochila' | 'enciclopedia' | 'ajustes'
   mochilaItemId: null, // objeto preseleccionado al abrir la mochila (ver abrirMochila)
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
@@ -845,6 +845,11 @@ export const useGameStore = create((set, get) => ({
   /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */
   abrirLogros() {
     set({ pantalla: 'logros' });
+  },
+
+  /** Abre los ajustes (accesible desde el mapa). volverAlMapa() los cierra. */
+  abrirAjustes() {
+    set({ pantalla: 'ajustes' });
   },
 
   /**

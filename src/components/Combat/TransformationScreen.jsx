@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useFactorAnimacion } from '../../store/useSettingsStore';
 import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import { normalizarPasivas, describirPasiva, nombrePasiva } from '../../engine/passives';
@@ -8,6 +9,9 @@ import { spriteDeModo } from '../common/transformationSprites';
 
 // Los dos tiempos del efecto. Tienen que cuadrar con las animaciones de
 // `index.css` (`anillo-chakra`, `destello-transformacion`).
+// Las dos duraciones se multiplican por el factor de velocidad de combate, igual
+// que las de `index.css`: la transformación es parte del mismo reloj, y con ×2 el
+// combate iba rápido y esta pantalla seguía tardando lo mismo.
 const MS_CARGA = 1400;
 const MS_ESTALLIDO = 520;
 
@@ -38,21 +42,22 @@ function encontrarBase(id) {
  */
 export default function TransformationScreen({ personajeId, indiceModo, onContinuar }) {
   const [fase, setFase] = useState('carga'); // carga → estallido → listo
+  const factorAnimacion = useFactorAnimacion();
 
   const base = encontrarBase(personajeId);
   const modo = base?.modos?.[indiceModo] ?? null;
 
   useEffect(() => {
     if (fase !== 'carga') return undefined;
-    const t = setTimeout(() => setFase('estallido'), MS_CARGA);
+    const t = setTimeout(() => setFase('estallido'), MS_CARGA * factorAnimacion);
     return () => clearTimeout(t);
-  }, [fase]);
+  }, [fase, factorAnimacion]);
 
   useEffect(() => {
     if (fase !== 'estallido') return undefined;
-    const t = setTimeout(() => setFase('listo'), MS_ESTALLIDO);
+    const t = setTimeout(() => setFase('listo'), MS_ESTALLIDO * factorAnimacion);
     return () => clearTimeout(t);
-  }, [fase]);
+  }, [fase, factorAnimacion]);
 
   // Si el modo no existe en los datos no hay nada que celebrar: se sale sin
   // pintar en vez de enseñar una pantalla vacía. No debería pasar nunca (el
@@ -74,7 +79,10 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
   const pasivas = normalizarPasivas(modo.pasivas ?? []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-tinta-950/95 flex flex-col items-center justify-center px-6">
+    // `escena-oscura`: esta pantalla se queda oscura también en modo claro (ver
+    // `index.css`). No es interfaz, es un espectáculo, y su destello va en un color
+    // claro FIJO — sobre un velo crema no existiría.
+    <div className="escena-oscura fixed inset-0 z-50 bg-tinta-950/95 flex flex-col items-center justify-center px-6">
       <p className="font-display text-xs uppercase tracking-[0.3em] text-pergamino-200/50 mb-8">
         {nombrePersonaje(personajeId)} is changing
       </p>
@@ -89,8 +97,11 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
           </>
         )}
 
+        {/* El destello va en color FIJO y no en un token del tema: un destello es
+            claro en los dos modos, y con `pergamino-100` se habría convertido en un
+            fogonazo de tinta oscura al activar el modo claro. */}
         {fase === 'estallido' && (
-          <div className="absolute w-48 h-48 rounded-full bg-pergamino-100 destello-transformacion" />
+          <div className="absolute w-48 h-48 rounded-full bg-[#EDE3CC] destello-transformacion" />
         )}
 
         {spriteNormal && (
@@ -121,7 +132,7 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
 
           <div className="mt-5 flex flex-col gap-2">
             {pasivas.map((pasiva) => (
-              <div key={pasiva.id} className="bg-tinta-900 border border-pergamino-100/10 rounded-lg px-3 py-2">
+              <div key={pasiva.id} className="bg-tinta-900 border border-marco rounded-lg px-3 py-2">
                 <p className="font-display text-xs text-sello-500 uppercase tracking-wide">
                   {nombrePasiva(pasiva.id)}
                 </p>

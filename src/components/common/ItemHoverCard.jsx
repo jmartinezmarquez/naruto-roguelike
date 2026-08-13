@@ -2,6 +2,7 @@ import itemsData from '../../data/items.json';
 import { normalizarPasivas, describirPasiva } from '../../engine/passives';
 import HoverTooltip from './HoverTooltip';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
+import { PanelMarco } from './PiezasUI';
 
 function encontrarObjeto(id) {
   return itemsData.objetos.find((o) => o.id === id) ?? null;
@@ -50,8 +51,13 @@ const COLOR_TIPO_OBJETO = {
   equipable: 'bg-suiton',
 };
 
+// ⚠️ `comun` era `text-pergamino-200/70` **dentro de una caja crema**: crema sobre
+// crema, así que la línea de rareza era casi invisible en la ficha de cualquier
+// objeto común, y hay varios en items.json. Se arregla al pasar la tarjeta al kit
+// (fondo oscuro), pero el tono se sube igualmente: era el más apagado de los tres
+// para la rareza más frecuente.
 const COLOR_RAREZA = {
-  comun: 'text-pergamino-200/70',
+  comun: 'text-exito',
   raro: 'text-suiton',
   legendario: 'text-sello-500',
 };
@@ -60,22 +66,26 @@ export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
   const objeto = encontrarObjeto(id);
   if (!objeto) return null;
 
+  // Del crema con texto oscuro al marco del kit: era, con su variante compacta, el
+  // último resto de la paleta invertida de antes del kit — y el que habría que
+  // arreglar igualmente para el modo claro, porque un fondo fijo en `pergamino-100`
+  // se vuelve texto en cuanto el token se invierte.
   return (
-    <div className={`bg-pergamino-100 text-tinta-950 rounded-lg text-left ${className}`}>
+    <PanelMarco className={`text-left ${className}`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="font-display font-bold text-sm flex items-center gap-1.5 min-w-0">
+        <p className="font-display text-[11px] text-pergamino-100 flex items-center gap-1.5 min-w-0">
           {SPRITE_OBJETO[objeto.id] && (
             <img src={SPRITE_OBJETO[objeto.id]} alt="" aria-hidden="true" className="w-6 h-6 object-contain shrink-0" />
           )}
           <span className="truncate">{objeto.nombre}</span>
         </p>
         <span
-          className={`text-[10px] uppercase tracking-wide text-pergamino-100 rounded-full px-2 py-0.5 shrink-0 ${COLOR_TIPO_OBJETO[objeto.tipo] ?? 'bg-tinta-800'}`}
+          className={`text-[8px] font-display uppercase tracking-wide text-sobre-acento rounded-sm px-2 py-0.5 shrink-0 ${COLOR_TIPO_OBJETO[objeto.tipo] ?? 'bg-tinta-800'}`}
         >
           {objeto.tipo === 'consumible' ? 'Consumable' : 'Equippable'}
         </span>
       </div>
-      <p className={`text-[10px] uppercase tracking-wide mt-0.5 ${COLOR_RAREZA[objeto.rareza] ?? ''}`}>
+      <p className={`text-[9px] font-display uppercase tracking-wide mt-1 ${COLOR_RAREZA[objeto.rareza] ?? ''}`}>
         {RAREZA_LABEL[objeto.rareza] ?? objeto.rareza}
         {CATEGORIA_LABEL[objeto.categoria] && ` · ${CATEGORIA_LABEL[objeto.categoria]}`}
       </p>
@@ -83,14 +93,14 @@ export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {
           y va a la enciclopedia (punto 10 del roadmap). En la tarjeta solo el
           efecto, que es lo accionable. */}
       {textoEfecto(objeto) && (
-        <p className="text-[10px] text-sello-600 font-display mt-1.5 pt-1.5 border-t border-tinta-950/10">
+        <p className="text-[9px] text-pergamino-200/80 font-display mt-2 pt-2 border-t border-marco leading-relaxed">
           {textoEfecto(objeto)}
         </p>
       )}
       {equipadoEnNombre && (
-        <p className="text-[10px] text-suiton font-display mt-1">Equipped on {equipadoEnNombre}</p>
+        <p className="text-[9px] text-suiton font-display mt-1.5">Equipped on {equipadoEnNombre}</p>
       )}
-    </div>
+    </PanelMarco>
   );
 }
 
@@ -104,12 +114,12 @@ export function FichaObjetoCompacta({ id, className = '' }) {
   if (!objeto) return null;
 
   return (
-    <div className={`bg-pergamino-100 text-tinta-950 ${className}`}>
-      <p className="text-[10px] leading-snug">
-        <span className="font-display font-bold">{objeto.nombre}:</span>{' '}
+    <PanelMarco className={className}>
+      <p className="text-[9px] text-pergamino-200/80 leading-snug">
+        <span className="font-display text-pergamino-100">{objeto.nombre}:</span>{' '}
         {textoEfecto(objeto)}
       </p>
-    </div>
+    </PanelMarco>
   );
 }
 
@@ -128,13 +138,9 @@ export default function ItemHoverCard({
       posicion={posicion}
       className={className}
       contenido={compacto ? (
-        <FichaObjetoCompacta id={id} className="w-48 rounded-md border-2 border-tinta-950 shadow-xl px-2 py-1.5" />
+        <FichaObjetoCompacta id={id} className="w-48 shadow-xl px-2.5 py-2" />
       ) : (
-        <FichaObjeto
-          id={id}
-          equipadoEnNombre={equipadoEnNombre}
-          className="w-56 border-2 border-sello-600 shadow-xl p-3"
-        />
+        <FichaObjeto id={id} equipadoEnNombre={equipadoEnNombre} className="w-56 shadow-xl p-3" />
       )}
     >
       {children}

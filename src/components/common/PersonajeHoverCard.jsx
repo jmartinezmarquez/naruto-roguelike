@@ -119,7 +119,7 @@ function BarraHp({ actual, maximo }) {
 
   return (
     <div>
-      <div className="h-2 w-full bg-tinta-800 rounded-sm overflow-hidden border border-tinta-950">
+      <div className="h-2 w-full bg-tinta-800 rounded-sm overflow-hidden border border-marco">
         <div className={`h-full ${color}`} style={{ width: `${porcentaje * 100}%` }} />
       </div>
       {/* Centrado bajo la barra, no alineado a la derecha: la cifra pertenece a

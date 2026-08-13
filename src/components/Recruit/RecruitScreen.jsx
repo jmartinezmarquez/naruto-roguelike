@@ -185,7 +185,7 @@ export default function RecruitScreen() {
             <button
               type="button"
               onClick={() => manejarClic(rival.personajeId)}
-              className="elevar-hover px-10 py-3 bg-exito hover:brightness-110 rounded-full font-display text-[11px] text-tinta-950 tracking-widest"
+              className="elevar-hover px-10 py-3 bg-exito hover:brightness-110 rounded-full font-display text-[11px] text-sobre-acento tracking-widest"
             >
               RECRUIT
             </button>

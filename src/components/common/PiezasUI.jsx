@@ -112,12 +112,16 @@ export function BotonCerrar({ onClick, className = '' }) {
     >
       {/* La sombra va dentro de la caja del botón (no desbordando) para que no se
           salga del borde de la barra de título cuando la ventana es estrecha. */}
-      <span aria-hidden="true" className="absolute left-1 top-1 w-9 h-9 bg-tinta-950" />
+      {/* Los tres colores de este botón son FIJOS y no salen del tema: la cara
+          crema, la sombra y la X oscuras. Es una pieza dibujada —la referencia es un
+          botón de ventana antigua— y si sus colores siguieran a `tinta`/`pergamino`
+          se invertiría en modo claro y dejaría de parecerse a nada. */}
+      <span aria-hidden="true" className="absolute left-1 top-1 w-9 h-9 bg-sobre-acento" />
       <span
         aria-hidden="true"
         className={[
           'absolute left-0 top-0 w-9 h-9 flex items-center justify-center',
-          'bg-pergamino-100 border-2 border-tinta-950',
+          'bg-[#EDE3CC] border-2 border-sobre-acento',
           'transition-transform duration-150 ease-out',
           'group-hover:-translate-x-0.5 group-hover:-translate-y-0.5',
           // Al pulsar se hunde hasta tocar la sombra: el recorrido completo del
@@ -125,8 +129,8 @@ export function BotonCerrar({ onClick, className = '' }) {
           'group-active:translate-x-1 group-active:translate-y-1',
         ].join(' ')}
       >
-        <span className="absolute w-4 h-[3px] bg-tinta-950 rotate-45" />
-        <span className="absolute w-4 h-[3px] bg-tinta-950 -rotate-45" />
+        <span className="absolute w-4 h-[3px] bg-sobre-acento rotate-45" />
+        <span className="absolute w-4 h-[3px] bg-sobre-acento -rotate-45" />
       </span>
     </button>
   );
@@ -397,7 +401,7 @@ export function BotonSecundario({ onClick, children, className = '', sobreFondo 
       className={[
         'font-display text-[9px] px-4 py-2 rounded-sm border transition-colors',
         sobreFondo
-          ? 'bg-tinta-900 border-pergamino-200/30 text-pergamino-100 hover:bg-tinta-800 hover:border-pergamino-200/60'
+          ? 'bg-tinta-900 border-marco text-pergamino-100 hover:bg-tinta-800 hover:border-pergamino-200/60'
           : 'border-marco text-pergamino-200/60 hover:border-pergamino-200/50 hover:text-pergamino-100',
         className,
       ].join(' ')}

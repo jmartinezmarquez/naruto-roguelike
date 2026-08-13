@@ -19,7 +19,7 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (215 tests)
+## Cobertura actual (225 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -100,6 +100,12 @@ sin mocks ni DOM.
   (tiene su propia pantalla y contarlo dos veces sería mentir), y el progreso de XP trae el antes y el
   después de los tres del equipo — la barra tiene que poder pintarse sin leer el store, que para
   cuando la animación empieza ya tiene el estado final.
+- **`store/useSettingsStore.test.js`** — las preferencias (ver [34](./34-ajustes.md)): valores por
+  defecto —incluido que **no** salta la pantalla de transformación, que es lo único que le cuenta al
+  jugador que las transformaciones existen—, que persiste los tres ajustes juntos y no solo el que cambia,
+  que **revienta con un ajuste desconocido** en vez de guardarlo en silencio (mismo criterio que las
+  pasivas: una opción que no hace nada es el peor fallo posible), que `cargarAjustes` completa las claves
+  que falten en lo guardado por una versión anterior, y que cada velocidad traduce a su multiplicador.
 - **`store/useAchievementsStore.test.js`** — desbloqueo y persistencia en `localStorage`, no repetir
   un logro ya conseguido, `cargarLogros()` recupera lo guardado en una sesión anterior. Y el **registro
   de vistos de la enciclopedia** (ver [32](./32-enciclopedia.md)): persiste por categoría, acumula sin

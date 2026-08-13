@@ -10,6 +10,7 @@ import { spriteDeProyectil } from '../common/projectileSprites';
 import TransformationScreen from './TransformationScreen';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import { PanelMarco, TituloBloque, IconoEnmarcado, BotonPrincipal } from '../common/PiezasUI';
+import { useFactorAnimacion, useSettingsStore } from '../../store/useSettingsStore';
 
 // El replay avanza de GOLPE en golpe, no de turno en turno. Un turno trae 2-4
 // eventos (los dos luchadores, más algún ataque extra) y resolverlos todos de
@@ -181,6 +182,7 @@ function pasivasDelUltimoGolpe(ronda, golpe) {
  */
 function Proyectil({ atacanteId, hacia, esJutsu: esJutsuEsteGolpe, refContenedor, refOrigen, refDestino }) {
   const nodo = useRef(null);
+  const factorAnimacion = useFactorAnimacion();
 
   useLayoutEffect(() => {
     const contenedor = refContenedor.current;
@@ -209,8 +211,9 @@ function Proyectil({ atacanteId, hacia, esJutsu: esJutsuEsteGolpe, refContenedor
     nodo.current.style.setProperty('--giro', esJutsuEsteGolpe ? '0deg' : hacia === 'derecha' ? '540deg' : '-540deg');
     // La duración manda desde JS: el reloj del replay la varía por tipo de golpe
     // y si el CSS se quedara con la suya, el impacto y la llegada se separarían.
-    nodo.current.style.animationDuration = `${msDeVuelo({ tipoAtaque: esJutsuEsteGolpe ? 'jutsu' : 'basico' })}ms`;
-  }, [refContenedor, refOrigen, refDestino, esJutsuEsteGolpe, hacia]);
+    const msVuelo = msDeVuelo({ tipoAtaque: esJutsuEsteGolpe ? 'jutsu' : 'basico' }) * factorAnimacion;
+    nodo.current.style.animationDuration = `${msVuelo}ms`;
+  }, [refContenedor, refOrigen, refDestino, esJutsuEsteGolpe, hacia, factorAnimacion]);
 
   return (
     <div ref={nodo} aria-hidden="true" className="proyectil z-10 pointer-events-none">
@@ -346,16 +349,22 @@ function EtiquetasPasivas({ pasivas, activadas }) {
             key={pasiva.id}
             posicion="arriba"
             contenido={(
-              <div className="w-48 bg-pergamino-100 text-tinta-950 rounded-md border-2 border-tinta-950 shadow-xl px-2 py-1.5">
-                <p className="font-display text-[10px] uppercase tracking-wide">{nombrePasiva(pasiva.id)}</p>
-                <p className="text-[10px] leading-snug mt-0.5">{describirPasiva(pasiva)}</p>
-              </div>
+              // El último resto de la paleta invertida en esta pantalla: era crema
+              // con texto oscuro, y con el modo claro se habría dado la vuelta.
+              <PanelMarco className="w-48 shadow-xl px-2.5 py-2">
+                <p className="font-display text-[9px] text-oro uppercase tracking-wide">
+                  {nombrePasiva(pasiva.id)}
+                </p>
+                <p className="text-[9px] text-pergamino-200/80 leading-snug mt-1">
+                  {describirPasiva(pasiva)}
+                </p>
+              </PanelMarco>
             )}
           >
             <span className={[
               'block text-[10px] font-display uppercase tracking-wide px-1.5 py-0.5 rounded-full border transition-all',
               salta
-                ? 'bg-oro text-tinta-950 border-oro scale-105 shadow-[0_0_10px_rgba(212,169,58,0.8)]'
+                ? 'bg-oro text-sobre-acento border-oro scale-105 shadow-[0_0_10px_rgba(212,169,58,0.8)]'
                 : 'bg-oro/15 text-oro border-oro/40',
             ].join(' ')}
             >
@@ -453,7 +462,7 @@ function TarjetaLuchador({
         {/* Dos barras con el MISMO porcentaje: la pálida de detrás va lenta y con
             retraso, así que el hueco entre las dos es el mordisco del último
             golpe. Ver `.estela-hp` en index.css. */}
-        <div className="relative h-3 w-full bg-tinta-800 rounded-sm overflow-hidden mt-1 border border-tinta-950">
+        <div className="relative h-3 w-full bg-tinta-800 rounded-sm overflow-hidden mt-1 border border-marco">
           <div
             className="absolute inset-y-0 left-0 bg-pergamino-100/45 estela-hp"
             style={{ width: `${porcentaje * 100}%` }}
@@ -485,7 +494,7 @@ function TarjetaLuchador({
             tierra" tipo Pokelike) y la sombra de contacto encima, para que el
             personaje se apoye en algo en vez de flotar suelto. */}
         <div className="relative h-24 flex items-end justify-center">
-          <div className="absolute bottom-1 w-20 h-5 rounded-[50%] bg-pergamino-200/25 border border-pergamino-100/15" />
+          <div className="absolute bottom-1 w-20 h-5 rounded-[50%] bg-pergamino-200/25 border border-marco" />
           <div className="absolute bottom-1.5 w-12 h-2 rounded-[50%] bg-tinta-950/55 blur-[2px]" />
           {sprite && (
             <img
@@ -514,7 +523,7 @@ function TarjetaLuchador({
             sin rótulo — el color ya la separa de la de HP, y el pulso al llenarse
             dice "lista" sin escribirlo (ver documentacion/29). */}
         {activo && cargaMaxima > 0 && (
-          <div className="h-1.5 w-full bg-tinta-800 rounded-full overflow-hidden border border-pergamino-100/10">
+          <div className="h-1.5 w-full bg-tinta-800 rounded-full overflow-hidden border border-marco/60">
             <div
               className={`h-full transition-all duration-300 ${jutsuListo ? 'bg-fuuton animate-pulse' : 'bg-suiton'}`}
               style={{ width: `${porcentajeCarga * 100}%` }}
@@ -595,6 +604,8 @@ function PanelBando({ titulo, children }) {
 
 export default function CombatScreen() {
   const resultado = useGameStore((s) => s.ultimoResultadoCombate);
+  const factorAnimacion = useFactorAnimacion();
+  const saltarTransformacion = useSettingsStore((s) => s.saltarTransformacion);
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const irAGameOver = useGameStore((s) => s.irAGameOver);
   const avanzarSiguienteArco = useGameStore((s) => s.avanzarSiguienteArco);
@@ -642,28 +653,41 @@ export default function CombatScreen() {
   const ronda = resultado?.rondas[indiceRonda] ?? null;
   // Los eventos de la ronda en una sola lista: es la unidad del replay.
   const golpes = useMemo(() => (ronda ? ronda.historial.flatMap((t) => t.eventos) : []), [ronda]);
-  const golpesAplicados = impactado ? golpesEmpezados : golpesEmpezados - 1;
-  const rondaCompleta = ronda ? golpesEmpezados >= golpes.length && impactado : false;
+  // Velocidad "instantánea": la ronda se considera ya reproducida entera. Se
+  // **deriva** en vez de forzar el estado, y no es un detalle de estilo: un
+  // `setState` dentro de un efecto para saltar al final provoca renders en cascada
+  // y React ya lo rechaza (`react-hooks/set-state-in-effect`). Es la misma lección
+  // del reset de estado al cambiar de combate, unas líneas más arriba — lo que
+  // depende de otro valor se calcula al renderizar, no se guarda.
+  const instantaneo = factorAnimacion === 0;
+  const golpesVistos = instantaneo ? golpes.length : golpesEmpezados;
+  const yaImpactado = instantaneo || impactado;
+
+  const golpesAplicados = yaImpactado ? golpesVistos : golpesVistos - 1;
+  const rondaCompleta = ronda ? golpesVistos >= golpes.length && yaImpactado : false;
   const hayMasRondas = resultado ? indiceRonda < resultado.rondas.length - 1 : false;
   const transicionRonda = rondaCompleta && ronda && !ronda.jugadorGano && hayMasRondas;
 
   // Lanza el siguiente golpe, una vez el anterior ha impactado.
   useEffect(() => {
-    if (!ronda || rondaCompleta || !impactado) return undefined;
-    const espera = msEntreGolpes(golpes[golpesEmpezados - 1], golpes[golpesEmpezados]);
+    if (!ronda || rondaCompleta || !impactado || instantaneo) return undefined;
+    const espera = msEntreGolpes(golpes[golpesEmpezados - 1], golpes[golpesEmpezados]) * factorAnimacion;
     const temporizador = setTimeout(() => {
       setGolpesEmpezados((n) => n + 1);
       setImpactado(false);
     }, espera);
     return () => clearTimeout(temporizador);
-  }, [ronda, rondaCompleta, impactado, golpesEmpezados, golpes]);
+  }, [ronda, rondaCompleta, impactado, golpesEmpezados, golpes, factorAnimacion, instantaneo]);
 
   // El proyectil llega: aquí es donde el golpe cuenta.
   useEffect(() => {
-    if (!ronda || impactado) return undefined;
-    const temporizador = setTimeout(() => setImpactado(true), msDeVuelo(golpes[golpesEmpezados - 1]));
+    if (!ronda || impactado || instantaneo) return undefined;
+    const temporizador = setTimeout(
+      () => setImpactado(true),
+      msDeVuelo(golpes[golpesEmpezados - 1]) * factorAnimacion,
+    );
     return () => clearTimeout(temporizador);
-  }, [ronda, impactado, golpesEmpezados, golpes]);
+  }, [ronda, impactado, golpesEmpezados, golpes, factorAnimacion, instantaneo]);
 
   // Lleva el registro de desarrollo a su última línea. En el build de producción
   // ese bloque no existe (`import.meta.env.DEV`), así que la ref queda a null y
@@ -678,9 +702,9 @@ export default function CombatScreen() {
       setIndiceRonda((i) => i + 1);
       setGolpesEmpezados(0);
       setImpactado(true);
-    }, PAUSA_ENTRE_RONDAS_MS);
+    }, PAUSA_ENTRE_RONDAS_MS * factorAnimacion);
     return () => clearTimeout(temporizador);
-  }, [transicionRonda]);
+  }, [transicionRonda, factorAnimacion]);
 
   // Reproduce los golpes ya impactados para saber cómo estaban HP y barra de
   // jutsu en ese momento.
@@ -762,7 +786,12 @@ export default function CombatScreen() {
   const nivelAlQueSubio = (personajeId) =>
     subidasDeNivel.find((s2) => s2.personajeId === personajeId)?.nivel ?? null;
 
-  const transformacionEnPantalla = combateTotalTerminado && nivelYaCelebrado
+  // Con el ajuste de saltar transformación puesto, la pantalla no se pinta — pero
+  // el desbloqueo sigue contando igual: lo que se salta es la celebración, no el
+  // modo. Y `transformacionesYaContadas` de abajo mira `transformacionesVistas`,
+  // que no avanza si nadie cierra la pantalla, así que aquí se dan por vistas
+  // todas de golpe para que las tarjetas se pinten ya con el nivel nuevo.
+  const transformacionEnPantalla = combateTotalTerminado && nivelYaCelebrado && !saltarTransformacion
     ? (resultado?.transformacionesDesbloqueadas ?? [])[transformacionesVistas] ?? null
     : null;
 
@@ -774,7 +803,7 @@ export default function CombatScreen() {
   // personaje volvía a salir igual que antes — y si el que subía era del
   // banquillo, no se actualizaba nunca hasta que le tocaba pelear.
   const transformacionesYaContadas = (resultado?.transformacionesDesbloqueadas ?? [])
-    .slice(0, transformacionesVistas)
+    .slice(0, saltarTransformacion ? undefined : transformacionesVistas)
     .map((t) => t.personajeId);
   const nivelEnPantalla = (miembro) => (
     transformacionesYaContadas.includes(miembro.id)
@@ -785,10 +814,10 @@ export default function CombatScreen() {
   // La transformación espera a que la subida de nivel se haya visto.
   useEffect(() => {
     if (!combateTotalTerminado || nivelYaCelebrado) return undefined;
-    const espera = (resultado?.subidasDeNivel ?? []).length > 0 ? MS_CELEBRAR_NIVEL : 0;
+    const espera = (resultado?.subidasDeNivel ?? []).length > 0 ? MS_CELEBRAR_NIVEL * factorAnimacion : 0;
     const t = setTimeout(() => setNivelYaCelebrado(true), espera);
     return () => clearTimeout(t);
-  }, [combateTotalTerminado, nivelYaCelebrado, resultado]);
+  }, [combateTotalTerminado, nivelYaCelebrado, resultado, factorAnimacion]);
 
   const hayMasEnCadena = cadenaEnemigos
     ? cadenaEnemigos.indiceActual < cadenaEnemigos.enemigos.length - 1
@@ -815,7 +844,7 @@ export default function CombatScreen() {
   }
 
   const eventosVisibles = golpes.slice(0, Math.max(0, golpesAplicados));
-  const golpeEnVuelo = !impactado && golpesEmpezados > 0 ? golpes[golpesEmpezados - 1] : null;
+  const golpeEnVuelo = !yaImpactado && golpesVistos > 0 ? golpes[golpesVistos - 1] : null;
   const ultimoImpacto = golpesAplicados > 0 ? golpes[golpesAplicados - 1] : null;
   const equipoEnPantalla = estadoDelEquipo(resultado, indiceRonda, estadoEnTurnoActual.hpJugador);
   const pasivasEnPantalla = pasivasDelUltimoGolpe(ronda, ultimoImpacto);
@@ -862,7 +891,7 @@ export default function CombatScreen() {
           )}
           {golpeEnVuelo && (
             <Proyectil
-              key={golpesEmpezados}
+              key={golpesVistos}
               atacanteId={golpeEnVuelo.atacanteId}
               hacia={golpeEnVuelo.atacanteId === ronda.jugador.id ? 'derecha' : 'izquierda'}
               esJutsu={golpeEnVuelo.tipoAtaque === 'jutsu'}
@@ -969,7 +998,7 @@ export default function CombatScreen() {
             que acordarse de quitarlo a mano antes de publicar. La partida se
             cuenta con la animación; esto es para depurar un combate raro. */}
         {import.meta.env.DEV && (
-          <details className="bg-tinta-900 border border-pergamino-100/10 rounded-lg mb-4">
+          <details className="bg-tinta-900 border border-marco rounded-lg mb-4">
             <summary className="cursor-pointer px-3 py-1.5 text-[10px] uppercase tracking-widest text-pergamino-200/40 font-display">
               [DEV] Combat log
             </summary>

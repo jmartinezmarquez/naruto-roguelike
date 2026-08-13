@@ -122,7 +122,6 @@ function FilaLogro({ logro, desbloqueado }) {
 export default function AchievementsScreen() {
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const logrosDesbloqueados = useAchievementsStore((s) => s.logrosDesbloqueados);
-  const reiniciarLogros = useAchievementsStore((s) => s.reiniciarLogros);
   const [pestanaId, setPestanaId] = useState('todos');
 
   const logros = achievementsData.logros;
@@ -161,6 +160,10 @@ export default function AchievementsScreen() {
         <FilaPestanas pestanas={pestanas} activaId={pestanaId} onElegir={setPestanaId} />
       }
     >
+      {/* Aquí había un botón `[DEV] Reset progress` con un "quitar antes de
+          publicar" pegado desde que existe el sistema de logros. Ya no hace falta:
+          es una opción de verdad en Ajustes ("reset meta-progress"), con
+          confirmación y en el sitio donde un jugador la buscaría. */}
       {visibles.map(({ logro }) => (
         <FilaLogro
           key={logro.id}
@@ -168,17 +171,6 @@ export default function AchievementsScreen() {
           desbloqueado={logrosDesbloqueados.includes(logro.id)}
         />
       ))}
-
-      {/* TEMP: dev only, remove before publishing. Va al final del scroll y no en
-          la cabecera fija: es un botón de desarrollo, no una acción de la pantalla,
-          y ahí no estorba ni se pulsa por error. */}
-      <button
-        type="button"
-        onClick={reiniciarLogros}
-        className="self-center mt-2 px-4 py-1.5 text-[9px] font-display border border-dashed border-marco text-pergamino-200/40 hover:text-pergamino-200/80 hover:border-pergamino-200/60 rounded-sm transition-colors"
-      >
-        [DEV] Reset progress
-      </button>
     </VentanaModal>
   );
 }

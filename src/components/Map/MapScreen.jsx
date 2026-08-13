@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import typesData from '../../data/types.json';
@@ -637,11 +637,6 @@ function RuedaChakra() {
   );
 }
 
-/** ¿Hay algún elemento en pantalla completa ahora mismo? Cross-browser mínimo (solo se necesita Chrome/Firefox/Safari modernos). */
-function hayPantallaCompleta() {
-  return Boolean(document.fullscreenElement);
-}
-
 /**
  * Menú vertical junto al mapa, como el de Pokelike: Missions, Bingo Book,
  * Pantalla completa (Fullscreen API) y Reiniciar Run (con confirmación nativa,
@@ -662,45 +657,34 @@ function hayPantallaCompleta() {
  * el código no se rompería — pero los iconos dejarían de coincidir con los huecos,
  * y eso se ve.
  *
- * El icono del engranaje hace de **pantalla completa** y el torii de **reiniciar la
- * run**: la maqueta traía engranaje de "ajustes" y torii de "salir", y ajustes sigue
- * sin tener ninguna opción real que ofrecer. Un torii es una puerta por la que se
- * sale, que es lo que se hace al abandonar una run.
+ * El icono del engranaje abre **Ajustes** —lo que la maqueta dibujó— y el torii
+ * **reinicia la run**: la maqueta traía torii de "salir", y un torii es una puerta por
+ * la que se sale, que es lo que se hace al abandonar una run.
  */
-function MenuVertical({ abrirLogros, abrirEnciclopedia, reiniciarRun }) {
-  const [pantallaCompleta, setPantallaCompleta] = useState(false);
-
-  useEffect(() => {
-    const actualizar = () => setPantallaCompleta(hayPantallaCompleta());
-    document.addEventListener('fullscreenchange', actualizar);
-    return () => document.removeEventListener('fullscreenchange', actualizar);
-  }, []);
-
-  function alternarPantallaCompleta() {
-    if (hayPantallaCompleta()) {
-      document.exitFullscreen();
-    } else {
-      document.documentElement.requestFullscreen();
-    }
-  }
-
+function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarRun }) {
   function manejarReiniciar() {
     if (window.confirm('Are you sure you want to restart the run? You will lose all current progress.')) {
       reiniciarRun();
     }
   }
 
-  // En el mismo orden en que están dibujados los huecos, de arriba abajo.
+  // En el mismo orden en que están dibujados los huecos, de arriba abajo. El
+  // engranaje abre **Ajustes**, que es lo que la maqueta dibujó: antes hacía de
+  // pantalla completa, que era un apaño mientras no había pantalla de ajustes —
+  // ahora pantalla completa vive dentro de ella.
   const ENTRADAS = [
     { etiqueta: 'Missions', onClick: abrirLogros },
     { etiqueta: 'Bingo Book', onClick: abrirEnciclopedia },
-    { etiqueta: pantallaCompleta ? 'Exit fullscreen' : 'Fullscreen', onClick: alternarPantallaCompleta },
+    { etiqueta: 'Settings', onClick: abrirAjustes },
     { etiqueta: 'Restart run', onClick: manejarReiniciar },
   ];
 
   return (
     <nav
-      className="absolute top-4 right-4 w-14 select-none"
+      // `escena-oscura` por lo mismo que el lienzo del mapa: la columna es un dibujo
+      // terminado y el realce del hover se pinta ENCIMA, así que tiene que seguir
+      // siendo un aclarado también en modo claro (ver `index.css`).
+      className="escena-oscura absolute top-4 right-4 w-14 select-none"
       style={{ aspectRatio: '133 / 655' }}
       aria-label="Game menu"
     >
@@ -753,6 +737,7 @@ export default function MapScreen() {
   const abrirMochila = useGameStore((s) => s.abrirMochila);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
   const abrirEnciclopedia = useGameStore((s) => s.abrirEnciclopedia);
+  const abrirAjustes = useGameStore((s) => s.abrirAjustes);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
 
   const fondoColumna = FONDO_COLUMNA[arcoActualDatos?.id];
@@ -816,7 +801,12 @@ export default function MapScreen() {
 
   return (
     <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
-      <MenuVertical abrirLogros={abrirLogros} abrirEnciclopedia={abrirEnciclopedia} reiniciarRun={reiniciarRun} />
+      <MenuVertical
+        abrirLogros={abrirLogros}
+        abrirEnciclopedia={abrirEnciclopedia}
+        abrirAjustes={abrirAjustes}
+        reiniciarRun={reiniciarRun}
+      />
 
       <header className="text-center mb-1 shrink-0">
         <p className="text-sello-500 text-[9px] tracking-[0.3em] uppercase">Current Arc</p>
@@ -843,7 +833,11 @@ export default function MapScreen() {
           className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden"
         >
           <div
-            className="bg-tinta-950"
+            // `escena-oscura` no pinta nada: le devuelve la paleta OSCURA a este
+            // subárbol en modo claro (ver el bloque del mismo nombre en
+            // `index.css`). La ilustración del fondo es un PNG que no cambia con el
+            // tema, así que lo que va encima de ella tampoco puede cambiar.
+            className="escena-oscura bg-tinta-950"
             style={{
               width: ANCHO * escala,
               height: alturaLienzo * escala,
@@ -955,14 +949,22 @@ export default function MapScreen() {
                 />
               ))}
             </div>
-          </div>
 
-          {/* El adorno del kit —línea interior y esquinas en corchete— compuesto a
-              mano porque este lienzo no puede ser un `PanelMarco`: su marco es un
-              `box-shadow` (ver arriba). Va DESPUÉS del contenido para pintarse por
-              encima de los nodos, y sus piezas llevan `pointer-events-none` para no
-              robarles el clic. */}
-          <AdornoMarco />
+            {/* El adorno del kit —línea interior y esquinas en corchete— compuesto a
+                mano porque este lienzo no puede ser un `PanelMarco`: su marco es un
+                `box-shadow` (ver arriba). Va DESPUÉS del contenido para pintarse por
+                encima de los nodos, y sus piezas llevan `pointer-events-none` para no
+                robarles el clic.
+
+                Va DENTRO de esta caja y no como hermana suya, que es donde estaba:
+                sus piezas son `absolute` y el contenedor de fuera no es `relative`, así
+                que se anclaban al div raíz de la pantalla y los cuatro corchetes se
+                pintaban en las esquinas de la PANTALLA. Aquí sí abrazan al mapa —que es
+                lo que el comentario decía desde el principio— y quedan además dentro
+                del subárbol de paleta oscura. Fuera del `transform` del div escalado, a
+                propósito: los corchetes se pintan en tamaño real. */}
+            <AdornoMarco />
+          </div>
         </div>
 
         {/* Columna derecha: mochila arriba, chuleta de chakra debajo. Los dos

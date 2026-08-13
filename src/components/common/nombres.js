@@ -122,7 +122,7 @@ const CLASE_TIPO = {
   suiton: 'bg-suiton/15 border-suiton/60 text-suiton',
 };
 
-const CLASE_TIPO_NEUTRA = 'bg-pergamino-100/10 border-pergamino-100/30 text-pergamino-200';
+const CLASE_TIPO_NEUTRA = 'bg-pergamino-100/10 border-marco text-pergamino-200';
 
 /** Clases de color de la pastilla de naturaleza de un luchador. */
 export function clasePastillaDeTipo(id) {
