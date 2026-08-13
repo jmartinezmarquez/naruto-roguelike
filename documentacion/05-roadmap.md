@@ -714,7 +714,8 @@ tres jerarquías, y en ningún sitio las esquinas en corchete de las maquetas.
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas por
 > comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar. Los
 > huecos (1-4, 8, 10-13) son puntos hechos que se han movido a "Hecho" **conservando su número en el
-> título**, no errores de numeración.
+> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre y nunca uno de los
+> huecos: el **14** es la pantalla de ajustes.
 
 ### Por dónde seguir
 
@@ -730,19 +731,23 @@ diseño, es **material que enseñar**: hay 7 logros y su documento MVP está esc
 lo que más rendimiento le saca a lo ya construido, porque el registro de vistos del Bingo Book ya metió
 contadores persistidos en `useAchievementsStore`, que es exactamente donde 5a necesita los suyos.
 
-**3.º — el 6 (eventos).** Le falta lo mismo que al 5 pero al revés: aquí el diseño está sin decidir. Es
+**3.º — el 14 (ajustes).** Es el único punto que **retira trabajo pendiente en vez de añadirlo**: le da
+sentido al engranaje del menú (hoy hace de pantalla completa, que es un apaño), se lleva dentro el botón
+`[DEV] Reset progress` que arrastra un "quitar antes de publicar", y trae el **modo claro/oscuro**, que
+es lo único que puede arreglar que el mapa en oscuro resulte lúgubre.
+
+**4.º — el 6 (eventos).** Le falta lo mismo que al 5 pero al revés: aquí el diseño está sin decidir. Es
 el único punto **sin documento MVP**, y una de sus preguntas es de diseño de juego y no de pantalla.
 
-**4.º — el 9 (columna central).** Cosmético y acotado; buen relleno cuando quede medio hueco.
+**5.º — el 9 (columna central).** Cosmético y acotado; buen relleno cuando quede medio hueco.
 
 **Lo más grande que le falta al MVP y no es un punto de esta lista: el sonido.** Está en el backlog
 porque no es un retoque de pantalla sino un sistema entero (assets, precarga, mezcla, volumen). Es, con
 diferencia, lo que más notaría el jugador ahora que lo visual está resuelto.
 
-**De la interfaz solo quedan tres cosas, y las tres esperan algo externo**: los **cuatro sprites del menú
-vertical** (ver "Pendiente de arte" — su etiqueta flotante ya está hecha), el **modo claro/oscuro**, que
-llega con la pantalla de ajustes y es lo que por fin le dará algo real que hacer al engranaje del menú
-(ver [33](./33-direccion-visual.md)), y el rediseño de fondo de eventos, que es el punto 6.
+**De la interfaz solo queda una cosa que espere a algo externo**: los **cuatro sprites del menú vertical**
+(ver "Pendiente de arte" — su etiqueta flotante ya está hecha). El **modo claro/oscuro** ya tiene punto
+propio (el 14) y el rediseño de fondo de eventos es el 6.
 
 ---
 
@@ -800,6 +805,52 @@ llega con la pantalla de ajustes y es lo que por fin le dará algo real que hace
    *(Del punto, ya hecho: el lienzo del mapa lleva el marco del kit con sus esquinas en corchete y se le
    quitó el redondeo — ver [33](./33-direccion-visual.md). Lo de arriba sigue pendiente.)*
 
+14. **Pantalla de ajustes** — la referencia es la de Pokelike, pero **la mitad de sus opciones no
+    aplican a este juego**, así que la lista es propia. El criterio para que una opción entre: que exista
+    algo real que activar o desactivar, y que un jugador vaya a querer cambiarlo más de una vez.
+
+    Es el punto que **retira trabajo pendiente en vez de añadirlo**, y por eso va pronto:
+
+    - Le da por fin sentido al **engranaje del menú vertical**. Hoy hace de pantalla completa, que es un
+      apaño: la maqueta lo dibujó como "ajustes" y ahí volverá. El menú queda entonces con las cuatro
+      entradas que el arte tiene dibujadas — Missions, Bingo Book, Settings y Restart — y **pantalla
+      completa se muda dentro de ajustes**, que es su sitio.
+    - Es el hogar del botón **`[DEV] Reset progress`**, que hoy está en la pantalla de logros y arrastra
+      un "quitar antes de publicar". Como opción de verdad —borrar logros y Bingo Book— deja de ser
+      código de desarrollo y pasa a ser una función del juego.
+
+    **Lo que entra:**
+
+    | Sección | Opción | Por qué |
+    |---|---|---|
+    | Display | **Modo claro / oscuro** | El ancla del punto. `game-background-light-theme.png` está sin usar y los tokens semánticos ya hacen que un tema sea redefinir variables en `index.css` y no repasar ocho pantallas (ver [33](./33-direccion-visual.md)). ⚠️ **Los colores de elemento NO cambian entre temas**: un jutsu de fuego es rojo en los dos. |
+    | Display | **Pantalla completa** | Se muda del menú. Sin cambio de código, solo de sitio. |
+    | Combate | **Velocidad de animación** (×1 / ×2 / instantánea) | Mejor que un "saltar" binario: la animación es media gracia del combate la primera vez y un peaje en la décima run. Ya existe el botón "Skip animation" por combate; esto es la preferencia persistente. |
+    | Combate | **Saltar la pantalla de transformación** | ⚠️ Con un aviso: es el **único sitio** donde el jugador se entera de que existen las transformaciones (ver [30](./30-sistema-de-pasivas.md)), así que la opción tiene sentido para quien ya las conoce, y **debe venir desactivada**. |
+    | Progreso | **Reiniciar la meta-progresión** | Logros + registro del Bingo Book. Sustituye al botón de desarrollo. Con confirmación, que aquí sí: es irreversible y entre runs. |
+    | Sonido | *(reservada)* | La sección se diseña pero **no se pinta hasta que exista el sistema de sonido** (backlog). Pintar un interruptor que no hace nada es peor que no tenerlo — la misma regla que dejó fuera el raíl de recompensas del punto 5b. |
+
+    **Lo que NO entra, y por qué** (para no volver a plantearlo):
+
+    - **Idioma.** El juego está escrito directamente en inglés, en una sola versión y **sin i18n** a
+      propósito (está en "Hecho", apartado de traducción). Un selector de idioma no es una opción de
+      ajustes: es construir i18n y traducir todos los JSON y componentes.
+    - **Efectos de clima.** No existen.
+    - **Mostrar atajos de teclado.** El único atajo del juego es Escape para cerrar una ventana.
+    - **Saltar la confirmación de reiniciar run.** Esa confirmación guarda una acción irreversible, y lo
+      único que ahorra la opción es un clic en algo que se hace muy de vez en cuando.
+
+    **Dos decisiones de implementación que hay que tomar antes de escribir código:**
+
+    1. **Dónde vive la configuración.** No en `useGameStore` (muere con la run) y tampoco encaja en
+       `useAchievementsStore`, que es progresión y no preferencias. Lo coherente es un
+       `useSettingsStore` propio con su clave de `localStorage`, como los otros dos.
+    2. ⚠️ **La velocidad de animación tiene un coste real y no evidente**: las duraciones viven en **dos
+       sitios** — nueve constantes `MS_*` en JS (siete en `CombatScreen`, dos en `TransformationScreen`) y
+       trece reglas `animation:` en `index.css`, y ya está documentado que si se cambian en un sitio hay
+       que cambiarlas en el otro. Un multiplicador exige conducir las de CSS desde una variable
+       (`--velocidad-animacion`) en vez de duplicar el número, o los dos relojes se separarán.
+
 ### Pendiente de arte
 
 Cosas que no están hechas por falta de dibujo, no por falta de código. Van juntas aquí y no dentro
@@ -816,6 +867,8 @@ leerlos buscando trabajo.
   - el hover puede realzar **el icono** en vez de su hueco, que es lo que se realza ahora.
   La etiqueta flotante de cada botón **ya está hecha** (`EtiquetaFlotante`, a la izquierda porque el menú
   vive pegado al borde derecho): no depende de los sprites y no hay que volver a ella.
+  Y el reparto de iconos deja de ser un apaño en el **punto 14**: el engranaje pasa a ser Ajustes —que es
+  lo que la maqueta dibujó— y pantalla completa se muda dentro de esa pantalla.
 - **Sai y Yamato no tienen sprite propio.** Llevan de placeholder el genin rival de su naturaleza de
   chakra (fuuton y doton). Declarado en `PLACEHOLDERS` de `scripts/generar-sprites-personajes.py`.
 - **Kakashi tampoco**, y con él un copia-y-pega no valía: es legendario y se pelea contra él en el

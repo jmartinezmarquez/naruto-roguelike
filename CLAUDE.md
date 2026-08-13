@@ -272,7 +272,10 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   tiene id propio en los JSON, con un test de invariante que prohíbe dos modos homónimos en el mismo
   personaje.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
-- [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
+- [ ] **Quitar antes de publicar**: botón "[DEV] Reset progress" en `AchievementsScreen.jsx` (llama a
+  `useAchievementsStore.reiniciarLogros()`, que borra logros **y** el registro de vistos del Bingo Book) —
+  solo para probar el desbloqueo durante desarrollo. Su destino ya está decidido: pasa a ser una opción de
+  verdad ("reiniciar la meta-progresión") en la pantalla de ajustes, el punto 14 del roadmap.
 
 ## Bugs ya resueltos (para no repetirlos)
 

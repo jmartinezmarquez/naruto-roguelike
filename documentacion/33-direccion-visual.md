@@ -240,8 +240,8 @@ torii es una puerta por la que se sale, que es lo que se hace al abandonar una r
 ## Pendiente decidido: modo claro y modo oscuro
 
 Con todo en oscuro el mapa puede quedar algo lúgubre, y existe `game-background-light-theme.png` sin
-usar. **Decisión tomada: no ahora.** Va a ser una opción de ajustes (claro / oscuro), y entonces el
-engranaje del menú tendrá por fin algo real que ofrecer.
+usar. **Decisión tomada: no ahora, y ya tiene sitio** — es el ancla del **punto 14 del roadmap, la
+pantalla de ajustes**, donde el engranaje del menú tendrá por fin algo real que ofrecer.
 
 Lo que hace que eso sea viable sin rehacer nada es el trabajo de tokens de este documento: si los
 colores fueran `bg-tinta-900` escritos por todas partes no habría tema que cambiar, pero al estar el
