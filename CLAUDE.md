@@ -106,13 +106,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 191 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 211 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 191 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 211 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -257,6 +257,18 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   media arrastra a los mal emparejados de tipo, así que cualquiera bien emparejado saca +20 puntos. Con
   un solo personaje de control tampoco vale: cuela su propio emparejamiento. Y los legendarios **no
   entran en la media del roster** del simulador, porque hay que ganarles un combate para tenerlos.
+- [x] **Enciclopedia** (punto 10 del roadmap): `components/Encyclopedia/EncyclopediaScreen.jsx`,
+  `pantalla: 'enciclopedia'`, icono 📖 en el menú del mapa. Cuatro secciones (Ninjas, Enemigos,
+  Objetos, Chakra) y **solo enseña lo ya visto**: lo no visto sale en silueta negra
+  (`filter: brightness(0)`) con "???" y el mensaje de cómo desbloquearlo. Es donde vive por fin lo que
+  se fue sacando de las tarjetas — descripción del jutsu, potencia, turnos de carga y qué hace cada
+  transformación. Ver `documentacion/32-enciclopedia.md`.
+- **El registro de vistos vive en `useAchievementsStore`**, no en `useGameStore`: es meta-progresión y
+  un game over habría borrado la enciclopedia entera. `registrarVistos` es **idempotente y no toca el
+  estado si no hay novedad** — hay una llamada de red de seguridad en `abrirEnciclopedia` y sin eso
+  cada apertura sería un bucle de renders. Un modo se identifica por su ÍNDICE (`naruto_1`) porque no
+  tiene id propio en los JSON, con un test de invariante que prohíbe dos modos homónimos en el mismo
+  personaje.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 

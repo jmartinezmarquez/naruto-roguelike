@@ -47,6 +47,22 @@ function encontrarPersonajeBase(id) {
 }
 
 /**
+ * Índice del modo activo de un personaje a un nivel dado, o null si no tiene
+ * ninguno desbloqueado todavía.
+ *
+ * Hace falta el ÍNDICE y no el modo porque un modo no tiene id propio en los
+ * JSON: la enciclopedia y los sprites lo identifican por su posición dentro de
+ * `modos` (`naruto_1`). `obtenerModoActivo` devuelve el objeto, así que se busca
+ * su posición — por identidad, que es exacta porque es el mismo objeto del array.
+ */
+function indiceDeModoActivo(personajeBase, nivel) {
+  const modo = obtenerModoActivo(personajeBase, nivel);
+  if (!modo) return null;
+  const indice = personajeBase.modos.indexOf(modo);
+  return indice === -1 ? null : indice;
+}
+
+/**
  * Datos base del personaje con sus bonificaciones permanentes (evento
  * `mejoraPermanenteAleatoria`) ya sumadas a statsBase.
  *
@@ -308,7 +324,7 @@ export const useGameStore = create((set, get) => ({
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
   mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
-  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros' | 'mochila'
+  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros' | 'mochila' | 'enciclopedia'
   mochilaItemId: null, // objeto preseleccionado al abrir la mochila (ver abrirMochila)
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
@@ -363,6 +379,11 @@ export const useGameStore = create((set, get) => ({
       runGanada: false,
       huboDerrotaEnEsteArco: false,
     });
+
+    // La enciclopedia arranca con lo que traes puesto: el personaje elegido y los
+    // objetos que hayan desbloqueado los logros. Va DESPUÉS del set() porque lee
+    // el estado ya montado, no los locales de aquí arriba.
+    get()._registrarVistosDeLaRun();
   },
 
   /**
@@ -479,6 +500,7 @@ export const useGameStore = create((set, get) => ({
     const equipoActualizado = [...equipo];
     equipoActualizado[indiceAReemplazar] = nuevaInstancia;
     set({ equipo: equipoActualizado, inventario: inventarioActualizado });
+    get()._registrarVistosDeLaRun();
     return true;
   },
 
@@ -709,6 +731,22 @@ export const useGameStore = create((set, get) => ({
 
     if (consumirBuffs) get()._consumirUsoBuffsTemporales();
 
+    // Enciclopedia: el enemigo se apunta aquí porque es lo único de este combate
+    // que NO queda en el estado — en cuanto termina, no hay forma de saber contra
+    // quién se peleó. Los modos se sacan de las rondas y no del equipo actual: el
+    // que peleó pudo caer, y aun así lo vio transformarse.
+    useAchievementsStore.getState().registrarVistos({
+      enemigos: [enemigoBase.id],
+      modos: rondas
+        .filter((r) => r.jugador.modoActivoNombre)
+        .map((r) => {
+          const base = encontrarPersonajeBase(r.jugador.id);
+          const indice = base.modos.findIndex((m) => m.nombre === r.jugador.modoActivoNombre);
+          return indice === -1 ? null : `${r.jugador.id}_${indice}`;
+        }),
+    });
+    get()._registrarVistosDeLaRun();
+
     const resumen = {
       rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado, equipoAlEmpezar,
       transformacionesDesbloqueadas, subidasDeNivel, recompensas,
@@ -792,6 +830,50 @@ export const useGameStore = create((set, get) => ({
   },
 
   /**
+   * Abre la enciclopedia (accesible desde el mapa). volverAlMapa() la cierra.
+   *
+   * Registra de paso lo que el jugador tiene ahora mismo, como **red de
+   * seguridad**: los ganchos de `_registrarVistosDeLaRun` cubren los momentos en
+   * que algo entra en el equipo o en la mochila, pero si alguno se queda sin
+   * poner (o se añade una vía nueva de conseguir objetos), esto lo tapa. Es
+   * gratis porque `registrarVistos` es idempotente y no toca el estado si no hay
+   * novedad — sin eso, esta llamada dentro de un cambio de pantalla sería un
+   * candidato perfecto a bucle de renders.
+   */
+  abrirEnciclopedia() {
+    get()._registrarVistosDeLaRun();
+    set({ pantalla: 'enciclopedia' });
+  },
+
+  /**
+   * Apunta en la enciclopedia todo lo que se puede leer del estado ACTUAL de la
+   * run: los personajes del equipo, sus modos ya activos, los objetos equipados y
+   * los de la mochila.
+   *
+   * Lo que NO puede salir de aquí es lo transitorio: un enemigo peleado no queda
+   * en el estado, así que ese se apunta en `jugarCombate`. Misma razón por la que
+   * un consumible se registra al comprarlo y no más tarde — para cuando se
+   * gasta, ya no está.
+   */
+  _registrarVistosDeLaRun() {
+    const { equipo, inventario } = get();
+    const modos = [];
+    for (const instancia of equipo) {
+      const indice = indiceDeModoActivo(encontrarPersonajeBase(instancia.id), instancia.nivel);
+      if (indice !== null) modos.push(`${instancia.id}_${indice}`);
+    }
+
+    useAchievementsStore.getState().registrarVistos({
+      personajes: equipo.map((p) => p.id),
+      modos,
+      objetos: [
+        ...inventario,
+        ...equipo.map((p) => p.objetoEquipadoId).filter(Boolean),
+      ],
+    });
+  },
+
+  /**
    * Abre la mochila (pantalla propia, no un panel dentro del mapa).
    * `itemIdInicial` deja preseleccionado un objeto: así, tocar un objeto en el
    * resumen del mapa lleva directo a su ficha en vez de a la lista en frío.
@@ -816,6 +898,7 @@ export const useGameStore = create((set, get) => ({
         items: tiendaActual.items.filter((i) => i.id !== itemId),
       },
     });
+    get()._registrarVistosDeLaRun();
     return true;
   },
 
@@ -879,6 +962,7 @@ export const useGameStore = create((set, get) => ({
     const { inventario, recompensaMiniJefe } = get();
     if (recompensaMiniJefe?.item) {
       set({ inventario: [...inventario, recompensaMiniJefe.item] });
+      get()._registrarVistosDeLaRun();
     }
     get().volverAlMapa();
   },
@@ -1174,6 +1258,7 @@ export const useGameStore = create((set, get) => ({
           const comprables = itemsData.objetos.filter((o) => o.precioTienda !== null);
           const objeto = comprables[Math.floor(Math.random() * comprables.length)];
           set({ oro: oro - efecto.coste, inventario: [...inventario, objeto.id] });
+          get()._registrarVistosDeLaRun();
         }
         break;
       }

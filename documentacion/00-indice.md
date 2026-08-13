@@ -37,5 +37,6 @@
 - [29 - Sistema de jutsus automáticos (ataque básico + barra de jutsu)](./29-sistema-de-jutsus-automaticos.md)
 - [30 - Sistema de pasivas](./30-sistema-de-pasivas.md)
 - [31 - Plan de los siguientes pasos](./31-plan-siguientes-pasos.md)
+- [32 - Enciclopedia](./32-enciclopedia.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

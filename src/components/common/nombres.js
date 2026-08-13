@@ -122,9 +122,25 @@ const CLASE_TIPO = {
   suiton: 'bg-suiton/15 border-suiton/60 text-suiton',
 };
 
+const CLASE_TIPO_NEUTRA = 'bg-pergamino-100/10 border-pergamino-100/30 text-pergamino-200';
+
 /** Clases de color de la pastilla de naturaleza de un luchador. */
 export function clasePastillaDeTipo(id) {
-  return CLASE_TIPO[tipoDeLuchador(id)] ?? 'bg-pergamino-100/10 border-pergamino-100/30 text-pergamino-200';
+  return clasePastillaDeNaturaleza(tipoDeLuchador(id));
+}
+
+/**
+ * Igual, pero por naturaleza directamente ("katon") en vez de por luchador. La
+ * tabla de eficacias de la enciclopedia pinta los cinco elementos, que no son de
+ * nadie: pedirle un id de luchador la obligaría a inventarse uno por tipo.
+ */
+export function clasePastillaDeNaturaleza(tipo) {
+  return CLASE_TIPO[tipo] ?? CLASE_TIPO_NEUTRA;
+}
+
+/** El emoji de una naturaleza directamente, sin pasar por un luchador. */
+export function emojiDeNaturaleza(tipo) {
+  return EMOJI_TIPO[tipo] ?? '';
 }
 
 export function nombreObjeto(id) {

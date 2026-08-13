@@ -9,6 +9,7 @@ import RecruitScreen from './components/Recruit/RecruitScreen';
 import ItemRewardScreen from './components/Reward/ItemRewardScreen';
 import GameOverScreen from './components/GameOver/GameOverScreen';
 import AchievementsScreen from './components/Achievements/AchievementsScreen';
+import EncyclopediaScreen from './components/Encyclopedia/EncyclopediaScreen';
 import InventoryScreen from './components/Inventory/InventoryScreen';
 import LogroToast from './components/Achievements/LogroToast';
 import AvisoToast from './components/Map/AvisoToast';
@@ -24,6 +25,7 @@ function pantallaActual(pantalla) {
   if (pantalla === 'recompensaMiniJefe') return <ItemRewardScreen />;
   if (pantalla === 'gameover') return <GameOverScreen />;
   if (pantalla === 'logros') return <AchievementsScreen />;
+  if (pantalla === 'enciclopedia') return <EncyclopediaScreen />;
   // La mochila NO sustituye al mapa: se dibuja encima, como el diálogo de
   // objeto de un Pokelike. El jugador sigue viendo dónde está mientras decide.
   if (pantalla === 'mochila') {

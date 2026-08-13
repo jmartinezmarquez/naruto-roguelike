@@ -572,19 +572,55 @@ legendario) y **experimento** (cuánto cuesta parchear el juego con cosas nuevas
   concreto — con dos legendarios en la pool, `personajes[0].personajeId === 'gaara'` se había vuelto
   aleatorio, que es peor que estar en rojo.
 
+**Enciclopedia (punto 10) — ver [32](./32-enciclopedia.md)**
+
+Era deuda real, no un "ya lo pondremos": la descripción de cada jutsu, su potencia, el ritmo de carga,
+qué hace cada transformación y la descripción narrativa de los objetos estaban **escritos en los JSON
+y sin pintarse en ninguna pantalla**. Y la deuda crecía cada vez que se adelgazaba una ficha — el
+punto 13 le añadió cuatro textos de golpe.
+
+- [x] Pantalla propia (`pantalla: 'enciclopedia'`, icono 📖 en el menú del mapa) con cuatro secciones:
+  Ninjas, Enemigos, Objetos y Chakra. Dos vistas y nunca las dos a la vez —rejilla o ficha—, el mismo
+  patrón que la mochila.
+- [x] **Solo enseña lo ya visto**, y esa era la única decisión que bloqueaba el código: las
+  transformaciones se quitaron de las tarjetas a propósito porque son una sorpresa, así que listarlas
+  todas habría deshecho media razón de ser del punto 4. Lo no visto sale en **silueta negra** con
+  "???" y el mensaje de qué hacer para abrirlo — no oculto: la gracia de una Pokédex es ver lo que
+  falta.
+- [x] Registro de vistos en `useAchievementsStore` (clave propia de `localStorage`), porque es
+  meta-progresión: en la run, un game over habría borrado la enciclopedia entera. Cuatro categorías, y
+  los modos identificados por su índice (`naruto_1`) porque **un modo no tiene id propio** en los JSON.
+- [x] `registrarVistos` es **idempotente y no toca el estado si no hay novedad**. No es cosmético: hay
+  una llamada de red de seguridad dentro de `abrirEnciclopedia`, y sin eso cada apertura provocaría un
+  `set` y un bucle de renders en quien esté suscrito. Tiene test propio.
+- [x] **No se añadió `descripcion` a los 31 modos** — no lo tiene ninguno, y no hace falta: el texto se
+  genera con `describirPasiva` y los multiplicadores, igual que en la pantalla de transformación.
+- [x] ⚠️ **Bug destapado de camino: `FichaPersonaje` no encontraba a los enemigos comunes.** Llevaba su
+  propia copia de la búsqueda del personaje base, que solo miraba `characters.json` y los jefes, así
+  que devolvía `null` para un genin rival y la tarjeta no se pintaba. Unificada con
+  `encontrarBaseDeLuchador` en `datosDeLuchador.js`. Mismo problema que tuvo `nombrePersonaje`: la
+  tercera vez que aparece una búsqueda duplicada ya no es casualidad.
+- [x] 211 tests (eran 191): el registro de vistos entero (persistencia, deduplicación, idempotencia,
+  carga de una versión anterior sin una categoría) y sus ganchos en el juego, incluido que **apunta al
+  enemigo aunque se pierda el combate**. Más dos invariantes de datos que es lo único automatizable de
+  una pantalla sin tests de React: todo luchador de los tres JSON se puede construir y tiene jutsu con
+  nombre, potencia y carga finita, y ningún luchador repite el nombre de un modo — si los repitiera, el
+  índice reconstruido por nombre daría siempre el primero y la segunda transformación no se
+  desbloquearía jamás.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —orden, fases, verificación y las decisiones que hacen
 > falta antes de tocar código— está en [31](./31-plan-siguientes-pasos.md).** Esta sección se queda
 > como el enunciado de cada punto; el cómo y el en-qué-orden viven allí.
 >
-> **Por dónde seguir ahora mismo: el 7 (playtest).** Todo lo cerrado —del 1 al 4, el 8, el 11, el 12
-> y el 13— está arriba, en "Hecho", con su número en el título para que las referencias a "punto N del
+> **Por dónde seguir ahora mismo: el 7 (playtest).** Todo lo cerrado —del 1 al 4, el 8, el 10, el 11,
+> el 12 y el 13— está arriba, en "Hecho", con su número en el título para que las referencias a "punto N del
 > roadmap" repartidas por el código sigan encontrando su sitio.
 >
-> **Ya no queda nada que toque motor ni store**, y las dos pantallas que el jugador mira todo el rato
-> —mapa y combate— están hechas. Lo que queda es pulir pantallas secundarias (5 logros, 6 eventos, 9
-> columna central) o añadir contenido (10 enciclopedia).
+> **Ya no queda nada que toque motor**, y las dos pantallas que el jugador mira todo el rato —mapa y
+> combate— están hechas. Lo que queda es pulir pantallas secundarias: 5 logros, 6 eventos y 9 columna
+> central.
 >
 > **El 7 va primero, y no como formalidad.** Las dos últimas tandas de mejoras salieron enteras de
 > partidas tuyas, no de la lista; y desde el último playtest han cambiado el balance de los jefes, la
@@ -597,7 +633,7 @@ legendario) y **experimento** (cuánto cuesta parchear el juego con cosas nuevas
 >
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas
 > por comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar.
-> La lista se queda con **5, 6, 7, 9 y 10**: los huecos (1-4, 8, 11, 12, 13) son puntos hechos que
+> La lista se queda con **5, 6, 7 y 9**: los huecos (1-4, 8, 10, 11, 12, 13) son puntos hechos que
 > se han movido a "Hecho" **conservando su número en el título**, no errores de numeración.
 >
 > Lo único que el punto 1 deja abierto a propósito es el peso de los objetos: se quedaron en el
@@ -635,15 +671,6 @@ legendario) y **experimento** (cuánto cuesta parchear el juego con cosas nuevas
       `personajesReclutablesIds: []`).
 
 9. **Diseño de la columna central** — Con unos nodos mas grandes la columna central puede volver a su tamaño anterior, manteniendo las proporciones y ajustandose a la pantalla. También el sprite usado en la columna central tiene que ser mas sencillo y representativo del arco actual. El nombre del arco actual tendría uqe estar con ese estilo caracteristico de Naruto en el que la fuente tiene color negro con ese reborde blanco tan caracteristico
-
-10. **Enciclopedia** — el sitio donde vive la información que se ha ido sacando de las tarjetas para
-    que quepan en una pantalla: descripción de cada jutsu, potencia, turnos exactos de carga, **qué
-    hace cada transformación** (`describirPasiva` ya genera esas líneas), **la descripción narrativa
-    de cada objeto** (sigue en `items.json`, ya no se pinta en ninguna tarjeta), tabla de eficacias
-    de chakra, y ficha de cada personaje y enemigo. Es consulta voluntaria, no algo que se cruce en
-    medio de una run — pantalla propia desde el menú de iconos del mapa, como Logros.
-    Ojo: hoy esa información **no está en ninguna parte**, así que hasta que esto exista hay una deuda
-    real, no solo un "ya lo pondremos". Y crece cada vez que se adelgaza una tarjeta.
 
 ### Pendiente de arte
 

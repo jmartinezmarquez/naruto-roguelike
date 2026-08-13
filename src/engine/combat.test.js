@@ -241,4 +241,32 @@ describe('ataque básico unificado (invariante de datos)', () => {
       expect(crearLuchador(base, 5).ataqueBasico).toEqual(ataqueBasicoPorDefecto);
     }
   });
+
+  // La enciclopedia lista a TODOS los luchadores de los tres JSON y de cada uno
+  // pinta el nombre de su jutsu, su potencia y sus turnos de carga a nivel 1. No
+  // hay tests de componentes React, así que esto es lo más cerca que se puede
+  // estar de comprobar que esa pantalla no se rompe con contenido nuevo: si
+  // alguien añade un enemigo sin `jutsu.danoBase`, salta aquí y no en pantalla.
+  it('todo luchador se puede construir a nivel 1 y su jutsu tiene nombre, potencia y carga finita', () => {
+    for (const base of todosLosLuchadores) {
+      const luchador = crearLuchador(base, 1);
+      expect(typeof base.jutsu.nombre, `jutsu.nombre de ${base.id}`).toBe('string');
+      expect(base.jutsu.nombre.length, `jutsu.nombre de ${base.id}`).toBeGreaterThan(0);
+      expect(typeof base.jutsu.danoBase, `jutsu.danoBase de ${base.id}`).toBe('number');
+      expect(Number.isFinite(turnosParaCargarJutsu(luchador)), `carga de ${base.id}`).toBe(true);
+    }
+  });
+
+  // El registro de vistos de la enciclopedia identifica un modo por su posición
+  // dentro de `modos` (`naruto_1`), porque un modo no tiene id propio en los JSON.
+  // Eso solo es una clave estable si ningún personaje repite el nombre de un modo
+  // con otro suyo — si los repitiera, `findIndex` por nombre (que es como el store
+  // reconstruye el índice desde el resumen del combate) devolvería siempre el
+  // primero y la segunda transformación no se desbloquearía nunca.
+  it('ningún luchador tiene dos modos con el mismo nombre', () => {
+    for (const base of todosLosLuchadores) {
+      const nombres = (base.modos ?? []).map((m) => m.nombre);
+      expect(new Set(nombres).size, `modos repetidos en ${base.id}`).toBe(nombres.length);
+    }
+  });
 });

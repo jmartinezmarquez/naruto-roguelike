@@ -1,22 +1,18 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import personajesData from '../../data/characters.json';
-import enemiesData from '../../data/enemies.json';
 import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import HoverTooltip from './HoverTooltip';
 import {
   emojiDeTipo, nombreDeTipo, nombreObjeto, rarezaDeLuchador, nombrePersonaje, nombreCorto,
   clasePastillaDeTipo,
 } from './nombres';
-import { spriteDeCombate } from './datosDeLuchador';
+import { spriteDeCombate, encontrarBaseDeLuchador } from './datosDeLuchador';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 
-function encontrarBase(id) {
-  return (
-    personajesData.personajes.find((p) => p.id === id)
-    ?? enemiesData.jefes.find((j) => j.id === id)
-    ?? null
-  );
-}
+// La búsqueda del personaje base vive en `datosDeLuchador.js` y no aquí: esta
+// copia solo miraba personajes y jefes, así que la ficha devolvía null para un
+// enemigo común y no se pintaba nada (lo destapó la enciclopedia, que sí los
+// lista). Misma lección que `nombrePersonaje`.
+const encontrarBase = encontrarBaseDeLuchador;
 
 /**
  * Ritmo de carga del jutsu, en 3 puntitos. Es cualitativo a propósito: el

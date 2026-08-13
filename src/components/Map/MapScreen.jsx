@@ -647,7 +647,7 @@ function hayPantallaCompleta() {
  * "Ajustes" se queda fuera a propósito — no hay ninguna opción real que
  * poner ahí todavía.
  */
-function MenuIconos({ abrirLogros, reiniciarRun }) {
+function MenuIconos({ abrirLogros, abrirEnciclopedia, reiniciarRun }) {
   const [pantallaCompleta, setPantallaCompleta] = useState(false);
 
   useEffect(() => {
@@ -677,6 +677,9 @@ function MenuIconos({ abrirLogros, reiniciarRun }) {
     <div className="absolute top-4 right-4 flex gap-2">
       <button type="button" onClick={abrirLogros} className={botonClase} title="Achievements" aria-label="Achievements">
         🏆
+      </button>
+      <button type="button" onClick={abrirEnciclopedia} className={botonClase} title="Encyclopedia" aria-label="Encyclopedia">
+        📖
       </button>
       <button
         type="button"
@@ -708,6 +711,7 @@ export default function MapScreen() {
   const desequiparObjeto = useGameStore((s) => s.desequiparObjeto);
   const abrirMochila = useGameStore((s) => s.abrirMochila);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
+  const abrirEnciclopedia = useGameStore((s) => s.abrirEnciclopedia);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
 
   const fondoColumna = FONDO_COLUMNA[arcoActualDatos?.id];
@@ -771,7 +775,7 @@ export default function MapScreen() {
 
   return (
     <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
-      <MenuIconos abrirLogros={abrirLogros} reiniciarRun={reiniciarRun} />
+      <MenuIconos abrirLogros={abrirLogros} abrirEnciclopedia={abrirEnciclopedia} reiniciarRun={reiniciarRun} />
 
       <header className="text-center mb-1 shrink-0">
         <p className="text-sello-500 text-[9px] tracking-[0.3em] uppercase">Current Arc</p>

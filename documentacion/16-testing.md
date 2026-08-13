@@ -19,7 +19,7 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (191 tests)
+## Cobertura actual (211 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -101,7 +101,15 @@ sin mocks ni DOM.
   después de los tres del equipo — la barra tiene que poder pintarse sin leer el store, que para
   cuando la animación empieza ya tiene el estado final.
 - **`store/useAchievementsStore.test.js`** — desbloqueo y persistencia en `localStorage`, no repetir
-  un logro ya conseguido, `cargarLogros()` recupera lo guardado en una sesión anterior.
+  un logro ya conseguido, `cargarLogros()` recupera lo guardado en una sesión anterior. Y el **registro
+  de vistos de la enciclopedia** (ver [32](./32-enciclopedia.md)): persiste por categoría, acumula sin
+  duplicar, ignora ids vacíos, recupera lo guardado por una versión anterior a la que le falta una
+  categoría (debe salir `[]` y no `undefined`, o la pantalla revienta al hacer `.includes`), y **no
+  cambia la referencia del estado si no hay novedad** — ese último no es cosmético: hay una llamada de
+  red de seguridad en `abrirEnciclopedia` y sin idempotencia cada apertura sería un bucle de renders.
+  Los ganchos del lado del juego están en `useGameStore.test.js`, incluido que se apunta al enemigo
+  **aunque se pierda** el combate y que el modo apuntado es el que usó en la pelea, no el que tenga
+  después.
 
 ## Convención para nuevos tests
 

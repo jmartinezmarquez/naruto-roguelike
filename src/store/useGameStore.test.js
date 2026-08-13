@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
-import { useAchievementsStore } from './useAchievementsStore';
+import { useAchievementsStore, VISTOS_VACIO } from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
 import configGlobal from '../data/config.json';
 
@@ -48,7 +48,7 @@ const enemigoImbatibleDePrueba = {
 // propósito (es meta-progresión entre runs), así que hay que limpiarlo aquí.
 beforeEach(() => {
   localStorage.clear();
-  useAchievementsStore.setState({ logrosDesbloqueados: [] });
+  useAchievementsStore.setState({ logrosDesbloqueados: [], vistos: VISTOS_VACIO });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -999,5 +999,79 @@ describe('usarConsumible', () => {
     useGameStore.setState({ inventario: ['sello_chakra'] });
     const exito = useGameStore.getState().usarConsumible('sello_chakra', 'naruto');
     expect(exito).toBe(false);
+  });
+});
+
+
+describe('registro de vistos para la enciclopedia', () => {
+  const vistos = () => useAchievementsStore.getState().vistos;
+
+  it('iniciarRun apunta el equipo inicial', () => {
+    // El beforeEach ya ha llamado a iniciarRun con los tres.
+    expect(vistos().personajes).toEqual(['naruto', 'sasuke', 'sakura']);
+  });
+
+  it('jugarCombate apunta al enemigo peleado, que no queda en el estado', () => {
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(vistos().enemigos).toContain('enemigo_debil_test');
+  });
+
+  it('apunta al enemigo aunque se PIERDA el combate', () => {
+    // Verlo es verlo: perder no borra que te lo has encontrado. Y este es el
+    // caso que un gancho puesto en la rama de victoria se habría comido.
+    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 50);
+    expect(vistos().enemigos).toContain('enemigo_imbatible_test');
+  });
+
+  it('apunta el modo con el que peleó un personaje, no el que tenga ahora', () => {
+    // Naruto desbloquea su primer modo a nivel 5 (characters.json). Se le sube
+    // antes de pelear para que entre ya transformado.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p) => (p.id === 'naruto' ? { ...p, nivel: 6 } : p)),
+    }));
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(vistos().modos).toContain('naruto_0');
+  });
+
+  it('no apunta un modo que el personaje todavía no tiene', () => {
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(vistos().modos).toEqual([]);
+  });
+
+  it('reclutarPersonaje apunta al que entra', () => {
+    useGameStore.getState().reclutarPersonaje('rock_lee', 5, 'sasuke');
+    expect(vistos().personajes).toContain('rock_lee');
+  });
+
+  it('comprar en la tienda apunta el objeto', () => {
+    useGameStore.setState({
+      oro: 999,
+      tiendaActual: { items: [{ id: 'sello_chakra', precio: 40 }] },
+    });
+    useGameStore.getState().comprarItemTienda('sello_chakra');
+    expect(vistos().objetos).toContain('sello_chakra');
+  });
+
+  it('recoger la recompensa del mini-jefe apunta el objeto', () => {
+    useGameStore.setState({ recompensaMiniJefe: { item: 'kubikiribocho_fragmento' } });
+    useGameStore.getState().reclamarRecompensaMiniJefe();
+    expect(vistos().objetos).toContain('kubikiribocho_fragmento');
+  });
+
+  it('abrirEnciclopedia apunta de red de seguridad lo que haya en la mochila', () => {
+    // La vía de escape para cuando algo entra en el inventario por un camino sin
+    // gancho propio: al abrir la pantalla se apunta lo que el jugador tiene.
+    useGameStore.setState({ inventario: ['pergamino_viento'] });
+    useGameStore.getState().abrirEnciclopedia();
+
+    expect(useGameStore.getState().pantalla).toBe('enciclopedia');
+    expect(vistos().objetos).toContain('pergamino_viento');
+  });
+
+  it('apunta también el objeto equipado, que no está en el inventario', () => {
+    useGameStore.setState({ inventario: ['semilla_sabio'] });
+    useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
+    useGameStore.getState().abrirEnciclopedia();
+    expect(vistos().objetos).toContain('semilla_sabio');
   });
 });

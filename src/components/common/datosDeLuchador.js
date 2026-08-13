@@ -12,13 +12,26 @@ import commonEnemiesData from '../../data/common-enemies.json';
 import { spriteDeLuchador } from './characterSprites';
 import { spriteDeModo } from './transformationSprites';
 
-function encontrarBase(id) {
+/**
+ * Datos base de cualquier luchador, mire donde haya que mirar: personajes, jefes,
+ * plantillas de enemigo común y enemigos nombrados. Los cuatro comparten espacio
+ * de nombres porque un jefe puede acabar en tu equipo por logro y un personaje
+ * puede ser el enemigo de un desafío.
+ *
+ * Exportada porque tenerla duplicada ya salió mal: `FichaPersonaje` llevaba su
+ * propia copia que solo miraba personajes y jefes, así que devolvía null para un
+ * genin rival y la tarjeta no se pintaba. Es el mismo problema que tuvo
+ * `nombrePersonaje` antes de unificarse en `nombres.js`.
+ */
+export function encontrarBaseDeLuchador(id) {
   return personajesData.personajes.find((p) => p.id === id)
     ?? enemiesData.jefes.find((j) => j.id === id)
     ?? commonEnemiesData.plantillasGenericas.find((e) => e.id === id)
     ?? commonEnemiesData.enemigosNombrados.find((e) => e.id === id)
     ?? null;
 }
+
+const encontrarBase = encontrarBaseDeLuchador;
 
 /**
  * El sprite con el que hay que pintar a un luchador de nivel N: el de su

@@ -20,7 +20,13 @@ Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeraci�
 > un personaje al que solo se llega peleando, en un combate que el simulador da al 52% en el piso 3.
 > Nada de lo que se haga mientras tanto lo sustituye.
 >
-> **Siguiente punto a implementar: el 10 (enciclopedia).** El plan está al final de este documento.
+> **El 10 (enciclopedia) está HECHO** el 2026-08-13, con el gateo de "solo lo ya visto" incluido — ver
+> [32-enciclopedia.md](./32-enciclopedia.md). El plan del final de este documento se conserva porque
+> las trampas que anotó siguen siendo ciertas y volverán a hacer falta.
+>
+> **Siguiente punto a implementar: el 5 (logros)**, partido en 5a/5b/5c como dice su sección, y ahora
+> con un motivo más para ir por ahí: el registro de vistos de la enciclopedia ya ha metido contadores
+> persistidos en `useAchievementsStore`, que es exactamente donde 5a necesita los suyos.
 
 ## Orden recomendado
 
