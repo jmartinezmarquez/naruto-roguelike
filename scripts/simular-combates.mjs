@@ -133,9 +133,23 @@ function resumir(etiqueta, resultados) {
   );
 }
 
-// El roster completo pelea cada combate: la media entre los 14 personajes es lo
+// El roster completo pelea cada combate: la media entre los personajes es lo
 // que importa para el balance, no un personaje concreto.
-const roster = personajesData.personajes;
+//
+// **Los legendarios quedan fuera de esta media a propósito.** No se reclutan como
+// los demás: hay que ganarles un combate en un pergamino dorado, así que la mayoría
+// de las runs no los tienen. Meterlos aquí subiría todas las medias del informe y
+// dejaría de poder compararse con las cifras documentadas en
+// documentacion/11-progresion-y-arcos.md — y de paso pintaría un juego más fácil
+// del que juega casi nadie. Su efecto se mide aparte, en `LEGENDARIOS_JUGABLES`.
+const roster = personajesData.personajes.filter((p) => p.rareza !== 'legendario');
+
+/**
+ * Los legendarios que se pueden acabar teniendo en el equipo (hoy: Kakashi). Se
+ * usan para dos cosas distintas: como RIVAL del pergamino dorado, y para medir
+ * cuánto cambia un arco cuando el jugador gana ese pergamino y se lo lleva.
+ */
+const LEGENDARIOS_JUGABLES = personajesData.personajes.filter((p) => p.rareza === 'legendario');
 
 /** Los pisos que se muestrean de cada arco: el primero jugable, el de en medio y el previo al jefe. */
 const pisosMuestreados = (arco) => [2, Math.round(arco.numeroPisos / 2), arco.numeroPisos - 1];
@@ -149,7 +163,13 @@ const jefesDelArco = (arco) => [
 // Cada personaje sube a su propio ritmo (la XP por nivel del roster va de 17 a
 // 24), así que la run se simula una vez por personaje y a partir de aquí "el
 // nivel del jugador" siempre sale de aquí, nunca de una fórmula.
-const PROGRESION = new Map(roster.map((p) => [p.id, nivelesEstimadosDeLaRun(p.curvaXp, ARCOS, xpDeJefe)]));
+// Los legendarios van aquí aunque estén fuera de `roster`: no cuentan para las
+// medias del informe, pero el bloque 1d los mete en el equipo y necesita su nivel
+// piso a piso igual que el de cualquier otro.
+const PROGRESION = new Map(
+  [...roster, ...LEGENDARIOS_JUGABLES]
+    .map((p) => [p.id, nivelesEstimadosDeLaRun(p.curvaXp, ARCOS, xpDeJefe)]),
+);
 const nivelDe = (personaje, arco, piso) => PROGRESION.get(personaje.id)[arco.id].get(piso);
 const nivelMedioEn = (arco, piso) => Math.round(media(roster.map((p) => nivelDe(p, arco, piso))));
 
@@ -378,11 +398,25 @@ function triosDelRoster() {
   const azar = azarConSemilla(SEMILLA);
   const PISOS_MUESTRA = [3, 6];
   for (const arco of ARCOS) {
-    // Los mismos que puede ofrecer el store: legendarios que no son el jefe ni
-    // el mini-jefe de este arco (ver `candidatosReclutables`).
-    const legendarios = enemigosData.jefes.filter(
-      (j) => j.rareza === 'legendario' && j.id !== arco.jefeFinalId && j.id !== arco.miniJefeId,
+    // Los mismos que puede ofrecer el store (ver `candidatosReclutables`): jefes
+    // legendarios que no son el jefe ni el mini-jefe de este arco, **más los
+    // personajes legendarios de la pool del propio arco**.
+    //
+    // Esa segunda mitad faltaba, y no era un detalle: un legendario de
+    // `characters.json` (Kakashi) era invisible aquí, así que el bloque medía el
+    // desafío del arco 1 contra Gaara y Pain — dos rivales que en una primera run
+    // no pueden salir, porque solo se desbloquean por logro— y NO contra el único
+    // que sale de verdad. Es el mismo fallo que el de las pasivas sin normalizar:
+    // el simulador midiendo un juego distinto del que se juega.
+    const legendariosDeLaPool = LEGENDARIOS_JUGABLES.filter(
+      (p) => (arco.personajesReclutablesIds ?? []).includes(p.id),
     );
+    const legendarios = [
+      ...enemigosData.jefes.filter(
+        (j) => j.rareza === 'legendario' && j.id !== arco.jefeFinalId && j.id !== arco.miniJefeId,
+      ),
+      ...legendariosDeLaPool,
+    ];
     for (const piso of PISOS_MUESTRA) {
       for (const legendario of legendarios) {
         const rs = triosDelRoster().map((trio) => {
@@ -403,6 +437,94 @@ function triosDelRoster() {
   }
   console.log('\n  Objetivo: entre el 45% y el 70%. Es opcional, así que puede doler — pero si el\n' +
     '  jugador nunca lo gana, el pergamino dorado es un cartel de "no entres".');
+}
+
+// ---------------------------------------------------------------------------
+// 1d. Lo que cambia si GANAS el pergamino dorado
+// ---------------------------------------------------------------------------
+
+/**
+ * La otra mitad de la pregunta del bloque anterior. Ahí se mide si el desafío se
+ * puede ganar; aquí, qué pasa con el resto del arco cuando se gana y el legendario
+ * se queda en el equipo. Es la comprobación de "que sus números se sientan fuertes,
+ * pero sin desbalancear la run".
+ *
+ * **Se reporta un PUESTO, no un Δ contra una media, y ese fue el hallazgo del
+ * bloque.** Las dos primeras versiones midieron al legendario en la posición 1
+ * contra la media de tríos y salió "+27 puntos, gana los seis jefes al 100% solo":
+ * conclusión falsa por dos motivos que se anulan entre sí y ninguno tiene que ver
+ * con el legendario.
+ *
+ * - **La posición 1 vale por sí misma.** Quien pelea la primera ronda llega con el
+ *   HP entero. Un común cualquiera puesto delante también barre los jefes.
+ * - **La media incluye a los mal emparejados.** Con la tabla de tipos, cualquier
+ *   personaje bien emparejado saca +20 puntos sobre una media que arrastra a los
+ *   cinco que pegan a 0,5×. Raiton hace 1,5× a doton, y tres de los seis jefes son
+ *   doton: eso sube a Kakashi, a Neji y a Kiba por igual.
+ *
+ * El puesto cancela las dos cosas de golpe, porque compara a cada candidato en el
+ * mismo sitio y contra el mismo jefe. Y con él la lectura se dio la vuelta: Kakashi
+ * es 3.º contra Haku y 6.º contra Pain, por detrás de comunes. Los empates a 100%
+ * se rompen por personajes gastados, que es lo único que discrimina cuando el nodo
+ * está saturado.
+ */
+if (LEGENDARIOS_JUGABLES.length > 0) {
+  console.log('\n\n=== Lo que cambia si ganas el pergamino dorado ===');
+  console.log('  (puesto del legendario entre TODOS los candidatos a la posición 1, jefe a jefe)\n');
+
+  const azar = azarConSemilla(SEMILLA);
+
+  /** Mide un nodo de jefe con `delante` en la posición 1 y parejas del roster detrás. */
+  function medirConDelante(arco, jefe, nivel, piso, delante) {
+    const resto = roster.filter((p) => p.id !== delante.id);
+    const trios = [];
+    for (let a = 0; a < resto.length; a += 1) {
+      for (let b = a + 1; b < resto.length; b += 1) trios.push([delante, resto[a], resto[b]]);
+    }
+    const rs = trios.map((trio) => {
+      const hpDeEntrada = piso === arco.pisoJefeFinal
+        ? trio.map((p) => crearLuchador(p, nivelDe(p, arco, piso)).hpMaximo)
+        : hpAlLlegarAlPiso(trio, arco, piso, azar);
+      return simularNodoDeJefe(trio, arco, piso, jefe, nivel, azar, hpDeEntrada);
+    });
+    const ganados = rs.filter((r) => r.gano);
+    return {
+      id: delante.id,
+      victorias: ganados.length / rs.length,
+      gastados: ganados.length ? media(ganados.map((r) => r.caidos + 1)) : 99,
+    };
+  }
+
+  for (const arco of ARCOS) {
+    const legendarios = LEGENDARIOS_JUGABLES.filter(
+      (p) => (arco.personajesReclutablesIds ?? []).includes(p.id),
+    );
+    // Un legendario reclutado en el arco 1 sigue en el equipo en el 2 y en el 3,
+    // así que se mide en los tres, no solo en el arco donde se consigue.
+    const enJuego = legendarios.length > 0 ? legendarios : LEGENDARIOS_JUGABLES;
+    for (const legendario of enJuego) {
+      for (const [rol, id, nivel, piso] of jefesDelArco(arco)) {
+        const jefe = enemigosData.jefes.find((j) => j.id === id);
+        const tabla = [...roster, legendario]
+          .map((p) => medirConDelante(arco, jefe, nivel, piso, p))
+          .sort((a, b) => (b.victorias - a.victorias) || (a.gastados - b.gastados));
+        const puesto = tabla.findIndex((f) => f.id === legendario.id) + 1;
+        const suyo = tabla[puesto - 1];
+        const mejores = tabla.slice(0, 3).map((f) => f.id).join(', ');
+        console.log(
+          `  ${arco.nombre.padEnd(16)} ${`${rol} ${jefe.nombre}`.padEnd(28)} ` +
+            `${legendario.nombre.split(' ')[0]}: puesto ${String(puesto).padStart(2)}/${tabla.length}  ` +
+            `${porcentaje(suyo.victorias).padStart(4)} / ${suyo.gastados.toFixed(1)} pers   ` +
+            `mejores: ${mejores}`,
+        );
+      }
+    }
+  }
+  console.log(
+    '\n  Objetivo: arriba de la tabla en los jefes a los que le va bien de tipo, y por detrás\n' +
+      '  de algún común en los otros. Primero en los seis quiere decir que el legendario ha\n' +
+      '  dejado sin sentido reclutar a nadie más; a mitad de tabla, que no merece el combate.',
+  );
 }
 
 // ---------------------------------------------------------------------------

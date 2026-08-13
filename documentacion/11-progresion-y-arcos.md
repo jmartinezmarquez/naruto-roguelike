@@ -179,6 +179,66 @@ opcional y se ve desde el mapa antes de entrar: el jugador decide con la informa
 alguna vez se quiere aplanar, la palanca no es el nivel sino los pesos de `poolRarezaReclutar` por
 piso, que hoy son iguales para todo el arco.
 
+## Calibrar un personaje nuevo: el caso de Kakashi (y cómo se mide mal)
+
+Kakashi es el primer personaje **legendario jugable** (los legendarios eran hasta ahora solo jefes
+desbloqueables por logro). Se pidió que "sus números se sintieran fuertes sin desbalancear la run", y
+lo que costó no fue elegir los números: fue **construir la medida**. Las dos primeras lecturas dieron
+conclusiones opuestas y las dos eran falsas.
+
+**Intento 1 — el legendario contra la media de tríos.** Se le puso en la posición 1 y se comparó con
+la media de todos los tríos del roster. Salió que ganaba los seis nodos de jefe al 100% gastando un
+solo personaje, con Δ de +7 a +27 puntos. Conclusión: roto. **Falso**, por dos sesgos que empujan en
+la misma dirección:
+
+- **La posición 1 vale por sí misma.** Quien pelea la primera ronda llega con el HP entero y, si
+  gana, el combate se acaba sin que nadie más entre. Un común cualquiera puesto delante también barre
+  los jefes.
+- **La media arrastra a los mal emparejados.** Con la tabla de tipos, cualquier personaje bien
+  emparejado saca +20 puntos sobre una media que incluye a los que pegan a 0,5×.
+
+**Intento 2 — control con un solo personaje de referencia.** Se comparó contra el mejor no legendario
+(Yamato) puesto en el mismo sitio. Salió Δ+33 contra Pain… porque Pain es raiton y Yamato doton. El
+control traía su propio emparejamiento de tipos.
+
+**Lo que funciona: el PUESTO.** Simular cada candidato a la posición 1 contra el mismo jefe y ordenar.
+Cancela los dos sesgos de golpe, y los empates a 100% se rompen por personajes gastados, que es lo
+único que discrimina cuando el nodo está saturado. Es el bloque **"Lo que cambia si ganas el pergamino
+dorado"** de `scripts/simular-combates.mjs`.
+
+Con esa medida la lectura se dio la vuelta: Kakashi es **puesto 2-6 de 15**, nunca primero.
+
+| Nodo | Puesto de Kakashi | Por delante |
+|---|---|---|
+| Haku (suiton) | 3.º — 98% / 1,2 pers | rock_lee, yamato (doton, 1,5× a suiton) |
+| Zabuza (suiton) | 4.º — 100% / 1,0 | rock_lee, shino, yamato |
+| Kabuto (doton) | 2.º — 100% / 1,0 | neji (el otro raiton) |
+| Gaara (doton) | 4.º — 100% / 1,0 | neji, choji, kiba |
+| Pain: Animal (doton) | 4.º — 100% / 1,0 | neji, kiba, yamato |
+| Pain Deva (raiton) | 6.º — 92% / 2,2 | naruto, tenten, choji, sai (fuuton, 1,5× a raiton) |
+
+Y sale una **consecuencia de diseño que no se buscó y conviene no "arreglar"**: Kakashi es raiton, se
+consigue en el arco 1 y **los dos jefes del arco 1 son suiton**. O sea que el premio del pergamino
+dorado no ayuda con el jefe que viene justo después — se cobra en los arcos 2 y 3, donde tres de los
+cuatro jefes son doton. Ganarlo es una inversión, no un atajo.
+
+Sus números finales: `42/11/8/10` (hp/atk/def/spe), jutsu Raikiri a 2,5 con carga 36/10, Sharingan a
+nivel 6 (`first_hit_reduction` 0,4 + `ignore_defense` 0,2) y Mangekyō a 35 (`ignore_defense` 0,55 +
+`priority`). Se llegó ahí bajando desde `45/12/9/11`, que sí barría de verdad: era mejor que todo el
+roster en las cuatro estadísticas **y** en pasivas **y** en jutsu, que no es "legendario" sino
+"dominante". El desafío para conseguirlo se gana el 52% de las veces en el piso 3 y el 87% en el 6.
+
+**Dos reglas que salen de aquí y valen para el siguiente personaje que se añada:**
+
+1. Los legendarios **no entran en la media del roster** del simulador (`roster` los filtra). No se
+   reclutan como los demás —hay que ganarles un combate—, así que la mayoría de las runs no los
+   tienen; meterlos subiría todas las medias del informe y dejaría de poder compararse con las cifras
+   de este documento.
+2. Un personaje legendario en `characters.json` era **invisible** para el bloque del desafío
+   legendario, que solo miraba `enemies.json`. Medía el arco 1 contra Gaara y Pain —dos rivales que en
+   una primera run no pueden salir— y no contra el único que sale de verdad. Es el mismo fallo que las
+   pasivas sin normalizar: **el simulador midiendo un juego distinto del que se juega.**
+
 ## Transformaciones de jefe: activarlas y compensar sus stats
 
 Durante meses **ninguna transformación de jefe se activó jamás**: sus modos se desbloqueaban por

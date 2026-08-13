@@ -19,7 +19,7 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (190 tests)
+## Cobertura actual (191 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -87,7 +87,13 @@ sin mocks ni DOM.
   dorado ofrece a uno solo y como desafío, degrada a común si no queda ningún legendario, pelea de
   verdad al nivel fijo del arco, perderlo termina la run, ganar deja reclutarlo desde el mismo
   pergamino, y ni el jefe ni el mini-jefe del arco en curso pueden salir como recluta — esto último
-  porque ganarle al jefe final ahí habría marcado el arco como completado. Y la **Spare Ninja
+  porque ganarle al jefe final ahí habría marcado el arco como completado. Y, desde que Kakashi
+  existe, que **el arco 1 ofrece un desafío legendario sin ningún logro desbloqueado** — antes su
+  `personajesReclutablesIds` estaba vacío y en una primera run el pergamino dorado degradaba siempre.
+  Añadirlo obligó a **quitar los ids escritos a mano** de tres tests de este bloque: con dos
+  legendarios en la pool, `personajes[0].personajeId === 'gaara'` pasó a ser una tirada de dados, que
+  es peor que estar en rojo. Ahora se lee de la oferta quién ha salido, o se arranca la run con una
+  copia del arco sin pool propia cuando el test necesita un rival concreto. Y la **Spare Ninja
   Headband dentro de un combate real** (`jugarCombate`, no `_aplicarDerrota` a mano): el que revive
   pelea dos rondas seguidas, así que hay que comprobar que no revive en las dos. Y el **final del
   combate**: el resumen trae XP, oro y XP de banquillo, el objeto del mini-jefe NO se anuncia ahí

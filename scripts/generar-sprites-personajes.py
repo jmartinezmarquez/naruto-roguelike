@@ -65,6 +65,24 @@ PLACEHOLDERS = {
     'camino_animal_pain': 'pain_camino_deva',
 }
 
+# Placeholders que además se **recolorean**, para los que un copia-y-pega no basta.
+# Kakashi es legendario y se pelea contra él en un pergamino dorado: si sale con el
+# sprite exacto del genin raiton, el jugador no distingue al desafío de un combate
+# común, que es justo la información que el nodo tiene que dar. Recolorear el pelo a
+# plata cuesta cuatro líneas y se lee de un vistazo.
+#
+# `banda` es la parte de arriba del dibujo donde se busca el color a cambiar (el
+# pelo es la masa de color dominante de la coronilla), y `tonos` son los colores de
+# reemplazo del más claro al más oscuro. No se escribe ningún color de origen: se
+# mide sobre el propio sprite, como todo lo demás en este script.
+RECOLOREADOS = {
+    'kakashi': {
+        'origen': 'genin_rival_raiton',   # Kakashi es raiton
+        'banda': 0.34,
+        'tonos': [(206, 206, 198), (150, 150, 144), (104, 104, 100)],
+    },
+}
+
 UMBRAL_OSCURO = 70       # por debajo de esto un píxel cuenta como marco
 DENSIDAD_SEPARADOR = 0.88  # qué parte de una línea tiene que ser marco para serlo
 TOLERANCIA_PAPEL = 26    # cuánto puede alejarse un píxel del papel y seguir siéndolo
@@ -252,6 +270,67 @@ def main():
         lado, salida = encuadrar(*recortar(w, h, ch, px, caja, papel))
         escribir_png_rgba(os.path.join(DESTINO, f'{destino}.png'), lado, lado, salida)
         print(f'  {destino}: placeholder, copia de {origen}')
+
+    for destino, receta in RECOLOREADOS.items():
+        origen = receta['origen']
+        if origen not in generados:
+            print(f'  ⚠ {destino}: falta su placeholder {origen}')
+            continue
+        caja, _ = generados[origen]
+        papel = color_del_papel(w, ch, px, (caja[0], caja[1], caja[0] + caja[2], caja[1] + caja[3]))
+        lado, salida = encuadrar(*recortar(w, h, ch, px, caja, papel))
+        # `recortar` devuelve bytes inmutables y aquí hay que pintar encima.
+        salida = bytearray(salida)
+        cambiados = recolorear_pelo(lado, salida, receta['banda'], receta['tonos'])
+        escribir_png_rgba(os.path.join(DESTINO, f'{destino}.png'), lado, lado, salida)
+        print(f'  {destino}: placeholder de {origen} con el pelo recoloreado ({cambiados} px)')
+
+
+def recolorear_pelo(lado, pixeles, banda, tonos, luz_minima=18, luz_maxima=95):
+    """
+    Cambia el color del pelo de un sprite ya recortado, EN EL SITIO.
+
+    **Por ventana de luminosidad, no por color exacto**, y esa es la única forma que
+    funciona aquí: el primer intento contaba colores y sustituía los más frecuentes,
+    y cambió 12 píxeles de 96×96. El dibujo está antialiaseado, así que el pelo no es
+    un color sino decenas de variantes de uno —(40,39,40), (41,40,40), (44,43,42)…—
+    y el "color dominante" de la coronilla salía siendo el NEGRO del contorno. Es el
+    mismo problema que el script ya tiene documentado con el papel texturizado de la
+    hoja; la solución es la misma: tolerancia en vez de igualdad.
+
+    Se recolorea lo que está oscuro **sin ser el contorno** (`luz_minima`) y **sin
+    llegar a la piel** (`luz_maxima`), dentro de la franja de arriba del dibujo
+    (`banda`, en tanto por uno de su alto). El tono de reemplazo se elige por
+    luminosidad relativa, así que el sombreado original se conserva en plata.
+    """
+    def opaco(i):
+        return pixeles[i * 4 + 3] > 128
+
+    def luz(c):
+        return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
+
+    filas_con_dibujo = [y for y in range(lado) if any(opaco(y * lado + x) for x in range(lado))]
+    if not filas_con_dibujo:
+        return 0
+    arriba, abajo = filas_con_dibujo[0], filas_con_dibujo[-1]
+    corte = arriba + max(1, int((abajo - arriba + 1) * banda))
+
+    cambiados = 0
+    for y in range(arriba, corte):
+        for x in range(lado):
+            i = y * lado + x
+            if not opaco(i):
+                continue
+            color = tuple(pixeles[i * 4:i * 4 + 3])
+            valor = luz(color)
+            if not (luz_minima < valor < luz_maxima):
+                continue
+            # De oscuro a claro dentro de la ventana, al tono que le toque.
+            tramo = (valor - luz_minima) / (luz_maxima - luz_minima)
+            indice = min(len(tonos) - 1, int((1 - tramo) * len(tonos)))
+            pixeles[i * 4:i * 4 + 3] = bytearray(tonos[indice])
+            cambiados += 1
+    return cambiados
 
 
 if __name__ == '__main__':

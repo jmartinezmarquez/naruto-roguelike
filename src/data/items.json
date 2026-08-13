@@ -149,6 +149,25 @@
           "soloJutsu": true
         }
       ]
+    },
+    {
+      "id": "cascabeles",
+      "nombre": "Kakashi's Bells",
+      "descripcion": "The two bells from the survival test. Whoever gets to them does it on the opening move, and is ready for what comes back.",
+      "tipo": "equipable",
+      "rareza": "raro",
+      "precioTienda": 70,
+      "categoria": "combate",
+      "pasivas": [
+        {
+          "id": "first_attack_bonus",
+          "cantidad": 0.6
+        },
+        {
+          "id": "first_hit_reduction",
+          "cantidad": 0.35
+        }
+      ]
     }
   ]
 }

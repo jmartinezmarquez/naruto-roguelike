@@ -20,6 +20,7 @@ import hinata from '../../assets/characters/hinata.png';
 import shino from '../../assets/characters/shino.png';
 import sai from '../../assets/characters/sai.png';
 import yamato from '../../assets/characters/yamato.png';
+import kakashi from '../../assets/characters/kakashi.png';
 import haku from '../../assets/characters/haku.png';
 import zabuza from '../../assets/characters/zabuza.png';
 import kabuto from '../../assets/characters/kabuto.png';
@@ -53,6 +54,11 @@ export const SPRITE_LUCHADOR = {
   // descuido — ver PLACEHOLDERS en `scripts/generar-sprites-personajes.py`.
   sai,
   yamato,
+  // Kakashi tampoco está en la hoja, y como es legendario y se pelea contra él en
+  // el pergamino dorado, una copia exacta del genin raiton habría hecho que el
+  // desafío pareciera un combate común. Lleva el mismo sprite con el pelo
+  // recoloreado a plata — ver RECOLOREADOS en el script.
+  kakashi,
   haku,
   zabuza,
   kabuto,

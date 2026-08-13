@@ -106,24 +106,26 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 190 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 191 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 190 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 191 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
 - [x] `App.jsx` real: `CharacterSelectScreen` (elige 1 personaje inicial, roster = "inicial" + desbloqueados por logro; el resto del equipo se completa reclutando) sustituye al arranque fijo con Naruto/Sasuke/Sakura — ver `documentacion/19-seleccion-de-personaje.md`.
-- [x] Reclutar con el equipo lleno deja elegir a quién reemplazar (`ShopScreen.jsx` → `ElegirReemplazo`, `reclutarPersonaje(id, nivel, idAReemplazar)`) — ver `documentacion/19-seleccion-de-personaje.md`.
+- [x] Reclutar con el equipo lleno deja elegir a quién reemplazar (`RecruitScreen.jsx` → `PanelReemplazo`, `reclutarPersonaje(id, nivel, idAReemplazar)`) — ver `documentacion/19-seleccion-de-personaje.md`.
 - [x] Tarjeta de hover con stats/tipo/jutsu/HP en todo sitio donde se muestra un personaje (`components/common/PersonajeHoverCard.jsx` / `FichaPersonaje`), y pictograma del ciclo de ventaja de chakra en el mapa (`RuedaChakra`).
 - [x] Ronda de bugfixing/ajustes de diseño (ver `documentacion/05-roadmap.md`, sección "Hecho — Bugfixing"): nivel de reclutamiento equilibrado con el equipo, líneas del mapa con 4 estados, nodo de descanso garantizado en el piso anterior al jefe, XP de caídos, efectos de estado desactivados, menú de iconos, toast de curación, selección de personaje con ficha completa, mapa escalado con `ResizeObserver` para caber sin scroll.
-- [x] Los "inicial" (Naruto/Sasuke/Sakura) no elegidos al empezar la run se pueden reclutar en
-  cualquier tienda, incluida la del primer arco (que no tiene `personajesReclutablesIds` propio) —
-  así siempre se puede formar un equipo de 3 aunque no se haya desbloqueado ningún logro todavía.
-  Ver `documentacion/15-tienda.md`.
+- [x] Los "inicial" (Naruto/Sasuke/Sakura) no elegidos al empezar la run entran en el pool de
+  reclutables, así que siempre se puede formar un equipo de 3 aunque no se haya desbloqueado ningún
+  logro. **Se reclutan en el nodo `reclutar` (pergamino verde), no en la tienda**: la tienda se
+  rediseñó a 3 objetos comprables y ya no recluta a nadie (`candidatosReclutables` en
+  `useGameStore.js` es el único sitio donde se arma ese pool, y lo consume el nodo). Ver
+  `documentacion/28-nodo-reclutar.md` y `15-tienda.md`.
 - [x] Los 3 arcos se juegan en una sola run: al derrotar al jefe final de uno, continúa
   automáticamente con el siguiente (`avanzarSiguienteArco`, `ORDEN_ARCOS` en `useGameStore.js`).
   Derrotar a Pain (`recompensa.finDeLaRun: true`) marca la run como ganada de verdad —
@@ -240,6 +242,21 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   `statsBase` de los cuatro dividido por los multiplicadores de su propio modo para que el jefe pese
   lo mismo pero parte de su poder venga de la transformación. Test de invariante nuevo — el que había
   solo miraba `characters.json`. Ver `documentacion/11-progresion-y-arcos.md`.
+- [x] **Kakashi y los cascabeles** (punto 13 del roadmap): primer legendario **jugable** — hasta ahora
+  los legendarios eran solo jefes desbloqueables por logro. Está en `personajesReclutablesIds` del arco
+  1 y **solo de ese**, así que su única puerta es el pergamino dorado (el verde acepta
+  `comun`/`inicial`/`raro`): eso no hay que programarlo, sale de `RAREZAS_POR_PERGAMINO`. Antes ese
+  array estaba vacío y en una **primera run** el pergamino dorado del arco 1 no tenía a nadie que
+  ofrecer y degradaba siempre. Añadir personaje y objeto fueron **tres ficheros de datos**, y los
+  invariantes que ya existían los validaron solos. Ver `documentacion/11-progresion-y-arcos.md` y
+  `28-nodo-reclutar.md`.
+- **Regla de medida que salió de ahí — para el siguiente personaje que se añada**: un personaje nuevo
+  se calibra por su **PUESTO** entre todos los candidatos a la posición 1 del equipo, jefe a jefe, no
+  por un Δ contra la media de tríos. Dos lecturas seguidas dieron conclusiones opuestas y las dos eran
+  falsas: la posición 1 vale por sí misma (quien pelea la primera ronda llega con el HP entero) y la
+  media arrastra a los mal emparejados de tipo, así que cualquiera bien emparejado saca +20 puntos. Con
+  un solo personaje de control tampoco vale: cuela su propio emparejamiento. Y los legendarios **no
+  entran en la media del roster** del simulador, porque hay que ganarles un combate para tenerlos.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [ ] **Quitar antes de publicar**: botón "[DEV] Reiniciar logros" en `AchievementsScreen.jsx` (llama a `useAchievementsStore.reiniciarLogros()`) — solo para probar el desbloqueo durante desarrollo.
 

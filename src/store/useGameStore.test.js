@@ -650,12 +650,22 @@ describe('nodo de reclutar', () => {
 
   it('elegirReclutaDeNodo falla si el personaje no está en la oferta', () => {
     fijarReclutarDePrueba();
-    const exito = useGameStore.getState().elegirReclutaDeNodo('kakashi');
+    // Un id que no existe en ningún JSON. Antes ponía 'kakashi', que era un id
+    // inventado hasta que Kakashi entró en el juego de verdad: el test seguía
+    // pasando (no está en ESA oferta) pero ya no probaba lo que dice su nombre.
+    const exito = useGameStore.getState().elegirReclutaDeNodo('ninja_que_no_existe');
     expect(exito).toBe(false);
   });
 });
 
 describe('desafío legendario (pergamino dorado)', () => {
+  // El arco 1 real tiene a Kakashi en `personajesReclutablesIds`, así que SIEMPRE
+  // hay un legendario en la pool. Los tests que necesitan que el único legendario
+  // sea el desbloqueado por logro (o que no haya ninguno) arrancan la run con esta
+  // copia del arco sin pool propia. Es la alternativa a meter a Kakashi en el
+  // equipo para sacarlo del sorteo, que cambiaría el equipo que se está midiendo.
+  const arcoSinLegendarioPropio = { ...arcoDePrueba, personajesReclutablesIds: [] };
+
   function entrarEnNodoDorado() {
     useGameStore.setState({
       mapa: {
@@ -673,6 +683,9 @@ describe('desafío legendario (pergamino dorado)', () => {
 
   it('un pergamino dorado ofrece a UN solo legendario, y como desafío', () => {
     // Gaara es legendario y es el jefe final del arco 2, no del que se juega aquí.
+    // Con Kakashi en la pool del arco hay DOS legendarios elegibles, así que el
+    // test no puede exigir un id concreto sin volverse aleatorio: lo que garantiza
+    // el nodo es que sale **uno solo** y que ese uno es legendario.
     useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
     entrarEnNodoDorado();
 
@@ -680,13 +693,28 @@ describe('desafío legendario (pergamino dorado)', () => {
     expect(reclutarActual.rareza).toBe('legendario');
     expect(reclutarActual.esDesafio).toBe(true);
     expect(reclutarActual.personajes).toHaveLength(1);
-    expect(reclutarActual.personajes[0].personajeId).toBe('gaara');
+    expect(reclutarActual.personajes[0].rareza).toBe('legendario');
     expect(reclutarActual.nivelDesafio).toBe(arcoDePrueba.nivelDesafioLegendario);
   });
 
+  it('el arco 1 ofrece un desafío legendario sin ningún logro desbloqueado', () => {
+    // La razón de que Kakashi esté en `personajesReclutablesIds` del arco 1: antes
+    // el array estaba vacío, los únicos legendarios eran jefes desbloqueados por
+    // logro, y el jefe y el mini-jefe del arco en curso están fuera del pool. O
+    // sea que en la PRIMERA run el pergamino dorado del arco 1 degradaba siempre.
+    entrarEnNodoDorado();
+
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.rareza).toBe('legendario');
+    expect(reclutarActual.esDesafio).toBe(true);
+    expect(reclutarActual.personajes[0].personajeId).toBe('kakashi');
+  });
+
   it('sin ningún legendario disponible, el nodo degrada a común en vez de quedarse vacío', () => {
-    // Sin logros desbloqueados no hay ni un legendario en la pool: el pergamino
-    // dorado del mapa no puede cumplir lo que promete, así que ofrece lo que hay.
+    // Sin logros desbloqueados y sin pool propia del arco no hay ni un legendario:
+    // el pergamino dorado del mapa no puede cumplir lo que promete, así que ofrece
+    // lo que hay.
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoSinLegendarioPropio);
     useGameStore.setState((estado) => ({ equipo: estado.equipo.filter((p) => p.id === 'naruto') }));
     entrarEnNodoDorado();
 
@@ -699,15 +727,19 @@ describe('desafío legendario (pergamino dorado)', () => {
   it('iniciarDesafioLegendario pelea contra el legendario al nivel FIJO del arco', () => {
     useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
     entrarEnNodoDorado();
+    // Quien sale del sorteo se lee de la oferta, no se escribe a mano: hay dos
+    // legendarios elegibles y lo que se comprueba es que se pelea contra el que se
+    // ha ofrecido, no contra otro.
+    const ofrecido = useGameStore.getState().reclutarActual.personajes[0].personajeId;
 
     const aceptado = useGameStore.getState().iniciarDesafioLegendario();
     expect(aceptado).toBe(true);
 
     const estado = useGameStore.getState();
     expect(estado.pantalla).toBe('combate');
-    expect(estado.desafioRecluta).toEqual({ personajeId: 'gaara' });
+    expect(estado.desafioRecluta).toEqual({ personajeId: ofrecido });
     // Se ha peleado de verdad: hay un resumen de combate contra él.
-    expect(estado.ultimoResultadoCombate.rondas[0].enemigo.id).toBe('gaara');
+    expect(estado.ultimoResultadoCombate.rondas[0].enemigo.id).toBe(ofrecido);
     expect(estado.ultimoResultadoCombate.rondas[0].enemigo.nivel)
       .toBe(arcoDePrueba.nivelDesafioLegendario);
   });
@@ -716,6 +748,9 @@ describe('desafío legendario (pergamino dorado)', () => {
     // El equipo del beforeEach es de nivel 1 y Gaara pelea a `nivelDesafioLegendario`:
     // pierde las tres rondas. Ese es el riesgo real que hace que el pergamino
     // dorado sea una decisión y no un regalo, y por eso la pantalla lo avisa.
+    // Se arranca sin la pool del arco para que el rival sea Gaara y no un sorteo
+    // entre él y Kakashi: el margen medido es el suyo (63 de HP base).
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoSinLegendarioPropio);
     useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
     entrarEnNodoDorado();
     useGameStore.getState().iniciarDesafioLegendario();

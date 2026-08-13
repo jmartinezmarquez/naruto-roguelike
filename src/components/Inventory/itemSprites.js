@@ -14,6 +14,10 @@ import pergaminoViento from '../../assets/items/pergamino_viento.png';
 import kubikiribochoFragmento from '../../assets/items/kubikiribocho_fragmento.png';
 import calabazaArena from '../../assets/items/calabaza_arena.png';
 import anilloRinneganFragmento from '../../assets/items/anillo_rinnegan_fragmento.png';
+// El único sprite del juego que no sale de una hoja del artista: los cascabeles no
+// están dibujados en ninguna y son dos esferas con una ranura, así que se dibujan
+// (`scripts/generar-sprite-cascabeles.py`). Placeholder declarado.
+import cascabeles from '../../assets/items/cascabeles.png';
 
 export const SPRITE_OBJETO = {
   pildora_soldado: pildoraSoldado,
@@ -26,6 +30,7 @@ export const SPRITE_OBJETO = {
   kubikiribocho_fragmento: kubikiribochoFragmento,
   calabaza_arena: calabazaArena,
   anillo_rinnegan_fragmento: anilloRinneganFragmento,
+  cascabeles,
 };
 
 // Color por rareza, el mismo código que usa la hoja de sprites del artista:

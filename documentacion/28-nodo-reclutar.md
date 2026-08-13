@@ -71,7 +71,7 @@ lo que no puede cumplir.
 ## Pool de candidatos
 
 `candidatosReclutables(equipo, arco)` en el store:
-1. `arcoActualDatos.personajesReclutablesIds` (vacío en País de las Olas — sin roster propio).
+1. `arcoActualDatos.personajesReclutablesIds` (en País de las Olas, **solo Kakashi** — ver abajo).
 2. Personajes desbloqueados por logro (`desbloquearPersonajeReclutable`).
 3. Los `rareza: 'inicial'` no elegidos al empezar la run.
 
@@ -82,6 +82,24 @@ al `jefeFinalId` del arco en un nodo de reclutar habría disparado `arcoCompleta
 `jugarCombate`: la run habría saltado al arco siguiente desde un pergamino. Aparte de eso, reclutar
 en el piso 2 a quien te espera en el 8 no se sostiene ni jugando ni en la ficción. Hay dos tests que
 lo protegen.
+
+### Un legendario en el arco 1, o el pergamino dorado no existía nunca
+
+`personajesReclutablesIds` del País de las Olas estaba **vacío**, y de ahí salía un agujero que no se
+veía leyendo el código de este nodo: los únicos legendarios del juego eran jefes desbloqueables por
+logro, y el jefe y el mini-jefe del arco en curso están fuera del pool. Resultado: en una **primera
+run** el pergamino dorado del arco 1 no podía ofrecer a nadie y degradaba siempre a común. El nodo
+existía, el sprite dorado existía, y el jugador no lo veía jamás hasta terminarse un arco entero.
+
+Kakashi lo arregla siendo el primer legendario **jugable** (`characters.json`, no `enemies.json`), y
+está en la pool de **este arco y solo de este**: es el sensei del equipo aquí, y meterlo en los tres
+diluiría el premio de los logros de jefe, que es lo que abre a los legendarios en los arcos 2 y 3.
+
+Como es legendario, el pergamino **verde nunca lo ofrece** (acepta `comun`, `inicial` y `raro`): su
+única puerta es el dorado, o sea ganarle un combate al `nivelDesafioLegendario` del arco. No hace
+falta ningún código para eso — es la consecuencia de `RAREZAS_POR_PERGAMINO` — y es la razón de que
+añadirlo fuera solo tres ficheros de datos. Hay un test que fija la garantía que importa: **el arco 1
+ofrece un desafío legendario sin ningún logro desbloqueado.**
 
 ### Degradación cuando la rareza se queda sin gente
 

@@ -15,7 +15,7 @@ El jugador puede comprar los que quiera con el oro disponible, sin límite ni or
   `precioTienda !== null` y elige 3 al azar.
 - `tiendaActual` = `{ items: [{ id, precio }, ...] }` — la carta desaparece de la oferta al comprarla.
 - El reclutamiento **ya no vive en la tienda** — tiene su propio nodo de tipo `reclutar`
-  (ver [25 - Nodo de reclutar](./25-nodo-reclutar.md)).
+  (ver [28 - Nodo de reclutar](./28-nodo-reclutar.md)).
 - Los objetos exclusivos de mini-jefe (`precioTienda: null`) **no aparecen en la tienda**.
   Solo se obtienen como recompensa de combate (ver más abajo).
 

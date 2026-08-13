@@ -42,7 +42,8 @@
   "miniJefeId": "haku",
   "pisoJefeFinal": 8,
   "jefeFinalId": "zabuza",
-  "personajesReclutablesIds": [],
+  "_comentarioReclutables": "Kakashi es LEGENDARIO, así que el pergamino verde (comun+inicial+raro) no lo ofrece nunca: su única puerta es el pergamino dorado, o sea ganarle un combate al nivelDesafioLegendario del arco. Antes de él este array estaba vacío y la primera run no podía ver un pergamino dorado en el arco 1 — los únicos legendarios eran jefes desbloqueados por logro, y el jefe y el mini-jefe del arco en curso están fuera del pool. Está solo en este arco a propósito: es el sensei del equipo aquí, y meterlo en los tres diluiría el premio de los logros de jefe.",
+  "personajesReclutablesIds": ["kakashi"],
   "personajesInicialesIds": [
     "naruto",
     "sasuke",

@@ -532,7 +532,7 @@
       "jutsu": {
         "nombre": "Human Bullet Tank",
         "descripcion": "Launches himself as a giant ball, gaining bulk and endurance.",
-        "danoBase": 2.45,
+        "danoBase": 2.35,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 20,
@@ -791,7 +791,7 @@
       "jutsu": {
         "nombre": "Super Beast Imitation Drawing",
         "descripcion": "Summons a giant ink beast that attacks and disorients the opponent.",
-        "danoBase": 2.45,
+        "danoBase": 2.35,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 34,
@@ -866,6 +866,74 @@
             {
               "id": "reduce_damage_taken",
               "cantidad": 0.1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kakashi",
+      "nombre": "Kakashi Hatake",
+      "tipo": "raiton",
+      "rareza": "legendario",
+      "statsBase": {
+        "hp": 41,
+        "ataque": 11,
+        "defensa": 8,
+        "velocidad": 10
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 24,
+        "crecimiento": 1.015
+      },
+      "jutsu": {
+        "nombre": "Lightning Blade",
+        "descripcion": "Lightning chakra concentrated into one hand until it pierces whatever it touches.",
+        "danoBase": 2.5,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 36,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Sharingan",
+          "nivelDesbloqueo": 6,
+          "multiplicadores": {
+            "ataque": 1.1,
+            "defensa": 1.04,
+            "velocidad": 1.12,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.4
+            },
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.2
+            }
+          ]
+        },
+        {
+          "nombre": "Mangekyō Sharingan",
+          "nivelDesbloqueo": 35,
+          "multiplicadores": {
+            "ataque": 1.3,
+            "defensa": 1.18,
+            "velocidad": 1.24,
+            "hp": 1.1
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.55
+            },
+            {
+              "id": "priority"
             }
           ]
         }

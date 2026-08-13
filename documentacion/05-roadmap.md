@@ -4,7 +4,7 @@
 
 **Fundamentos**
 - [x] Concepto, temática (Naruto), 3 arcos del MVP definidos.
-- [x] Datos completos: `types`, `characters` (14 personajes), `enemies` (6 jefes/minijefes),
+- [x] Datos completos: `types`, `characters` (15 personajes), `enemies` (6 jefes/minijefes),
   `common-enemies`, `items`, `config`, `events` (12, 4 por arco), `arcs/*` (3).
 - [x] Motor puro (`engine/`): `leveling.js`, `combat.js`, `mapGenerator.js`. Combate 1vs1
   automático, con rondas encadenadas si el activo cae (ver [09](./09-motor-engine.md)).
@@ -108,7 +108,7 @@
 **Nodo de reclutar + rediseño de tienda + recompensa de mini-jefe**
 - [x] Nodo `reclutar` dedicado en el mapa (icono `✚` verde, sin restricciones de piso ni cap):
   3 fichas de ninja a elegir, 1 clic para reclutar, panel de reemplazo si el equipo está lleno,
-  sin coste de oro. Ver [25](./25-nodo-reclutar.md).
+  sin coste de oro. Ver [28](./28-nodo-reclutar.md).
 - [x] Tienda rediseñada: 3 objetos aleatorios comprables (consumibles o equipables mezclados), sin
   reclutar, sin objeto gratuito. Ver [15](./15-tienda.md).
 - [x] Al derrotar a un mini-jefe, pantalla `ItemRewardScreen` con 1 objeto aleatorio (el
@@ -534,15 +534,57 @@ decide que la XP merece verse, el sitio es `FichaPersonaje`.
   cosa en vez de la lectura de la barra entera.
 
 
+**Añadir personaje y objeto: Kakashi y los cascabeles (punto 13) — ver [11](./11-progresion-y-arcos.md) y [28](./28-nodo-reclutar.md)**
+
+El punto tenía dos intenciones: **contenido** (el arco 1 no tenía reclutables propios ni ningún
+legendario) y **experimento** (cuánto cuesta parchear el juego con cosas nuevas).
+
+- [x] **Kakashi Hatake**, primer legendario **jugable** — hasta ahora los legendarios eran solo jefes
+  desbloqueables por logro. Raiton, `42/11/8/10`, Raikiri con carga rápida, **Sharingan a nivel 6** y
+  **Mangekyō a 35** (los dos dentro de la run, y en ese orden por la ficción: en el País de las Olas
+  todavía no tiene el Mangekyō).
+- [x] **Los cascabeles** (`cascabeles`, equipable raro de 70): `first_attack_bonus` 0,6 +
+  `first_hit_reduction` 0,35 — el intercambio de apertura, que es de lo que va la prueba de los
+  cascabeles. Ninguna de las dos pasivas la usaba ningún otro objeto. La primera versión llevaba solo
+  la ofensiva y daba +1,1 puntos en jefes contra los +8,3 del Sello de Chakra: demasiado poco para su
+  precio.
+- [x] **El experimento salió bien: fueron tres ficheros de datos.** Kakashi es legendario, así que el
+  pergamino verde no lo ofrece nunca y su única puerta es el dorado — eso no hay que programarlo, sale
+  de `RAREZAS_POR_PERGAMINO`. Y los invariantes que ya existían lo validaron solos, sin escribir un
+  test para él: todo personaje tiene transformación, todo modo se desbloquea dentro de la run, nadie
+  define su propio `ataqueBasico`, ningún objeto da estadísticas planas, y una pasiva con id
+  inválido revienta en vez de ignorarse.
+- [x] **Y de paso tapó un agujero que no se veía**: `personajesReclutablesIds` del arco 1 estaba
+  vacío, así que en una **primera run** el pergamino dorado no tenía a nadie que ofrecer y degradaba
+  siempre. El nodo y su sprite existían y el jugador no los veía hasta terminarse un arco entero.
+- [x] ⚠️ **Lo que de verdad costó fue la MEDIDA, no los números** — está contado entero en
+  [11](./11-progresion-y-arcos.md). Dos lecturas seguidas dieron conclusiones opuestas y las dos eran
+  falsas: "gana los seis jefes al 100% él solo" (sesgo de la posición 1 más una media que arrastra a
+  los mal emparejados de tipo) y luego un control de un solo personaje que colaba su propio
+  emparejamiento. Lo que funciona es el **puesto** entre todos los candidatos a la posición 1, y con él
+  Kakashi es 2.º-6.º de 15, nunca primero. Se llegó ahí bajándolo desde `45/12/9/11`, que sí barría.
+- [x] **Consecuencia de diseño que no se buscó y que no hay que "arreglar"**: Kakashi es raiton y los
+  dos jefes del arco 1 son suiton, así que el premio del pergamino no ayuda con el jefe que viene
+  detrás — se cobra en los arcos 2 y 3, donde tres de los cuatro jefes son doton. Es una inversión, no
+  un atajo.
+- [x] 191 tests (eran 190). El nuevo fija la garantía que importa: **el arco 1 ofrece un desafío
+  legendario sin ningún logro desbloqueado.** Y tres de los que ya había pasaron a no depender de un id
+  concreto — con dos legendarios en la pool, `personajes[0].personajeId === 'gaara'` se había vuelto
+  aleatorio, que es peor que estar en rojo.
+
 ## Próximos pasos (en orden sugerido)
 
-> **Por dónde seguir ahora mismo: el 7 (playtest).** Todo lo cerrado —del 1 al 4, el 8, el 11 y el
-> 12— está arriba, en "Hecho", con su número en el título para que las referencias a "punto N del
+> 📋 **El plan de trabajo de estos puntos —orden, fases, verificación y las decisiones que hacen
+> falta antes de tocar código— está en [31](./31-plan-siguientes-pasos.md).** Esta sección se queda
+> como el enunciado de cada punto; el cómo y el en-qué-orden viven allí.
+>
+> **Por dónde seguir ahora mismo: el 7 (playtest).** Todo lo cerrado —del 1 al 4, el 8, el 11, el 12
+> y el 13— está arriba, en "Hecho", con su número en el título para que las referencias a "punto N del
 > roadmap" repartidas por el código sigan encontrando su sitio.
 >
-> **Ya no queda nada que toque motor, store ni datos**, y las dos pantallas que el jugador mira todo
-> el rato —mapa y combate— están hechas. Lo que queda es pulir pantallas secundarias (5 logros, 6
-> eventos, 9 columna central) o añadir contenido (10 enciclopedia, 13 Kakashi).
+> **Ya no queda nada que toque motor ni store**, y las dos pantallas que el jugador mira todo el rato
+> —mapa y combate— están hechas. Lo que queda es pulir pantallas secundarias (5 logros, 6 eventos, 9
+> columna central) o añadir contenido (10 enciclopedia).
 >
 > **El 7 va primero, y no como formalidad.** Las dos últimas tandas de mejoras salieron enteras de
 > partidas tuyas, no de la lista; y desde el último playtest han cambiado el balance de los jefes, la
@@ -555,7 +597,7 @@ decide que la XP merece verse, el sitio es `FichaPersonaje`.
 >
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas
 > por comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar.
-> La lista se queda con **5, 6, 7, 9, 10 y 13**: los huecos (1-4, 8, 11, 12) son puntos hechos que
+> La lista se queda con **5, 6, 7, 9 y 10**: los huecos (1-4, 8, 11, 12, 13) son puntos hechos que
 > se han movido a "Hecho" **conservando su número en el título**, no errores de numeración.
 >
 > Lo único que el punto 1 deja abierto a propósito es el peso de los objetos: se quedaron en el
@@ -603,8 +645,6 @@ decide que la XP merece verse, el sitio es `FichaPersonaje`.
     Ojo: hoy esa información **no está en ninguna parte**, así que hasta que esto exista hay una deuda
     real, no solo un "ya lo pondremos". Y crece cada vez que se adelgaza una tarjeta.
 
-13. **Añadir personaje y objeto** - Creo que es buen momento para probar como se sentiría añadir un nuevo personaje al elenco. Como el primer arco no tiene muchos personajes jugables y ninguno es legendario hasta que superas el boss final, me gustaría añadir a Kakashi. Dale un jutsu apropiado para esta altura de la historia, una transfomracion acorde y unas pasivas que se sientan del estilo de Kakashi. Dale tipo legendario y haz que sus números se sientan fuertes, pero sin desbalancear la run. Con él, añade también el objeto de los cascabeles, simplemente por ver como de difícil sería añadir un parche a futuro añadiendo cosas al juego. Si no tienes sprites, buscalos en internet, crealos tu o usa placeholders si no tienes suerte
-
 ### Pendiente de arte
 
 Cosas que no están hechas por falta de dibujo, no por falta de código. Van juntas aquí y no dentro
@@ -613,6 +653,21 @@ leerlos buscando trabajo.
 
 - **Sai y Yamato no tienen sprite propio.** Llevan de placeholder el genin rival de su naturaleza de
   chakra (fuuton y doton). Declarado en `PLACEHOLDERS` de `scripts/generar-sprites-personajes.py`.
+- **Kakashi tampoco**, y con él un copia-y-pega no valía: es legendario y se pelea contra él en el
+  pergamino dorado, así que con el sprite exacto del genin raiton el desafío parecería un combate
+  común. Lleva ese mismo sprite **con el pelo recoloreado a plata** (`RECOLOREADOS` en el mismo
+  script). El recolor va por **ventana de luminosidad, no por color exacto**: el dibujo está
+  antialiaseado y el pelo son decenas de variantes de un tono, así que contar colores cambiaba 12
+  píxeles de 96×96 y el "color dominante" de la coronilla salía siendo el negro del contorno — el
+  mismo problema que el papel texturizado de la hoja.
+- **Kakashi no tiene sprite de transformación ni proyectil de jutsu.** Cae a su sprite normal y a
+  kunai, como Sai y Yamato. El kunai chirría más en su caso porque el Raikiri es cuerpo a cuerpo; el
+  sitio donde se resolvería es el tratamiento de melé que ya tiene Rock Lee.
+- **Los cascabeles están dibujados por script, no por un artista**
+  (`scripts/generar-sprite-cascabeles.py`): dos esferas de cuatro tonos con su ranura y una cuerda
+  roja, en rejilla lógica de 28×28 ampliada ×4. Es el **único** sprite del juego que no sale de una
+  hoja. Cuando exista el dibujo de verdad, ese script se borra y el objeto pasa a
+  `generar-sprites-objetos.py` como todos los demás.
 - **Camino Animal de Pain comparte sprite y proyectil con Camino Deva**, que es el único Pain que
   hay dibujado. Mismo sitio.
 - **Los genin rivales no tienen proyectil de jutsu**, así que lanzan kunai también en su técnica.
