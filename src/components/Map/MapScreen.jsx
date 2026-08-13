@@ -1,64 +1,140 @@
-import { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import personajesData from '../../data/characters.json';
+import { spriteDeCombate } from '../common/datosDeLuchador';
 import typesData from '../../data/types.json';
-import itemsData from '../../data/items.json';
+import { nombreObjeto, nombreCorto } from '../common/nombres';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
 import ItemHoverCard from '../common/ItemHoverCard';
 import HoverTooltip from '../common/HoverTooltip';
+import spriteCombate from '../../assets/nodes/combate.png';
+import spriteEvento from '../../assets/nodes/evento.png';
+import spriteTienda from '../../assets/nodes/tienda.png';
+import spriteDescanso from '../../assets/nodes/descanso.png';
+import spriteReclutarComun from '../../assets/nodes/reclutar-comun.png';
+import spriteReclutarLegendario from '../../assets/nodes/reclutar-legendario.png';
+import { SPRITE_OBJETO } from '../Inventory/itemSprites';
+import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
+import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
+import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
+import COLUMNA_MENU from '../../assets/menu/columna-menu.png';
+import { PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante } from '../common/PiezasUI';
 
-function nombrePersonaje(id) {
-  return personajesData.personajes.find((p) => p.id === id)?.nombre ?? id;
-}
+// Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
+// original del artista trae los 5 iconos juntos; los recortes viven en
+// `assets/nodes/*.png` a media resolución, 100 px para pintarse a 48).
+// El mini-jefe y el jefe final pintan el sprite del PERSONAJE que hay dentro
+// (`spriteDeLuchador`, ver `components/common/characterSprites.js`); el sprite de
+// combate genérico es solo su respaldo. El nodo de entrenador no puede: el
+// enemigo nombrado concreto se sortea al ENTRAR en el nodo (`resolverEnemigoDeNodo`),
+// no al generar el mapa, así que a la hora de pintarlo todavía no se sabe quién es.
+// A los tres los distingue además el badge de rango y el color del borde.
+const SPRITE_NODO = {
+  // El nodo de salida no tiene sprite a propósito: nace visitado, así que se
+  // pinta como un disco oscuro con su tick, igual que en Pokelike.
+  inicio: null,
+  combate: spriteCombate,
+  combateEntrenador: spriteCombate, 
+  evento: spriteEvento,
+  tienda: spriteTienda,
+  // `reclutar` no está aquí: su sprite depende de la rareza del pergamino y sale
+  // de SPRITE_RECLUTAR, justo debajo.
+  descanso: spriteDescanso,
+  miniJefe: spriteCombate,
+  jefe: spriteCombate,
+};
 
-function nombreObjeto(id) {
-  return itemsData.objetos.find((o) => o.id === id)?.nombre ?? id;
-}
+// Un pergamino por rareza (`nodo.rareza`, decidida al generar el mapa — ver
+// `elegirRarezaReclutar` en engine/mapGenerator.js). El dorado no es solo un
+// premio más gordo: es un COMBATE contra el ninja que hay dentro, así que el
+// jugador tiene que poder verlo venir desde el mapa y decidir si va.
+//
+// Solo se usan dos de los tres pergaminos de la hoja: el azul (raro) se retiró al
+// fusionar común/inicial/raro en un mismo nodo — lo que separa los dos pergaminos
+// es cómo se consigue al ninja, no lo bueno que sea. `assets/nodes/reclutar-raro.png`
+// sigue generándose por si vuelve a hacer falta.
+const SPRITE_RECLUTAR = {
+  comun: spriteReclutarComun,
+  legendario: spriteReclutarLegendario,
+};
 
-// Un icono simple por tipo de nodo, en vez de depender de assets externos.
-// Los kanjis solos no son legibles para quien no lee japonés, así que cada
-// nodo lleva además su propio hover con nombre + beneficio (ver INFO_NODO) —
-// sustituye a la vieja leyenda fija del lateral, que ocupaba sitio siempre
-// visible por algo que solo hace falta consultar de vez en cuando.
-const ICONO_NODO = {
-  combate: '⚔',
-  evento: '?',
-  tienda: '¥',
-  descanso: '♨',
+const COLOR_RECLUTAR = {
+  comun: 'border-exito/60 text-exito',
+  legendario: 'border-oro text-oro',
+};
+
+const ETIQUETA_RECLUTAR = {
+  comun: 'Recruit',
+  legendario: 'Legendary Challenge',
+};
+
+// Glifo de rango superpuesto al sprite, solo en los combates que no son el
+// aleatorio corriente. Cada nodo lleva además su hover con el nombre del tipo
+// (ver ETIQUETA_NODO) — sustituye a la vieja leyenda fija del lateral.
+const BADGE_NODO = {
+  combateEntrenador: '★',
   miniJefe: '☠',
   jefe: '危',
 };
 
 const ETIQUETA_NODO = {
-  combate: 'Combate',
-  evento: 'Evento',
-  tienda: 'Tienda',
-  descanso: 'Descanso',
-  miniJefe: 'Mini-jefe',
-  jefe: 'Jefe',
+  inicio: 'Start',
+  combate: 'Combat',
+  combateEntrenador: 'Elite',
+  evento: 'Event',
+  tienda: 'Shop',
+  descanso: 'Rest',
+  miniJefe: 'Mini-Boss',
+  jefe: 'Boss',
 };
 
-const INFO_NODO = {
-  combate: 'Enemigo aleatorio — gana XP y oro al vencer.',
-  evento: 'Elección narrativa: cura, oro, mejoras... sin combate.',
-  tienda: 'Compra objetos y recluta (o reemplaza) personajes.',
-  descanso: 'Cura y revive a todo el equipo por completo.',
-  miniJefe: 'Combate más duro, con recompensa adicional garantizada.',
-  jefe: 'El jefe final del arco — superarlo cura a todo el equipo.',
-};
-
+// Solo borde y color de texto: el fondo lo tapa el sprite. El color sigue siendo
+// la pista rápida del tipo de nodo cuando el mapa está escalado y los sprites
+// se ven pequeños.
 const COLOR_NODO = {
-  combate: 'bg-tinta-800 border-pergamino-200/40 text-pergamino-100',
-  evento: 'bg-tinta-800 border-raiton/50 text-raiton',
-  tienda: 'bg-tinta-800 border-doton/50 text-doton',
-  descanso: 'bg-tinta-800 border-suiton/50 text-suiton',
-  miniJefe: 'bg-sello-600/20 border-sello-500 text-sello-500',
-  jefe: 'bg-sello-600 border-sello-500 text-pergamino-100',
+  inicio: 'border-pergamino-200/40 text-pergamino-100',
+  combate: 'border-pergamino-200/40 text-pergamino-100',
+  combateEntrenador: 'border-katon/60 text-katon',
+  evento: 'border-raiton/50 text-raiton',
+  tienda: 'border-doton/50 text-doton',
+  descanso: 'border-suiton/50 text-suiton',
+  miniJefe: 'border-sello-500 text-sello-500',
+  jefe: 'border-sello-500 text-pergamino-100',
+};
+
+// Fondo de la columna central del mapa, uno por arco — recortado de
+// `assets/map-column-backgrounds.png` (hoja de referencia con las 4 columnas
+// etiquetadas; los recortes limpios viven en `assets/map-columns/*.png`).
+// La clave es el `id` del arco, así que un arco sin entrada simplemente se queda
+// con la columna negra en vez de romperse.
+const FONDO_COLUMNA = {
+  pais_de_las_olas: fondoColumnaOlas,
+  examen_chunin: fondoColumnaChunin,
+  invasion_de_pain: fondoColumnaPain,
 };
 
 const ANCHO = 520;
 const ALTO_POR_PISO = 120;
-const RADIO_NODO = 26;
+
+// Tamaño del nodo, en píxeles del LIENZO (520 × 120·pisos). El lienzo entero se
+// escala para caber sin scroll, así que un tamaño fijo aquí se traduce en un
+// tamaño variable en pantalla: a escala 0,65 los 48 px de antes acababan en 31 px
+// reales y el icono no se distinguía. Pokelike nunca baja de 32 px, así que el
+// tamaño se calcula contra la escala y se garantiza un mínimo REAL en pantalla.
+//
+// El tope existe para que en pantallas muy bajas (escala pequeña → nodo enorme en
+// coordenadas de lienzo) los nodos de un piso de 5 no se toquen: la separación
+// horizontal es ANCHO/6 ≈ 87 px de lienzo.
+const TAMANO_NODO = 56;
+const TAMANO_MINIMO_EN_PANTALLA = 44;
+const TAMANO_MAXIMO_NODO = 76;
+
+function tamanoNodo(escala, esJefe) {
+  const lado = Math.min(
+    TAMANO_MAXIMO_NODO,
+    Math.max(TAMANO_NODO, TAMANO_MINIMO_EN_PANTALLA / (escala || 1)),
+  );
+  return esJefe ? lado * 1.15 : lado;
+}
 
 /** Calcula la posición (x, y) de cada nodo dentro del lienzo del mapa. */
 function calcularPosiciones(mapa) {
@@ -77,82 +153,197 @@ function calcularPosiciones(mapa) {
   return posiciones;
 }
 
-function NodoMapa({ nodo, posicion, disponible, visitado, esActual, onClick }) {
-  const estilo = COLOR_NODO[nodo.tipo] ?? COLOR_NODO.combate;
-  const icono = ICONO_NODO[nodo.tipo] ?? '?';
+function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onClick, arco }) {
+  const tipoEfectivo = nodo.tipo === 'combate' && nodo.subtipo === 'entrenador' ? 'combateEntrenador' : nodo.tipo;
+  // Los mapas generados antes de que existiera la rareza (y los tests que montan
+  // un nodo a mano) no la traen: se leen como el pergamino común de siempre.
+  const rarezaReclutar = nodo.tipo === 'reclutar' ? (nodo.rareza ?? 'comun') : null;
+  const estilo = (rarezaReclutar ? COLOR_RECLUTAR[rarezaReclutar] : COLOR_NODO[tipoEfectivo])
+    ?? COLOR_NODO.combate;
+  // `in` y no `??`: el nodo de inicio tiene sprite `null` a propósito, y con
+  // `??` habría caído al de combate.
+  // Con el nivel al que se pelea, para que el nodo enseñe al jefe tal y como te
+  // lo vas a encontrar — y desde que sus umbrales se bajaron al nivel de su
+  // propio combate, eso significa **transformado**. El mapa no ha tenido que
+  // cambiar para enterarse: el sprite es función del nivel.
+  const spriteDelJefe = nodo.tipo === 'miniJefe'
+    ? spriteDeCombate(arco?.miniJefeId, arco?.nivelMiniJefe)
+    : nodo.tipo === 'jefe' ? spriteDeCombate(arco?.jefeFinalId, arco?.nivelJefeFinal)
+      : null;
+  const sprite = spriteDelJefe
+    ?? (rarezaReclutar ? SPRITE_RECLUTAR[rarezaReclutar] ?? SPRITE_RECLUTAR.comun : null)
+    ?? (tipoEfectivo in SPRITE_NODO ? SPRITE_NODO[tipoEfectivo] : SPRITE_NODO.combate);
+  const badge = BADGE_NODO[tipoEfectivo];
+  const etiqueta = (rarezaReclutar ? ETIQUETA_RECLUTAR[rarezaReclutar] : ETIQUETA_NODO[tipoEfectivo])
+    ?? nodo.tipo;
   const esJefe = nodo.tipo === 'jefe';
+  // El pergamino de reclutar no es circular: recortarlo en círculo le cortaría
+  // las varillas de arriba y abajo, así que ese va en marco cuadrado.
+  const esCircular = tipoEfectivo !== 'reclutar';
+
+  const lado = tamanoNodo(escala, esJefe);
 
   // Cuatro estados visuales bien diferenciados, sin solaparse: aquí ahora,
-  // ya visitado (greyed out, no se puede repetir), disponible para elegir, o
-  // todavía fuera de alcance (más adelante en el mapa).
+  // ya visitado (no se puede repetir), disponible para elegir, o todavía fuera
+  // de alcance (más adelante en el mapa).
+  //
+  // Los no clicables se apagan con `opacity` y el cursor de "prohibido", como en
+  // Pokelike. Antes se apagaban con filtros (grayscale + brightness-[0.35]) para
+  // que el sprite siguiera siendo opaco: se veía bien de cerca, pero dejaba el
+  // mapa entero casi negro, que es exactamente la sensación que no queremos.
+  // Transparentar deja asomar el fondo por debajo, y eso es preferible.
   let estadoClases;
-  let estadoTexto;
   if (esActual) {
     estadoClases = 'cursor-not-allowed shadow-lg shadow-black/40';
-    estadoTexto = 'Estás aquí';
   } else if (visitado) {
-    estadoClases = 'cursor-not-allowed opacity-50 grayscale';
-    estadoTexto = 'Visitado';
+    estadoClases = 'cursor-not-allowed opacity-65';
   } else if (disponible) {
-    estadoClases = 'cursor-pointer hover:scale-110 shadow-lg shadow-black/40';
+    // El mini-zoom del hover va acompañado de un halo: el nodo elegible es lo
+    // único del mapa que se ilumina, así que se ve enseguida qué es clicable.
+    estadoClases = 'cursor-pointer hover:scale-110 hover:brightness-110 '
+      + 'shadow-lg shadow-black/40 hover:shadow-[0_0_16px_rgba(201,74,60,0.75)]';
   } else {
-    estadoClases = 'cursor-not-allowed opacity-30 grayscale';
-    estadoTexto = 'Todavía no alcanzable';
+    estadoClases = 'cursor-not-allowed opacity-40';
   }
 
-  const contenidoTooltip = (
-    <div className="bg-pergamino-100 text-tinta-950 rounded-lg border-2 border-sello-600 shadow-xl p-2.5 w-44 text-left">
-      <p className="font-display font-bold text-xs">{ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}</p>
-      <p className="text-[10px] opacity-70 mt-0.5">{INFO_NODO[nodo.tipo] ?? ''}</p>
-      {estadoTexto && (
-        <p className="text-[10px] text-sello-600 font-display mt-1 pt-1 border-t border-tinta-950/10">
-          {estadoTexto}
-        </p>
-      )}
-    </div>
-  );
+  // Solo el título, como en Pokelike: la descripción larga de cada tipo de nodo
+  // ocupaba media pantalla y se lee una vez en la vida. Lo que hace un nodo se
+  // aprende jugando; el tooltip solo tiene que recordar cuál es cuál.
+  const contenidoTooltip = <EtiquetaFlotante>{etiqueta}</EtiquetaFlotante>;
 
   return (
-    <div className="absolute" style={{ left: posicion.x - RADIO_NODO, top: posicion.y - RADIO_NODO }}>
+    <div className="absolute" style={{ left: posicion.x - lado / 2, top: posicion.y - lado / 2 }}>
       <HoverTooltip posicion="abajo" contenido={contenidoTooltip}>
         <button
           type="button"
           disabled={!disponible}
           onClick={() => onClick(nodo.id)}
+          style={{ width: lado, height: lado }}
           className={[
-            'flex items-center justify-center border-2 font-display text-lg',
-            'transition-transform duration-200',
-            esJefe ? 'w-14 h-14 border-double border-4' : 'rounded-full w-12 h-12',
+            'relative block border-2 bg-tinta-900',
+            'transition-all duration-200',
+            esJefe ? 'border-4 border-double' : '',
+            esCircular ? 'rounded-full' : 'rounded-md',
             estilo,
             estadoClases,
             esActual && 'ring-2 ring-sello-500 ring-offset-2 ring-offset-tinta-950 scale-110',
           ].filter(Boolean).join(' ')}
-          aria-label={`Nodo de tipo ${ETIQUETA_NODO[nodo.tipo] ?? nodo.tipo}${visitado ? ', visitado' : disponible ? ', disponible' : ', no disponible'}`}
+          aria-label={`${etiqueta} node${visitado ? ' — visited' : disponible ? ' — available' : ' — not yet reachable'}`}
         >
-          {icono}
+          {sprite && (
+            <img
+              src={sprite}
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+              className={[
+                'w-full h-full object-cover select-none',
+                // El recorte va en la propia imagen, no en el botón: si lo pusiera
+                // el botón con `overflow-hidden`, el badge de rango que asoma por
+                // la esquina quedaría cortado.
+                esCircular ? 'rounded-full' : 'rounded-sm',
+              ].join(' ')}
+              // Solo el sprite de personaje va pixelado: es un dibujo de ~37×63 px
+              // que se AMPLÍA y sin esto sale borroso. Los iconos de nodo, en
+              // cambio, se recortaron a 100 px para pintarse a ~56 y se reducen:
+              // pixelarlos los dejaría dentados.
+              // El `scale` compensa el lienzo común de 96 px de los sprites de
+              // personaje: el dibujo ocupa menos parte del PNG que antes, y sin
+              // esto el jefe se veía pequeño dentro de su nodo. No hay escala
+              // entera posible aquí (el nodo cambia de tamaño con el zoom del
+              // mapa), pero a este tamaño no se nota.
+              style={spriteDelJefe ? { imageRendering: 'pixelated', transform: 'scale(1.25)' } : undefined}
+            />
+          )}
+          {/* Tick de "ya hecho", como en Pokelike: encima del sprite, con su
+              propio velo para que se lea sobre cualquier dibujo. Va también en
+              el nodo actual, porque al llegar a un nodo se resuelve al instante
+              — estar en él ya significa haberlo jugado. */}
+          {visitado && (
+            <span
+              className={[
+                'absolute inset-0 flex items-center justify-center',
+                'text-pergamino-100 font-display leading-none',
+                // Velo flojo: el nodo visitado ya va a `opacity-65`, y sumarle
+                // el velo denso de antes lo dejaba negro.
+                esActual ? 'bg-tinta-950/30' : 'bg-tinta-950/35',
+                esJefe ? 'text-lg' : 'text-base',
+                esCircular ? 'rounded-full' : 'rounded-sm',
+              ].join(' ')}
+            >
+              ✓
+            </span>
+          )}
+          {badge && (
+            <span
+              className={[
+                'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full',
+                'flex items-center justify-center font-display text-[8px] leading-none',
+                'bg-tinta-950 border',
+                estilo,
+              ].join(' ')}
+            >
+              {badge}
+            </span>
+          )}
         </button>
       </HoverTooltip>
     </div>
   );
 }
 
-/** Panel izquierdo: equipo con HP, clicable para reordenar (pon a alguien en posición 1). */
+/**
+ * Panel izquierdo: el equipo. Es la vista que el jugador tiene delante casi toda
+ * la partida, así que es donde más se notaba que las tarjetas se diseñaron antes
+ * de que hubiera arte: enseñaban texto donde ya podían enseñar al ninja.
+ *
+ * Cambios respecto a la versión de solo texto (puntos 8 y 11 del roadmap):
+ * - **Sprite** a la izquierda, con el nivel encima. Con el nivel real, así que
+ *   un personaje transformado se ve transformado también aquí.
+ * - **Nombre abreviado** ("Naruto U.") y la naturaleza de chakra como etiqueta
+ *   propia debajo del HP, fuera del nombre. Los nombres completos se truncaban a
+ *   mitad de palabra y el emoji dentro del nombre le robaba sitio.
+ * - **Reordenar con drag and drop** en vez de un clic que mandaba a la posición 1.
+ *   Arrastrar dice *dónde* lo pones; el clic solo permitía "al frente", así que
+ *   ordenar el segundo y el tercero entre sí era imposible.
+ * - **El objeto equipado se ve con su sprite**, con una X para quitarlo.
+ * - El panel es más ancho (`w-40`): había sitio de sobra y la letra no tiene por
+ *   qué ser diminuta.
+ */
 function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjeto }) {
-  function ponerEnFrente(idElegido) {
-    if (equipo[0]?.id === idElegido) return;
-    const nuevoOrden = [idElegido, ...equipo.filter((p) => p.id !== idElegido).map((p) => p.id)];
-    reordenarEquipo(nuevoOrden);
+  // El id que se está arrastrando. Es estado local y no del store a propósito:
+  // no es información de la run, solo del gesto en curso.
+  const [arrastrando, setArrastrando] = useState(null);
+  const [encima, setEncima] = useState(null);
+
+  function soltarSobre(idDestino) {
+    if (!arrastrando || arrastrando === idDestino) return;
+    const ids = equipo.map((p) => p.id);
+    const desde = ids.indexOf(arrastrando);
+    const hasta = ids.indexOf(idDestino);
+    if (desde === -1 || hasta === -1) return;
+    // Sacar y volver a insertar, no intercambiar: intercambiar dos posiciones
+    // deja el orden intermedio como estaba y el gesto no se corresponde con lo
+    // que ve el jugador, que es "he metido a este aquí".
+    ids.splice(desde, 1);
+    ids.splice(hasta, 0, arrastrando);
+    reordenarEquipo(ids);
   }
 
   return (
     <div className="w-40 shrink-0">
-      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm mb-3 tracking-wide">EQUIPO</p>
-        <div className="flex flex-col gap-2">
+      {/* Del crema al marco oscuro del kit. Los tres paneles del mapa iban cada uno
+          por su cuenta —equipo y objetos en `bg-pergamino-100`, la rueda de chakra en
+          oscuro— y al lado de las ventanas de Missions y el Bingo Book se veía que no
+          eran del mismo juego. Ver documentacion/33-direccion-visual.md. */}
+      <PanelMarco className="p-2.5 flex flex-col gap-2">
+        <TituloBloque>Team</TituloBloque>
+        <div className="flex flex-col gap-1.5">
           {equipo.map((p, index) => {
             const hpMaximo = obtenerHpMaximo(p.id) ?? p.hpActual ?? 1;
             const porcentaje = Math.max(0, p.hpActual / hpMaximo);
             const esActivo = index === 0;
+            const sprite = spriteDeCombate(p.id, p.nivel);
             return (
               <PersonajeHoverCard
                 key={p.id}
@@ -160,43 +351,104 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                 nivel={p.nivel}
                 hpActual={p.hpActual}
                 hpMaximo={hpMaximo}
+                objetoEquipadoId={p.objetoEquipadoId}
                 className="block w-full"
               >
                 <div
+                  draggable={!p.derrotado}
+                  onDragStart={() => setArrastrando(p.id)}
+                  onDragEnd={() => { setArrastrando(null); setEncima(null); }}
+                  onDragOver={(e) => { e.preventDefault(); setEncima(p.id); }}
+                  onDragLeave={() => setEncima((actual) => (actual === p.id ? null : actual))}
+                  onDrop={(e) => { e.preventDefault(); soltarSobre(p.id); setEncima(null); }}
                   className={[
-                    'w-full text-left rounded-md p-2 border transition-colors',
-                    esActivo ? 'border-sello-600 bg-sello-600/10' : 'border-tinta-950/15 bg-tinta-950/5',
-                    p.derrotado ? 'opacity-40' : '',
+                    'w-full text-left rounded-sm p-1.5 border transition-colors',
+                    esActivo ? 'border-sello-500 bg-sello-600/15' : 'border-marco bg-tinta-950/40',
+                    p.derrotado ? 'opacity-40' : 'cursor-grab active:cursor-grabbing',
+                    arrastrando === p.id ? 'opacity-50' : '',
+                    encima === p.id && arrastrando && arrastrando !== p.id ? 'border-oro border-dashed' : '',
                   ].join(' ')}
                 >
-                  <button
-                    type="button"
-                    onClick={() => ponerEnFrente(p.id)}
-                    disabled={p.derrotado || esActivo}
-                    className={`w-full text-left ${p.derrotado ? 'cursor-default' : 'cursor-pointer'}`}
-                    title={esActivo ? 'Este personaje está en posición 1' : 'Poner en posición 1'}
-                  >
-                    <p className="text-xs font-display font-bold truncate">
-                      {nombrePersonaje(p.id)} {esActivo && '★'}
-                    </p>
-                    <p className="text-[10px] opacity-70">Nv. {p.nivel}{p.derrotado ? ' — caído' : ''}</p>
-                    <div className="h-1.5 w-full bg-tinta-950/20 rounded-full overflow-hidden mt-1">
-                      <div
-                        className={`h-full ${porcentaje > 0.4 ? 'bg-fuuton' : 'bg-sello-600'}`}
-                        style={{ width: `${porcentaje * 100}%` }}
-                      />
+                  {/* El nombre va en su propia línea, a lo ancho de la
+                      tarjeta: compartiendo fila con el sprite le quedaban 60 px y
+                      hasta "Naruto U." se cortaba en "Nar…", que no identifica a
+                      nadie. Debajo, el sprite y el estado. */}
+                  <p className="text-[10px] font-display font-bold truncate mb-1">
+                    {nombreCorto(p.id)} {esActivo && '★'}
+                  </p>
+
+                  <div className="flex items-center gap-1.5">
+                    {/* El sprite va a la mitad de su lienzo (96 → 48): sigue
+                        siendo un múltiplo entero, que es lo que mantiene limpio
+                        el pixel art. El nivel va encima, en la esquina — es un
+                        dato de una o dos cifras y no merece una columna. */}
+                    <div className="relative w-12 h-12 shrink-0 flex items-end justify-center">
+                      <div className="absolute bottom-0 w-9 h-2 rounded-[50%] bg-pergamino-200/20" />
+                      {sprite && (
+                        <img
+                          src={sprite}
+                          alt=""
+                          className="relative w-12 h-12 object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                          draggable={false}
+                        />
+                      )}
+                      <span className="absolute top-0 left-0 text-[8px] font-display bg-tinta-950/70 text-pergamino-100 px-1 rounded-sm leading-tight">
+                        {p.nivel}
+                      </span>
                     </div>
-                  </button>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="h-1.5 w-full bg-tinta-950 border border-marco rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${porcentaje > 0.4 ? 'bg-exito' : 'bg-sello-600'}`}
+                          style={{ width: `${porcentaje * 100}%` }}
+                        />
+                      </div>
+                      {/* Debajo de la barra van los NÚMEROS de HP, no la
+                          naturaleza de chakra: en el mapa lo que se consulta a
+                          cada paso es cuánta vida le queda a cada uno para decidir
+                          si toca descanso. El tipo es de leer una vez y sigue en
+                          el hover, con su pastilla de color.
+
+                          Sin el sufijo "HP" y sin espacios alrededor de la barra:
+                          la columna son ~78 px y "45 / 45 HP" se cortaba en
+                          "45 / 45 …". La barra justo encima ya dice que eso es
+                          vida, y así caben incluso los 3 dígitos del final de la
+                          run ("245/245"). */}
+                      <p className="text-[8px] opacity-70 mt-1 truncate">
+                        {Math.max(0, p.hpActual)}/{hpMaximo}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* El objeto equipado, en su propia fila debajo. Se probó
+                      encima del sprite, en la esquina, y tapaba justo al ninja:
+                      el retrato es lo primero que identifica la tarjeta y el
+                      objeto le caía encima con su botón de quitar. Aquí abajo
+                      cabe entero, con su nombre, y la X no pisa nada. */}
                   {p.objetoEquipadoId && (
-                    <div className="flex items-center justify-between gap-1 mt-1.5 pt-1.5 border-t border-tinta-950/10">
-                      <span className="text-[9px] opacity-70 truncate">🎒 {nombreObjeto(p.objetoEquipadoId)}</span>
+                    <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-marco">
+                      {SPRITE_OBJETO[p.objetoEquipadoId] && (
+                        <img
+                          src={SPRITE_OBJETO[p.objetoEquipadoId]}
+                          alt=""
+                          className="w-5 h-5 shrink-0"
+                          style={{ imageRendering: 'pixelated' }}
+                          draggable={false}
+                        />
+                      )}
+                      <span className="text-[8px] opacity-80 truncate flex-1 min-w-0">
+                        {nombreObjeto(p.objetoEquipadoId)}
+                      </span>
                       <button
                         type="button"
                         onClick={() => desequiparObjeto(p.id)}
-                        className="text-[9px] opacity-60 hover:opacity-100 shrink-0 underline"
-                        title="Desequipar (vuelve al inventario)"
+                        className="shrink-0 w-4 h-4 rounded-full bg-pergamino-100/10 hover:bg-sello-600 hover:text-sobre-sello text-[9px] leading-none flex items-center justify-center transition-colors"
+                        title="Unequip (returns to inventory)"
+                        aria-label={`Unequip ${nombreObjeto(p.objetoEquipadoId)}`}
                       >
-                        quitar
+                        ×
                       </button>
                     </div>
                   )}
@@ -205,102 +457,87 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
             );
           })}
         </div>
-        <p className="text-[9px] opacity-50 mt-3 leading-snug">
-          Toca a un personaje para ponerlo en posición 1 (el que combate).
+        <p className="text-[8px] text-pergamino-200/45 leading-snug">
+          Drag to reorder. The first one fights.
         </p>
-      </div>
+      </PanelMarco>
     </div>
   );
 }
 
 /**
- * Panel debajo del equipo: oro y objetos del inventario, agrupados por id
- * (con "xN" si hay varios) — hover en cada uno para ver su descripción y su
- * efecto exacto (`ItemHoverCard`). Tocar un objeto abre un selector de
- * personaje: "Equipar en..." para equipables, "Usar en..." para
- * consumibles — los objetos ya equipados no aparecen aquí (se ven y se
- * desequipan desde `PanelEquipo`, están "puestos", no en la mochila).
+ * Panel debajo del equipo: resumen de oro y objetos. Es solo un vistazo — tocar
+ * cualquier fila (o el propio panel) abre la mochila de verdad
+ * (`InventoryScreen`), que es donde se equipa y se usa. Antes esto llevaba
+ * dentro un selector de personaje en línea: resolvía la mecánica, pero se
+ * sentía un formulario web en vez de un inventario de RPG
+ * (ver documentacion/24-diseño-tarjeta-equipar-objeto.md).
+ *
+ * Aquí solo sale lo que está suelto en `inventario`; lo que alguien lleva
+ * puesto se ve en `PanelEquipo` y en la mochila.
  */
-function PanelObjetos({ inventario, oro, equipo, equiparObjeto, usarConsumible }) {
-  const [itemSeleccionadoId, setItemSeleccionadoId] = useState(null);
-
+function PanelObjetos({ inventario, oro, abrirMochila }) {
   const conteoPorId = inventario.reduce((acc, id) => {
     acc[id] = (acc[id] ?? 0) + 1;
     return acc;
   }, {});
   const idsUnicos = Object.keys(conteoPorId);
-  const itemSeleccionado = itemsData.objetos.find((o) => o.id === itemSeleccionadoId) ?? null;
-
-  function elegirPersonaje(idPersonaje) {
-    if (itemSeleccionado.tipo === 'equipable') equiparObjeto(itemSeleccionado.id, idPersonaje);
-    else if (itemSeleccionado.tipo === 'consumible') usarConsumible(itemSeleccionado.id, idPersonaje);
-    setItemSeleccionadoId(null);
-  }
 
   return (
-    <div className="w-40 shrink-0">
-      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm tracking-wide">OBJETOS</p>
-        <p className="text-xs text-sello-600 font-display mt-0.5 mb-3">{oro} de oro</p>
-
-        {itemSeleccionado ? (
-          <div>
-            <p className="text-[10px] mb-2 leading-snug">
-              {itemSeleccionado.tipo === 'equipable' ? 'Equipar' : 'Usar'}{' '}
-              <span className="font-display font-bold">{itemSeleccionado.nombre}</span> en:
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {equipo.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => elegirPersonaje(p.id)}
-                  className="text-left text-xs bg-tinta-950/5 hover:bg-sello-600/20 border border-tinta-950/15 hover:border-sello-600/60 rounded-md px-2 py-1.5 transition-colors"
-                >
-                  {nombrePersonaje(p.id)}
-                  {p.objetoEquipadoId && itemSeleccionado.tipo === 'equipable' && (
-                    <span className="opacity-60"> (cambia {nombreObjeto(p.objetoEquipadoId)})</span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setItemSeleccionadoId(null)}
-              className="mt-2 text-[10px] underline opacity-60 hover:opacity-100"
-            >
-              Cancelar
-            </button>
-          </div>
-        ) : idsUnicos.length === 0 ? (
-          <p className="text-[10px] opacity-50 leading-snug">Todavía no tienes ningún objeto.</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {idsUnicos.map((id) => (
-              <ItemHoverCard key={id} id={id} className="block w-full">
-                <button
-                  type="button"
-                  onClick={() => setItemSeleccionadoId(id)}
-                  className="w-full flex items-center justify-between gap-1 rounded-md border border-tinta-950/15 bg-tinta-950/5 hover:border-sello-600/60 px-2 py-1.5 transition-colors"
-                >
-                  <p className="text-xs font-display truncate">{nombreObjeto(id)}</p>
-                  {conteoPorId[id] > 1 && (
-                    <span className="text-[10px] opacity-60 shrink-0">x{conteoPorId[id]}</span>
-                  )}
-                </button>
-              </ItemHoverCard>
-            ))}
-          </div>
-        )}
+    <PanelMarco className="p-2.5 flex flex-col gap-2">
+      {/* Cabecera informativa, no clicable: la mochila se abre tocando un
+          objeto concreto, y hacer que "ITEMS" u "oro" también la abrieran
+          solo provocaba aperturas sin querer.
+          El oro va en esta misma línea, no dentro de la rejilla: no es un objeto
+          de la mochila, es el contador de la run. Dentro del panel solo entran
+          sprites de objeto. */}
+      <div className="flex items-baseline justify-between gap-1">
+        <TituloBloque>Items</TituloBloque>
+        <p className="text-[10px] text-oro font-display">{oro}g</p>
       </div>
-    </div>
+
+      {idsUnicos.length === 0 ? (
+        <p className="text-[9px] text-pergamino-200/45 leading-snug">Empty bag.</p>
+      ) : (
+        // Rejilla de sprites sin nombre: el nombre lo cuenta el hover, y la
+        // lista con texto obligaba a una fila por objeto y crecía sin parar.
+        <div className="grid grid-cols-3 gap-1">
+          {idsUnicos.map((id) => (
+            <ItemHoverCard key={id} id={id} posicion="izquierda" compacto className="block">
+              <button
+                type="button"
+                onClick={() => abrirMochila(id)}
+                title={nombreObjeto(id)}
+                aria-label={nombreObjeto(id)}
+                className="elevar-hover relative w-full aspect-square flex items-center justify-center rounded-sm border border-marco bg-tinta-950/50 hover:border-oro/60 hover:bg-tinta-950/80"
+              >
+                {SPRITE_OBJETO[id] ? (
+                  <img src={SPRITE_OBJETO[id]} alt="" aria-hidden="true" className="w-7 h-7 object-contain" />
+                ) : (
+                  <span className="text-[10px] font-display text-pergamino-200/40">?</span>
+                )}
+                {conteoPorId[id] > 1 && (
+                  <span className="absolute bottom-0 right-0 text-[8px] font-display leading-none px-1 py-0.5 rounded-sm bg-tinta-950 border border-marco text-pergamino-100">
+                    {conteoPorId[id]}
+                  </span>
+                )}
+              </button>
+            </ItemHoverCard>
+          ))}
+        </div>
+      )}
+    </PanelMarco>
   );
 }
 
 const ORDEN_CICLO_CHAKRA = typesData.elementos; // ['katon', 'fuuton', 'raiton', 'doton', 'suiton'] — ya en orden de ventaja del ciclo
 const CENTRO_RUEDA = 55;
-const RADIO_RUEDA = 42;
-const RADIO_NODO_CHAKRA = 12;
+const RADIO_RUEDA = 40;
+const RADIO_NODO_CHAKRA = 13;
+
+const EMOJI_CHAKRA = {
+  katon: '🔥', fuuton: '🌪️', raiton: '⚡', doton: '🪨', suiton: '💧',
+};
 
 /** Posición del punto i-ésimo de un pentágono, empezando arriba y en sentido horario. */
 function puntoRuedaChakra(indice, total) {
@@ -323,135 +560,165 @@ function RuedaChakra() {
   const puntos = ORDEN_CICLO_CHAKRA.map((_, i) => puntoRuedaChakra(i, total));
 
   return (
-    <div className="w-40 shrink-0">
-      <div className="bg-pergamino-100 text-tinta-950 rounded-lg p-3">
-        <p className="font-display font-bold text-sm tracking-wide">VENTAJA DE CHAKRA</p>
-        <p className="text-[9px] opacity-60 mt-1 mb-2 leading-snug">
-          Cada flecha apunta al elemento contra el que es fuerte.
-        </p>
-        <svg viewBox="0 0 110 110" className="w-full">
-          <defs>
-            {ORDEN_CICLO_CHAKRA.map((tipo) => (
-              <marker
-                key={tipo}
-                id={`flecha-chakra-${tipo}`}
-                markerUnits="userSpaceOnUse"
-                markerWidth="8"
-                markerHeight="8"
-                refX="5"
-                refY="2.5"
-                orient="auto"
-              >
-                <path d="M0,0 L5,2.5 L0,5 Z" fill={`var(--color-${tipo})`} />
-              </marker>
-            ))}
-          </defs>
-          {ORDEN_CICLO_CHAKRA.map((tipo, i) => {
-            const origen = puntos[i];
-            const destino = puntos[(i + 1) % total];
-            // Curva ligera hacia el centro para que las 5 flechas no se solapen entre sí.
-            const puntoMedioX = (origen.x + destino.x) / 2;
-            const puntoMedioY = (origen.y + destino.y) / 2;
-            const controlX = puntoMedioX + (CENTRO_RUEDA - puntoMedioX) * 0.3;
-            const controlY = puntoMedioY + (CENTRO_RUEDA - puntoMedioY) * 0.3;
-            // Recorta el final de la curva justo al borde del círculo destino
-            // (tangente = dirección control→destino) — si la flecha termina
-            // en el centro del círculo, el círculo (dibujado encima) la tapa
-            // por completo y no se ve ninguna punta.
-            const dx = destino.x - controlX;
-            const dy = destino.y - controlY;
-            const distancia = Math.hypot(dx, dy) || 1;
-            const finX = destino.x - (dx / distancia) * RADIO_NODO_CHAKRA;
-            const finY = destino.y - (dy / distancia) * RADIO_NODO_CHAKRA;
-            return (
-              <path
-                key={tipo}
-                d={`M ${origen.x} ${origen.y} Q ${controlX} ${controlY} ${finX} ${finY}`}
-                fill="none"
-                stroke={`var(--color-${tipo})`}
-                strokeWidth="2"
-                opacity="0.85"
-                markerEnd={`url(#flecha-chakra-${tipo})`}
-              />
-            );
-          })}
-          {ORDEN_CICLO_CHAKRA.map((tipo, i) => (
-            <g key={tipo}>
-              <circle cx={puntos[i].x} cy={puntos[i].y} r={RADIO_NODO_CHAKRA} fill={`var(--color-${tipo})`} />
-              <text
-                x={puntos[i].x}
-                y={puntos[i].y + 3}
-                textAnchor="middle"
-                fontSize="8"
-                fontWeight="bold"
-                fill="var(--color-pergamino-100)"
-              >
-                {tipo.slice(0, 3).toUpperCase()}
-              </text>
-            </g>
+    <PanelMarco className="p-2.5 flex flex-col gap-1">
+      <TituloBloque>Chakra</TituloBloque>
+      <p className="text-[8px] text-pergamino-200/45 mb-1 leading-snug">
+        → is strong against
+      </p>
+      <svg viewBox="0 0 110 110" className="w-full">
+        <defs>
+          {ORDEN_CICLO_CHAKRA.map((tipo) => (
+            <marker
+              key={tipo}
+              id={`flecha-chakra-${tipo}`}
+              markerUnits="userSpaceOnUse"
+              markerWidth="8"
+              markerHeight="8"
+              refX="5"
+              refY="2.5"
+              orient="auto"
+            >
+              <path d="M0,0 L5,2.5 L0,5 Z" fill={`var(--color-${tipo})`} />
+            </marker>
           ))}
-        </svg>
-      </div>
-    </div>
+        </defs>
+        {ORDEN_CICLO_CHAKRA.map((tipo, i) => {
+          const origen = puntos[i];
+          const destino = puntos[(i + 1) % total];
+          const pmx = (origen.x + destino.x) / 2;
+          const pmy = (origen.y + destino.y) / 2;
+          const controlX = pmx + (CENTRO_RUEDA - pmx) * 0.3;
+          const controlY = pmy + (CENTRO_RUEDA - pmy) * 0.3;
+          const dx = destino.x - controlX;
+          const dy = destino.y - controlY;
+          const dist = Math.hypot(dx, dy) || 1;
+          const finX = destino.x - (dx / dist) * RADIO_NODO_CHAKRA;
+          const finY = destino.y - (dy / dist) * RADIO_NODO_CHAKRA;
+          return (
+            <path
+              key={tipo}
+              d={`M ${origen.x} ${origen.y} Q ${controlX} ${controlY} ${finX} ${finY}`}
+              fill="none"
+              stroke={`var(--color-${tipo})`}
+              strokeWidth="1.5"
+              opacity="0.75"
+              markerEnd={`url(#flecha-chakra-${tipo})`}
+            />
+          );
+        })}
+        {ORDEN_CICLO_CHAKRA.map((tipo, i) => (
+          <g key={tipo}>
+            <circle
+              cx={puntos[i].x}
+              cy={puntos[i].y}
+              r={RADIO_NODO_CHAKRA}
+              fill="var(--color-tinta-800)"
+              stroke={`var(--color-${tipo})`}
+              strokeWidth="2"
+            />
+            <foreignObject
+              x={puntos[i].x - RADIO_NODO_CHAKRA}
+              y={puntos[i].y - RADIO_NODO_CHAKRA}
+              width={RADIO_NODO_CHAKRA * 2}
+              height={RADIO_NODO_CHAKRA * 2}
+            >
+              <div style={{
+                width: '100%', height: '100%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '11px', lineHeight: 1,
+              }}>
+                {EMOJI_CHAKRA[tipo]}
+              </div>
+            </foreignObject>
+          </g>
+        ))}
+      </svg>
+    </PanelMarco>
   );
 }
 
-/** ¿Hay algún elemento en pantalla completa ahora mismo? Cross-browser mínimo (solo se necesita Chrome/Firefox/Safari modernos). */
-function hayPantallaCompleta() {
-  return Boolean(document.fullscreenElement);
-}
-
 /**
- * Menú de iconos junto al mapa, estilo Pokelike: Logros, Pantalla completa
- * (Fullscreen API del navegador) y Reiniciar Run (con confirmación nativa,
- * porque borra el progreso de la run actual sin posibilidad de deshacerlo).
- * "Ajustes" se queda fuera a propósito — no hay ninguna opción real que
- * poner ahí todavía.
+ * Menú vertical junto al mapa, como el de Pokelike: Missions, Bingo Book,
+ * Pantalla completa (Fullscreen API) y Reiniciar Run (con confirmación nativa,
+ * porque borra el progreso de la run sin posibilidad de deshacerlo).
+ *
+ * **La columna es UNA imagen** (`assets/menu/columna-menu.png`, la maqueta del
+ * artista) con cuatro botones transparentes encima, uno por cuarto de alto. La
+ * primera versión intentaba recortar los cuatro iconos a PNG sueltos como el resto
+ * de los sprites, y era pelearse con el dibujo: la hoja no es una hoja de sprites
+ * con separaciones limpias, es un **menú ya terminado** —marco, huecos e iconos
+ * dibujados juntos—, así que cualquier recorte se llevaba trozos del marco o
+ * agujereaba el sombreado del icono. Usarla entera sale idéntica a la maqueta y sin
+ * detección frágil que mantener.
+ *
+ * ⚠️ El precio de eso: los cuatro huecos están **pintados** en la imagen. Añadir o
+ * quitar una entrada del menú exige redibujar la columna (o entonces sí recortar
+ * los iconos). Los botones se reparten por índice sobre `ENTRADAS.length`, así que
+ * el código no se rompería — pero los iconos dejarían de coincidir con los huecos,
+ * y eso se ve.
+ *
+ * El icono del engranaje abre **Ajustes** —lo que la maqueta dibujó— y el torii
+ * **reinicia la run**: la maqueta traía torii de "salir", y un torii es una puerta por
+ * la que se sale, que es lo que se hace al abandonar una run.
  */
-function MenuIconos({ abrirLogros, reiniciarRun }) {
-  const [pantallaCompleta, setPantallaCompleta] = useState(false);
-
-  useEffect(() => {
-    const actualizar = () => setPantallaCompleta(hayPantallaCompleta());
-    document.addEventListener('fullscreenchange', actualizar);
-    return () => document.removeEventListener('fullscreenchange', actualizar);
-  }, []);
-
-  function alternarPantallaCompleta() {
-    if (hayPantallaCompleta()) {
-      document.exitFullscreen();
-    } else {
-      document.documentElement.requestFullscreen();
-    }
-  }
-
+function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarRun }) {
   function manejarReiniciar() {
-    if (window.confirm('¿Seguro que quieres reiniciar la run? Perderás todo el progreso actual.')) {
+    if (window.confirm('Are you sure you want to restart the run? You will lose all current progress.')) {
       reiniciarRun();
     }
   }
 
-  const botonClase = 'w-9 h-9 flex items-center justify-center rounded-full border border-pergamino-100/20 '
-    + 'text-pergamino-100/80 hover:text-pergamino-100 hover:border-sello-600/60 transition-colors';
+  // En el mismo orden en que están dibujados los huecos, de arriba abajo. El
+  // engranaje abre **Ajustes**, que es lo que la maqueta dibujó: antes hacía de
+  // pantalla completa, que era un apaño mientras no había pantalla de ajustes —
+  // ahora pantalla completa vive dentro de ella.
+  const ENTRADAS = [
+    { etiqueta: 'Missions', onClick: abrirLogros },
+    { etiqueta: 'Bingo Book', onClick: abrirEnciclopedia },
+    { etiqueta: 'Settings', onClick: abrirAjustes },
+    { etiqueta: 'Restart run', onClick: manejarReiniciar },
+  ];
 
   return (
-    <div className="absolute top-4 right-4 flex gap-2">
-      <button type="button" onClick={abrirLogros} className={botonClase} title="Logros" aria-label="Logros">
-        🏆
-      </button>
-      <button
-        type="button"
-        onClick={alternarPantallaCompleta}
-        className={botonClase}
-        title={pantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
-        aria-label="Pantalla completa"
-      >
-        ⛶
-      </button>
-      <button type="button" onClick={manejarReiniciar} className={botonClase} title="Reiniciar run" aria-label="Reiniciar run">
-        ⟲
-      </button>
-    </div>
+    <nav
+      // `escena-oscura` por lo mismo que el lienzo del mapa: la columna es un dibujo
+      // terminado y el realce del hover se pinta ENCIMA, así que tiene que seguir
+      // siendo un aclarado también en modo claro (ver `index.css`).
+      className="escena-oscura absolute top-4 right-4 w-14 select-none"
+      style={{ aspectRatio: '133 / 655' }}
+      aria-label="Game menu"
+    >
+      <img
+        src={COLUMNA_MENU}
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+        className="absolute inset-0 w-full h-full"
+      />
+      {ENTRADAS.map((entrada, indice) => (
+        // La etiqueta flotante va a la IZQUIERDA: el menú vive pegado al borde
+        // derecho de la pantalla y a la derecha se saldría. Sustituye al `title` del
+        // navegador, que tardaba un segundo en salir y no se parecía al juego.
+        <HoverTooltip
+          key={entrada.etiqueta}
+          posicion="izquierda"
+          className="absolute left-0 w-full"
+          style={{ top: `${(indice * 100) / ENTRADAS.length}%`, height: `${100 / ENTRADAS.length}%` }}
+          contenido={<EtiquetaFlotante>{entrada.etiqueta}</EtiquetaFlotante>}
+        >
+          <button
+            type="button"
+            onClick={entrada.onClick}
+            aria-label={entrada.etiqueta}
+            // Lo que se realza al pasar por encima es el HUECO, no el icono: el
+            // icono está dentro de la imagen de fondo de la columna y no se puede
+            // tocar por separado. Cuando existan los sprites propios (ver "Pendiente
+            // de arte" del roadmap) el realce podrá ir en el icono.
+            className="w-full h-full rounded-full transition-colors hover:bg-pergamino-100/15 active:bg-pergamino-100/25"
+          />
+        </HoverTooltip>
+      ))}
+    </nav>
   );
 }
 
@@ -466,14 +733,38 @@ export default function MapScreen() {
   const reordenarEquipo = useGameStore((s) => s.reordenarEquipo);
   const inventario = useGameStore((s) => s.inventario);
   const oro = useGameStore((s) => s.oro);
-  const equiparObjeto = useGameStore((s) => s.equiparObjeto);
   const desequiparObjeto = useGameStore((s) => s.desequiparObjeto);
-  const usarConsumible = useGameStore((s) => s.usarConsumible);
+  const abrirMochila = useGameStore((s) => s.abrirMochila);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
+  const abrirEnciclopedia = useGameStore((s) => s.abrirEnciclopedia);
+  const abrirAjustes = useGameStore((s) => s.abrirAjustes);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
+
+  const fondoColumna = FONDO_COLUMNA[arcoActualDatos?.id];
 
   const posiciones = useMemo(() => (mapa ? calcularPosiciones(mapa) : {}), [mapa]);
   const disponibles = useMemo(() => new Set(obtenerNodosDisponibles()), [mapa, nodoActualId]);
+
+  /**
+   * Los nodos a los que **todavía se puede llegar** desde donde estás, siguiendo
+   * conexiones hacia adelante. No es lo mismo que "estar más adelante en el mapa":
+   * al elegir una rama, el subárbol de la otra queda muerto aunque siga estando en
+   * pisos que no has jugado. Sin esta cuenta, esos caminos se pintaban como
+   * futuros y el mapa prometía sitios a los que ya no se puede ir.
+   */
+  const alcanzables = useMemo(() => {
+    if (!mapa) return new Set();
+    const vistos = new Set();
+    const cola = nodoActualId === null ? [...mapa.nodosIniciales] : [nodoActualId];
+    while (cola.length > 0) {
+      const id = cola.pop();
+      if (vistos.has(id)) continue;
+      vistos.add(id);
+      cola.push(...(mapa.nodos[id]?.conexiones ?? []));
+    }
+    return vistos;
+  }, [mapa, nodoActualId]);
+
   const alturaLienzo = mapa ? ALTO_POR_PISO * mapa.pisos.length : 0;
 
   // Escala el lienzo (SVG + nodos) para que quepa en el espacio disponible
@@ -503,41 +794,79 @@ export default function MapScreen() {
   if (!mapa) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
-        No hay ninguna run en curso todavía.
+        No run in progress yet.
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
-      <MenuIconos abrirLogros={abrirLogros} reiniciarRun={reiniciarRun} />
+    <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
+      <MenuVertical
+        abrirLogros={abrirLogros}
+        abrirEnciclopedia={abrirEnciclopedia}
+        abrirAjustes={abrirAjustes}
+        reiniciarRun={reiniciarRun}
+      />
 
-      <header className="text-center mb-2 shrink-0">
-        <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Arco actual</p>
-        <h1 className="font-display text-3xl font-bold text-pergamino-100">
+      <header className="text-center mb-1 shrink-0">
+        <p className="text-sello-500 text-[9px] tracking-[0.3em] uppercase">Current Arc</p>
+        <h1 className="font-naruto text-2xl text-pergamino-100 tracking-wide">
           {arcoActualDatos?.nombre}
         </h1>
       </header>
 
-      <div className="flex-1 min-h-0 flex justify-center items-start gap-6 max-w-4xl mx-auto w-full">
-        <div className="flex flex-col gap-4">
-          <PanelEquipo
-            equipo={equipo}
-            obtenerHpMaximo={obtenerHpMaximo}
-            reordenarEquipo={reordenarEquipo}
-            desequiparObjeto={desequiparObjeto}
-          />
-          <PanelObjetos
-            inventario={inventario}
-            oro={oro}
-            equipo={equipo}
-            equiparObjeto={equiparObjeto}
-            usarConsumible={usarConsumible}
-          />
-        </div>
+      <div className="flex-1 min-h-0 flex justify-center items-start gap-4 max-w-3xl mx-auto w-full">
+        <PanelEquipo
+          equipo={equipo}
+          obtenerHpMaximo={obtenerHpMaximo}
+          reordenarEquipo={reordenarEquipo}
+          desequiparObjeto={desequiparObjeto}
+        />
 
-        <div ref={contenedorRef} className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden">
-          <div style={{ width: ANCHO * escala, height: alturaLienzo * escala }}>
+        {/* El contenedor de fuera solo mide el hueco disponible: no pinta nada.
+            El marco (fondo + borde) va en el div ya escalado de dentro, para que
+            abrace exactamente al mapa. Cuando el marco lo pintaba el contenedor,
+            sobraban bandas negras a los lados — el lienzo casi nunca es tan ancho
+            como el hueco, porque la escala la manda la altura. */}
+        <div
+          ref={contenedorRef}
+          className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden"
+        >
+          <div
+            // `escena-oscura` no pinta nada: le devuelve la paleta OSCURA a este
+            // subárbol en modo claro (ver el bloque del mismo nombre en
+            // `index.css`). La ilustración del fondo es un PNG que no cambia con el
+            // tema, así que lo que va encima de ella tampoco puede cambiar.
+            className="escena-oscura bg-tinta-950"
+            style={{
+              width: ANCHO * escala,
+              height: alturaLienzo * escala,
+              position: 'relative',
+              zIndex: 1,
+              // Sin redondeo: los paneles del kit son de esquina viva, y el lienzo
+              // es la caja más grande de la pantalla — con 12 px de radio era el
+              // único elemento redondeado y se leía como de otro juego.
+              borderRadius: 0,
+              // Marco por `box-shadow` y no por `border`: un borde real se comería
+              // píxeles del ancho útil (box-sizing: border-box) y el lienzo escalado,
+              // que mide exactamente ANCHO*escala, se saldría por los lados. Dos
+              // anillos para imitar el borde del kit: el fino en color de marco y el
+              // grueso oscuro por fuera, que lo separa del fondo del juego.
+              boxShadow: '0 0 0 1px var(--color-marco), 0 0 0 5px var(--color-tinta-950)',
+              // `100% 100%` y no `cover`: las columnas se generan a 520×960,
+              // que es exactamente el lienzo (ANCHO × ALTO_POR_PISO × 8 pisos),
+              // así que encajan sin recortar ni deformar. Si algún arco dejara
+              // de tener 8 pisos habría que regenerarlas (scripts/generar-columnas-mapa.py).
+              backgroundImage: fondoColumna ? `url(${fondoColumna})` : undefined,
+              backgroundSize: '100% 100%',
+            }}
+          >
+            {/* Velo oscuro sobre el fondo, ahora suave: con la columna de tierra
+                lisa el contraste ya lo da el propio fondo, y sólo hace falta
+                bajarle un punto de brillo para que las líneas del mapa se lean.
+                Con el paisaje completo detrás hacía falta el triple de velo. */}
+            {fondoColumna && <div className="absolute inset-0 bg-tinta-950/15" />}
+
             <div
               className="relative"
               style={{ width: ANCHO, height: alturaLienzo, transform: `scale(${escala})`, transformOrigin: 'top left' }}
@@ -554,12 +883,25 @@ export default function MapScreen() {
                     //    visitado por piso, así que si origen Y destino están
                     //    visitados, esta es LA arista que se tomó entre ellos.
                     // 2) elegible ahora mismo desde donde estás (pergamino sólido).
-                    // 3) descartado — origen ya visitado (piso ya superado) pero
-                    //    esta rama en concreto no se tomó: ya no se puede volver.
-                    // 4) todavía fuera de alcance, más adelante en el mapa (punteado).
+                    // 3) alcanzable más adelante: sale de un nodo al que todavía
+                    //    puedes llegar, así que es un camino que aún existe.
+                    // 4) inalcanzable, por detrás o en una rama muerta.
+                    //
+                    // Los del caso 3 van en blanco y bien visibles, no insinuados:
+                    // son los que dejan **leer el mapa por delante** y decidir a
+                    // dónde te lleva cada rama. Lo que los distingue de un camino
+                    // elegible no es que se vean menos, sino que van discontinuos.
+                    //
+                    // Los del 4 sí se apagan, y ahí entran dos cosas que antes se
+                    // trataban distinto: la rama que descartaste al pasar de piso y
+                    // **el subárbol entero que cuelga de ella**. Ese segundo caso no
+                    // se detectaba —solo se miraba si el origen estaba visitado—, así
+                    // que medio mapa muerto seguía pintándose como futuro. Ahora los
+                    // dos se resuelven con la misma pregunta: ¿puedo llegar todavía
+                    // al nodo del que sale este camino?
                     const recorrido = nodo.visitado && mapa.nodos[destinoId]?.visitado;
                     const disponibleAhora = !recorrido && nodo.id === nodoActualId && disponibles.has(destinoId);
-                    const descartado = !recorrido && !disponibleAhora && nodo.visitado;
+                    const sigueEnJuego = alcanzables.has(nodo.id);
 
                     let stroke = 'var(--color-pergamino-100)';
                     let strokeOpacity = 0.15;
@@ -571,12 +913,10 @@ export default function MapScreen() {
                       strokeOpacity = 0.8;
                       strokeWidth = 2.5;
                     } else if (disponibleAhora) {
-                      strokeOpacity = 0.9;
+                      strokeOpacity = 0.95;
                       strokeWidth = 2;
-                    } else if (descartado) {
-                      stroke = 'var(--color-tinta-950)';
-                      strokeOpacity = 0.7;
-                    } else {
+                    } else if (sigueEnJuego) {
+                      strokeOpacity = 0.65;
                       strokeDasharray = '4 4';
                     }
 
@@ -600,17 +940,40 @@ export default function MapScreen() {
                   key={nodo.id}
                   nodo={nodo}
                   posicion={posiciones[nodo.id]}
+                  escala={escala}
                   disponible={disponibles.has(nodo.id)}
                   visitado={nodo.visitado}
                   esActual={nodo.id === nodoActualId}
                   onClick={avanzarANodo}
+                  arco={arcoActualDatos}
                 />
               ))}
             </div>
+
+            {/* El adorno del kit —línea interior y esquinas en corchete— compuesto a
+                mano porque este lienzo no puede ser un `PanelMarco`: su marco es un
+                `box-shadow` (ver arriba). Va DESPUÉS del contenido para pintarse por
+                encima de los nodos, y sus piezas llevan `pointer-events-none` para no
+                robarles el clic.
+
+                Va DENTRO de esta caja y no como hermana suya, que es donde estaba:
+                sus piezas son `absolute` y el contenedor de fuera no es `relative`, así
+                que se anclaban al div raíz de la pantalla y los cuatro corchetes se
+                pintaban en las esquinas de la PANTALLA. Aquí sí abrazan al mapa —que es
+                lo que el comentario decía desde el principio— y quedan además dentro
+                del subárbol de paleta oscura. Fuera del `transform` del div escalado, a
+                propósito: los corchetes se pintan en tamaño real. */}
+            <AdornoMarco />
           </div>
         </div>
 
-        <RuedaChakra />
+        {/* Columna derecha: mochila arriba, chuleta de chakra debajo. Los dos
+            son consulta rápida (qué llevo / qué le gana a qué), frente a la
+            columna izquierda, que es la que se toca para jugar. */}
+        <div className="w-32 shrink-0 flex flex-col gap-4">
+          <PanelObjetos inventario={inventario} oro={oro} abrirMochila={abrirMochila} />
+          <RuedaChakra />
+        </div>
       </div>
     </div>
   );

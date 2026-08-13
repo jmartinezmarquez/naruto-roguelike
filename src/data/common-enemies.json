@@ -1,9 +1,9 @@
 {
-  "_comentario": "Mismo esquema que un personaje jugable (statsBase, jutsu, modo opcional) para no necesitar normalización antes de pasarlo a crearLuchador. plantillasGenericas rellena nodos de combate aleatorios escalando statsBase con calcularNivelPorPiso; enemigosNombrados son fijos, con más presencia narrativa.",
+  "_comentario": "Same schema as a playable character (statsBase, jutsu, optional mode) so it doesn't need normalization before passing to crearLuchador. plantillasGenericas fills random combat nodes scaling statsBase with calcularNivelPorPiso; enemigosNombrados are fixed, with more narrative presence.",
   "plantillasGenericas": [
     {
       "id": "genin_rival_katon",
-      "nombre": "Genin Rival",
+      "nombre": "Rival Genin",
       "tipo": "katon",
       "statsBase": {
         "hp": 20,
@@ -12,15 +12,20 @@
         "velocidad": 5
       },
       "jutsu": {
-        "nombre": "Jutsu de Fuego Menor",
-        "danoBase": 1.1,
-        "efectoEstado": null
+        "nombre": "Minor Fire Jutsu",
+        "danoBase": 2.0,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": []
     },
     {
       "id": "genin_rival_fuuton",
-      "nombre": "Genin Rival",
+      "nombre": "Rival Genin",
       "tipo": "fuuton",
       "statsBase": {
         "hp": 18,
@@ -29,15 +34,20 @@
         "velocidad": 6
       },
       "jutsu": {
-        "nombre": "Ráfaga Cortante",
-        "danoBase": 1.1,
-        "efectoEstado": null
+        "nombre": "Slashing Gust",
+        "danoBase": 2.0,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": []
     },
     {
       "id": "genin_rival_raiton",
-      "nombre": "Genin Rival",
+      "nombre": "Rival Genin",
       "tipo": "raiton",
       "statsBase": {
         "hp": 19,
@@ -46,15 +56,20 @@
         "velocidad": 5
       },
       "jutsu": {
-        "nombre": "Descarga Menor",
-        "danoBase": 1.15,
-        "efectoEstado": null
+        "nombre": "Minor Discharge",
+        "danoBase": 2.15,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": []
     },
     {
       "id": "genin_rival_doton",
-      "nombre": "Genin Rival",
+      "nombre": "Rival Genin",
       "tipo": "doton",
       "statsBase": {
         "hp": 22,
@@ -63,15 +78,20 @@
         "velocidad": 3
       },
       "jutsu": {
-        "nombre": "Muro de Tierra",
-        "danoBase": 0.9,
-        "efectoEstado": null
+        "nombre": "Earth Wall",
+        "danoBase": 1.4,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": []
     },
     {
       "id": "genin_rival_suiton",
-      "nombre": "Genin Rival",
+      "nombre": "Rival Genin",
       "tipo": "suiton",
       "statsBase": {
         "hp": 20,
@@ -80,9 +100,14 @@
         "velocidad": 4
       },
       "jutsu": {
-        "nombre": "Latigazo de Agua",
-        "danoBase": 1.1,
-        "efectoEstado": null
+        "nombre": "Water Whip",
+        "danoBase": 2.0,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": []
     }
@@ -100,14 +125,18 @@
       },
       "jutsu": {
         "nombre": "Slicing Sound Wave",
-        "descripcion": "Ondas de aire comprimido lanzadas desde los brazos.",
-        "danoBase": 1.25,
-        "efectoEstado": null
+        "descripcion": "Compressed air waves launched from his arms.",
+        "danoBase": 2.45,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
       },
       "modos": [],
-      "recompensa": {
-        "xp": 60
-      }
+      "esEntrenador": true,
+      "geninAntes": 2
     },
     {
       "id": "dosu",
@@ -120,15 +149,19 @@
         "velocidad": 6
       },
       "jutsu": {
-        "nombre": "Vibración Sónica",
-        "descripcion": "Un brazalete emite un sonido que desorienta al rival.",
-        "danoBase": 1.15,
-        "efectoEstado": null
+        "nombre": "Sonic Vibration",
+        "descripcion": "A gauntlet emits a sound that disorients the opponent.",
+        "danoBase": 2.15,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 26,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
       },
       "modos": [],
-      "recompensa": {
-        "xp": 60
-      }
+      "esEntrenador": true,
+      "geninAntes": 2
     },
     {
       "id": "kin",
@@ -141,15 +174,19 @@
         "velocidad": 8
       },
       "jutsu": {
-        "nombre": "Senbon Ilusorio",
-        "descripcion": "Agujas lanzadas con precisión para debilitar la concentración del rival.",
-        "danoBase": 1.1,
-        "efectoEstado": null
+        "nombre": "Illusory Senbon",
+        "descripcion": "Needles thrown with precision to weaken the opponent's focus.",
+        "danoBase": 2.0,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [],
-      "recompensa": {
-        "xp": 50
-      }
+      "esEntrenador": true,
+      "geninAntes": 1
     }
   ]
 }

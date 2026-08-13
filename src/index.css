@@ -1,9 +1,26 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 
+@font-face {
+  font-family: 'NJNaruto';
+  src: url('./assets/njnaruto.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PressStart2P';
+  src: url('./assets/PressStart2P-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-display: "Shippori Mincho", serif;
-  --font-body: "Zen Kaku Gothic New", sans-serif;
+  --font-display: "PressStart2P", monospace;
+  --font-body: "PressStart2P", monospace;
+  --font-naruto: "NJNaruto", "PressStart2P", monospace;
 
   --color-tinta-950: #151210;
   --color-tinta-900: #1E1A16;
@@ -18,10 +35,443 @@
   --color-raiton: #D9B23C;
   --color-doton: #8C6B47;
   --color-suiton: #3D7A9E;
+
+  /* --- Colores SEMÁNTICOS ----------------------------------------------------
+     Separados de los de elemento a propósito, y no es cosmético: hasta ahora el
+     verde de "desbloqueado / victoria / eficaz" era `fuuton` —el color del chakra
+     de viento— y el oro de "legendario" era `raiton`. Ocho sitios usaban un color
+     de elemento para decir algo que no tiene nada que ver con el elemento, y en
+     la tabla de eficacias de la enciclopedia los dos significados se pintan a la
+     vez y chocan.
+
+     `marco` le da nombre al borde de los paneles, que estaba escrito como
+     `pergamino-100/20` en cada pantalla: cambiarlo obligaba a un buscar y
+     reemplazar por todo el proyecto. */
+  --color-exito: #62B36F;
+  --color-oro: #D4A93A;
+  --color-marco: #4D463B;
+
+  /* Texto que va ENCIMA de un color de acento (el verde de "RECRUIT", el oro de
+     una pasiva que salta). Tiene su propio token porque **no cambia con el tema**:
+     los acentos tampoco cambian, así que su texto tiene que seguir siendo oscuro
+     también en modo claro. Antes esto era `text-tinta-950`, y al invertir los
+     tokens del tema se habría vuelto claro sobre claro — ilegible. */
+  --color-sobre-acento: #151210;
+
+  /* Y su pareja: el contenido que va encima del ROJO de sello, que es el único
+     acento oscuro que hay. Aquí hace falta lo contrario —crema fija— y por el mismo
+     motivo: el rojo no cambia con el tema, así que su texto tampoco puede. Con
+     `pergamino-100` la barra de título de las ventanas y los botones rojos salían en
+     modo claro con tinta oscura sobre granate, que es la peor combinación de las dos
+     que caben. */
+  --color-sobre-sello: #EDE3CC;
+}
+
+/* --- El contorno de la fuente de Naruto -------------------------------------
+   El logo de la serie son letras de color con un contorno grueso alrededor, y es lo
+   que las hace legibles encima de un cielo, de una calle o de lo que sea. Nuestros
+   títulos van casi siempre sobre el fondo de juego o sobre una barra de color, así
+   que llevan el mismo tratamiento, y va en la propia clase `font-naruto` para que lo
+   tenga TODO título por el hecho de usar la fuente — no un adorno que haya que
+   acordarse de añadir en cada pantalla nueva.
+
+   ⚠️ La regla: **el contorno es el negativo del RELLENO, no del fondo.** De ahí las
+   dos variantes, y elegir mal la variante es lo único que puede salir mal aquí:
+
+   - por defecto, el relleno sigue al tema (`text-pergamino-100`), así que el contorno
+     también: `tinta-950` es siempre del lado opuesto a `pergamino-*`, por definición
+     de las dos familias. Letras crema con contorno de tinta en oscuro, letras de tinta
+     con contorno de pergamino en claro.
+   - `.contorno-fijo` para los rellenos que NO cambian con el tema (el oro de una
+     transformación, el verde de Victory, el rojo de Defeat, el crema fijo de la barra
+     de título): si el relleno es constante, su contorno tiene que serlo también.
+
+   Se hace con `text-shadow` en ocho direcciones y no con `-webkit-text-stroke`, que
+   sería una línea más limpia: el `stroke` se pinta encima del relleno salvo que el
+   navegador soporte `paint-order`, y donde no lo soporte adelgaza la letra en vez de
+   rodearla. Ocho sombras a 0 de difuminado funcionan en todas partes y además son
+   nítidas, que es lo que pide el resto de la interfaz. */
+.font-naruto {
+  --contorno-titulo: var(--color-tinta-950);
+  text-shadow:
+    2px 0 0 var(--contorno-titulo),
+    -2px 0 0 var(--contorno-titulo),
+    0 2px 0 var(--contorno-titulo),
+    0 -2px 0 var(--contorno-titulo),
+    2px 2px 0 var(--contorno-titulo),
+    -2px 2px 0 var(--contorno-titulo),
+    2px -2px 0 var(--contorno-titulo),
+    -2px -2px 0 var(--contorno-titulo);
+}
+
+.contorno-fijo {
+  --contorno-titulo: var(--color-sobre-acento);
+}
+
+/* --- Modo claro -------------------------------------------------------------
+   Un tema es redefinir variables, no repasar pantallas: las utilidades de
+   Tailwind v4 compilan a `background-color: var(--color-tinta-900)`, así que
+   cambiar el valor cambia las ocho pantallas de golpe. Cubre también `body` y
+   `.scroll-pixel`, que leen los tokens con `var()`.
+
+   ⚠️ Desde que hay dos temas, los nombres significan el ROL y no el color:
+   `tinta-*` es la superficie y `pergamino-*` el contenido que va encima, así que en
+   modo claro `pergamino-100` es tinta oscura. Se decidió conservar los nombres en vez
+   de renombrar 240 usos; el precio es esta nota (ver
+   documentacion/33-direccion-visual.md).
+
+   ⚠️ Pero **el contenido cambia de lado y la rampa de superficies NO**: `tinta-950
+   → 800` conserva su dirección (hundido → realzado) en los dos temas. Está explicado
+   dentro del propio bloque, que es donde se equivocó.
+
+   ⚠️ Lo que NO se toca aquí: los colores de elemento (katon…) y los de acento
+   (`exito`, `oro`, `sello`, `sobre-acento`). Son del CONTENIDO, no de la
+   interfaz — un jutsu de fuego es rojo en los dos temas.
+
+   Caveat conocido: las clases con modificador de opacidad (`bg-tinta-950/60`)
+   emiten dos reglas, una literal de respaldo y otra con `color-mix(… var(…) …)`.
+   En un navegador sin `color-mix` gana la literal y esa superficie se queda
+   oscura. En los navegadores actuales se aplica la buena. */
+[data-tema='claro'] {
+  /* ⚠️ La rampa de superficies NO se invierte: se conserva su DIRECCIÓN.
+     `tinta-950 → 800` va de la superficie hundida (el fondo de página y los huecos
+     de dentro de un panel) a la realzada (el panel, y encima de él las barras y los
+     hover). En oscuro eso es de oscuro a claro, y todas las relaciones del kit
+     dependen de ese sentido: el panel se despega del fondo, `tono="hueco"` se lee
+     como un agujero y `hover:bg-tinta-800` aclara.
+
+     El primer pase invirtió los tres valores uno a uno —950 el más claro— y con eso
+     se dio la vuelta a las relaciones, no al tema: el panel salía MÁS OSCURO que la
+     página, así que en vez de despegarse se hundía en ella, los huecos salían más
+     claros que el panel que los contiene y el hover oscurecía. De ahí la sensación
+     de que en claro "los bordes no resaltan": el borde estaba bien, lo que no
+     separaba era la superficie. Ahora 950 sigue siendo la hundida (pergamino
+     tostado) y 800 la realzada (casi blanco). */
+  --color-tinta-950: #DED0AE;
+  --color-tinta-900: #F0E7D1;
+  --color-tinta-800: #FAF4E4;
+  --color-pergamino-100: #1E1A16;
+  --color-pergamino-200: #3A322A;
+  /* ⚠️ `marco` NO se redefine, y la ausencia es deliberada: el marco es siempre del
+     lado OPUESTO a la superficie. En oscuro es la tinta más clara y se lee como una
+     línea que aclara; en claro, ese mismo valor sobre pergamino se lee como una línea
+     oscura. Un solo color da las dos lecturas, y es lo que le devuelve al tema claro
+     el contraste del oscuro. La primera versión lo aclaraba a un tostado (#A9906B)
+     por simetría con el resto de la tabla y el resultado era un tema sin bordes:
+     todos los paneles fundidos en la misma mancha crema. */
+}
+
+/* Lo que es ESCENA y no interfaz se queda oscuro en los dos temas ---------------
+   Tres sitios, y en los tres el motivo es el mismo: lo que hay debajo está DIBUJADO y
+   no cambia con el tema, así que lo que se pinta encima tampoco puede.
+
+   - **El lienzo del mapa**: la ilustración de la columna es un PNG. Con los tokens
+     invertidos, el fondo del nodo pasaba a ser un disco crema —que es justo lo que se
+     ve por los bordes del sprite, y entero en el nodo de inicio, que no tiene sprite—
+     y las líneas de camino quedaban en tinta oscura sobre roca oscura.
+   - **La columna del menú vertical**: es un menú ya dibujado y el realce del hover va
+     encima; tiene que seguir siendo un aclarado, no un manchón oscuro.
+   - **La pantalla de transformación**: es puro espectáculo sobre un escenario negro, y
+     su destello ya va en un color claro FIJO por la misma razón. Sobre un velo crema
+     el destello no existiría.
+
+   Es la misma regla que ya deja fuera del tema los colores de elemento y de acento
+   (son del contenido), aplicada a un subárbol entero. Y se resuelve redefiniendo los
+   tokens en ese subárbol, no cambiando una docena de clases a colores fijos: las
+   utilidades ya leen `var()`, así que basta con decirles otro valor. */
+[data-tema='claro'] .escena-oscura {
+  --color-tinta-950: #151210;
+  --color-tinta-900: #1E1A16;
+  --color-tinta-800: #2A241E;
+  --color-pergamino-100: #EDE3CC;
+  --color-pergamino-200: #E0D3B0;
 }
 
 body {
   margin: 0;
   background: var(--color-tinta-950);
   font-family: var(--font-body);
+  line-height: 1.8;
+}
+
+/* Pixel art crisp — sprites y backgrounds sin interpolación */
+img {
+  image-rendering: pixelated;
+}
+
+/*
+ * Alza la pieza unos píxeles al pasar por encima, como en Pokelike: el hover no
+ * solo cambia de color, la tarjeta o el botón se despega del fondo. Se combina
+ * con el resaltado de selección que ya teníamos (borde + glow), no lo sustituye.
+ *
+ * Va como clase propia y no como utilidad suelta de Tailwind porque el efecto
+ * lo comparten tarjetas de tienda, de reclutar y botones de acción, y así el
+ * "cuánto sube" se toca en un sitio. La transición lista también los colores
+ * para no pisar el `transition-colors` de los sitios donde ya estaba.
+ */
+.elevar-hover {
+  transition-property: transform, box-shadow, background-color, border-color, color, filter;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.elevar-hover:hover:not(:disabled) {
+  transform: translateY(-4px);
+}
+
+
+/* --- Hover de tooltip -------------------------------------------------------
+   El contenido se muestra con el combinador de HIJO DIRECTO (`>`), no con el
+   `group-hover` de Tailwind. Un `group/hover` con nombre lo activa CUALQUIER
+   ancestro que lo lleve, así que dos tooltips anidados —una tarjeta con hover
+   que dentro tiene pastillas con su propio hover— se abrían todos a la vez al
+   pasar por encima de la tarjeta. Con `>` solo responde su envoltorio inmediato,
+   y anidar deja de ser un problema.
+
+   El zoom usa la propiedad `scale` y NO `transform: scale()`: las posiciones
+   `arriba` y `abajo` se centran con el `-translate-x-1/2` de Tailwind, que ya
+   ocupa `transform`, y declararlo aquí otra vez lo pisaría y descentraría el
+   tooltip. `scale` es una propiedad aparte y se compone con la otra. */
+
+.hover-envoltorio > .hover-contenido {
+  opacity: 0;
+  scale: 0.95;
+  pointer-events: none;
+  transition: opacity 150ms, scale 150ms;
+}
+
+.hover-envoltorio:hover > .hover-contenido {
+  opacity: 1;
+  scale: 1;
+}
+
+
+/* --- El reloj de las animaciones de combate ----------------------------------
+   Todas las duraciones de aquí abajo van multiplicadas por `--factor-animacion`,
+   que pone `App.jsx` a partir del ajuste de velocidad de combate (×1 → 1,
+   ×2 → 0,5). El valor de respaldo del `var()` es 1, así que sin el ajuste puesto
+   todo corre a velocidad normal.
+
+   Existe porque estas duraciones **están duplicadas en JS** (las constantes `MS_*`
+   de `CombatScreen` y `TransformationScreen`) y ya estaba documentado que había que
+   cambiarlas en los dos sitios a mano. Con un factor común, el ajuste mueve los dos
+   relojes a la vez y no pueden separarse.
+
+   "Instantánea" NO se implementa con factor 0: eso dejaría el replay avanzando
+   golpe a golpe, solo muy rápido. Se resuelve la ronda de golpe desde JS,
+   reutilizando lo mismo que hace el botón "Skip animation".
+
+--- Combate: proyectil y sacudida al impactar -------------------------------
+   El proyectil va del CENTRO del que lanza al centro del que recibe, y esas dos
+   posiciones no se pueden escribir aquí: la tarjeta activa del equipo puede ser
+   la primera, la segunda o la tercera, así que su altura cambia. `Proyectil` las
+   mide con `getBoundingClientRect` y las inyecta como variables antes del primer
+   pintado (`useLayoutEffect`). Aquí solo se interpolan.
+
+   La duración la fija `Proyectil` desde JS (`animationDuration`), porque el reloj
+   del replay la varía según el golpe: un jutsu vuela más lento que un básico. El
+   valor de aquí es solo el de respaldo. */
+
+@keyframes volar-proyectil {
+  from {
+    transform: translate(var(--desde-x), var(--desde-y)) rotate(0deg);
+    opacity: 0;
+  }
+  15% { opacity: 1; }
+  to {
+    transform: translate(var(--hasta-x), var(--hasta-y)) rotate(var(--giro, 0deg));
+    opacity: 1;
+  }
+}
+
+.proyectil {
+  /* El elemento se coloca en el origen del contenedor y viaja con `translate`:
+     así las variables son coordenadas absolutas dentro de la caja del combate y
+     no hay que pelearse con `left`/`top` a la vez que con la animación. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: volar-proyectil calc(420ms * var(--factor-animacion, 1)) linear forwards;
+}
+
+@keyframes sacudida {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+.sacudida { animation: sacudida calc(300ms * var(--factor-animacion, 1)) ease-in-out; }
+
+@keyframes flotar-dano {
+  from { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
+  20%  { opacity: 1; transform: translate(-50%, -10px) scale(1.15); }
+  to   { opacity: 0; transform: translate(-50%, -38px) scale(1); }
+}
+
+.dano-flotante { animation: flotar-dano calc(700ms * var(--factor-animacion, 1)) ease-out forwards; }
+
+/* --- Transformación: el momento en que se desbloquea un modo ----------------
+   Dos tiempos, y los dos duran lo mismo que las constantes de
+   `TransformationScreen`: si se cambian ahí, cambiarlas aquí.
+
+   1. CARGA: el personaje tiembla mientras un anillo de chakra se cierra sobre
+      él, y su silueta parpadea entre la forma normal y la transformada — el
+      guiño a la evolución de Pokémon, que aquí sale casi gratis porque tenemos
+      los dos sprites.
+   2. ESTALLIDO: destello blanco que se abre y deja ya el sprite transformado. */
+
+@keyframes temblor-transformacion {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+.temblor-transformacion { animation: temblor-transformacion calc(120ms * var(--factor-animacion, 1)) linear infinite; }
+
+/* La silueta se consigue aplastando el sprite a blanco puro. Alterna con el
+   sprite normal a golpes secos (`steps`), no con un fundido: el corte duro es
+   justo lo que hace que se lea como "está cambiando". */
+@keyframes parpadeo-silueta {
+  0%, 49% { filter: none; }
+  50%, 100% { filter: brightness(0) invert(1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.9)); }
+}
+
+.parpadeo-silueta { animation: parpadeo-silueta calc(260ms * var(--factor-animacion, 1)) steps(1, end) infinite; }
+
+/* El anillo se cierra desde fuera hacia el personaje. Es un borde grueso que
+   encoge, sin imagen: no hay arte de sello y con tipografía quedaba pobre. */
+@keyframes anillo-chakra {
+  from { width: 320px; height: 320px; opacity: 0; border-width: 2px; }
+  30%  { opacity: 0.9; }
+  to   { width: 90px; height: 90px; opacity: 0; border-width: 10px; }
+}
+
+.anillo-chakra { animation: anillo-chakra calc(700ms * var(--factor-animacion, 1)) ease-in infinite; }
+
+@keyframes destello-transformacion {
+  from { opacity: 0; transform: scale(0.2); }
+  30%  { opacity: 1; }
+  to   { opacity: 0; transform: scale(2.4); }
+}
+
+.destello-transformacion { animation: destello-transformacion calc(520ms * var(--factor-animacion, 1)) ease-out forwards; }
+
+@keyframes entrada-transformado {
+  from { opacity: 0; transform: scale(0.7); }
+  60%  { opacity: 1; transform: scale(1.12); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.entrada-transformado { animation: entrada-transformado calc(520ms * var(--factor-animacion, 1)) ease-out forwards; }
+
+/* --- Subida de nivel en combate ---------------------------------------------
+   Dos piezas a la vez: el cartel sube y se desvanece, y la tarjeta suelta un
+   destello dorado. El cartel solo no se veía — llega justo cuando el jugador
+   está mirando el banner de victoria, no la tarjeta. */
+
+@keyframes cartel-subida-nivel {
+  from { opacity: 0; transform: translate(-50%, 10px) scale(0.7); }
+  25%  { opacity: 1; transform: translate(-50%, -6px) scale(1.15); }
+  70%  { opacity: 1; transform: translate(-50%, -14px) scale(1); }
+  to   { opacity: 0; transform: translate(-50%, -30px) scale(1); }
+}
+
+.cartel-subida-nivel { animation: cartel-subida-nivel calc(1600ms * var(--factor-animacion, 1)) ease-out forwards; }
+
+@keyframes halo-subida-nivel {
+  0%, 100% { box-shadow: 0 0 0 rgba(217, 178, 60, 0); }
+  30% { box-shadow: 0 0 26px 4px rgba(217, 178, 60, 0.75); }
+}
+
+.halo-subida-nivel { animation: halo-subida-nivel calc(1600ms * var(--factor-animacion, 1)) ease-out forwards; }
+
+/* --- Estela de la barra de HP -----------------------------------------------
+   Una segunda barra pálida detrás de la de vida, atada al MISMO porcentaje pero
+   con una transición mucho más lenta y con retraso. El resultado es que al
+   recibir un golpe se ve el mordisco durante un segundo antes de que la estela
+   alcance a la barra real: se percibe cuánto ha quitado el golpe, no solo cuánto
+   queda. No necesita estado en React — es la misma cifra pintada dos veces a
+   velocidades distintas. */
+
+.estela-hp {
+  transition: width calc(900ms * var(--factor-animacion, 1)) ease-out
+               calc(250ms * var(--factor-animacion, 1));
+}
+
+/* --- Jutsu cargado ----------------------------------------------------------
+   La barra se llena un turno ANTES de que el jutsu salga (es una regla del
+   motor, ver documentacion/29). Ese hueco existía y no se veía: aquí el luchador
+   que lo tiene listo respira y brilla, así que el turno pasa a ser tensión —
+   sabes que viene y si te da tiempo a tumbarlo antes. */
+
+@keyframes telegrafia-jutsu {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(61, 122, 158, 0.6)); }
+  50% { transform: scale(1.07); filter: drop-shadow(0 0 12px rgba(94, 156, 132, 0.95)); }
+}
+
+.telegrafia-jutsu { animation: telegrafia-jutsu calc(700ms * var(--factor-animacion, 1)) ease-in-out infinite; }
+
+/* --- Caída ------------------------------------------------------------------
+   El que cae se desploma en vez de apagarse sin más. Con `forwards` se queda
+   tumbado: la tarjeta ya está atenuada, esto cuenta el momento. */
+
+@keyframes caida-ko {
+  from { transform: rotate(0) translateY(0); opacity: 1; }
+  to { transform: rotate(-75deg) translateY(14px); opacity: 0.35; }
+}
+
+.caida-ko { animation: caida-ko calc(500ms * var(--factor-animacion, 1)) ease-in forwards; }
+
+/* --- Relevo en la cadena de rondas ------------------------------------------
+   Cuando cae tu personaje activo entra el siguiente, y ese es el momento más
+   dramático del combate: se contaba con una línea de texto. Ahora su tarjeta
+   entra deslizándose desde la izquierda.
+
+   El primer intento recorría 28 px en 420 ms y se veía como un tirón: es una
+   tarjeta con barras y sprite dentro, no un cartel, y a esa distancia el bloque
+   entero da un salto. Ahora es la mitad de recorrido y más corto — se lee como
+   "ha entrado alguien" sin que la caja se mueva de sitio. Va con `ease-out`
+   puro, sin rebote: el rebote era la otra mitad del stutter. */
+
+@keyframes entrada-relevo {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.entrada-relevo { animation: entrada-relevo calc(260ms * var(--factor-animacion, 1)) ease-out; }
+
+/* --- Barra de scroll dentro de una ventana ----------------------------------
+   El scroll de `VentanaModal` es del cuerpo de la ventana, no de la página, así
+   que su barra se ve siempre y con el aspecto por defecto del navegador rompe la
+   ilusión de "esto es un juego" más que cualquier otro detalle: es lo único en
+   pantalla que no está dibujado.
+
+   Cuadrada (`border-radius: 0`) y con los colores del marco. Solo WebKit/Blink
+   más `scrollbar-color` para Firefox — no hay forma estándar de darle forma, y no
+   pasa nada: donde no se aplique se ve la del sistema y la ventana sigue
+   funcionando igual. */
+
+.scroll-pixel {
+  scrollbar-color: var(--color-marco) var(--color-tinta-950);
+  scrollbar-width: thin;
+}
+
+.scroll-pixel::-webkit-scrollbar {
+  width: 12px;
+}
+
+.scroll-pixel::-webkit-scrollbar-track {
+  background: var(--color-tinta-950);
+  border-left: 2px solid var(--color-marco);
+}
+
+.scroll-pixel::-webkit-scrollbar-thumb {
+  background: var(--color-marco);
+  border: 2px solid var(--color-tinta-950);
+}
+
+.scroll-pixel::-webkit-scrollbar-thumb:hover {
+  background: var(--color-pergamino-200);
 }

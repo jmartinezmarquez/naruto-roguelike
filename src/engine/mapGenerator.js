@@ -20,6 +20,32 @@ function elegirTipoPorPeso(poolTiposNodo) {
   return poolTiposNodo[poolTiposNodo.length - 1].tipo;
 }
 
+/**
+ * Rareza del pergamino de un nodo de reclutar, sorteada con los pesos del arco
+ * (`poolRarezaReclutar`) y **restringida a las rarezas que de verdad tienen
+ * candidatos** en esta run.
+ *
+ * Ese filtro es el motivo de que la rareza se decida aquí y no al entrar en el
+ * nodo: el mapa pinta un pergamino verde, azul o dorado, así que la rareza tiene
+ * que existir antes de que el jugador elija a dónde va. Y como el motor no sabe
+ * nada del equipo ni de los logros, quién está disponible se lo dice el store
+ * (`rarezasReclutarDisponibles`) — sin eso, un mapa recién empezado prometería
+ * pergaminos dorados que al abrirlos no tienen a nadie dentro.
+ */
+function elegirRarezaReclutar(arco, rarezasDisponibles) {
+  const pool = (arco.poolRarezaReclutar ?? [])
+    .filter((r) => rarezasDisponibles.includes(r.rareza));
+  if (pool.length === 0) return 'comun';
+
+  const total = pool.reduce((acc, r) => acc + r.peso, 0);
+  let tirada = Math.random() * total;
+  for (const { rareza, peso } of pool) {
+    if (tirada < peso) return rareza;
+    tirada -= peso;
+  }
+  return pool[pool.length - 1].rareza;
+}
+
 let contadorId = 0;
 function generarIdNodo() {
   contadorId += 1;
@@ -40,33 +66,96 @@ function anchoDelPiso(piso, numeroPisosNormales, min, max) {
 }
 
 /**
- * Genera el mapa completo de un arco: nodos organizados por piso, con
- * conexiones hacia el piso siguiente. El último piso es siempre un único
- * nodo de tipo 'jefe'. El piso de mini-jefe fuerza un nodo de tipo 'miniJefe'.
+ * Anchos de todos los pisos, con la regla de que **dos pisos seguidos nunca
+ * miden lo mismo**: el mapa tiene que ensancharse o estrecharse en cada salto,
+ * que es lo que dibuja el rombo. Sin esto, el ruido de `anchoDelPiso` repetía
+ * el mismo ancho varias veces seguidas y salían tramos rectos.
+ *
+ * El primer piso (nodo de inicio) y el del jefe miden 1 y no se tocan; los de
+ * en medio se corrigen en pasada única: si repiten el ancho del anterior, se
+ * intenta subir uno y, si no cabe en `max`, bajar uno.
  */
-export function generarMapa(arco) {
+function anchosDeLosPisos(arco, numeroPisosNormales) {
+  const { min, max } = arco.nodosPorPiso;
+  const anchos = [];
+
+  for (let piso = 1; piso <= arco.numeroPisos; piso++) {
+    if (piso === 1 || piso === arco.pisoJefeFinal) {
+      anchos.push(1);
+      continue;
+    }
+    let ancho = anchoDelPiso(piso, numeroPisosNormales, min, max);
+    // El piso justo después de la salida se abre como mucho a 3: del nodo de
+    // inicio salen todas las aristas de ese piso, y con 4-5 el arranque parecía
+    // una estrella en vez del pico de un rombo.
+    if (piso === 2) ancho = Math.min(ancho, Math.max(min, 3));
+    const anterior = anchos[anchos.length - 1];
+    if (ancho === anterior) {
+      ancho = ancho + 1 <= max ? ancho + 1 : Math.max(min, ancho - 1);
+    }
+    anchos.push(ancho);
+  }
+
+  // El piso anterior al jefe también tiene que romper con el 1 del jefe, y
+  // además `garantizarDescansoAntesDelJefe` necesita sitio para un descanso
+  // que no pise al mini-jefe.
+  const indicePrevio = arco.pisoJefeFinal - 2;
+  if (indicePrevio > 0 && anchos[indicePrevio] === 1) {
+    anchos[indicePrevio] = Math.min(max, 2);
+  }
+
+  return anchos;
+}
+
+/**
+ * Genera el mapa completo de un arco: nodos organizados por piso, con
+ * conexiones hacia el piso siguiente.
+ *
+ * - El piso 1 es siempre un único nodo `inicio`, que nace ya visitado: es la
+ *   casilla de salida, como en un Pokelike. No se juega, solo marca de dónde
+ *   sale el jugador y da el primer abanico de opciones.
+ * - El último piso es siempre un único nodo de tipo 'jefe'.
+ * - El piso de mini-jefe fuerza un nodo de tipo 'miniJefe'.
+ *
+ * `opciones.rarezasReclutarDisponibles` son las rarezas que tienen al menos un
+ * candidato reclutable en esta run — las calcula el store, que es quien conoce
+ * el equipo y los logros. Por defecto, solo `comun`: un mapa generado sin esa
+ * información no promete pergaminos raros ni dorados que luego no puede cumplir.
+ */
+export function generarMapa(arco, opciones = {}) {
+  const { rarezasReclutarDisponibles = ['comun'] } = opciones;
   contadorId = 0;
   const nodos = {};
   const pisos = [];
   const numeroPisosNormales = arco.numeroPisos - 1; // todos menos el del jefe
+  const anchos = anchosDeLosPisos(arco, numeroPisosNormales);
 
   for (let piso = 1; piso <= arco.numeroPisos; piso++) {
     const esUltimoPiso = piso === arco.pisoJefeFinal;
-    const numNodos = esUltimoPiso
-      ? 1
-      : anchoDelPiso(piso, numeroPisosNormales, arco.nodosPorPiso.min, arco.nodosPorPiso.max);
+    const esPisoInicio = piso === 1;
+    const numNodos = anchos[piso - 1];
 
-    // El primer piso nunca debe ofrecer descanso (curar algo que ya está a
-    // HP completo no es una opción real) ni tienda (no tienes oro todavía).
-    const poolDeEstePiso = piso === 1
+    // El primer piso jugable (el 2, porque el 1 es la casilla de salida) nunca
+    // debe ofrecer descanso —curar algo que ya está a HP completo no es una
+    // opción real— ni tienda, porque todavía no hay oro.
+    const poolDeEstePiso = piso === 2
       ? arco.poolTiposNodo.filter((t) => t.tipo !== 'descanso' && t.tipo !== 'tienda')
       : arco.poolTiposNodo;
 
     const idsPiso = [];
     for (let i = 0; i < numNodos; i++) {
       const id = generarIdNodo();
-      const tipo = esUltimoPiso ? 'jefe' : elegirTipoPorPeso(poolDeEstePiso);
-      nodos[id] = { id, piso, tipo, conexiones: [], visitado: false, completado: false };
+      const tipo = esPisoInicio ? 'inicio' : esUltimoPiso ? 'jefe' : elegirTipoPorPeso(poolDeEstePiso);
+      const subtipo = tipo === 'combate' ? (Math.random() < 0.2 ? 'entrenador' : 'aleatorio') : undefined;
+      nodos[id] = {
+        id,
+        piso,
+        tipo,
+        ...(subtipo !== undefined && { subtipo }),
+        conexiones: [],
+        visitado: esPisoInicio,
+        completado: esPisoInicio,
+      };
       idsPiso.push(id);
     }
 
@@ -124,8 +213,25 @@ export function generarMapa(arco) {
   }
 
   garantizarDescansoAntesDelJefe(nodos, pisos, arco);
+  colocarNodosDeReclutar(nodos, pisos, arco);
 
-  return { arcoId: arco.id, pisos, nodos, nodosIniciales: pisos[0] };
+  // La rareza se reparte al final, cuando el tipo de cada nodo ya no va a
+  // cambiar.
+  Object.values(nodos).forEach((nodo) => {
+    if (nodo.tipo === 'reclutar') {
+      nodo.rareza = elegirRarezaReclutar(arco, rarezasReclutarDisponibles);
+    }
+  });
+
+  return {
+    arcoId: arco.id,
+    pisos,
+    nodos,
+    nodosIniciales: pisos[0],
+    // El nodo de salida: el store arranca la run ya plantado aquí, así que las
+    // primeras opciones reales son sus conexiones, no el piso entero.
+    nodoInicialId: pisos[0][0],
+  };
 }
 
 /**
@@ -149,6 +255,46 @@ function garantizarDescansoAntesDelJefe(nodos, pisos, arco) {
 
   const idElegido = candidatos[numeroAleatorioEntre(0, candidatos.length - 1)];
   nodos[idElegido].tipo = 'descanso';
+}
+
+/**
+ * Coloca los nodos de reclutar del arco: **uno seguro**, y un segundo solo con
+ * `arco.probabilidadSegundoNodoReclutar`.
+ *
+ * No salen del sorteo por peso como el resto de tipos, y el motivo es que el
+ * equipo tiene 3 huecos para toda la run: con `reclutar` en `poolTiposNodo` el
+ * mapa ofrecía cuatro y cinco pergaminos por arco, y a partir del segundo la
+ * decisión ya no existe —o no tienes a quién meter, o estás tirando a alguien
+ * que acabas de reclutar—. Un nodo que casi siempre se salta es un nodo muerto.
+ * Colocándolos aquí el número es exacto, no una esperanza estadística.
+ *
+ * Van después del descanso garantizado y nunca pisan un nodo que ya significa
+ * algo (`inicio`, `jefe`, `miniJefe`, `descanso`): los tres primeros no se pueden
+ * reemplazar y el cuarto es una garantía que este código no debe deshacer.
+ */
+function colocarNodosDeReclutar(nodos, pisos, arco) {
+  const NO_REEMPLAZABLES = new Set(['inicio', 'jefe', 'miniJefe', 'descanso']);
+  const pisosJugables = [];
+  for (let piso = 2; piso < arco.pisoJefeFinal; piso += 1) {
+    const candidatos = (pisos[piso - 1] ?? []).filter((id) => !NO_REEMPLAZABLES.has(nodos[id].tipo));
+    if (candidatos.length > 0) pisosJugables.push(candidatos);
+  }
+  if (pisosJugables.length === 0) return;
+
+  const cuantos = Math.random() < (arco.probabilidadSegundoNodoReclutar ?? 0) ? 2 : 1;
+  // Un piso como mucho aporta un pergamino: dos en el mismo piso son la misma
+  // decisión repetida, y encima el jugador solo puede tomar uno de los dos.
+  const pisosElegidos = [];
+  const disponibles = [...pisosJugables];
+  for (let i = 0; i < cuantos && disponibles.length > 0; i += 1) {
+    pisosElegidos.push(...disponibles.splice(numeroAleatorioEntre(0, disponibles.length - 1), 1));
+  }
+
+  pisosElegidos.forEach((candidatos) => {
+    const id = candidatos[numeroAleatorioEntre(0, candidatos.length - 1)];
+    nodos[id].tipo = 'reclutar';
+    delete nodos[id].subtipo; // por si era un combate de entrenador
+  });
 }
 
 /**
@@ -189,7 +335,7 @@ export function resolverEnemigoDeNodo(nodo, arco) {
 
   if (nodo.tipo === 'combate') {
     const { plantillasGenericas, enemigosNombrados } = commonEnemiesData;
-    const usarNombrado = enemigosNombrados.length > 0 && Math.random() < 0.2;
+    const usarNombrado = nodo.subtipo === 'entrenador' && enemigosNombrados.length > 0;
 
     const enemigoBase = usarNombrado
       ? enemigosNombrados[numeroAleatorioEntre(0, enemigosNombrados.length - 1)]
@@ -198,5 +344,5 @@ export function resolverEnemigoDeNodo(nodo, arco) {
     return { enemigoBase, nivel: calcularNivelPorPiso(nodo.piso, arco) };
   }
 
-  return null; // evento, tienda, descanso, reclutamiento
+  return null; // evento, tienda, descanso, reclutar
 }

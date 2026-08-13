@@ -6,25 +6,32 @@ const POSICION_CLASES = {
 };
 
 /**
- * Envuelve cualquier trigger y muestra `contenido` al hacer hover, con CSS
- * puro (`opacity`/`scale` vía un "named group" de Tailwind, `group/hover` —
- * no choca con otros `group` que ya tenga el trigger envuelto). Mecánica
- * genérica extraída de `PersonajeHoverCard`, para no repetirla en cada sitio
- * que necesite un tooltip (objetos, nodos del mapa...).
+ * Envuelve cualquier trigger y muestra `contenido` al hacer hover, con CSS puro.
+ *
+ * El mostrado va con `.hover-envoltorio:hover > .hover-contenido` (ver
+ * `index.css`) y NO con el `group-hover` de Tailwind. Un `group/hover` con
+ * nombre lo activa **cualquier** ancestro que lo lleve, y eso rompía el
+ * anidamiento: en la pantalla de combate la tarjeta entera tenía hover y dentro
+ * llevaba una pastilla por pasiva con el suyo, así que al pasar por encima de la
+ * tarjeta se abrían todos los tooltips de golpe, unos encima de otros. Con el
+ * combinador de hijo directo, cada tooltip solo responde a su propio envoltorio.
  */
 export default function HoverTooltip({
   posicion = 'derecha',
   className = 'inline-block',
+  // `style` existe para los triggers que se colocan por posición calculada, como
+  // los botones del menú vertical (top y alto en % según su índice): sin él habría
+  // que envolverlos en otro div solo para posicionarlos.
+  style,
   contenido,
   children,
 }) {
   return (
-    <div className={`relative group/hover ${className}`}>
+    <div className={`relative hover-envoltorio ${className}`} style={style}>
       {children}
       <div
         className={[
-          'absolute z-40 opacity-0 scale-95 pointer-events-none',
-          'group-hover/hover:opacity-100 group-hover/hover:scale-100 transition-all duration-150',
+          'hover-contenido absolute z-40',
           POSICION_CLASES[posicion] ?? POSICION_CLASES.derecha,
         ].join(' ')}
       >

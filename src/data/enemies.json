@@ -1,25 +1,30 @@
 {
-  "_comentario": "Catálogo de jefes reutilizable entre arcos. Mismo esquema que un personaje: statsBase, jutsu, modos (array, 0-2 transformaciones activadas solo por nivel, nunca a mitad de combate). BALANCE: statsBase de jefes/minijefes se calcula como un múltiplo fijo de un personaje medio (hp41/atq9/def7/vel8), NO como valores absolutos — minijefe: x1.8 hp, x1.3 atq/def, x1.2 vel. jefe: x2.2 hp, x1.5 atq, x1.4 def, x1.2 vel. Como jugador y enemigo escalan con la misma fórmula por nivel, el ratio se mantiene constante en cualquier punto de la run — un jefe de nivel 100 es proporcionalmente igual de duro que uno de nivel 15, no más. Cada arco referencia los ids que necesita vía miniJefeId/jefeFinalId en su config. Cada jefe tiene además 'rareza' y 'curvaXp': con eso, el mismo objeto sirve tal cual como personajeBase si se desbloquea como reclutable vía logro (desbloqueablePorLogro: true) — no hace falta duplicarlo en characters.json.",
+  "_comentario": "Boss catalogue reusable across arcs. Same schema as a character: statsBase, jutsu, modos (array, 0-2 transformations activated only by level, never mid-combat). BALANCE: boss/mini-boss statsBase is calculated as a fixed multiple of an average character (hp41/atk9/def7/spd8) — mini-boss: x1.8 hp, x1.3 atk/def, x1.2 spd. boss: x2.2 hp, x1.5 atk, x1.4 def, x1.2 spd. Since player and enemy scale with the same formula per level, the ratio stays constant at any point of the run. Each arc references the ids it needs via miniJefeId/jefeFinalId in its config. Each boss also has 'rareza' and 'curvaXp': this lets the same object serve as personajeBase if unlocked as recruitable via achievement (desbloqueablePorLogro: true) — no need to duplicate it in characters.json.",
   "jefes": [
     {
       "id": "haku",
       "nombre": "Haku",
       "tipo": "suiton",
       "statsBase": {
-        "hp": 74,
-        "ataque": 12,
-        "defensa": 9,
+        "hp": 59,
+        "ataque": 9,
+        "defensa": 8,
         "velocidad": 10
       },
       "jutsu": {
-        "nombre": "Espejos de Hielo Demoniaco",
-        "descripcion": "Encierra al rival en una prisión de espejos de hielo, ralentizándolo.",
-        "danoBase": 1.3,
-        "efectoEstado": null
+        "nombre": "Demonic Ice Mirrors",
+        "descripcion": "Traps the opponent in a prison of ice mirrors, slowing them down.",
+        "danoBase": 2.6,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 26,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [],
       "recompensa": {
-        "xp": 150,
+        "xp": 100,
         "objetoGarantizado": "pergamino_viento"
       },
       "rareza": "raro",
@@ -34,31 +39,46 @@
       "nombre": "Zabuza Momochi",
       "tipo": "suiton",
       "statsBase": {
-        "hp": 90,
-        "ataque": 14,
-        "defensa": 10,
+        "hp": 58,
+        "ataque": 9,
+        "defensa": 8,
         "velocidad": 10
       },
       "jutsu": {
-        "nombre": "Jutsu de Ocultación entre la Niebla",
-        "descripcion": "Ataca desde la niebla con la Kubikiribōchō, aprovechando la sorpresa.",
-        "danoBase": 1.45,
-        "efectoEstado": null
+        "nombre": "Hidden Mist Jutsu",
+        "descripcion": "Attacks from the mist with the Kubikiribōchō, exploiting the element of surprise.",
+        "danoBase": 3.05,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 28,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Furia del Demonio de la Niebla",
-          "nivelDesbloqueo": 15,
+          "nombre": "Demon of the Mist Fury",
+          "nivelDesbloqueo": 8,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.2,
-            "velocidad": 1.1,
-            "hp": 1.2
-          }
+            "ataque": 1.16,
+            "defensa": 1.08,
+            "velocidad": 1.04,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.5
+            },
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.15
+            }
+          ]
         }
       ],
       "recompensa": {
-        "xp": 450,
+        "xp": 165,
         "objetoGarantizado": "kubikiribocho_fragmento",
         "desbloqueaSiguienteArco": true
       },
@@ -74,31 +94,46 @@
       "nombre": "Kabuto Yakushi",
       "tipo": "doton",
       "statsBase": {
-        "hp": 74,
-        "ataque": 12,
-        "defensa": 9,
-        "velocidad": 10
+        "hp": 53,
+        "ataque": 8,
+        "defensa": 7,
+        "velocidad": 9
       },
       "jutsu": {
-        "nombre": "Bisturí de Chakra",
-        "descripcion": "Corta puntos vitales con precisión médica, debilitando la defensa del rival.",
-        "danoBase": 1.3,
-        "efectoEstado": null
+        "nombre": "Chakra Scalpel",
+        "descripcion": "Cuts vital points with medical precision, weakening the opponent's defense.",
+        "danoBase": 2.6,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 26,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Fusión Senjutsu-Serpiente",
-          "nivelDesbloqueo": 33,
+          "nombre": "Snake-Senjutsu Fusion",
+          "nivelDesbloqueo": 17,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.5,
-            "velocidad": 1.2,
-            "hp": 1.3
-          }
+            "ataque": 1.16,
+            "defensa": 1.2,
+            "velocidad": 1.08,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.2
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
         }
       ],
       "recompensa": {
-        "xp": 220
+        "xp": 125
       },
       "rareza": "raro",
       "curvaXp": {
@@ -112,41 +147,62 @@
       "nombre": "Gaara",
       "tipo": "doton",
       "statsBase": {
-        "hp": 90,
-        "ataque": 14,
-        "defensa": 10,
+        "hp": 63,
+        "ataque": 9,
+        "defensa": 7,
         "velocidad": 10
       },
       "jutsu": {
-        "nombre": "Ataúd de Arena",
-        "descripcion": "Aplasta al rival con arena compacta, reduciendo su defensa de forma severa.",
-        "danoBase": 1.4,
-        "efectoEstado": null
+        "nombre": "Sand Coffin",
+        "descripcion": "Crushes the opponent with compacted sand, severely reducing their defense.",
+        "danoBase": 2.15,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 14,
+          "alRecibirDano": 40,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Escudo de Arena Absoluta",
-          "nivelDesbloqueo": 30,
+          "nombre": "Absolute Sand Shield",
+          "nivelDesbloqueo": 24,
           "multiplicadores": {
-            "ataque": 1.2,
-            "defensa": 1.6,
-            "velocidad": 0.9,
-            "hp": 1
-          }
+            "ataque": 1.08,
+            "defensa": 1.24,
+            "velocidad": 0.96,
+            "hp": 1.0
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.8
+            }
+          ]
         },
         {
-          "nombre": "Liberación Parcial de Shukaku",
-          "nivelDesbloqueo": 50,
+          "nombre": "Partial Shukaku Release",
+          "nivelDesbloqueo": 40,
           "multiplicadores": {
-            "ataque": 1.6,
-            "defensa": 1.9,
-            "velocidad": 0.8,
-            "hp": 1.4
-          }
+            "ataque": 1.24,
+            "defensa": 1.36,
+            "velocidad": 0.92,
+            "hp": 1.16
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.8
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.25
+            }
+          ]
         }
       ],
       "recompensa": {
-        "xp": 900,
+        "xp": 210,
         "objetoGarantizado": "calabaza_arena",
         "desbloqueaSiguienteArco": true
       },
@@ -159,23 +215,28 @@
     },
     {
       "id": "camino_animal_pain",
-      "nombre": "Camino Animal de Pain",
+      "nombre": "Pain: Animal Path",
       "tipo": "doton",
       "statsBase": {
-        "hp": 74,
-        "ataque": 12,
-        "defensa": 9,
+        "hp": 59,
+        "ataque": 9,
+        "defensa": 8,
         "velocidad": 10
       },
       "jutsu": {
-        "nombre": "Invocación Múltiple",
-        "descripcion": "Invoca bestias gigantes que embisten y aturden al rival.",
-        "danoBase": 1.35,
-        "efectoEstado": null
+        "nombre": "Multiple Summoning",
+        "descripcion": "Summons giant beasts that ram and stun the opponent.",
+        "danoBase": 2.75,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 26,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [],
       "recompensa": {
-        "xp": 700
+        "xp": 160
       },
       "rareza": "raro",
       "curvaXp": {
@@ -186,34 +247,46 @@
     },
     {
       "id": "pain_camino_deva",
-      "nombre": "Pain (Camino Deva)",
+      "nombre": "Pain (Deva Path)",
       "tipo": "raiton",
       "statsBase": {
-        "hp": 90,
-        "ataque": 14,
-        "defensa": 10,
-        "velocidad": 10
+        "hp": 56,
+        "ataque": 8,
+        "defensa": 8,
+        "velocidad": 9
       },
       "jutsu": {
         "nombre": "Shinra Tensei",
-        "descripcion": "Repulsión gravitacional devastadora que arrasa la defensa del rival.",
-        "danoBase": 1.6,
-        "efectoEstado": null
+        "descripcion": "Devastating gravitational repulsion that obliterates the opponent's defense.",
+        "danoBase": 4.45,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 18,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Sincronización de los Seis Caminos",
-          "nivelDesbloqueo": 90,
+          "nombre": "Six Paths Synchronization",
+          "nivelDesbloqueo": 40,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.4,
-            "velocidad": 1.3,
-            "hp": 1.3
-          }
+            "ataque": 1.2,
+            "defensa": 1.16,
+            "velocidad": 1.12,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 1
+            },
+            "priority"
+          ]
         }
       ],
       "recompensa": {
-        "xp": 2000,
+        "xp": 300,
         "objetoGarantizado": "anillo_rinnegan_fragmento",
         "finDeLaRun": true
       },

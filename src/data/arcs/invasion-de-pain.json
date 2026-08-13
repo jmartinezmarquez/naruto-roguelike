@@ -1,9 +1,9 @@
 {
   "_comentario": "Tercer y último arco del MVP. Licencia creativa: no sigue un arco 1:1 del manga, es una compresión de la Invasión de Pain a Konoha adaptada al formato roguelike. Nivel de enemigos fijo por piso, recalibrado (ver pais-de-las-olas.json).",
   "id": "invasion_de_pain",
-  "nombre": "Invasión de Pain",
+  "nombre": "Pain's Invasion",
   "temaVisual": "konoha_en_ruinas",
-  "numeroPisos": 12,
+  "numeroPisos": 8,
   "nodosPorPiso": {
     "min": 2,
     "max": 5
@@ -11,31 +11,44 @@
   "poolTiposNodo": [
     {
       "tipo": "combate",
-      "peso": 50
+      "peso": 45
     },
     {
       "tipo": "evento",
-      "peso": 20
+      "peso": 25
     },
     {
       "tipo": "tienda",
-      "peso": 20
+      "peso": 18
     },
     {
       "tipo": "descanso",
-      "peso": 10
+      "peso": 12
     }
   ],
-  "pisoMiniJefe": 6,
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 70
+    },
+    {
+      "rareza": "legendario",
+      "peso": 30
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 41,
+  "pisoMiniJefe": 4,
   "miniJefeId": "camino_animal_pain",
-  "pisoJefeFinal": 12,
+  "pisoJefeFinal": 8,
   "jefeFinalId": "pain_camino_deva",
   "personajesReclutablesIds": [
     "sai",
     "yamato"
   ],
-  "nivelEnemigoBase": 46,
-  "escaladoNivelPorPiso": 0.2,
-  "nivelMiniJefe": 48,
-  "nivelJefeFinal": 49
+  "nivelEnemigoBase": 33,
+  "escaladoNivelPorPiso": 1.0,
+  "nivelMiniJefe": 36,
+  "nivelJefeFinal": 44,
+  "xpCombateComun": 100
 }

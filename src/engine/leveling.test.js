@@ -5,7 +5,14 @@ import {
   ganarXp,
   obtenerModoActivo,
   aplicarMultiplicadores,
+  nivelesEstimadosDeLaRun,
 } from './leveling';
+import { calcularNivelPorPiso } from './mapGenerator';
+import charactersData from '../data/characters.json';
+import enemiesData from '../data/enemies.json';
+import arco1 from '../data/arcs/pais-de-las-olas.json';
+import arco2 from '../data/arcs/examen-chunin.json';
+import arco3 from '../data/arcs/invasion-de-pain.json';
 
 describe('xpParaSiguienteNivel', () => {
   it('calcula la XP requerida según la curva del personaje', () => {
@@ -98,5 +105,128 @@ describe('aplicarMultiplicadores', () => {
   it('devuelve las stats sin cambios si no hay multiplicadores', () => {
     const stats = { hp: 100, ataque: 10, defensa: 10, velocidad: 10 };
     expect(aplicarMultiplicadores(stats, null)).toEqual(stats);
+  });
+});
+
+describe('nivelesEstimadosDeLaRun', () => {
+  const arcoDePrueba = {
+    id: 'prueba',
+    numeroPisos: 8,
+    pisoMiniJefe: 4,
+    pisoJefeFinal: 8,
+    miniJefeId: 'mini',
+    jefeFinalId: 'final',
+    xpCombateComun: 100,
+    poolTiposNodo: [{ tipo: 'combate', peso: 50 }, { tipo: 'tienda', peso: 50 }],
+  };
+  const curva = { xpParaSiguienteNivel: 20, crecimiento: 1.0 };
+  const xpDeJefe = (id) => (id === 'mini' ? 200 : 400);
+
+  it('empieza la run a nivel 1 y sube piso a piso', () => {
+    const niveles = nivelesEstimadosDeLaRun(curva, [arcoDePrueba], xpDeJefe).prueba;
+    expect(niveles.get(1)).toBe(1);
+    expect(niveles.get(8)).toBeGreaterThan(niveles.get(2));
+  });
+
+  it('un piso normal solo aporta la XP que cabe esperar de él, no la de un combate entero', () => {
+    // 50% de probabilidad de combate × 100 de XP = 50 esperados, que con una
+    // curva plana de 20 son 2 niveles y medio por piso, no 5.
+    const niveles = nivelesEstimadosDeLaRun(curva, [arcoDePrueba], xpDeJefe).prueba;
+    expect(niveles.get(3)).toBe(3); // nivel 1 + 50 XP = nivel 3, sobran 10
+  });
+
+  it('el nivel se arrastra de un arco al siguiente', () => {
+    const dosArcos = nivelesEstimadosDeLaRun(
+      curva,
+      [arcoDePrueba, { ...arcoDePrueba, id: 'segundo' }],
+      xpDeJefe,
+    );
+    expect(dosArcos.segundo.get(2)).toBeGreaterThan(dosArcos.prueba.get(8));
+  });
+});
+
+// El bug que estos tests existen para que no vuelva: los arcos declaraban a
+// Zabuza a nivel 4 y a Pain a nivel 49, y con la XP real el jugador llegaba a
+// ellos a nivel 9 y a nivel 70. Nadie se enteró porque el simulador SUPONÍA el
+// nivel del jugador en vez de calcularlo, así que los combates comunes salían al
+// 99% de victorias con el 97% del HP intacto y los mini-jefes eran más duros que
+// el jefe de su propio arco. Los niveles fijos de un arco solo significan algo si
+// alguien comprueba que el jugador llega ahí.
+describe('arcos (invariantes de datos)', () => {
+  const ARCOS = [arco1, arco2, arco3];
+  const xpDeJefe = (id, arco) => enemiesData.jefes.find((j) => j.id === id)?.recompensa?.xp
+    ?? arco.xpCombateComun;
+
+  /** Nivel medio del roster al llegar a un piso, que es lo que se calibra. */
+  function nivelMedioEn(arco, piso) {
+    const niveles = charactersData.personajes.map(
+      (p) => nivelesEstimadosDeLaRun(p.curvaXp, ARCOS, xpDeJefe)[arco.id].get(piso),
+    );
+    return niveles.reduce((a, b) => a + b, 0) / niveles.length;
+  }
+
+  it('todos los arcos declaran la XP de sus combates comunes', () => {
+    // Sin esto el store cae en su red de seguridad (20 XP) y la economía entera
+    // se descalibra en silencio: las plantillas genéricas no traen `recompensa`.
+    for (const arco of ARCOS) {
+      expect(arco.xpCombateComun, arco.id).toBeGreaterThan(0);
+    }
+  });
+
+  it('el jugador llega a cada jefe cerca del nivel que el arco le ha puesto', () => {
+    const DESVIO_MAXIMO = 2; // niveles
+    for (const arco of ARCOS) {
+      expect(Math.abs(nivelMedioEn(arco, arco.pisoMiniJefe) - arco.nivelMiniJefe), `${arco.id} — mini-jefe`)
+        .toBeLessThanOrEqual(DESVIO_MAXIMO);
+      expect(Math.abs(nivelMedioEn(arco, arco.pisoJefeFinal) - arco.nivelJefeFinal), `${arco.id} — jefe final`)
+        .toBeLessThanOrEqual(DESVIO_MAXIMO);
+    }
+  });
+
+  it('el jugador nunca va tan sobrado que los combates comunes dejen de serlo', () => {
+    // Cinco niveles por encima del enemigo del piso ya es un paseo; a diez, el
+    // combate no existe. Esto es lo que medía mal el simulador antiguo.
+    for (const arco of ARCOS) {
+      for (let piso = 2; piso <= arco.numeroPisos; piso += 1) {
+        if (piso === arco.pisoMiniJefe || piso === arco.pisoJefeFinal) continue;
+        const ventaja = nivelMedioEn(arco, piso) - calcularNivelPorPiso(piso, arco);
+        expect(ventaja, `${arco.id} — piso ${piso}`).toBeLessThanOrEqual(5);
+      }
+    }
+  });
+
+  it('cada personaje desbloquea su primera transformación dentro del primer arco', () => {
+    // Con los modos a nivel 12-28 y el arco 1 acabando sobre el 10, el primer
+    // arco entero se jugaba sin transformaciones: el 92% del poder venía de
+    // subir de nivel y nada más.
+    const finDelPrimerArco = arco1.nivelJefeFinal;
+    for (const personaje of charactersData.personajes) {
+      // Sai y Yamato tienen un único modo, que es de los tardíos a propósito.
+      if (personaje.modos.length < 2) continue;
+      expect(personaje.modos[0].nivelDesbloqueo, personaje.id).toBeLessThanOrEqual(finDelPrimerArco);
+    }
+  });
+
+  it('todo jefe con transformación llega transformado al combate en que se pelea', () => {
+    // El mismo error que el de arriba, pero en los jefes, donde estuvo vivo mucho
+    // más tiempo porque el test anterior solo mira `characters.json`: Zabuza
+    // desbloqueaba a 15 y se pelea a 10, Kabuto a 33 peleándose a 19, Gaara a 30
+    // peleándose a 27 y Pain a **90** peleándose a 44. Ninguna se activaba jamás,
+    // con arte recortado que nadie iba a ver nunca.
+    //
+    // Van al nivel al que se pelean o por debajo, no "dentro de la run": un jefe
+    // tiene un solo combate, así que o llega transformado o su modo no existe.
+    const combatesDeJefe = ARCOS.flatMap((arco) => [
+      [arco.miniJefeId, arco.nivelMiniJefe],
+      [arco.jefeFinalId, arco.nivelJefeFinal],
+    ]);
+
+    for (const [id, nivelDelCombate] of combatesDeJefe) {
+      const jefe = enemiesData.jefes.find((j) => j.id === id);
+      // Haku y Camino Animal no tienen modos: no hay arte para ellos y se dejan
+      // sin transformación a propósito. Lo que no vale es tener uno y no usarlo.
+      if (!jefe?.modos?.length) continue;
+      expect(jefe.modos[0].nivelDesbloqueo, id).toBeLessThanOrEqual(nivelDelCombate);
+    }
   });
 });

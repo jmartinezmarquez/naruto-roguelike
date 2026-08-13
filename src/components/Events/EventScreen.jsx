@@ -1,30 +1,50 @@
 import { useGameStore } from '../../store/useGameStore';
+import { PanelMarco, CabeceraPantalla, TituloBloque } from '../common/PiezasUI';
 
-const NOMBRE_STAT = { ataque: 'Ataque', defensa: 'Defensa', velocidad: 'Velocidad', hp: 'HP' };
+/**
+ * Nodo de evento: un texto y dos o tres elecciones, sin combate.
+ *
+ * A pantalla completa y no como ventana: es una parada del camino, un momento
+ * propio de la run — el mismo criterio que la tienda y reclutar (ver
+ * documentacion/33-direccion-visual.md).
+ *
+ * ⚠️ **Esto es solo el kit visual, no el rediseño.** El punto 6 del roadmap sigue
+ * abierto y es el único sin documento MVP: hay que escribir antes qué se quiere de
+ * esta pantalla (¿ilustración por evento o fondo por arco? ¿la pista del efecto se
+ * sigue viendo antes de elegir, que es un cambio de diseño de JUEGO y no de
+ * pantalla?). Lo que se ha hecho aquí es que deje de ser la única pantalla que no
+ * habla el idioma de las demás.
+ */
 
-/** Genera un texto legible a partir del efecto, para que un jugador novato sepa qué hace cada elección. */
+const STAT_NAME = { ataque: 'ATK', defensa: 'DEF', velocidad: 'SPD', hp: 'HP' };
+
 function generarPista(efecto) {
   switch (efecto.tipo) {
     case 'curarEquipoPorcentaje':
-      return `Cura un ${Math.round(efecto.cantidad * 100)}% de la vida del equipo.`;
+      return `Heals ${Math.round(efecto.cantidad * 100)}% of the team's HP.`;
     case 'buffTemporalEquipo':
-      return `${NOMBRE_STAT[efecto.stat]} +${Math.round((efecto.multiplicador - 1) * 100)}% durante ${efecto.combates} combates.`;
+      return `${STAT_NAME[efecto.stat] ?? efecto.stat} +${Math.round((efecto.multiplicador - 1) * 100)}% for ${efecto.combates} battles.`;
     case 'ganarXpEquipo':
-      return `El equipo gana ${efecto.cantidad} de experiencia.`;
+      return `The team gains ${efecto.cantidad} experience.`;
     case 'ganarOro':
-      return `Ganas ${efecto.cantidad} de oro.`;
+      return `You gain ${efecto.cantidad} gold.`;
     case 'perderOro':
-      return `Pierdes ${efecto.cantidad} de oro.`;
+      return `You lose ${efecto.cantidad} gold.`;
     case 'comprarObjetoAleatorio':
       return efecto.coste > 0
-        ? `Consigues un objeto aleatorio por ${efecto.coste} de oro.`
-        : 'Consigues un objeto aleatorio gratis.';
+        ? `Get a random item for ${efecto.coste} gold.`
+        : 'Get a random item for free.';
     case 'mejoraPermanenteAleatoria':
-      return 'Un personaje al azar gana una mejora permanente de estadística.';
+      return 'A random character gains a permanent stat upgrade.';
     case 'ninguno':
     default:
-      return 'No pasa nada.';
+      return 'Nothing happens.';
   }
+}
+
+/** Un efecto que quita algo se pinta en rojo: es lo único que distingue una elección mala. */
+function esCoste(efecto) {
+  return efecto.tipo === 'perderOro' || (efecto.tipo === 'comprarObjetoAleatorio' && efecto.coste > 0);
 }
 
 export default function EventScreen() {
@@ -33,35 +53,45 @@ export default function EventScreen() {
 
   if (!evento) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
-        No hay ningún evento en curso.
+      <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body text-[10px]">
+        No event in progress.
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 flex items-center justify-center">
-      <div className="max-w-md w-full bg-tinta-900 border border-pergamino-100/10 rounded-lg p-6">
-        <p className="text-raiton text-xs tracking-[0.3em] uppercase mb-2 text-center">Evento</p>
-        <h1 className="font-display text-2xl font-bold text-center mb-4">{evento.titulo}</h1>
-        <p className="text-pergamino-200/80 text-sm text-center mb-6 leading-relaxed">
-          {evento.descripcion}
-        </p>
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center gap-5">
+      <CabeceraPantalla antetitulo="On the road" titulo="Event" />
 
-        <div className="flex flex-col gap-3">
+      <PanelMarco className="max-w-md w-full p-5 flex flex-col gap-4">
+        <div className="text-center flex flex-col gap-2">
+          <TituloBloque tono="seccion" className="text-center">{evento.titulo}</TituloBloque>
+          <p className="text-[11px] text-pergamino-200/80 leading-relaxed">{evento.descripcion}</p>
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-marco pt-4">
           {evento.elecciones.map((eleccion, i) => (
             <button
               key={i}
               type="button"
               onClick={() => resolverEventoEleccion(i)}
-              className="text-left px-4 py-3 bg-tinta-800 hover:bg-tinta-800/70 border border-pergamino-100/10 hover:border-sello-500/50 rounded-lg transition-colors"
+              // `elevar-hover` porque esto sí es elegir, que es donde va el rebote.
+              className="elevar-hover text-left px-3 py-2.5 rounded-sm border border-marco bg-tinta-950/40 hover:border-oro/60 hover:bg-tinta-950/70 transition-colors"
             >
-              <p>{eleccion.texto}</p>
-              <p className="text-xs text-pergamino-200/50 mt-1">{generarPista(eleccion.efecto)}</p>
+              <p className="font-display text-[10px] text-pergamino-100 leading-relaxed">
+                {eleccion.texto}
+              </p>
+              {/* La pista del resultado sigue visible ANTES de elegir, como hasta
+                  ahora. No es un descuido: esconderla convertiría el evento en una
+                  apuesta en vez de una decisión informada, y eso es diseño de juego
+                  — la pregunta está anotada para el punto 6 del roadmap. */}
+              <p className={`text-[9px] mt-1.5 ${esCoste(eleccion.efecto) ? 'text-sello-500' : 'text-exito/90'}`}>
+                {generarPista(eleccion.efecto)}
+              </p>
             </button>
           ))}
         </div>
-      </div>
+      </PanelMarco>
     </div>
   );
 }

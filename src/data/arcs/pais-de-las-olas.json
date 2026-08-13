@@ -1,7 +1,7 @@
 {
   "_comentario": "Primer arco de la run. Nivel de enemigos FIJO por piso (no relativo al jugador — la dificultad de un roguelike debe ser fija para que subir de nivel siga significando algo, ver documentacion/11-progresion-y-arcos.md). Recalibrado con el número REAL de combates de un único camino (no la suma de todos los nodos del piso). nivelMiniJefe/nivelJefeFinal son niveles fijos explícitos, calculados para ser superables incluso por el 'camino mínimo' que se salta todo lo opcional.",
   "id": "pais_de_las_olas",
-  "nombre": "País de las Olas",
+  "nombre": "Land of Waves",
   "temaVisual": "bosque_konoha",
   "numeroPisos": 8,
   "nodosPorPiso": {
@@ -11,33 +11,47 @@
   "poolTiposNodo": [
     {
       "tipo": "combate",
-      "peso": 45
+      "peso": 38
     },
     {
       "tipo": "evento",
-      "peso": 28
+      "peso": 34
     },
     {
       "tipo": "tienda",
-      "peso": 20
+      "peso": 18
     },
     {
       "tipo": "descanso",
-      "peso": 7
+      "peso": 10
     }
   ],
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 80
+    },
+    {
+      "rareza": "legendario",
+      "peso": 20
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 6,
   "pisoMiniJefe": 4,
   "miniJefeId": "haku",
   "pisoJefeFinal": 8,
   "jefeFinalId": "zabuza",
-  "personajesReclutablesIds": [],
+  "_comentarioReclutables": "Kakashi es LEGENDARIO, así que el pergamino verde (comun+inicial+raro) no lo ofrece nunca: su única puerta es el pergamino dorado, o sea ganarle un combate al nivelDesafioLegendario del arco. Antes de él este array estaba vacío y la primera run no podía ver un pergamino dorado en el arco 1 — los únicos legendarios eran jefes desbloqueados por logro, y el jefe y el mini-jefe del arco en curso están fuera del pool. Está solo en este arco a propósito: es el sensei del equipo aquí, y meterlo en los tres diluiría el premio de los logros de jefe.",
+  "personajesReclutablesIds": ["kakashi"],
   "personajesInicialesIds": [
     "naruto",
     "sasuke",
     "sakura"
   ],
   "nivelEnemigoBase": 1,
-  "escaladoNivelPorPiso": 0.33,
+  "escaladoNivelPorPiso": 1.0,
   "nivelMiniJefe": 3,
-  "nivelJefeFinal": 4
+  "nivelJefeFinal": 10,
+  "xpCombateComun": 65
 }

@@ -1,5 +1,5 @@
 {
-  "_comentario": "Cada personaje tiene stats base (nivel 1), un jutsu característico que inflige daño, y un array 'modos' con hasta 2 transformaciones. Cada modo se activa a partir de nivelDesbloqueo (el motor elige automáticamente el de mayor nivel desbloqueado) y multiplica stats — NUNCA cambia el jutsu, igual que las transformaciones DBZ. jutsu.efectoEstado va a null en todos: los efectos de estado (buffs/debuffs temporales) se desactivaron para el MVP por simplicidad de cálculo y balance (no todos los jutsu narrativamente tenían sentido con uno) — el motor (engine/combat.js) sigue soportándolos tal cual si algún día se rellenan de nuevo, ver documentacion/09-motor-engine.md.",
+  "_comentario": "Each character has base stats (level 1), a signature jutsu that deals damage, and a 'modos' array with up to 2 transformations. Each mode activates above its nivelDesbloqueo (the engine always picks the highest unlocked one) and multiplies stats — NEVER changes the jutsu, like DBZ transformations. jutsu.efectoEstado is null for all: status effects (temporary buffs/debuffs) were disabled for the MVP — the engine (engine/combat.js) still supports them if refilled in the future, see documentacion/09-motor-engine.md.",
   "personajes": [
     {
       "id": "naruto",
@@ -18,30 +18,55 @@
       },
       "jutsu": {
         "nombre": "Rasengan",
-        "descripcion": "Esfera giratoria de chakra que daña y desestabiliza al rival.",
-        "danoBase": 5,
-        "efectoEstado": null
+        "descripcion": "A rotating sphere of chakra that damages and destabilizes the opponent.",
+        "danoBase": 2.35,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 32,
+          "alRecibirDano": 22,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Manto de Chakra del Kyuubi",
-          "nivelDesbloqueo": 12,
+          "nombre": "Nine-Tails Chakra Cloak",
+          "nivelDesbloqueo": 5,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.2,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.16,
+            "defensa": 1.08,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_jutsu_bonus",
+              "cantidad": 0.4
+            },
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.08
+            }
+          ]
         },
         {
-          "nombre": "Modo Sabio",
-          "nivelDesbloqueo": 62,
+          "nombre": "Sage Mode",
+          "nivelDesbloqueo": 34,
           "multiplicadores": {
-            "ataque": 1.8,
-            "defensa": 1.5,
-            "velocidad": 1.6,
-            "hp": 1.4
-          }
+            "ataque": 1.32,
+            "defensa": 1.2,
+            "velocidad": 1.24,
+            "hp": 1.16
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.5
+            },
+            {
+              "id": "damage_floor",
+              "cantidad": 0.45
+            }
+          ]
         }
       ]
     },
@@ -61,31 +86,52 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Gran Bola de Fuego",
-        "descripcion": "Bola de fuego que quema al rival, reduciendo su ataque por el dolor.",
-        "danoBase": 1.35,
-        "efectoEstado": null
+        "nombre": "Great Fireball Jutsu",
+        "descripcion": "A massive fireball that scorches the opponent, weakening their attack through the burns.",
+        "danoBase": 2.05,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 52,
+          "alRecibirDano": 8,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Marca de Maldición (Nivel 2)",
-          "nivelDesbloqueo": 12,
+          "nombre": "Curse Mark (Level 2)",
+          "nivelDesbloqueo": 5,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.1,
-            "velocidad": 1.3,
-            "hp": 1.1
-          }
+            "ataque": 1.2,
+            "defensa": 1.04,
+            "velocidad": 1.12,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "repeat_basic_chance",
+              "cantidad": 0.3
+            }
+          ]
         },
         {
           "nombre": "Susanoo",
-          "nivelDesbloqueo": 68,
+          "nivelDesbloqueo": 35,
           "multiplicadores": {
-            "ataque": 1.9,
-            "defensa": 1.7,
-            "velocidad": 1.2,
-            "hp": 1.5
-          }
+            "ataque": 1.36,
+            "defensa": 1.28,
+            "velocidad": 1.08,
+            "hp": 1.2
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 1
+            },
+            {
+              "id": "repeat_basic_chance",
+              "cantidad": 0.4
+            }
+          ]
         }
       ]
     },
@@ -105,31 +151,52 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Golpe de Chakra Médico",
-        "descripcion": "Concentra chakra en el puño y de paso estabiliza su propia resistencia.",
-        "danoBase": 1.15,
-        "efectoEstado": null
+        "nombre": "Medical Chakra Strike",
+        "descripcion": "Concentrates chakra in her fist while reinforcing her own stamina.",
+        "danoBase": 2.15,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Golpe de Fuerza Monstruosa",
-          "nivelDesbloqueo": 20,
+          "nombre": "Monstrous Strength",
+          "nivelDesbloqueo": 6,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.2,
-            "velocidad": 1,
-            "hp": 1.2
-          }
+            "ataque": 1.16,
+            "defensa": 1.08,
+            "velocidad": 1.0,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.25
+            }
+          ]
         },
         {
-          "nombre": "Sello de los Cien (Byakugou)",
-          "nivelDesbloqueo": 60,
+          "nombre": "Byakugou Seal",
+          "nivelDesbloqueo": 34,
           "multiplicadores": {
-            "ataque": 1.6,
-            "defensa": 1.6,
-            "velocidad": 1.2,
-            "hp": 1.8
-          }
+            "ataque": 1.24,
+            "defensa": 1.24,
+            "velocidad": 1.08,
+            "hp": 1.32
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.2
+            },
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.35
+            }
+          ]
         }
       ]
     },
@@ -149,31 +216,46 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Loto Inicial",
-        "descripcion": "Taijutsu puro a máxima velocidad; se arriesga a bajar su propia defensa.",
-        "danoBase": 1.4,
-        "efectoEstado": null
+        "nombre": "Primary Lotus",
+        "descripcion": "Pure taijutsu at maximum speed; risks lowering his own defense.",
+        "danoBase": 2.15,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 50,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Puertas Internas Abiertas",
-          "nivelDesbloqueo": 22,
+          "nombre": "Inner Gates",
+          "nivelDesbloqueo": 7,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 0.9,
-            "velocidad": 1.6,
-            "hp": 1
-          }
+            "ataque": 1.2,
+            "defensa": 0.96,
+            "velocidad": 1.24,
+            "hp": 1.0
+          },
+          "pasivas": [
+            "priority"
+          ]
         },
         {
-          "nombre": "Puerta de la Muerte",
-          "nivelDesbloqueo": 70,
+          "nombre": "Gate of Death",
+          "nivelDesbloqueo": 35,
           "multiplicadores": {
-            "ataque": 2.1,
-            "defensa": 0.8,
-            "velocidad": 2,
-            "hp": 0.9
-          }
+            "ataque": 1.44,
+            "defensa": 0.92,
+            "velocidad": 1.4,
+            "hp": 0.96
+          },
+          "pasivas": [
+            "priority",
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.35
+            }
+          ]
         }
       ]
     },
@@ -193,31 +275,50 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Ocho Trigramas: 64 Palmas",
-        "descripcion": "Ataca los puntos de chakra del rival, bloqueando parte de su energía.",
-        "danoBase": 1.3,
-        "efectoEstado": null
+        "nombre": "Eight Trigrams: 64 Palms",
+        "descripcion": "Strikes the opponent's chakra points, blocking part of their energy.",
+        "danoBase": 2.6,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Byakugan Pleno",
-          "nivelDesbloqueo": 24,
+          "nombre": "Full Byakugan",
+          "nivelDesbloqueo": 7,
           "multiplicadores": {
-            "ataque": 1.3,
-            "defensa": 1.3,
-            "velocidad": 1.2,
-            "hp": 1.1
-          }
+            "ataque": 1.12,
+            "defensa": 1.12,
+            "velocidad": 1.08,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.3,
+              "soloJutsu": false
+            }
+          ]
         },
         {
-          "nombre": "Ocho Trigramas: 128 Palmas",
-          "nivelDesbloqueo": 75,
+          "nombre": "Eight Trigrams: 128 Palms",
+          "nivelDesbloqueo": 36,
           "multiplicadores": {
-            "ataque": 1.7,
-            "defensa": 1.4,
-            "velocidad": 1.4,
-            "hp": 1.2
-          }
+            "ataque": 1.28,
+            "defensa": 1.16,
+            "velocidad": 1.16,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.55,
+              "soloJutsu": false
+            }
+          ]
         }
       ]
     },
@@ -237,31 +338,52 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Invocación de Armas",
-        "descripcion": "Lluvia de armas arrojadizas que mejora su propia precisión.",
-        "danoBase": 1.2,
-        "efectoEstado": null
+        "nombre": "Weapon Summoning",
+        "descripcion": "A rain of thrown weapons that improves her own accuracy.",
+        "danoBase": 2.3,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Arsenal Celestial",
-          "nivelDesbloqueo": 20,
+          "nombre": "Celestial Arsenal",
+          "nivelDesbloqueo": 6,
           "multiplicadores": {
-            "ataque": 1.3,
-            "defensa": 1.1,
-            "velocidad": 1.2,
-            "hp": 1.1
-          }
+            "ataque": 1.12,
+            "defensa": 1.04,
+            "velocidad": 1.08,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.2
+            }
+          ]
         },
         {
-          "nombre": "Soten Hiken (Dragones Gemelos)",
-          "nivelDesbloqueo": 78,
+          "nombre": "Twin Rising Dragons",
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
-            "ataque": 1.7,
-            "defensa": 1.2,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.28,
+            "defensa": 1.08,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.5
+            },
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.25
+            }
+          ]
         }
       ]
     },
@@ -281,31 +403,49 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Posesión de Sombras",
-        "descripcion": "Inmoviliza al rival, reduciendo drásticamente su velocidad.",
-        "danoBase": 0.9,
-        "efectoEstado": null
+        "nombre": "Shadow Possession Jutsu",
+        "descripcion": "Immobilizes the opponent, drastically reducing their speed.",
+        "danoBase": 1.65,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 18,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Sombra Ampliada",
-          "nivelDesbloqueo": 26,
+          "nombre": "Extended Shadow",
+          "nivelDesbloqueo": 8,
           "multiplicadores": {
-            "ataque": 1.1,
-            "defensa": 1.2,
-            "velocidad": 1,
-            "hp": 1.2
-          }
+            "ataque": 1.04,
+            "defensa": 1.08,
+            "velocidad": 1.0,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
         },
         {
-          "nombre": "Estrangulamiento de Sombra",
-          "nivelDesbloqueo": 80,
+          "nombre": "Shadow Strangle",
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.3,
-            "velocidad": 1.1,
-            "hp": 1.3
-          }
+            "ataque": 1.16,
+            "defensa": 1.12,
+            "velocidad": 1.04,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.25
+            },
+            "priority"
+          ]
         }
       ]
     },
@@ -325,31 +465,52 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Posesión Mental",
-        "descripcion": "Toma el control momentáneo del rival, mermando su ataque.",
-        "danoBase": 0.85,
-        "efectoEstado": null
+        "nombre": "Mind Transfer Jutsu",
+        "descripcion": "Takes momentary control of the opponent, weakening their attack.",
+        "danoBase": 1.25,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 28,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Vínculo Mental Reforzado",
-          "nivelDesbloqueo": 23,
+          "nombre": "Reinforced Mind Link",
+          "nivelDesbloqueo": 7,
           "multiplicadores": {
-            "ataque": 1.2,
-            "defensa": 1.1,
-            "velocidad": 1.2,
-            "hp": 1.1
-          }
+            "ataque": 1.08,
+            "defensa": 1.04,
+            "velocidad": 1.08,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.35
+            }
+          ]
         },
         {
-          "nombre": "Posesión Mental a Distancia",
-          "nivelDesbloqueo": 72,
+          "nombre": "Long-Range Mind Transfer",
+          "nivelDesbloqueo": 35,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.2,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.2,
+            "defensa": 1.08,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_jutsu_bonus",
+              "cantidad": 0.45
+            },
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.35
+            }
+          ]
         }
       ]
     },
@@ -369,31 +530,52 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Bala Humana",
-        "descripcion": "Se lanza como una bola gigante, ganando corpulencia y aguante.",
-        "danoBase": 1.25,
-        "efectoEstado": null
+        "nombre": "Human Bullet Tank",
+        "descripcion": "Launches himself as a giant ball, gaining bulk and endurance.",
+        "danoBase": 2.35,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 20,
+          "alRecibirDano": 26,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Mariposa de las Tres Alas",
-          "nivelDesbloqueo": 28,
+          "nombre": "Butterfly Mode",
+          "nivelDesbloqueo": 9,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.3,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.16,
+            "defensa": 1.12,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
         },
         {
-          "nombre": "Mariposa Dorada del Sabio",
-          "nivelDesbloqueo": 85,
+          "nombre": "Sage Butterfly Mode",
+          "nivelDesbloqueo": 38,
           "multiplicadores": {
-            "ataque": 1.8,
-            "defensa": 1.6,
-            "velocidad": 1.5,
-            "hp": 1.4
-          }
+            "ataque": 1.32,
+            "defensa": 1.24,
+            "velocidad": 1.2,
+            "hp": 1.16
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.2
+            },
+            {
+              "id": "damage_floor",
+              "cantidad": 0.5
+            }
+          ]
         }
       ]
     },
@@ -413,31 +595,49 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Colmillo Sobre Colmillo",
-        "descripcion": "Ataque giratorio junto a Akamaru que gana velocidad con el impulso.",
-        "danoBase": 1.3,
-        "efectoEstado": null
+        "nombre": "Fang Over Fang",
+        "descripcion": "Spinning attack alongside Akamaru that gains speed from the momentum.",
+        "danoBase": 1.95,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 46,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Transformación Bestial Doble",
-          "nivelDesbloqueo": 21,
+          "nombre": "Double Beast Transformation",
+          "nivelDesbloqueo": 6,
           "multiplicadores": {
-            "ataque": 1.4,
-            "defensa": 1.1,
-            "velocidad": 1.4,
-            "hp": 1.1
-          }
+            "ataque": 1.16,
+            "defensa": 1.04,
+            "velocidad": 1.16,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "repeat_basic_chance",
+              "cantidad": 0.25
+            }
+          ]
         },
         {
-          "nombre": "Colmillo del Lobo Voraz",
-          "nivelDesbloqueo": 74,
+          "nombre": "Ravenous Wolf Fang",
+          "nivelDesbloqueo": 36,
           "multiplicadores": {
-            "ataque": 1.7,
-            "defensa": 1.2,
-            "velocidad": 1.7,
-            "hp": 1.2
-          }
+            "ataque": 1.28,
+            "defensa": 1.08,
+            "velocidad": 1.28,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "repeat_basic_chance",
+              "cantidad": 0.4
+            },
+            "priority"
+          ]
         }
       ]
     },
@@ -457,31 +657,54 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Ocho Trigramas: Dos Palmas",
-        "descripcion": "Golpe preciso a los tenketsu que refuerza su propia defensa por concentración.",
-        "danoBase": 1.1,
-        "efectoEstado": null
+        "nombre": "Eight Trigrams: Two Palms",
+        "descripcion": "Precise strike to the tenketsu that reinforces her own defense through concentration.",
+        "danoBase": 1.55,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 46,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Byakugan Pleno",
-          "nivelDesbloqueo": 25,
+          "nombre": "Full Byakugan",
+          "nivelDesbloqueo": 8,
           "multiplicadores": {
-            "ataque": 1.2,
-            "defensa": 1.3,
-            "velocidad": 1.2,
-            "hp": 1.2
-          }
+            "ataque": 1.08,
+            "defensa": 1.12,
+            "velocidad": 1.08,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.25,
+              "soloJutsu": false
+            }
+          ]
         },
         {
-          "nombre": "Ocho Trigramas: Vacío Celestial",
-          "nivelDesbloqueo": 82,
+          "nombre": "Eight Trigrams: Heavenly Void",
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
-            "ataque": 1.6,
-            "defensa": 1.5,
-            "velocidad": 1.4,
-            "hp": 1.4
-          }
+            "ataque": 1.24,
+            "defensa": 1.2,
+            "velocidad": 1.16,
+            "hp": 1.16
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.45,
+              "soloJutsu": false
+            },
+            {
+              "id": "first_jutsu_bonus",
+              "cantidad": 0.3
+            }
+          ]
         }
       ]
     },
@@ -501,31 +724,52 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Enjambre de Insectos Destructores",
-        "descripcion": "Sus insectos drenan chakra del rival, mermando su ataque poco a poco.",
-        "danoBase": 1,
-        "efectoEstado": null
+        "nombre": "Destruction Bug Swarm",
+        "descripcion": "His insects drain chakra from the opponent, gradually weakening their attack.",
+        "danoBase": 1.7,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 24,
+          "alRecibirDano": 16,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Enjambre Total",
-          "nivelDesbloqueo": 27,
+          "nombre": "Full Swarm",
+          "nivelDesbloqueo": 8,
           "multiplicadores": {
-            "ataque": 1.2,
-            "defensa": 1.2,
-            "velocidad": 1.1,
-            "hp": 1.3
-          }
+            "ataque": 1.08,
+            "defensa": 1.08,
+            "velocidad": 1.04,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.1
+            }
+          ]
         },
         {
-          "nombre": "Colonia Devoradora Definitiva",
-          "nivelDesbloqueo": 79,
+          "nombre": "Ultimate Devouring Colony",
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
-            "ataque": 1.6,
-            "defensa": 1.5,
-            "velocidad": 1.3,
-            "hp": 1.6
-          }
+            "ataque": 1.24,
+            "defensa": 1.2,
+            "velocidad": 1.12,
+            "hp": 1.24
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.2
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
         }
       ]
     },
@@ -545,21 +789,36 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Bestia de Tinta Súper Gigante",
-        "descripcion": "Invoca una bestia de tinta que ataca y desorienta al rival.",
-        "danoBase": 1.25,
-        "efectoEstado": null
+        "nombre": "Super Beast Imitation Drawing",
+        "descripcion": "Summons a giant ink beast that attacks and disorients the opponent.",
+        "danoBase": 2.35,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Ejército de Tinta",
-          "nivelDesbloqueo": 75,
+          "nombre": "Ink Army",
+          "nivelDesbloqueo": 36,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.3,
-            "velocidad": 1.3,
-            "hp": 1.2
-          }
+            "ataque": 1.2,
+            "defensa": 1.12,
+            "velocidad": 1.12,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.4
+            },
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.2
+            }
+          ]
         }
       ]
     },
@@ -579,21 +838,104 @@
         "crecimiento": 1.015
       },
       "jutsu": {
-        "nombre": "Estilo de Madera: Muro Nacido de la Tierra",
-        "descripcion": "Levanta un muro de madera que protege y fortalece al equipo.",
-        "danoBase": 1.1,
-        "efectoEstado": null
+        "nombre": "Wood Style: Arbor Jutsu",
+        "descripcion": "Raises a wood wall that protects and strengthens the team.",
+        "danoBase": 2.0,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 26,
+          "alRecibirDano": 16,
+          "inicial": 0
+        }
       },
       "modos": [
         {
-          "nombre": "Liberación Total de Estilo de Madera",
-          "nivelDesbloqueo": 80,
+          "nombre": "Wood Style: Full Release",
+          "nivelDesbloqueo": 37,
           "multiplicadores": {
-            "ataque": 1.5,
-            "defensa": 1.7,
-            "velocidad": 1.1,
-            "hp": 1.5
-          }
+            "ataque": 1.2,
+            "defensa": 1.28,
+            "velocidad": 1.04,
+            "hp": 1.2
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.6
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kakashi",
+      "nombre": "Kakashi Hatake",
+      "tipo": "raiton",
+      "rareza": "legendario",
+      "statsBase": {
+        "hp": 41,
+        "ataque": 11,
+        "defensa": 8,
+        "velocidad": 10
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 24,
+        "crecimiento": 1.015
+      },
+      "jutsu": {
+        "nombre": "Lightning Blade",
+        "descripcion": "Lightning chakra concentrated into one hand until it pierces whatever it touches.",
+        "danoBase": 2.5,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 36,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Sharingan",
+          "nivelDesbloqueo": 6,
+          "multiplicadores": {
+            "ataque": 1.1,
+            "defensa": 1.04,
+            "velocidad": 1.12,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.4
+            },
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.2
+            }
+          ]
+        },
+        {
+          "nombre": "Mangekyō Sharingan",
+          "nivelDesbloqueo": 35,
+          "multiplicadores": {
+            "ataque": 1.3,
+            "defensa": 1.18,
+            "velocidad": 1.24,
+            "hp": 1.1
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.55
+            },
+            {
+              "id": "priority"
+            }
+          ]
         }
       ]
     }

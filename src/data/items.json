@@ -1,95 +1,173 @@
 {
-  "_comentario": "Objetos que aparecen en eventos, tienda y recompensas de combate. 'equipable' se asigna a un personaje concreto (un hueco por personaje) y solo beneficia a quien lo lleve puesto — si lo desequipas o reemplazas a ese personaje, el objeto vuelve al inventario (revivirUnaVez es la excepción: se consume al activarse, no vuelve). 'consumible' se gasta una vez usado sobre un personaje.",
+  "_comentario": "Items appearing in events, shop and combat rewards. 'equipable' is assigned to a specific character (one slot per character) and only benefits whoever carries it — if you unequip it or replace that character, the item returns to inventory (revivirUnaVez is the exception: consumed on activation, doesn't return). 'consumible' is spent once used on a character.",
   "objetos": [
     {
       "id": "pildora_soldado",
-      "nombre": "Píldora del Soldado",
-      "descripcion": "Restaura HP al instante a un personaje, a cambio de fatiga futura.",
+      "nombre": "Soldier Pill",
+      "descripcion": "Instantly restores HP to a character, at the cost of future fatigue.",
       "tipo": "consumible",
       "rareza": "comun",
       "precioTienda": 25,
-      "efecto": { "tipo": "curarPersonaje", "cantidad": "40porciento" }
+      "efecto": {
+        "tipo": "curarPersonaje",
+        "cantidad": "40porciento"
+      },
+      "categoria": "consumible"
     },
     {
       "id": "banda_repuesto",
-      "nombre": "Banda Ninja de Repuesto",
-      "descripcion": "Si quien la lleva equipada cae en combate, revive con 1 HP. Se consume al activarse (no vuelve al inventario).",
+      "nombre": "Spare Ninja Headband",
+      "descripcion": "If the equipped carrier falls in battle, they revive with 1 HP. Consumed on activation (does not return to inventory).",
       "tipo": "equipable",
       "rareza": "raro",
       "precioTienda": 60,
-      "efecto": { "tipo": "revivirUnaVez", "hpAlRevivir": 1 }
+      "efecto": {
+        "tipo": "revivirUnaVez",
+        "hpAlRevivir": 1
+      },
+      "categoria": "supervivencia"
     },
     {
       "id": "sello_chakra",
-      "nombre": "Sello de Chakra",
-      "descripcion": "Aumenta el ataque de quien lo lleve equipado.",
+      "nombre": "Chakra Seal",
+      "descripcion": "A seal that concentrates chakra for the opening technique.",
       "tipo": "equipable",
       "rareza": "comun",
       "precioTienda": 40,
-      "efecto": { "tipo": "buffEquipable", "stat": "ataque", "cantidad": 2 }
+      "categoria": "combate",
+      "pasivas": [
+        {
+          "id": "first_jutsu_bonus",
+          "cantidad": 0.45
+        }
+      ]
     },
     {
       "id": "pergamino_reserva",
-      "nombre": "Pergamino de Reserva de Chakra",
-      "descripcion": "Aumenta el HP máximo de quien lo lleve equipado.",
+      "nombre": "Reserve Scroll",
+      "descripcion": "Stored chakra that closes wounds once the fighting stops.",
       "tipo": "equipable",
       "rareza": "comun",
       "precioTienda": 40,
-      "efecto": { "tipo": "buffEquipable", "stat": "hp", "cantidad": 8 }
+      "categoria": "supervivencia",
+      "pasivas": [
+        {
+          "id": "heal_after_battle",
+          "cantidad": 0.2
+        }
+      ]
     },
     {
       "id": "semilla_sabio",
-      "nombre": "Semilla del Sabio Ermitaño",
-      "descripcion": "Cura un porcentaje del HP de quien lo lleve equipado, automáticamente tras cada combate ganado.",
+      "nombre": "Sage Hermit's Seed",
+      "descripcion": "Natural energy flows back into the bearer with every enemy felled.",
       "tipo": "equipable",
       "rareza": "raro",
-      "precioTienda": 55,
-      "efecto": { "tipo": "curacionPostCombate", "cantidad": "15porciento" }
+      "precioTienda": 60,
+      "categoria": "supervivencia",
+      "pasivas": [
+        {
+          "id": "heal_on_kill",
+          "cantidad": 0.28
+        }
+      ]
     },
     {
       "id": "fragmento_sello_maldito",
-      "nombre": "Fragmento de Sello Maldito",
-      "descripcion": "Aumenta mucho el ataque de quien lo lleve equipado, pero reduce su defensa. Arriesgado.",
+      "nombre": "Cursed Seal Shard",
+      "descripcion": "Borrowed power that tears at the body of whoever uses it.",
       "tipo": "equipable",
       "rareza": "raro",
-      "precioTienda": 65,
-      "efecto": { "tipo": "buffYDebuffEquipable", "buff": { "stat": "ataque", "cantidad": 4 }, "debuff": { "stat": "defensa", "cantidad": -2 } }
+      "precioTienda": 75,
+      "categoria": "riesgo",
+      "pasivas": [
+        {
+          "id": "jutsu_bonus",
+          "cantidad": 0.5
+        },
+        {
+          "id": "increase_damage_taken",
+          "cantidad": 0.15
+        }
+      ]
     },
     {
       "id": "pergamino_viento",
-      "nombre": "Pergamino de Viento",
-      "descripcion": "Aumenta la velocidad de quien lo lleve equipado. Obtenido al derrotar a Haku.",
+      "nombre": "Wind Scroll",
+      "descripcion": "Wind chakra carries the bearer into the fight before anyone else.",
       "tipo": "equipable",
       "rareza": "raro",
-      "precioTienda": null,
-      "efecto": { "tipo": "buffEquipable", "stat": "velocidad", "cantidad": 3 }
+      "precioTienda": 70,
+      "categoria": "combate",
+      "pasivas": [
+        "priority"
+      ]
     },
     {
       "id": "kubikiribocho_fragmento",
-      "nombre": "Fragmento de la Kubikiribōchō",
-      "descripcion": "Un trozo de la legendaria espada decapitadora. Aumenta el ataque de quien lo lleve equipado. Obtenido al derrotar a Zabuza.",
+      "nombre": "Kubikiribōchō Fragment",
+      "descripcion": "A shard of the executioner blade. It drinks what it cuts.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffEquipable", "stat": "ataque", "cantidad": 4 }
+      "categoria": "jefe",
+      "pasivas": [
+        {
+          "id": "heal_on_kill",
+          "cantidad": 0.4
+        }
+      ]
     },
     {
       "id": "calabaza_arena",
-      "nombre": "Calabaza de Arena (fragmento)",
-      "descripcion": "Aumenta considerablemente la defensa de quien lo lleve equipado. Obtenido al derrotar a Gaara.",
+      "nombre": "Sand Gourd (Fragment)",
+      "descripcion": "The sand rises on its own when its bearer is about to fall.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffEquipable", "stat": "defensa", "cantidad": 5 }
+      "categoria": "jefe",
+      "pasivas": [
+        {
+          "id": "low_hp_reduction",
+          "cantidad": 0.5,
+          "umbral": 0.45
+        }
+      ]
     },
     {
       "id": "anillo_rinnegan_fragmento",
-      "nombre": "Fragmento del Anillo Rinnegan",
-      "descripcion": "Un fragmento del poder de los Seis Caminos. Trofeo de fin de run — aumenta todas las estadísticas de quien lo lleve equipado.",
+      "nombre": "Rinnegan Ring Fragment",
+      "descripcion": "A sliver of the Rinnegan. The first technique of a battle cannot be defended.",
       "tipo": "equipable",
       "rareza": "legendario",
       "precioTienda": null,
-      "efecto": { "tipo": "buffEquipable", "stat": "todas", "cantidad": 3 }
+      "categoria": "jefe",
+      "pasivas": [
+        {
+          "id": "ignore_defense",
+          "cantidad": 1,
+          "soloJutsu": true
+        }
+      ]
+    },
+    {
+      "id": "cascabeles",
+      "nombre": "Kakashi's Bells",
+      "descripcion": "The two bells from the survival test. Whoever gets to them does it on the opening move, and is ready for what comes back.",
+      "tipo": "equipable",
+      "rareza": "raro",
+      "precioTienda": 70,
+      "categoria": "combate",
+      "pasivas": [
+        {
+          "id": "first_attack_bonus",
+          "cantidad": 0.6
+        },
+        {
+          "id": "first_hit_reduction",
+          "cantidad": 0.35
+        }
+      ]
     }
   ]
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
+import { PanelMarco, TituloBloque } from '../common/PiezasUI';
 
 const DURACION_VISIBLE_MS = 3000;
 const DURACION_DESVANECIDO_MS = 500;
@@ -49,13 +50,16 @@ export default function LogroToast() {
         visible ? 'opacity-100' : 'opacity-0'
       }`}
     >
-      <div className="bg-pergamino-100 text-tinta-950 border-2 border-sello-600 rounded-lg px-4 py-3 shadow-lg max-w-xs text-center">
-        <p className="text-[10px] uppercase tracking-wide text-sello-600 font-display font-bold">
-          Logro desbloqueado
+      {/* Del recuadro crema con texto oscuro al marco del kit: era el último sitio
+          del juego que invertía la paleta, y aparecía justo encima de pantallas ya
+          oscuras. El oro del rótulo dice "premio", que es lo que es. */}
+      <PanelMarco className="px-4 py-3 max-w-xs text-center shadow-xl shadow-black/60">
+        <TituloBloque className="text-oro">Mission complete</TituloBloque>
+        <p className="font-display text-[11px] text-pergamino-100 mt-1.5">{notificacion.nombre}</p>
+        <p className="text-[9px] text-pergamino-200/70 mt-1 leading-relaxed">
+          {notificacion.descripcion}
         </p>
-        <p className="font-display font-bold text-sm mt-0.5">{notificacion.nombre}</p>
-        <p className="text-xs text-tinta-950/70 mt-0.5">{notificacion.descripcion}</p>
-      </div>
+      </PanelMarco>
     </div>
   );
 }

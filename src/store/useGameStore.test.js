@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
-import { useAchievementsStore } from './useAchievementsStore';
+import { useAchievementsStore, VISTOS_VACIO } from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
 import configGlobal from '../data/config.json';
 
@@ -48,7 +48,7 @@ const enemigoImbatibleDePrueba = {
 // propósito (es meta-progresión entre runs), así que hay que limpiarlo aquí.
 beforeEach(() => {
   localStorage.clear();
-  useAchievementsStore.setState({ logrosDesbloqueados: [] });
+  useAchievementsStore.setState({ logrosDesbloqueados: [], vistos: VISTOS_VACIO });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -147,7 +147,8 @@ describe('encadenar arcos', () => {
     const { arcoActualId, mapa, nodoActualId, oro, equipo, huboDerrotaEnEsteArco, pantalla } = useGameStore.getState();
     expect(arcoActualId).toBe('examen_chunin');
     expect(mapa.arcoId).toBe('examen_chunin');
-    expect(nodoActualId).toBeNull();
+    // El arco nuevo arranca plantado en su nodo de salida, no "en ninguna parte".
+    expect(nodoActualId).toBe(mapa.nodoInicialId);
     expect(pantalla).toBe('mapa');
     expect(oro).toBe(oroAntes);
     expect(equipo.map((p) => p.id)).toEqual(idsEquipoAntes);
@@ -186,6 +187,26 @@ describe('jugarCombate — un personaje muere', () => {
   });
 });
 
+describe('jugarCombate — barra de jutsu entre rondas encadenadas', () => {
+  it('el enemigo conserva su carga de una ronda a la siguiente, como conserva el HP', () => {
+    // Un enemigo imbatible obliga a que entren los 3 personajes en cadena.
+    const resumen = useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+
+    const [primera, segunda] = resumen.rondas;
+    const cargaFinalPrimeraRonda = primera.historial
+      .flatMap((t) => t.eventos)
+      .filter((e) => e.atacanteId === primera.enemigo.id)
+      .at(-1).cargaAtacante;
+
+    expect(segunda.enemigo.cargaInicial).toBe(cargaFinalPrimeraRonda);
+  });
+
+  it('cada personaje del jugador entra a su ronda con la barra a cero', () => {
+    const resumen = useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+    resumen.rondas.forEach((ronda) => expect(ronda.jugador.cargaInicial).toBe(0));
+  });
+});
+
 describe('_aplicarVictoria — XP de personajes caídos', () => {
   it('un personaje ya caído ANTES de este combate no gana XP hasta curarse', () => {
     useGameStore.setState((estado) => ({
@@ -216,6 +237,225 @@ describe('_aplicarVictoria — XP de personajes caídos', () => {
     expect(sasuke.xpActual).toBeGreaterThan(0); // ganó XP por haber participado en este combate
     expect(sasuke.hpActual).toBe(0); // pero sigue a 0 HP — subir de nivel no lo revive de regalo
     expect(sasuke.derrotado).toBe(true);
+  });
+});
+
+describe('jugarCombate — foto del equipo para la pantalla de combate', () => {
+  // `jugarCombate` aplica victoria/derrota ANTES de que la animación empiece, así
+  // que si CombatScreen leyera `equipo` para pintar al equipo estaría pintando el
+  // estado FINAL: se vería caer a un personaje antes de que el jugador lo viva.
+  // Por eso el resumen lleva su propia foto, tomada antes de la primera ronda.
+  it('el resumen trae el equipo tal y como estaba antes de pelear', () => {
+    const equipoAntes = useGameStore.getState().equipo.map((p) => ({ id: p.id, hpActual: p.hpActual }));
+
+    const resumen = useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+
+    expect(resumen.equipoAlEmpezar.map((p) => p.id)).toEqual(equipoAntes.map((p) => p.id));
+    expect(resumen.equipoAlEmpezar.map((p) => p.hpActual)).toEqual(equipoAntes.map((p) => p.hpActual));
+    // Y el estado real del store sí ha cambiado: la foto no es un alias de `equipo`.
+    expect(useGameStore.getState().equipo.every((p) => p.derrotado)).toBe(true);
+  });
+
+  it('la foto trae el HP máximo de ANTES, no el de después de subir de nivel', () => {
+    const maximosAntes = Object.fromEntries(
+      useGameStore.getState().equipo.map((p) => [p.id, useGameStore.getState().obtenerHpMaximo(p.id)]),
+    );
+
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+
+    for (const miembro of resumen.equipoAlEmpezar) {
+      expect(miembro.hpMaximo, miembro.id).toBe(maximosAntes[miembro.id]);
+    }
+    // El activo sube de nivel al ganar, así que su máximo de ahora es mayor: si
+    // la pantalla usara ese, la barra saldría corta durante toda la animación.
+    expect(useGameStore.getState().obtenerHpMaximo('naruto')).toBeGreaterThan(maximosAntes.naruto);
+  });
+});
+
+describe('jugarCombate — recompensas en el resumen', () => {
+  // El final del combate era un "Victory" de texto: la XP se aplicaba en el store
+  // y solo se notaba si además subías de nivel, el oro cambiaba en otra pantalla y
+  // el objeto aparecía en la mochila sin que nadie lo dijera. Todo eso ya viaja en
+  // el resumen para que `CombatScreen` pueda enseñarlo (punto 12 del roadmap).
+  it('el resumen dice cuánto oro ha dado el combate, y coincide con el que se suma', () => {
+    const oroAntes = useGameStore.getState().oro;
+
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+
+    expect(resumen.recompensas.oro).toBeGreaterThan(0);
+    expect(useGameStore.getState().oro).toBe(oroAntes + resumen.recompensas.oro);
+    // La XP no viaja en el resumen a propósito: casi cada combate sube un nivel,
+    // así que el número exacto no cambia ninguna decisión y la pantalla no lo
+    // enseña. Lo que se ve de la XP es su consecuencia (`subidasDeNivel`).
+    expect(resumen.recompensas.xp).toBeUndefined();
+  });
+
+  it('el objeto del mini-jefe NO se anuncia en el resumen: tiene su propia pantalla', () => {
+    // Anunciarlo aquí y volver a darlo en `ItemRewardScreen` sería contarlo dos veces.
+    // El stub de Haku no lleva recompensa, así que se le pone una aquí: lo que se
+    // prueba es el reparto, no los datos del arco.
+    const miniJefeConObjeto = {
+      ...enemigoHakuDePrueba,
+      recompensa: { xp: 100, objetoGarantizado: 'pergamino_viento' },
+    };
+    const resumen = useGameStore.getState().jugarCombate(miniJefeConObjeto, 1);
+    expect(useGameStore.getState().recompensaMiniJefe).not.toBeNull();
+    expect(resumen.recompensas.objetos).toEqual([]);
+  });
+
+  it('el objeto del jefe final SÍ va en el resumen: se auto-añade a la mochila', () => {
+    // La otra cara del test anterior. El jefe final no tiene pantalla de recogida,
+    // así que su objeto entra directo y el resumen es el único sitio donde se
+    // anuncia — si no, aparecería en la mochila sin que nadie lo dijera.
+    const jefeConObjeto = {
+      ...enemigoZabuzaDePrueba,
+      recompensa: { xp: 100, objetoGarantizado: 'pergamino_viento' },
+    };
+    const resumen = useGameStore.getState().jugarCombate(jefeConObjeto, 1);
+    expect(resumen.recompensas.objetos).toEqual(['pergamino_viento']);
+  });
+
+});
+
+describe('recompensas de una cadena de entrenador', () => {
+  // El bug: el resumen traía solo lo de ESE combate, así que la pantalla pintaba un
+  // cartel de recompensa en cada eslabón —tres carteles de 1,6 s— y ninguno decía
+  // cuánto llevabas ganado en total.
+  function cadenaDeDosDePrueba() {
+    useGameStore.setState({
+      cadenaEnemigos: {
+        enemigos: [
+          { enemigoBase: enemigoDebilDePrueba, nivel: 1 },
+          { enemigoBase: enemigoDebilDePrueba, nivel: 1 },
+        ],
+        indiceActual: 0,
+      },
+    });
+  }
+
+  it('el resumen del primer eslabón trae solo lo de ese combate', () => {
+    cadenaDeDosDePrueba();
+    const primero = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, false);
+    expect(primero.recompensas.oro).toBeGreaterThan(0);
+    expect(useGameStore.getState().cadenaEnemigos.recompensasAcumuladas.oro)
+      .toBe(primero.recompensas.oro);
+  });
+
+  it('el resumen del último eslabón trae el TOTAL de la cadena, no solo su combate', () => {
+    cadenaDeDosDePrueba();
+    const primero = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, false);
+    const oroDelPrimero = primero.recompensas.oro;
+
+    useGameStore.getState().continuarCadena();
+    const segundo = useGameStore.getState().ultimoResultadoCombate;
+
+    expect(segundo.recompensas.oro).toBeGreaterThan(oroDelPrimero);
+  });
+
+  it('el acumulado muere con la cadena: el combate siguiente empieza de cero', () => {
+    cadenaDeDosDePrueba();
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, false);
+    useGameStore.setState({ cadenaEnemigos: null });
+
+    const suelto = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    // Sin cadena no hay acumulado: el resumen es exactamente lo de este combate.
+    expect(useGameStore.getState().oro - suelto.recompensas.oro).toBeGreaterThanOrEqual(0);
+    expect(suelto.recompensas.objetos).toEqual([]);
+  });
+});
+
+describe('jugarCombate — transformaciones desbloqueadas', () => {
+  // No hay ningún evento de "subir de modo": el modo activo es una función del
+  // nivel (`obtenerModoActivo`), así que la única forma de saber que se ha
+  // cruzado el umbral es comparar antes y después de aplicar la XP. Si eso se
+  // rompe, el jugador nunca vuelve a ver la pantalla de transformación y no salta
+  // ningún error — el juego sigue funcionando, solo que en silencio.
+  it('detecta el modo que se acaba de desbloquear y en qué personaje', () => {
+    const naruto = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    expect(naruto.nivel).toBe(1); // arranca por debajo de su primer modo
+
+    // XP de sobra para cruzar el nivel de desbloqueo del primer modo.
+    const resumen = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } }, 1,
+    );
+
+    const deNaruto = resumen.transformacionesDesbloqueadas.find((t) => t.personajeId === 'naruto');
+    expect(deNaruto).toBeDefined();
+    expect(deNaruto.indiceModo).toBe(0);
+  });
+
+  it('no la vuelve a anunciar en el combate siguiente', () => {
+    useGameStore.getState().jugarCombate({ ...enemigoDebilDePrueba, recompensa: { xp: 500 } }, 1);
+    const segundo = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 20 } }, 1,
+    );
+    expect(segundo.transformacionesDesbloqueadas.find((t) => t.personajeId === 'naruto')).toBeUndefined();
+  });
+
+  it('anota quién ha subido de nivel y a cuál, para que la pantalla lo celebre', () => {
+    const antes = useGameStore.getState().equipo.find((p) => p.id === 'naruto').nivel;
+
+    const resumen = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } }, 1,
+    );
+
+    const deNaruto = resumen.subidasDeNivel.find((s2) => s2.personajeId === 'naruto');
+    expect(deNaruto).toBeDefined();
+    expect(deNaruto.nivel).toBeGreaterThan(antes);
+    // El banquillo también gana XP, así que también puede subir.
+    expect(resumen.subidasDeNivel.length).toBeGreaterThan(1);
+  });
+
+  it('sin subir de modo, la lista viene vacía', () => {
+    const resumen = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 1 } }, 1,
+    );
+    expect(resumen.transformacionesDesbloqueadas).toEqual([]);
+  });
+});
+
+describe('_aplicarVictoria — HP al subir de nivel', () => {
+  // El bug que este test existe para que no vuelva: `aplicarXpYActualizarHp` sí
+  // sumaba el incremento de vida al subir de nivel, pero para el personaje que
+  // había peleado `_aplicarVictoria` pisaba después su hpActual con el HP del
+  // final del combate, y el incremento se perdía entero. O sea que el banquillo
+  // cobraba la vida del nivel y el que peleaba —el que gana la XP completa y por
+  // tanto el que más sube de nivel— no. Invisible en pantalla: la barra sube de
+  // máximo y el jugador no tiene forma de saber que le faltan puntos.
+  it('el que ha peleado gana la vida del nivel sobre el HP con el que terminó el combate', () => {
+    const antes = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    const hpMaximoAntes = useGameStore.getState().obtenerHpMaximo('naruto');
+    const hpFinalDeCombate = Math.round(hpMaximoAntes * 0.5);
+
+    // XP de sobra para garantizar al menos una subida de nivel.
+    useGameStore.getState()._aplicarVictoria(
+      antes.id,
+      hpFinalDeCombate,
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } },
+      new Set(),
+    );
+
+    const despues = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    const hpMaximoDespues = useGameStore.getState().obtenerHpMaximo('naruto');
+    expect(despues.nivel).toBeGreaterThan(antes.nivel);
+    expect(hpMaximoDespues).toBeGreaterThan(hpMaximoAntes);
+    expect(despues.hpActual).toBe(hpFinalDeCombate + (hpMaximoDespues - hpMaximoAntes));
+  });
+
+  it('el incremento nunca deja el HP por encima del nuevo máximo', () => {
+    const antes = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    const hpMaximoAntes = useGameStore.getState().obtenerHpMaximo('naruto');
+
+    // Termina el combate a HP lleno: sumar el incremento encima se pasaría.
+    useGameStore.getState()._aplicarVictoria(
+      antes.id,
+      hpMaximoAntes,
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } },
+      new Set(),
+    );
+
+    const despues = useGameStore.getState().equipo.find((p) => p.id === 'naruto');
+    expect(despues.hpActual).toBe(useGameStore.getState().obtenerHpMaximo('naruto'));
   });
 });
 
@@ -299,40 +539,70 @@ describe('logros (a través de jugarCombate)', () => {
     expect(useAchievementsStore.getState().estaDesbloqueado('run_sin_bajas')).toBe(false);
   });
 
-  it('un personaje reclutable desbloqueado por logro aparece en la oferta de una tienda', () => {
-    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'haku' });
+  it('un personaje raro desbloqueado por logro aparece en el pergamino VERDE', () => {
+    // Kabuto es `raro` y es el mini-jefe del arco 2, no del que se está jugando
+    // aquí: se puede ofrecer sin chocar con la regla de "en su propio arco, no".
+    // Los raros comparten pergamino con comunes e iniciales — lo que separa los
+    // dos pergaminos es cómo se consigue al ninja, no lo bueno que sea.
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'kabuto' });
 
-    // Fija un mapa mínimo con un único nodo de tienda, para no depender del azar del generador.
     useGameStore.setState({
       mapa: {
-        nodos: { tienda_test: { tipo: 'tienda', piso: 2, conexiones: [], visitado: false } },
-        nodosIniciales: ['tienda_test'],
+        nodos: { reclutar_test: { tipo: 'reclutar', rareza: 'comun', piso: 2, conexiones: [], visitado: false } },
+        nodosIniciales: ['reclutar_test'],
       },
       nodoActualId: null,
     });
 
-    useGameStore.getState().avanzarANodo('tienda_test');
-    const { tiendaActual } = useGameStore.getState();
-    expect(tiendaActual.reclutables.some((r) => r.personajeId === 'haku')).toBe(true);
+    // Con equipo de 3 y muchos candidatos comunes, la oferta de 3 puede no
+    // sacarlo por azar: lo que se comprueba es que ESTÁ en la pool, así que se
+    // deja el equipo en 1 y se repite hasta verlo.
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.filter((p) => p.id === 'naruto') }));
+    let salioKabuto = false;
+    for (let i = 0; i < 60 && !salioKabuto; i += 1) {
+      useGameStore.getState().avanzarANodo('reclutar_test');
+      const { reclutarActual } = useGameStore.getState();
+      expect(reclutarActual.rareza).toBe('comun');
+      salioKabuto = reclutarActual.personajes.some((p) => p.personajeId === 'kabuto');
+    }
+    expect(salioKabuto).toBe(true);
   });
 
-  it('los "inicial" no elegidos al empezar la run se pueden reclutar en cualquier tienda, incluso en el primer arco', () => {
-    // Equipo de 1 solo personaje (como arranca una run real) y el arco de
-    // prueba no tiene personajesReclutablesIds propio, así que la única
-    // fuente posible para la oferta son los otros "inicial" no elegidos.
+  it('el mini-jefe del arco en curso NO se ofrece como recluta en ese mismo arco', () => {
+    // Haku es `raro` y desbloqueable por logro, pero es el mini-jefe del arco 1:
+    // reclutarlo aquí sería reclutar a quien te espera en el piso 4. Y con el
+    // jefe final la regla no es solo estética — ganarle en un nodo de reclutar
+    // habría marcado el arco como completado.
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'haku' });
+
+    useGameStore.setState({
+      mapa: {
+        nodos: { reclutar_test: { tipo: 'reclutar', rareza: 'comun', piso: 2, conexiones: [], visitado: false } },
+        nodosIniciales: ['reclutar_test'],
+      },
+      nodoActualId: null,
+    });
+
+    useGameStore.getState().avanzarANodo('reclutar_test');
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.personajes.some((p) => p.personajeId === 'haku')).toBe(false);
+  });
+
+  it('los "inicial" no elegidos aparecen en el nodo de reclutar del primer arco', () => {
     useGameStore.setState((estado) => ({ equipo: estado.equipo.filter((p) => p.id === 'naruto') }));
     useGameStore.setState({
       mapa: {
-        nodos: { tienda_test: { tipo: 'tienda', piso: 2, conexiones: [], visitado: false } },
-        nodosIniciales: ['tienda_test'],
+        nodos: { reclutar_test: { tipo: 'reclutar', piso: 2, conexiones: [], visitado: false } },
+        nodosIniciales: ['reclutar_test'],
       },
       nodoActualId: null,
     });
 
-    useGameStore.getState().avanzarANodo('tienda_test');
-    const { tiendaActual } = useGameStore.getState();
-    const idsOfrecidos = tiendaActual.reclutables.map((r) => r.personajeId).sort();
-    expect(idsOfrecidos).toEqual(['sakura', 'sasuke']);
+    useGameStore.getState().avanzarANodo('reclutar_test');
+    const { reclutarActual } = useGameStore.getState();
+    const ids = reclutarActual.personajes.map((p) => p.personajeId).sort();
+    // Solo hay 2 iniciales no elegidos; el pool devuelve hasta 3 pero aquí solo hay 2.
+    expect(ids).toEqual(['sakura', 'sasuke']);
   });
 
   it('un objeto inicial desbloqueado por logro aparece en el inventario al empezar una run nueva', () => {
@@ -352,117 +622,252 @@ describe('tienda', () => {
     useGameStore.setState({
       oro: 1000,
       tiendaActual: {
-        consumibles: ['pildora_soldado'],
-        gratuito: 'sello_chakra',
-        reclutables: [
-          { personajeId: 'rock_lee', nombre: 'Rock Lee', rareza: 'comun', precio: 40 },
-          { personajeId: 'neji', nombre: 'Neji Hyuga', rareza: 'comun', precio: 40 },
+        items: [
+          { id: 'pildora_soldado', precio: 25 },
+          { id: 'sello_chakra', precio: 40 },
+        ],
+      },
+    });
+  }
+
+  it('comprarItemTienda descuenta el oro y añade el objeto al inventario', () => {
+    fijarTiendaDePrueba();
+    const oroAntes = useGameStore.getState().oro;
+    const exito = useGameStore.getState().comprarItemTienda('pildora_soldado');
+    expect(exito).toBe(true);
+    expect(useGameStore.getState().inventario).toContain('pildora_soldado');
+    expect(useGameStore.getState().oro).toBe(oroAntes - 25);
+  });
+
+  it('comprarItemTienda falla si no hay oro suficiente', () => {
+    fijarTiendaDePrueba();
+    useGameStore.setState({ oro: 0 });
+    const exito = useGameStore.getState().comprarItemTienda('pildora_soldado');
+    expect(exito).toBe(false);
+    expect(useGameStore.getState().inventario).not.toContain('pildora_soldado');
+  });
+
+  it('comprarItemTienda elimina el objeto de la oferta tras comprarlo', () => {
+    fijarTiendaDePrueba();
+    useGameStore.getState().comprarItemTienda('pildora_soldado');
+    const { tiendaActual } = useGameStore.getState();
+    expect(tiendaActual.items.find((i) => i.id === 'pildora_soldado')).toBeUndefined();
+    expect(tiendaActual.items.find((i) => i.id === 'sello_chakra')).toBeDefined(); // el otro sigue
+  });
+
+  it('comprarItemTienda falla si el objeto no está en la oferta actual', () => {
+    fijarTiendaDePrueba();
+    const exito = useGameStore.getState().comprarItemTienda('banda_repuesto');
+    expect(exito).toBe(false);
+  });
+});
+
+describe('nodo de reclutar', () => {
+  function fijarReclutarDePrueba() {
+    useGameStore.setState({
+      reclutarActual: {
+        personajes: [
+          { personajeId: 'rock_lee', nombre: 'Rock Lee', rareza: 'comun' },
+          { personajeId: 'neji', nombre: 'Neji Hyuga', rareza: 'comun' },
         ],
         nivelReclutamiento: 10,
       },
     });
   }
 
-  it('comprarConsumibleTienda descuenta el oro y añade el objeto al inventario', () => {
-    fijarTiendaDePrueba();
-    const oroAntes = useGameStore.getState().oro;
-    const exito = useGameStore.getState().comprarConsumibleTienda('pildora_soldado');
-    expect(exito).toBe(true);
-    expect(useGameStore.getState().inventario).toContain('pildora_soldado');
-    expect(useGameStore.getState().oro).toBeLessThan(oroAntes);
-  });
-
-  it('comprarConsumibleTienda falla si no hay oro suficiente', () => {
-    fijarTiendaDePrueba();
-    useGameStore.setState({ oro: 0 });
-    const exito = useGameStore.getState().comprarConsumibleTienda('pildora_soldado');
-    expect(exito).toBe(false);
-    expect(useGameStore.getState().inventario).not.toContain('pildora_soldado');
-  });
-
-  it('reclamarObjetoGratuitoTienda añade el objeto sin coste', () => {
-    fijarTiendaDePrueba();
-    useGameStore.setState({ oro: 0 });
-    const exito = useGameStore.getState().reclamarObjetoGratuitoTienda();
-    expect(exito).toBe(true);
-    expect(useGameStore.getState().inventario).toContain('sello_chakra');
-    expect(useGameStore.getState().oro).toBe(0); // no cobra nada
-  });
-
-  it('reclutarDeTienda añade al personaje elegido y descarta la otra opción', () => {
-    fijarTiendaDePrueba();
+  it('elegirReclutaDeNodo añade al personaje con el nivel de la oferta', () => {
+    fijarReclutarDePrueba();
     useGameStore.setState((estado) => ({ equipo: estado.equipo.slice(0, 2) })); // dejar hueco
-    const exito = useGameStore.getState().reclutarDeTienda('rock_lee');
+    const exito = useGameStore.getState().elegirReclutaDeNodo('rock_lee');
     expect(exito).toBe(true);
-    const { equipo, tiendaActual } = useGameStore.getState();
-    expect(equipo.map((p) => p.id)).toContain('rock_lee');
-    expect(equipo.map((p) => p.id)).not.toContain('neji'); // la otra opción se descarta
-    expect(tiendaActual.reclutables).toHaveLength(0);
-  });
-
-  it('reclutarDeTienda respeta el nivel de reclutamiento fijado en la oferta', () => {
-    fijarTiendaDePrueba();
-    useGameStore.setState((estado) => ({ equipo: estado.equipo.slice(0, 2) })); // dejar hueco
-    useGameStore.getState().reclutarDeTienda('rock_lee');
     const reclutado = useGameStore.getState().equipo.find((p) => p.id === 'rock_lee');
     expect(reclutado.nivel).toBe(10);
   });
 
-  it('reclutarDeTienda no hace nada si el equipo ya está completo y no se indica a quién reemplazar', () => {
-    fijarTiendaDePrueba(); // el equipo del beforeEach ya tiene 3/3
-    const exito = useGameStore.getState().reclutarDeTienda('rock_lee');
+  it('elegirReclutaDeNodo no hace nada si el equipo está completo y no se indica reemplazo', () => {
+    fijarReclutarDePrueba(); // equipo del beforeEach: 3/3
+    const exito = useGameStore.getState().elegirReclutaDeNodo('rock_lee');
     expect(exito).toBe(false);
     expect(useGameStore.getState().equipo.map((p) => p.id)).not.toContain('rock_lee');
   });
 
-  it('reclutarDeTienda con idAReemplazar saca a ese personaje y pone al reclutado en su lugar', () => {
-    fijarTiendaDePrueba(); // el equipo del beforeEach ya tiene 3/3: naruto, sasuke, sakura
-    const exito = useGameStore.getState().reclutarDeTienda('rock_lee', 'sasuke');
+  it('elegirReclutaDeNodo con idAReemplazar reemplaza al personaje indicado', () => {
+    fijarReclutarDePrueba(); // equipo 3/3: naruto, sasuke, sakura
+    const exito = useGameStore.getState().elegirReclutaDeNodo('rock_lee', 'sasuke');
     expect(exito).toBe(true);
-
-    const { equipo, oro } = useGameStore.getState();
-    expect(equipo.map((p) => p.id)).toEqual(['naruto', 'rock_lee', 'sakura']); // reemplaza en su misma posición
-    expect(equipo).toHaveLength(3); // el equipo no crece, solo se reemplaza
-    expect(oro).toBeLessThan(1000); // sí que cobra al reemplazar
+    const { equipo } = useGameStore.getState();
+    expect(equipo.map((p) => p.id)).toEqual(['naruto', 'rock_lee', 'sakura']);
+    expect(equipo).toHaveLength(3);
   });
 
-  it('reemplazar da bonusNivelAlReemplazar de más sobre el nivel de la oferta, para que compense frente a rellenar un hueco vacío', () => {
-    fijarTiendaDePrueba(); // nivelReclutamiento: 10 en la oferta de prueba
-    useGameStore.getState().reclutarDeTienda('rock_lee', 'sasuke');
+  it('reemplazar da bonusNivelAlReemplazar de más sobre el nivel de la oferta', () => {
+    fijarReclutarDePrueba(); // nivelReclutamiento: 10
+    useGameStore.getState().elegirReclutaDeNodo('rock_lee', 'sasuke');
     const reclutado = useGameStore.getState().equipo.find((p) => p.id === 'rock_lee');
     expect(reclutado.nivel).toBe(10 + configGlobal.equipo.bonusNivelAlReemplazar);
   });
 
-  it('reclutarDeTienda con un idAReemplazar que no está en el equipo no hace nada', () => {
-    fijarTiendaDePrueba();
-    const exito = useGameStore.getState().reclutarDeTienda('rock_lee', 'kakashi');
+  it('elegirReclutaDeNodo falla si el personaje no está en la oferta', () => {
+    fijarReclutarDePrueba();
+    // Un id que no existe en ningún JSON. Antes ponía 'kakashi', que era un id
+    // inventado hasta que Kakashi entró en el juego de verdad: el test seguía
+    // pasando (no está en ESA oferta) pero ya no probaba lo que dice su nombre.
+    const exito = useGameStore.getState().elegirReclutaDeNodo('ninja_que_no_existe');
     expect(exito).toBe(false);
-    expect(useGameStore.getState().equipo.map((p) => p.id)).not.toContain('rock_lee');
   });
 });
 
-describe('nivel de reclutamiento al entrar en un nodo de tienda', () => {
-  function fijarMapaConTienda() {
+describe('desafío legendario (pergamino dorado)', () => {
+  // El arco 1 real tiene a Kakashi en `personajesReclutablesIds`, así que SIEMPRE
+  // hay un legendario en la pool. Los tests que necesitan que el único legendario
+  // sea el desbloqueado por logro (o que no haya ninguno) arrancan la run con esta
+  // copia del arco sin pool propia. Es la alternativa a meter a Kakashi en el
+  // equipo para sacarlo del sorteo, que cambiaría el equipo que se está midiendo.
+  const arcoSinLegendarioPropio = { ...arcoDePrueba, personajesReclutablesIds: [] };
+
+  function entrarEnNodoDorado() {
     useGameStore.setState({
       mapa: {
-        nodos: { tienda_test: { tipo: 'tienda', piso: 2, conexiones: [], visitado: false } },
-        nodosIniciales: ['tienda_test'],
+        nodos: {
+          reclutar_test: {
+            tipo: 'reclutar', rareza: 'legendario', piso: 2, conexiones: [], visitado: false,
+          },
+        },
+        nodosIniciales: ['reclutar_test'],
       },
       nodoActualId: null,
     });
+    useGameStore.getState().avanzarANodo('reclutar_test');
   }
 
+  it('un pergamino dorado ofrece a UN solo legendario, y como desafío', () => {
+    // Gaara es legendario y es el jefe final del arco 2, no del que se juega aquí.
+    // Con Kakashi en la pool del arco hay DOS legendarios elegibles, así que el
+    // test no puede exigir un id concreto sin volverse aleatorio: lo que garantiza
+    // el nodo es que sale **uno solo** y que ese uno es legendario.
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    entrarEnNodoDorado();
+
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.rareza).toBe('legendario');
+    expect(reclutarActual.esDesafio).toBe(true);
+    expect(reclutarActual.personajes).toHaveLength(1);
+    expect(reclutarActual.personajes[0].rareza).toBe('legendario');
+    expect(reclutarActual.nivelDesafio).toBe(arcoDePrueba.nivelDesafioLegendario);
+  });
+
+  it('el arco 1 ofrece un desafío legendario sin ningún logro desbloqueado', () => {
+    // La razón de que Kakashi esté en `personajesReclutablesIds` del arco 1: antes
+    // el array estaba vacío, los únicos legendarios eran jefes desbloqueados por
+    // logro, y el jefe y el mini-jefe del arco en curso están fuera del pool. O
+    // sea que en la PRIMERA run el pergamino dorado del arco 1 degradaba siempre.
+    entrarEnNodoDorado();
+
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.rareza).toBe('legendario');
+    expect(reclutarActual.esDesafio).toBe(true);
+    expect(reclutarActual.personajes[0].personajeId).toBe('kakashi');
+  });
+
+  it('sin ningún legendario disponible, el nodo degrada a común en vez de quedarse vacío', () => {
+    // Sin logros desbloqueados y sin pool propia del arco no hay ni un legendario:
+    // el pergamino dorado del mapa no puede cumplir lo que promete, así que ofrece
+    // lo que hay.
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoSinLegendarioPropio);
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.filter((p) => p.id === 'naruto') }));
+    entrarEnNodoDorado();
+
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.rareza).toBe('comun');
+    expect(reclutarActual.esDesafio).toBe(false);
+    expect(reclutarActual.personajes.length).toBeGreaterThan(0);
+  });
+
+  it('iniciarDesafioLegendario pelea contra el legendario al nivel FIJO del arco', () => {
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    entrarEnNodoDorado();
+    // Quien sale del sorteo se lee de la oferta, no se escribe a mano: hay dos
+    // legendarios elegibles y lo que se comprueba es que se pelea contra el que se
+    // ha ofrecido, no contra otro.
+    const ofrecido = useGameStore.getState().reclutarActual.personajes[0].personajeId;
+
+    const aceptado = useGameStore.getState().iniciarDesafioLegendario();
+    expect(aceptado).toBe(true);
+
+    const estado = useGameStore.getState();
+    expect(estado.pantalla).toBe('combate');
+    expect(estado.desafioRecluta).toEqual({ personajeId: ofrecido });
+    // Se ha peleado de verdad: hay un resumen de combate contra él.
+    expect(estado.ultimoResultadoCombate.rondas[0].enemigo.id).toBe(ofrecido);
+    expect(estado.ultimoResultadoCombate.rondas[0].enemigo.nivel)
+      .toBe(arcoDePrueba.nivelDesafioLegendario);
+  });
+
+  it('perder el desafío termina la run, como cualquier otro combate', () => {
+    // El equipo del beforeEach es de nivel 1 y Gaara pelea a `nivelDesafioLegendario`:
+    // pierde las tres rondas. Ese es el riesgo real que hace que el pergamino
+    // dorado sea una decisión y no un regalo, y por eso la pantalla lo avisa.
+    // Se arranca sin la pool del arco para que el rival sea Gaara y no un sorteo
+    // entre él y Kakashi: el margen medido es el suyo (63 de HP base).
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoSinLegendarioPropio);
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    entrarEnNodoDorado();
+    useGameStore.getState().iniciarDesafioLegendario();
+
+    const estado = useGameStore.getState();
+    expect(estado.ultimoResultadoCombate.jugadorGanoFinal).toBe(false);
+    expect(estado.runTerminada).toBe(true);
+  });
+
+  it('ganar el desafío deja reclutarlo desde el mismo pergamino', () => {
+    // El combate no se juega aquí (a nivel 1 no se le gana a un legendario, ver
+    // el test de arriba): lo que se comprueba es el camino de vuelta, que es lo
+    // que enlaza `CombatScreen` con la pantalla de reclutar.
+    useGameStore.setState({
+      reclutarActual: {
+        personajes: [{ personajeId: 'gaara', nombre: 'Gaara', rareza: 'legendario' }],
+        nivelReclutamiento: 10,
+        rareza: 'legendario',
+        esDesafio: true,
+        nivelDesafio: 6,
+      },
+      desafioRecluta: { personajeId: 'gaara' },
+    });
+
+    useGameStore.getState().irAReclutaDesafio();
+    expect(useGameStore.getState().pantalla).toBe('reclutar');
+    expect(useGameStore.getState().reclutarActual.desafioGanado).toBe(true);
+
+    useGameStore.getState().elegirReclutaDeNodo('gaara', 'sasuke');
+    expect(useGameStore.getState().equipo.map((p) => p.id)).toContain('gaara');
+  });
+
+  it('el jefe final del arco en curso nunca puede ser el desafío', () => {
+    // Si pudiera, ganarle en un nodo de reclutar habría disparado `arcoCompletado`
+    // en jugarCombate y la run habría saltado de arco desde un pergamino.
+    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'zabuza' });
+    entrarEnNodoDorado();
+
+    const { reclutarActual } = useGameStore.getState();
+    expect(reclutarActual.personajes.some((p) => p.personajeId === 'zabuza')).toBe(false);
+  });
+});
+
+describe('nivel de reclutamiento al entrar en un nodo de reclutar', () => {
   it('usa el nivel del personaje más fuerte del equipo, no el nivel fijo del piso', () => {
-    // El piso 2 de pais-de-las-olas daría un nivel muy bajo por calcularNivelPorPiso
-    // (nivelEnemigoBase 1 + escalado) — aquí el equipo ya está muy por encima,
-    // y la oferta debe reflejarlo para que reclutar siga siendo relevante.
     useGameStore.setState((estado) => ({
       equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, nivel: 8 } : p)),
     }));
-    fijarMapaConTienda();
+    useGameStore.setState({
+      mapa: {
+        nodos: { reclutar_test: { tipo: 'reclutar', piso: 2, conexiones: [], visitado: false } },
+        nodosIniciales: ['reclutar_test'],
+      },
+      nodoActualId: null,
+    });
 
-    useGameStore.getState().avanzarANodo('tienda_test');
-    expect(useGameStore.getState().tiendaActual.nivelReclutamiento).toBe(8);
+    useGameStore.getState().avanzarANodo('reclutar_test');
+    expect(useGameStore.getState().reclutarActual.nivelReclutamiento).toBe(8);
   });
 });
 
@@ -517,12 +922,40 @@ describe('equiparObjeto / desequiparObjeto', () => {
     expect(exito).toBe(false);
   });
 
-  it('el objeto equipado afecta a las stats reales (HP máximo, vía obtenerHpMaximo)', () => {
+  // Los objetos YA NO dan stats: desde el rediseño de balance dan pasivas, que
+  // cambian reglas en vez de engordar los cuatro números de siempre. Un bonus
+  // plano se diluye con el nivel (un +4 de ataque contra 80 es ruido), y era la
+  // razón de que los objetos aportaran ~1,5% del poder de una run.
+  it('el objeto equipado NO cambia las stats del personaje', () => {
     const hpAntes = useGameStore.getState().obtenerHpMaximo('naruto');
     useGameStore.setState({ inventario: ['pergamino_reserva'] });
     useGameStore.getState().equiparObjeto('pergamino_reserva', 'naruto');
-    const hpDespues = useGameStore.getState().obtenerHpMaximo('naruto');
-    expect(hpDespues).toBe(hpAntes + 8);
+    expect(useGameStore.getState().obtenerHpMaximo('naruto')).toBe(hpAntes);
+  });
+
+  // El de verdad: que las pasivas del objeto lleguen al motor y hagan algo en un
+  // combate real. `semilla_sabio` cura al rematar, así que quien la lleve debe
+  // terminar la pelea con más HP que quien no.
+  it('las pasivas del objeto equipado llegan al combate', () => {
+    const hpMaximo = useGameStore.getState().obtenerHpMaximo('naruto');
+    const hpDePartida = Math.round(hpMaximo * 0.5);
+
+    useGameStore.setState({
+      equipo: useGameStore.getState().equipo.map((p) => (p.id === 'naruto' ? { ...p, hpActual: hpDePartida } : p)),
+    });
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    const sinObjeto = useGameStore.getState().equipo.find((p) => p.id === 'naruto').hpActual;
+
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+    useGameStore.setState({
+      inventario: ['semilla_sabio'],
+      equipo: useGameStore.getState().equipo.map((p) => (p.id === 'naruto' ? { ...p, hpActual: hpDePartida } : p)),
+    });
+    useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    const conObjeto = useGameStore.getState().equipo.find((p) => p.id === 'naruto').hpActual;
+
+    expect(conObjeto).toBeGreaterThan(sinObjeto);
   });
 });
 
@@ -567,12 +1000,28 @@ describe('revivirUnaVez (equipado) — a través de _aplicarDerrota', () => {
     expect(naruto.derrotado).toBe(true);
     expect(naruto.hpActual).toBe(0);
   });
+
+  it('dentro de un combate perdido revive UNA sola vez, no una por ronda', () => {
+    // Por la vía real (`jugarCombate`, no `_aplicarDerrota` a mano): el que
+    // revive vuelve a entrar contra el mismo enemigo, así que pelea dos rondas
+    // seguidas. Lo que no puede es revivir en las dos.
+    useGameStore.setState({ inventario: ['banda_repuesto'] });
+    useGameStore.getState().equiparObjeto('banda_repuesto', 'naruto');
+
+    const resultado = useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+
+    const rondasDeNaruto = resultado.rondas.filter((r) => r.jugador.id === 'naruto');
+    expect(rondasDeNaruto).toHaveLength(2); // la suya y la que le da el objeto
+    expect(rondasDeNaruto[1].jugador.hpInicial).toBe(1); // vuelve con el HP del objeto
+    expect(useGameStore.getState().equipo.find((p) => p.id === 'naruto').derrotado).toBe(true);
+    expect(useGameStore.getState().runTerminada).toBe(true);
+  });
 });
 
-describe('curacionPostCombate (equipado) — a través de _aplicarVictoria', () => {
+describe('heal_after_battle (pasiva de objeto) — a través de _aplicarVictoria', () => {
   it('cura un % extra a quien lo lleva equipado, además de su HP final de combate', () => {
-    useGameStore.setState({ inventario: ['semilla_sabio'] });
-    useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
+    useGameStore.setState({ inventario: ['pergamino_reserva'] });
+    useGameStore.getState().equiparObjeto('pergamino_reserva', 'naruto');
 
     const hpMaximo = useGameStore.getState().obtenerHpMaximo('naruto');
     const hpFinalBajo = Math.round(hpMaximo * 0.3); // terminó el combate con poco HP
@@ -609,5 +1058,79 @@ describe('usarConsumible', () => {
     useGameStore.setState({ inventario: ['sello_chakra'] });
     const exito = useGameStore.getState().usarConsumible('sello_chakra', 'naruto');
     expect(exito).toBe(false);
+  });
+});
+
+
+describe('registro de vistos para la enciclopedia', () => {
+  const vistos = () => useAchievementsStore.getState().vistos;
+
+  it('iniciarRun apunta el equipo inicial', () => {
+    // El beforeEach ya ha llamado a iniciarRun con los tres.
+    expect(vistos().personajes).toEqual(['naruto', 'sasuke', 'sakura']);
+  });
+
+  it('jugarCombate apunta al enemigo peleado, que no queda en el estado', () => {
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(vistos().enemigos).toContain('enemigo_debil_test');
+  });
+
+  it('apunta al enemigo aunque se PIERDA el combate', () => {
+    // Verlo es verlo: perder no borra que te lo has encontrado. Y este es el
+    // caso que un gancho puesto en la rama de victoria se habría comido.
+    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 50);
+    expect(vistos().enemigos).toContain('enemigo_imbatible_test');
+  });
+
+  it('apunta el modo con el que peleó un personaje, no el que tenga ahora', () => {
+    // Naruto desbloquea su primer modo a nivel 5 (characters.json). Se le sube
+    // antes de pelear para que entre ya transformado.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p) => (p.id === 'naruto' ? { ...p, nivel: 6 } : p)),
+    }));
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(vistos().modos).toContain('naruto_0');
+  });
+
+  it('no apunta un modo que el personaje todavía no tiene', () => {
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(vistos().modos).toEqual([]);
+  });
+
+  it('reclutarPersonaje apunta al que entra', () => {
+    useGameStore.getState().reclutarPersonaje('rock_lee', 5, 'sasuke');
+    expect(vistos().personajes).toContain('rock_lee');
+  });
+
+  it('comprar en la tienda apunta el objeto', () => {
+    useGameStore.setState({
+      oro: 999,
+      tiendaActual: { items: [{ id: 'sello_chakra', precio: 40 }] },
+    });
+    useGameStore.getState().comprarItemTienda('sello_chakra');
+    expect(vistos().objetos).toContain('sello_chakra');
+  });
+
+  it('recoger la recompensa del mini-jefe apunta el objeto', () => {
+    useGameStore.setState({ recompensaMiniJefe: { item: 'kubikiribocho_fragmento' } });
+    useGameStore.getState().reclamarRecompensaMiniJefe();
+    expect(vistos().objetos).toContain('kubikiribocho_fragmento');
+  });
+
+  it('abrirEnciclopedia apunta de red de seguridad lo que haya en la mochila', () => {
+    // La vía de escape para cuando algo entra en el inventario por un camino sin
+    // gancho propio: al abrir la pantalla se apunta lo que el jugador tiene.
+    useGameStore.setState({ inventario: ['pergamino_viento'] });
+    useGameStore.getState().abrirEnciclopedia();
+
+    expect(useGameStore.getState().pantalla).toBe('enciclopedia');
+    expect(vistos().objetos).toContain('pergamino_viento');
+  });
+
+  it('apunta también el objeto equipado, que no está en el inventario', () => {
+    useGameStore.setState({ inventario: ['semilla_sabio'] });
+    useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
+    useGameStore.getState().abrirEnciclopedia();
+    expect(vistos().objetos).toContain('semilla_sabio');
   });
 });

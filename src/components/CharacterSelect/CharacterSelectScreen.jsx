@@ -5,6 +5,7 @@ import achievementsData from '../../data/achievements.json';
 import configGlobal from '../../data/config.json';
 import { obtenerPersonajesInicialesDesbloqueados } from '../../engine/achievements';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
+import { CabeceraPantalla } from '../common/PiezasUI';
 
 function TarjetaCandidato({ personaje, seleccionado, onClick }) {
   return (
@@ -12,12 +13,18 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
       type="button"
       onClick={onClick}
       className={[
-        'w-full rounded-lg border-2 transition-colors text-left',
-        seleccionado ? 'border-sello-600' : 'border-transparent hover:border-pergamino-100/30',
+        'elevar-hover w-full border-2 text-left',
+        seleccionado
+          ? 'border-sello-500'
+          : 'border-transparent hover:border-pergamino-200/40 hover:shadow-lg hover:shadow-black/40',
       ].join(' ')}
     >
-      <FichaPersonaje id={personaje.id} className="p-3" />
-      {seleccionado && <p className="text-xs text-sello-500 text-center py-1 font-display">★ Elegido</p>}
+      {/* Con el nivel, aunque siempre sea 1: elegir con quién empiezas es un
+          reclutamiento como el de los pergaminos, y la ficha tiene que decir lo
+          mismo en los dos sitios. Sin él, la fila de la rareza se quedaba coja y
+          esta era la única tarjeta del juego que no decía a qué nivel entra. */}
+      <FichaPersonaje id={personaje.id} nivel={1} className="p-3" />
+      {seleccionado && <p className="text-[9px] text-sello-500 text-center py-1 font-display">★ Chosen</p>}
     </button>
   );
 }
@@ -64,15 +71,16 @@ export default function CharacterSelectScreen({ onConfirmar }) {
   }
 
   return (
-    <div className="min-h-screen bg-tinta-950 text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
-      <div className="max-w-2xl w-full text-center">
-        <p className="text-sello-500 text-xs tracking-[0.3em] uppercase mb-1">Nueva run</p>
-        <h1 className="font-display text-3xl font-bold text-pergamino-100 mb-2">Elige a tu ninja</h1>
-        <p className="text-sm text-pergamino-200/60 mb-8">
-          El resto del equipo se completa reclutando durante la aventura.
+    <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
+      {/* A pantalla completa y sin marco de ventana: es el arranque de la run, el
+          único momento en que todavía no hay mapa detrás que enseñar. */}
+      <div className="max-w-3xl w-full text-center flex flex-col gap-6">
+        <CabeceraPantalla antetitulo="A new path" titulo="Choose your ninja" />
+        <p className="text-[10px] text-pergamino-200/60 -mt-4">
+          The rest of your team is built by recruiting during the adventure.
         </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {roster.map((personaje) => (
             <TarjetaCandidato
               key={personaje.id}

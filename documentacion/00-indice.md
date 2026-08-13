@@ -26,5 +26,19 @@
 - [22 - Diseño de tarjeta de personaje](./22-diseño-tarjeta-de-personaje.md)
 - [23 - Diseño de tarjeta de inventario](./23-diseño-tarjeta-de-inventario.md)
 - [24 - Diseño de tarjeta de equipar objeto](./24-diseño-tarjeta-equipar-objeto.md)
+- [25 - Diseño de la pantalla de logros](./25-diseño-pantalla-logros.md)
+- [26 - Combate en cadena (entrenadores)](./26-combate-en-cadena.md)
+- [27 - Rediseño del sistema de balance](./27-sistema-de-balance.md) — implementado en el punto 1 del
+  roadmap, salvo el peso de los objetos (se quedaron en el 21-24% del poder, no en el 40%).
+- [28 - Mochila (inventario y equipar)](./28-mochila.md)
+- [28 - Nodo de reclutar](./28-nodo-reclutar.md) — sí, hay dos documentos con el 28; los enlaces
+  repartidos por el código apuntan a los nombres de archivo, así que renumerar rompería más de lo
+  que arregla.
+- [29 - Sistema de jutsus automáticos (ataque básico + barra de jutsu)](./29-sistema-de-jutsus-automaticos.md)
+- [30 - Sistema de pasivas](./30-sistema-de-pasivas.md)
+- [31 - Plan de los siguientes pasos](./31-plan-siguientes-pasos.md)
+- [32 - Enciclopedia](./32-enciclopedia.md)
+- [33 - Dirección visual: el kit de piezas compartidas](./33-direccion-visual.md)
+- [34 - Ajustes](./34-ajustes.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.
