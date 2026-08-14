@@ -234,7 +234,13 @@ export function CabeceraPantalla({ antetitulo, titulo, contador = null }) {
       <h1 className="font-naruto text-4xl text-pergamino-100">
         {titulo}
       </h1>
-      {contador && <p className="text-[10px] text-pergamino-200/60 mt-1">{contador}</p>}
+      {/* ⚠️ Sin opacidad rebajada, y no es un descuido: esta cabecera va sobre el
+          FONDO DEL JUEGO, no sobre un panel. Apagar un texto con alpha da por hecho
+          que debajo hay una superficie con la que mezclarse; sobre una ilustración
+          clara, un 60% de tinta se convierte en un gris lavado y "65 gold available"
+          dejaba de leerse. La regla: **sobre el fondo, el texto va a opacidad
+          completa**; el alpha es para el texto de dentro de un panel. */}
+      {contador && <p className="text-[10px] text-pergamino-200 mt-1">{contador}</p>}
     </header>
   );
 }

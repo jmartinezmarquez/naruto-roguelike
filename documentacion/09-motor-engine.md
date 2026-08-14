@@ -30,9 +30,18 @@
 
 - `obtenerEficacia(tipoAtacante, tipoDefensor)` — lee la matriz de `types.json`.
 - `crearLuchador(personajeBase, nivel, hpActualInicial, multiplicadoresExtra, multiplicadorCargaExtra)` — instancia de combate. **`hpActualInicial`**: si se pasa, el luchador empieza con ese HP en vez de a HP completo — es lo que permite que el HP persista entre combates. **`multiplicadoresExtra`**: multiplicadores aplicados después del modo, para los buffs temporales de eventos ("+20% ataque, 3 combates"). **`multiplicadorCargaExtra`**: acelera o frena la barra de jutsu, se combina con `modoActivo.multiplicadorCarga`. El modo activo se sigue calculando internamente con `obtenerModoActivo`.
-- `calcularDano(atacante, defensor, ataque)` — fórmula: `ataqueEfectivo * ataque.danoBase * eficacia - defensaEfectiva * 0.5`, mínimo 1. `ataque` es indistintamente el ataque básico o el `jutsu`. El básico sale siempre de
+- `calcularDano(atacante, defensor, ataque)` — fórmula:
+`(ataqueEfectivo * eficacia - defensaEfectiva * 0.5) * ataque.danoBase`, mínimo 1. `ataque` es
+indistintamente el ataque básico o el `jutsu`. El básico sale siempre de
 `config.combate.jutsu.ataqueBasicoPorDefecto` — es el mismo para todos los luchadores, ver
 [29](./29-sistema-de-jutsus-automaticos.md).
+  ⚠️ **La defensa se resta EN PROPORCIÓN a la potencia del ataque, no como una cantidad plana.**
+  Estuvo plana (`… - defensaEfectiva * 0.5` fuera del paréntesis) hasta el playtest del 2026-08-14, y
+  el efecto es de los que no se ven leyendo los datos: el mismo escudo se comía el **59% de un ataque
+  básico y el 16% de un jutsu** (Naruto Nv.1, ataque 9, contra defensa 7), así que un jutsu que en los
+  datos pega 3,6 veces más acababa pegando **7,4 veces más** en pantalla, y el básico caía al mínimo
+  de 1 y dejaba de existir. La regla que queda: **una resta plana no es neutral entre golpes de
+  tamaños distintos** — castiga al pequeño en proporción a lo pequeño que sea.
 - `ejecutarAtaque(atacante, defensor)` — el atacante no elige: lanza su **jutsu** si la barra está llena (y la vacía), o su **ataque básico** si no (y la carga). Sustituyó a `ejecutarJutsu`. Ver [29](./29-sistema-de-jutsus-automaticos.md) para las reglas completas de carga.
 - `turnosParaCargarJutsu(luchador)` — estimación del ritmo de un personaje, solo para la UI. El
   número exacto no llega a la pantalla: la ficha lo traduce a 3 puntitos (`RitmoCarga`).

@@ -784,6 +784,81 @@ era ningún color suelto: era haber tratado como valores unos tokens que son rel
   líneas son "+N Gold" y el nombre de un objeto. Un `TituloBloque` sirve para distinguir bloques dentro de
   una caja con varios, y ahí no hay más que uno.
 
+### Playtest 2026-08-14 — triaje y arreglos
+
+El primer playtest desde que cambiaron el balance de los jefes, el roster y las ocho pantallas. Seis
+hallazgos, **cuatro de ellos bugs de verdad** (dos confirmados leyendo el código, no por sensación).
+El triaje entra por delante del 5a, como dice el [31](./31-plan-siguientes-pasos.md).
+
+- [x] 🐛 **El equipo se reordenaba solo.** Se veía al curar al equipo tras un jefe, pero la curación no
+  tenía la culpa: `_aplicarDerrota` hacía `[...vivos, ...caidos]` y ese reorden era **permanente**. El
+  jugador colocaba su equipo arrastrando, se le moría alguien y veinte minutos después se encontraba
+  otro orden que no había elegido. **Y no hacía ninguna falta**: `obtenerPersonajeActivo` ya es
+  `equipo.find((p) => !p.derrotado)`, o sea que "posición 1" nunca quiso decir índice 0, quiso decir
+  *el primero en pie*. Se borra el reorden. Dos tests nuevos, uno por cada mitad de la frase anterior.
+- [x] 🐛 **El pergamino dorado podía ser un peaje obligatorio.** Dos vetos nuevos, los dos porque el
+  dorado no es una elección sino un **combate a nivel fijo**: nunca antes del piso del mini-jefe (el
+  mismo combate está al 52% en el piso 3 y al 87% en el 6) y **nunca si es el único nodo de su piso**
+  — `nodosPorPiso.min` es 1, así que eso podía pasar y el jugador lo sufrió. Ver
+  [28](./28-nodo-reclutar.md). Efecto medido: los mapas con dorado bajan del 20% al 13,9% en el arco 1,
+  y lo que se ha quitado son justo los casos injustos.
+- [x] 🐛 **Los ataques básicos eran negligibles** ("-1, -3 de daño y luego el jutsu hace muchísimo
+  más"). La causa no era la potencia del jutsu sino que **la defensa se restaba plana**, y una resta
+  plana no es neutral entre golpes de tamaños distintos: el mismo escudo se comía el **59% de un
+  básico y el 16% de un jutsu**, así que una diferencia de 3,6× en los datos salía a 7,4× en pantalla y
+  el básico caía al suelo de 1. Ahora la defensa se resta **en proporción a la potencia del ataque**.
+  Ver [09](./09-motor-engine.md).
+  - **Medido con `simular-combates.mjs` antes y después**, que para eso es determinista: los jefes en
+    cadena pasan de 80/77/76/88/91/84% a **85/83/79/87/93/84%** —dentro del objetivo—, los comunes se
+    quedan igual (96-99%), el reparto del poder no se mueve (≈50/25/25) y **desaparece uno de los dos
+    combates que llegaban al tope de turnos**. No hizo falta recalibrar nada.
+  - ⚠️ El test que saltó era bueno: pedía `jutsu > basico` y eso **también lo cumplía la versión rota**.
+    Ahora fija la **proporción** contra los `danoBase` declarados, que es lo que estaba mal, y hay un
+    segundo test para la única esquina donde los dos empatan (cuando la defensa se traga el ataque
+    entero, los dos caen al mínimo de 1 — contra ese rival la respuesta del juego es cambiar de
+    personaje, no pegar más).
+- [x] **Equipar arrastrando el objeto encima del personaje.** El mapa ya dejaba arrastrar objetos y no
+  dejaba equiparlos así. Ver [13](./13-ui-mapa-y-combate.md).
+- [x] **El cursor de escritura en la rueda de chakra**: los emojis viven en un `foreignObject`, o sea
+  HTML de verdad dentro del SVG, así que el navegador los trataba como un párrafo. `pointerEvents: none`.
+- [x] `simular-combates.mjs` medía el desafío legendario en el **piso 3**, que desde el veto ya no
+  existe: pasa a medir el piso del mini-jefe. Un simulador que mide un caso que el generador no produce
+  es exactamente el fallo de las pasivas sin normalizar, otra vez.
+
+- [x] 🐛 **La transformación no se veía si pulsabas rápido.** El desbloqueo se celebra con retraso
+  —primero el cartel de subida de nivel, `MS_CELEBRAR_NIVEL`— pero el bloque de cierre del combate se
+  pintaba en cuanto terminaba la pelea, así que durante ese segundo y medio había un botón de
+  "Continue" en pantalla: quien lo pulsaba se iba del combate y **no veía nunca su transformación**.
+  Ahora la salida no se pinta mientras quede alguna por enseñar (la cola entera, no solo la primera:
+  dos personajes pueden cruzar su umbral en la misma victoria). Es un fallo de los que solo pasan "a
+  veces" porque dependen de lo deprisa que pulse el jugador — de ahí que no saliera en ningún test.
+- [x] **Texto ilegible en modo claro sobre el fondo del juego** ("65 gold available", el reclamo del
+  mercader). No era un color mal elegido sino **apagar texto con alpha sobre una ilustración**: sin una
+  superficie con la que mezclarse, un 45-60% de tinta es un gris lavado. Ocho textos sueltos con cuatro
+  opacidades distintas, todos de cuando el fondo era oscuro. Ver [33](./33-direccion-visual.md).
+
+- [x] **La cadena de entrenador cantaba "Victory" en cada eslabón** (y un "Next up..." debajo), tres
+  veces por nodo y cada cartel tapado 0,7 s después por el rival siguiente. Una cadena es **UN combate
+  con relevos**: el cierre es el del nodo, no el de cada rival. De paso, el respiro entre eslabones era
+  un **1600 ms fijo** —lo único de la pantalla que no obedecía al ajuste de velocidad de animación— y
+  ahora sigue el factor como todo lo demás. ⚠️ Acortarlo obligó a que el temporizador esperase también a
+  la transformación y al cartel de nivel: sin eso se reintroducía el bug de arriba dentro de la cadena.
+- [x] **"Victory" ya no va en verde.** `exito` es un color **semántico** ("esto es bueno",
+  "desbloqueado", "eficaz") y como rótulo gigante era lo único de la pantalla que no parecía del mismo
+  juego. Pasa a `pergamino-100`, que sigue al tema. "Defeat" se queda en rojo de sello, que sí es un
+  color propio de la paleta.
+- [x] 🐛 **Arrastrar un objeto sobre alguien que ya llevaba otro no preguntaba nada.** La mochila lo
+  preguntaba desde que existe; al abrir la segunda puerta para equipar se coló sin la guarda. **Las
+  guardas van con la acción, no con el camino** — cada camino nuevo hacia una acción vieja hay que
+  mirarlo con la lista de guardas en la mano. Misma ventana y mismo texto que la mochila.
+
+**Lo que queda de esta tanda, y no es código:**
+
+- [ ] **Pictogramas propios para los 5 tipos de chakra**, en vez de los emojis de la rueda. Va con los
+  cuatro iconos del menú vertical, en "Pendiente de arte" — de una tacada, que es la única forma de que
+  salgan del mismo estilo.
+- [ ] **El mapa se ve pequeño** comparado con Pokelike: es el **punto 9**, que ya lo tenía anotado.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -897,6 +972,12 @@ leerlos buscando trabajo.
   vive pegado al borde derecho): no depende de los sprites y no hay que volver a ella.
   Y el reparto de iconos deja de ser un apaño en el **punto 14**: el engranaje pasa a ser Ajustes —que es
   lo que la maqueta dibujó— y pantalla completa se muda dentro de esa pantalla.
+- **Los 5 tipos de chakra se dibujan con emoji.** La rueda del mapa (`RuedaChakra`) y las pastillas de
+  tipo usan 🔥💨⚡🪨💧, que es lo único de la interfaz que no está dibujado — se ve sobre todo al lado de
+  los sprites, que sí lo están. **Lo que hace falta**: cinco PNG en un lienzo común, en el mismo estilo
+  que los iconos de nodo. Van **con los cuatro del menú vertical, de una tacada**: hacerlos por
+  separado es la forma segura de que salgan de dos estilos distintos. Salió del playtest del
+  2026-08-14; el cursor de escritura que los delataba ya está arreglado, que era la mitad de código.
 - **Sai y Yamato no tienen sprite propio.** Llevan de placeholder el genin rival de su naturaleza de
   chakra (fuuton y doton). Declarado en `PLACEHOLDERS` de `scripts/generar-sprites-personajes.py`.
 - **Kakashi tampoco**, y con él un copia-y-pega no valía: es legendario y se pelea contra él en el

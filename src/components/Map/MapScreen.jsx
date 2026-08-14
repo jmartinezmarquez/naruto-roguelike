@@ -17,7 +17,10 @@ import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
 import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
 import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
 import COLUMNA_MENU from '../../assets/menu/columna-menu.png';
-import { PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante } from '../common/PiezasUI';
+import itemsData from '../../data/items.json';
+import {
+  PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante, VentanaModal, BotonSecundario,
+} from '../common/PiezasUI';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
@@ -111,6 +114,12 @@ const FONDO_COLUMNA = {
   examen_chunin: fondoColumnaChunin,
   invasion_de_pain: fondoColumnaPain,
 };
+
+// El tipo de dato que viaja en un arrastre de objeto, de la rejilla de la mochila
+// a una tarjeta del equipo. Es un tipo propio y no `text/plain` para que la
+// tarjeta pueda distinguir "me traen un objeto" de "me traen un compañero" (que
+// es el otro arrastre que acepta) sin compartir estado entre los dos paneles.
+const ARRASTRE_OBJETO = 'application/x-objeto';
 
 const ANCHO = 520;
 const ALTO_POR_PISO = 120;
@@ -310,11 +319,15 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
  * - El panel es más ancho (`w-40`): había sitio de sobra y la letra no tiene por
  *   qué ser diminuta.
  */
-function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjeto }) {
+function PanelEquipo({
+  equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjeto, equiparObjeto, usarConsumible,
+}) {
   // El id que se está arrastrando. Es estado local y no del store a propósito:
   // no es información de la run, solo del gesto en curso.
   const [arrastrando, setArrastrando] = useState(null);
   const [encima, setEncima] = useState(null);
+  // `{ itemId, idPersonaje }` del reemplazo que espera confirmación, o null.
+  const [reemplazoPendiente, setReemplazoPendiente] = useState(null);
 
   function soltarSobre(idDestino) {
     if (!arrastrando || arrastrando === idDestino) return;
@@ -328,6 +341,34 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
     ids.splice(desde, 1);
     ids.splice(hasta, 0, arrastrando);
     reordenarEquipo(ids);
+  }
+
+  /**
+   * Soltar un objeto de la mochila encima de un personaje (salido del playtest:
+   * el mapa dejaba arrastrar objetos y no dejaba equiparlos así, que es el único
+   * sitio donde arrastrar significa algo).
+   *
+   * ⚠️ **Si el destino ya lleva algo puesto, se pregunta antes.** La mochila ya
+   * lo preguntaba desde que existe (`InventoryScreen`), y al abrir esta segunda
+   * puerta para equipar se coló sin ella: equipar encima devuelve el objeto
+   * anterior a la bolsa, y eso no se ve venir desde un arrastre. Es el fallo
+   * clásico de añadir un camino nuevo a una acción que ya tenía guardas — las
+   * guardas van con la acción, no con el camino.
+   *
+   * Con lo demás no se pregunta: un consumible se gasta en quien lo recibe y un
+   * hueco vacío no pisa nada.
+   */
+  function soltarObjetoSobre(itemId, personaje) {
+    const objeto = itemsData.objetos.find((o) => o.id === itemId);
+    if (objeto?.tipo === 'equipable' && personaje.objetoEquipadoId) {
+      setReemplazoPendiente({ itemId, idPersonaje: personaje.id });
+      return;
+    }
+    // Aparte de ese caso, no se mira de qué tipo es: se intenta equipar y, si el
+    // store dice que no, se intenta usar. Los dos validan y devuelven `false` si
+    // no les toca, así que quien distingue equipable de consumible sigue siendo él.
+    if (equiparObjeto(itemId, personaje.id)) return;
+    usarConsumible(itemId, personaje.id);
   }
 
   return (
@@ -358,15 +399,27 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                   draggable={!p.derrotado}
                   onDragStart={() => setArrastrando(p.id)}
                   onDragEnd={() => { setArrastrando(null); setEncima(null); }}
+                  // La tarjeta acepta DOS cosas: otro compañero (reordenar) y un
+                  // objeto de la mochila (equipar o usar). Se distinguen por el tipo
+                  // de dato que lleva el arrastre, no por un estado compartido entre
+                  // los dos paneles: `dataTransfer` ya viaja con el gesto.
+                  // `getData` solo se puede leer al soltar, pero `types` sí se puede
+                  // consultar antes, que es lo que hace falta para el resaltado.
                   onDragOver={(e) => { e.preventDefault(); setEncima(p.id); }}
                   onDragLeave={() => setEncima((actual) => (actual === p.id ? null : actual))}
-                  onDrop={(e) => { e.preventDefault(); soltarSobre(p.id); setEncima(null); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const itemId = e.dataTransfer.getData(ARRASTRE_OBJETO);
+                    if (itemId) soltarObjetoSobre(itemId, p);
+                    else soltarSobre(p.id);
+                    setEncima(null);
+                  }}
                   className={[
                     'w-full text-left rounded-sm p-1.5 border transition-colors',
                     esActivo ? 'border-sello-500 bg-sello-600/15' : 'border-marco bg-tinta-950/40',
                     p.derrotado ? 'opacity-40' : 'cursor-grab active:cursor-grabbing',
                     arrastrando === p.id ? 'opacity-50' : '',
-                    encima === p.id && arrastrando && arrastrando !== p.id ? 'border-oro border-dashed' : '',
+                    encima === p.id && arrastrando !== p.id ? 'border-oro border-dashed' : '',
                   ].join(' ')}
                 >
                   {/* El nombre va en su propia línea, a lo ancho de la
@@ -458,10 +511,70 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
           })}
         </div>
         <p className="text-[8px] text-pergamino-200/45 leading-snug">
-          Drag to reorder. The first one fights.
+          Drag to reorder, or drop an item on a ninja.
         </p>
       </PanelMarco>
+
+      {/* La confirmación de reemplazo, con el mismo texto que la de la mochila
+          (`InventoryScreen`): las dos puertas para equipar tienen que contar lo
+          mismo, sobre todo la que se abre sin querer. Va como ventana y no como
+          `window.confirm` por lo de siempre —el diálogo del navegador rompe la
+          ilusión— y porque el criterio del kit ya dice que una decisión corta se
+          resuelve en una ventana sobre el mapa (ver documentacion/33). */}
+      {reemplazoPendiente && (
+        <PanelReemplazoObjeto
+          itemId={reemplazoPendiente.itemId}
+          personaje={equipo.find((p) => p.id === reemplazoPendiente.idPersonaje)}
+          onCancelar={() => setReemplazoPendiente(null)}
+          onConfirmar={() => {
+            equiparObjeto(reemplazoPendiente.itemId, reemplazoPendiente.idPersonaje);
+            setReemplazoPendiente(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+/**
+ * "Ya lleva algo puesto, ¿lo cambio?" — la ventana que aparece al soltar un
+ * equipable encima de un personaje que ya tiene su hueco ocupado.
+ *
+ * Vive aquí y no en el kit porque solo la usa esta pantalla, que es la regla del
+ * propio kit. Lo que sí se comparte con la mochila es el **texto**: decir lo mismo
+ * con otras palabras en los dos sitios es una forma barata de que parezcan dos
+ * mecánicas distintas.
+ */
+function PanelReemplazoObjeto({ itemId, personaje, onCancelar, onConfirmar }) {
+  if (!personaje) return null;
+  return (
+    <VentanaModal titulo="Replace item" onCerrar={onCancelar} ancho="max-w-sm">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          {SPRITE_OBJETO[itemId] && (
+            <img src={SPRITE_OBJETO[itemId]} alt="" aria-hidden="true" className="w-12 h-12 object-contain shrink-0" />
+          )}
+          <p className="font-display text-[11px] text-pergamino-100 leading-tight">
+            {nombreObjeto(itemId)}
+          </p>
+        </div>
+        <p className="text-[9px] text-pergamino-200/70 leading-relaxed border-t border-marco pt-3">
+          <span className="text-pergamino-100">{nombreCorto(personaje.id)}</span> is already carrying{' '}
+          <span className="text-pergamino-100">{nombreObjeto(personaje.objetoEquipadoId)}</span>.
+          It goes back to the bag.
+        </p>
+        <div className="flex justify-end gap-2">
+          <BotonSecundario onClick={onCancelar}>Cancel</BotonSecundario>
+          <button
+            type="button"
+            onClick={onConfirmar}
+            className="font-display text-[9px] px-3 py-2 rounded-sm bg-sello-600 text-sobre-sello hover:bg-sello-500 transition-colors"
+          >
+            Replace
+          </button>
+        </div>
+      </div>
+    </VentanaModal>
   );
 }
 
@@ -507,9 +620,19 @@ function PanelObjetos({ inventario, oro, abrirMochila }) {
               <button
                 type="button"
                 onClick={() => abrirMochila(id)}
+                // Arrastrable hasta una tarjeta del equipo, que lo equipa o lo usa
+                // (ver `soltarObjetoSobre` en PanelEquipo). El clic sigue abriendo la
+                // mochila: el arrastre es el atajo, no el único camino — con el equipo
+                // fuera de pantalla, o para leer lo que hace el objeto antes de
+                // decidir, la mochila sigue siendo lo suyo.
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData(ARRASTRE_OBJETO, id);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
                 title={nombreObjeto(id)}
                 aria-label={nombreObjeto(id)}
-                className="elevar-hover relative w-full aspect-square flex items-center justify-center rounded-sm border border-marco bg-tinta-950/50 hover:border-oro/60 hover:bg-tinta-950/80"
+                className="elevar-hover relative w-full aspect-square flex items-center justify-center rounded-sm border border-marco bg-tinta-950/50 hover:border-oro/60 hover:bg-tinta-950/80 cursor-grab active:cursor-grabbing"
               >
                 {SPRITE_OBJETO[id] ? (
                   <img src={SPRITE_OBJETO[id]} alt="" aria-hidden="true" className="w-7 h-7 object-contain" />
@@ -622,10 +745,17 @@ function RuedaChakra() {
               width={RADIO_NODO_CHAKRA * 2}
               height={RADIO_NODO_CHAKRA * 2}
             >
+              {/* `pointerEvents: none` y `userSelect: none` porque esto es un
+                  dibujo, no texto: el emoji vive en un `foreignObject`, o sea en
+                  HTML de verdad dentro del SVG, así que el navegador lo trataba
+                  como un párrafo — cursor de escritura al pasar por encima y se
+                  podía seleccionar arrastrando. Con los eventos desactivados el
+                  puntero ve el círculo de debajo y no el texto. */}
               <div style={{
                 width: '100%', height: '100%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '11px', lineHeight: 1,
+                pointerEvents: 'none', userSelect: 'none',
               }}>
                 {EMOJI_CHAKRA[tipo]}
               </div>
@@ -734,6 +864,8 @@ export default function MapScreen() {
   const inventario = useGameStore((s) => s.inventario);
   const oro = useGameStore((s) => s.oro);
   const desequiparObjeto = useGameStore((s) => s.desequiparObjeto);
+  const equiparObjeto = useGameStore((s) => s.equiparObjeto);
+  const usarConsumible = useGameStore((s) => s.usarConsumible);
   const abrirMochila = useGameStore((s) => s.abrirMochila);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
   const abrirEnciclopedia = useGameStore((s) => s.abrirEnciclopedia);
@@ -821,6 +953,8 @@ export default function MapScreen() {
           obtenerHpMaximo={obtenerHpMaximo}
           reordenarEquipo={reordenarEquipo}
           desequiparObjeto={desequiparObjeto}
+          equiparObjeto={equiparObjeto}
+          usarConsumible={usarConsumible}
         />
 
         {/* El contenedor de fuera solo mide el hueco disponible: no pinta nada.

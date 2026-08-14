@@ -197,12 +197,53 @@ texto puro cuando ya existían los sprites. Rehecha con los puntos 8 y 11 del ro
   no se intercambia — intercambiar deja el orden intermedio como estaba y el gesto no cuadra con lo
   que ve el jugador, que es "he metido a este aquí". El id que se arrastra es estado local del
   componente, no del store: no es información de la run, solo del gesto en curso.
+- **Equipar arrastrando el objeto encima del personaje** (playtest 2026-08-14). ⚠️ **Si el destino ya
+  lleva algo puesto, se pregunta antes**, con el mismo texto que la mochila: equipar encima devuelve el
+  objeto anterior a la bolsa, y eso no se ve venir desde un arrastre. La mochila ya lo preguntaba desde
+  que existe, y al abrir esta segunda puerta se coló sin la guarda — **las guardas van con la acción, no
+  con el camino**, y cada camino nuevo hacia una acción vieja hay que mirarlo con esa lista en la mano. El panel ya dejaba
+  arrastrar objetos y no dejaba equiparlos así, que es el único sitio donde arrastrar significa algo;
+  el jugador lo dijo tal cual. La tarjeta acepta **dos** arrastres distintos —un compañero (reordenar)
+  y un objeto (equipar)— y los distingue por el **tipo de dato del `dataTransfer`**, no por un estado
+  compartido entre los dos paneles: el dato ya viaja con el gesto. ⚠️ `getData` solo se puede leer al
+  soltar, pero `types` sí antes, que es lo que hace falta para el resaltado.
+  Y **el componente no mira de qué tipo es el objeto**: intenta equipar y, si el store dice que no,
+  intenta usar. Los dos validan el tipo y devuelven `false`, así que quien distingue un equipable de un
+  consumible sigue siendo el store. El clic sigue abriendo la mochila: el arrastre es el atajo, no el
+  único camino.
 - **El objeto equipado va en su propia fila debajo**, con su sprite, su nombre y una X para quitarlo.
   Se probó en la esquina del retrato y tapaba justo al ninja: el sprite es lo primero que identifica
   la tarjeta y el objeto le caía encima con su botón. Abajo cabe entero y la X no pisa nada.
 - Panel más ancho (`w-32` → `w-40`): había sitio y la letra no tiene por qué ser diminuta.
 
 ## `components/Combat/CombatScreen.jsx`
+
+### El cierre del combate en una cadena de entrenador (playtest 2026-08-14)
+
+⚠️ **En un eslabón intermedio no se pinta nada del bloque de cierre**: ni "Victory", ni las
+recompensas, ni el "Next up...". Una cadena de entrenador es **UN combate con relevos**, y cantar la
+victoria tres veces —cada cartel tapado por el rival siguiente un segundo después— cortaba el ritmo sin
+decir nada nuevo. El cierre es el del **nodo**, no el de cada rival.
+
+Lo decide un único derivado, `seguiraLaCadena`, que usan los dos sitios que antes llevaban la lista de
+condiciones duplicada: el temporizador que encadena y el bloque de cierre.
+
+Dos cosas que se arreglaron de paso:
+
+- El respiro entre eslabones era un **1600 ms fijo**: lo único de la pantalla que no obedecía al ajuste
+  de velocidad de animación. Ahora es `MS_ENTRE_ESLABONES * factorAnimacion`, y más corto (700 ms),
+  porque ya no tiene que dar tiempo a leer un cartel.
+- El temporizador espera a `quedanTransformaciones` y a `nivelYaCelebrado`. Sin eso, acortar la pausa
+  habría reintroducido en la cadena el bug de la transformación que no se ve: el eslabón siguiente
+  entraba antes de que la celebración llegara a salir.
+
+### "Victory" no va en verde
+
+El verde (`exito`) es un color **semántico** —"esto es bueno", "desbloqueado", "eficaz"— y como rótulo
+gigante competía con toda la paleta de pergamino y tinta: era lo único de la pantalla que no parecía del
+mismo juego. Va en `pergamino-100`, que **sigue al tema** (crema sobre tinta, tinta sobre pergamino), y
+por eso lleva el contorno por defecto y no `contorno-fijo`. "Defeat" sí se queda en rojo de sello: el
+rojo ya significa derrota en esta paleta y es un color propio de ella.
 
 - Lee `ultimoResultadoCombate` del store (resumen enriquecido: nombres, HP máximo, modo activo).
 - **Reproduce el combate golpe a golpe, no turno a turno.** Un turno del motor trae 2-4 eventos (los

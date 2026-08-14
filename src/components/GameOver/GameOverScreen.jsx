@@ -26,7 +26,7 @@ export default function GameOverScreen() {
           antetitulo={runGanada ? 'The Will of Fire' : 'End of the road'}
           titulo={runGanada ? 'Victory' : 'Game Over'}
         />
-        <p className="text-[11px] text-pergamino-200/80 leading-relaxed">
+        <p className="text-[11px] text-pergamino-200 leading-relaxed">
           {runGanada
             ? 'You have defeated Pain and completed all 3 arcs. Konoha is safe.'
             : (

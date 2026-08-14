@@ -116,12 +116,42 @@ describe('barra de jutsu', () => {
     expect(atacante.cargaJutsu).toBe(0);
   });
 
-  it('el ataque básico pega menos que el jutsu del mismo luchador', () => {
+  it('el jutsu pega EXACTAMENTE lo que dice la proporción de sus danoBase', () => {
+    // Antes este test solo pedía `jutsu > basico`, y eso lo cumplía también la
+    // versión que salió mal en el playtest: con la defensa restada plana, un jutsu
+    // que en los datos pega 2,4 veces más acababa pegando 4 y 7 veces más, porque
+    // el mismo escudo se come un porcentaje enorme del golpe pequeño y uno pequeño
+    // del grande. Ahora la defensa se resta en proporción a la potencia, así que la
+    // proporción de los datos es la que se ve en pantalla — y eso sí se puede fijar
+    // con un número.
     const atacante = crearLuchador(cargadorRapido, 5);
-    const defensor = crearLuchador(rivalDePrueba, 5);
+    const defensor = crearLuchador(personajeDePrueba, 5); // mismo tipo: eficacia ×1
+
     const basico = ejecutarAtaque(atacante, defensor);
     const jutsu = ejecutarAtaque(atacante, defensor);
+
+    // Con este fixture la resta plana daba 1 y 9: **nueve veces**, para dos ataques
+    // que en los datos se llevan 2,4. Ahora sale 2,7, y lo que sobra es redondeo:
+    // el daño se redondea a entero y a un dígito eso mueve mucho la proporción, así
+    // que el margen es de media unidad (`toBeCloseTo(…, 0)`) y no más fino. Lo que
+    // fija el test es el orden de magnitud, que es justo lo que estaba roto.
+    const proporcionDeclarada = cargadorRapido.jutsu.danoBase / cargadorRapido.ataqueBasico.danoBase;
+    expect(jutsu.dano / basico.dano).toBeCloseTo(proporcionDeclarada, 0);
     expect(jutsu.dano).toBeGreaterThan(basico.dano);
+  });
+
+  it('cuando la defensa se traga el ataque entero, los dos caen al suelo de 1', () => {
+    // El rival es suiton y el atacante katon: eficacia ×0.5, y con esa penalización
+    // su defensa vale más que el ataque recibido. Ninguno de los dos golpes hace
+    // nada, y los dos se quedan en el mínimo de 1 — el mismo que ya existía para
+    // que ningún ataque haga 0. Es la única situación en la que el jutsu NO pega
+    // más que el básico, y es la correcta: contra ese rival no funciona ninguno de
+    // los dos, y la respuesta del juego es cambiar de personaje, no pegar más.
+    const atacante = crearLuchador(cargadorRapido, 5);
+    const defensor = crearLuchador(rivalDePrueba, 5);
+
+    expect(ejecutarAtaque(atacante, defensor).dano).toBe(1);
+    expect(ejecutarAtaque(atacante, defensor).dano).toBe(1);
   });
 
   it('solo el jutsu aplica efectoEstado, el ataque básico no', () => {

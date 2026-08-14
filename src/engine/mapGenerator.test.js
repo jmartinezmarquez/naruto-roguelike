@@ -183,6 +183,38 @@ describe('nodos de reclutar', () => {
     }
     expect([...vistas].sort()).toEqual(['comun', 'legendario']);
   });
+
+  // --- Los dos vetos del pergamino dorado (salieron del playtest) -------------
+  // El dorado no es una elección, es un COMBATE a un nivel FIJO del arco. Los dos
+  // tests de abajo protegen las dos formas que tenía de ser injusto.
+
+  it('el pergamino dorado nunca aparece antes del piso del mini-jefe', () => {
+    // El nivel del desafío no depende del piso, pero el del jugador sí: la
+    // simulación da el mismo combate al 52% en el piso 3 y al 87% en el 6. Antes
+    // del mini-jefe encima te pilla con el equipo a medio formar.
+    for (let i = 0; i < 60; i++) {
+      const mapa = generarMapa(arcoConReclutar, {
+        rarezasReclutarDisponibles: ['comun', 'legendario'],
+      });
+      nodosReclutar(mapa)
+        .filter((nodo) => nodo.rareza === 'legendario')
+        .forEach((nodo) => expect(nodo.piso).toBeGreaterThanOrEqual(arcoConReclutar.pisoMiniJefe));
+    }
+  });
+
+  it('el pergamino dorado nunca es el único nodo de su piso', () => {
+    // `nodosPorPiso.min` es 1: un piso puede tener un solo nodo, y ahí el dorado
+    // deja de ser una apuesta para ser un peaje obligatorio. Degrada a verde, que
+    // en esa misma casilla no molesta porque es una elección y no una pelea.
+    for (let i = 0; i < 60; i++) {
+      const mapa = generarMapa(arcoConReclutar, {
+        rarezasReclutarDisponibles: ['comun', 'legendario'],
+      });
+      nodosReclutar(mapa)
+        .filter((nodo) => nodo.rareza === 'legendario')
+        .forEach((nodo) => expect(mapa.pisos[nodo.piso - 1].length).toBeGreaterThan(1));
+    }
+  });
 });
 
 describe('calcularNivelPorPiso', () => {

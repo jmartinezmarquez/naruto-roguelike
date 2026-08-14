@@ -460,20 +460,32 @@ describe('_aplicarVictoria — HP al subir de nivel', () => {
 });
 
 describe('_aplicarDerrota (a través de jugarCombate)', () => {
-  it('los personajes derrotados quedan al final del orden del equipo', () => {
-    // Solo se enfrenta el enemigo débil (gana el activo), así que forzamos
-    // una derrota directa para aislar el comportamiento de reordenación.
-    useGameStore.setState((estado) => ({
-      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, hpActual: 1 } : p)),
-    }));
-    // Usamos el enemigo imbatible pero solo nos interesa el primer personaje:
-    // comprobamos el orden justo tras la primera ronda perdida.
-    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
-    const { equipo } = useGameStore.getState();
-    // Los 3 caen con este enemigo, así que comprobamos que el que EMPEZÓ
-    // primero (naruto) sigue estando en la lista, y todos están derrotados.
-    expect(equipo.map((p) => p.id)).toContain('naruto');
-    expect(equipo.every((p) => p.derrotado)).toBe(true);
+  it('NO cambia el orden del equipo al caer alguien', () => {
+    // El orden lo elige el jugador arrastrando (`reordenarEquipo`), así que es
+    // suyo y nada puede tocarlo por su cuenta. Antes los caídos se mandaban al
+    // final, y era un reorden permanente: la curación de fin de arco los revivía
+    // pero ya no devolvía el orden, y el jugador se encontraba su equipo
+    // barajado sin haber tocado nada. Salió del playtest.
+    useGameStore.getState().reordenarEquipo(['sakura', 'naruto', 'sasuke']);
+    useGameStore.getState()._aplicarDerrota('sakura');
+
+    expect(useGameStore.getState().equipo.map((p) => p.id)).toEqual(['sakura', 'naruto', 'sasuke']);
+  });
+
+  it('el activo pasa a ser el primero VIVO, que es lo que hacía falta del reorden', () => {
+    // La razón por la que el reorden parecía necesario. No lo era:
+    // `obtenerPersonajeActivo` ya busca al primero en pie, esté en el índice que
+    // esté. "Posición 1" nunca quiso decir índice 0.
+    useGameStore.getState()._aplicarDerrota('naruto');
+
+    expect(useGameStore.getState().obtenerPersonajeActivo().id).toBe('sasuke');
+  });
+
+  it('marca la run como terminada cuando cae el último', () => {
+    for (const id of ['naruto', 'sasuke', 'sakura']) useGameStore.getState()._aplicarDerrota(id);
+
+    expect(useGameStore.getState().runTerminada).toBe(true);
+    expect(useGameStore.getState().obtenerPersonajeActivo()).toBeNull();
   });
 });
 

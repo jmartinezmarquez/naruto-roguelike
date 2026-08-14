@@ -108,6 +108,32 @@ Puede pasar a mitad de arco: dos pergaminos dorados y un solo legendario en la p
 la pantalla no miente. El mapa sí se queda con el pergamino dorado dibujado — es el único punto donde
 el icono puede prometer de más, y se acepta a cambio de no dejar un nodo muerto.
 
+### Dos sitios donde el pergamino dorado NO puede salir (playtest 2026-08-14)
+
+El dorado no es una elección, es un **combate** a un nivel FIJO del arco. Eso lo hace justo o injusto
+según **dónde caiga**, y de ahí dos vetos en `rarezasPermitidasEnElPiso` (`engine/mapGenerator.js`).
+En los dos casos el nodo degrada a verde, por el camino que ya existía.
+
+1. **Nunca antes del piso del mini-jefe.** El nivel del desafío no depende del piso, pero el del
+   jugador sí: la simulación da el mismo combate al **52% en el piso 3 y al 87% en el 6**. La misma
+   decisión salía cara o barata según dónde cayera, y en el arco 1 encima te pilla con el equipo a
+   medio formar. El corte va en `pisoMiniJefe` y no en "la mitad" porque es el punto que ya significa
+   algo: para cuando llegas ahí tienes equipo completo.
+2. **Nunca si es el único nodo de su piso.** `nodosPorPiso.min` es **1**, así que un piso puede tener
+   un solo nodo — y ahí el dorado deja de ser una apuesta para ser un **peaje obligatorio** que
+   pierdes la mitad de las veces. Un pergamino verde en esa misma casilla no molesta: es una elección,
+   no una pelea.
+
+⚠️ **La rareza depende de DÓNDE está el nodo**, así que se reparte recorriendo `pisos` y no
+`Object.values(nodos)`, que no sabe ni en qué piso está cada uno ni con cuántos vecinos.
+
+⚠️ **Efecto medido en el arco 1**: los mapas con al menos un pergamino dorado pasan del ~20% que dice
+el peso al **13,9%** real. Es el precio de los vetos y se acepta: lo que quitan son exactamente los
+casos injustos. Si alguna vez se quiere volver al 20% visible, se sube el peso de `legendario` en
+`poolRarezaReclutar` — no se tocan los vetos.
+
+Hay dos tests de invariante en `mapGenerator.test.js` que los protegen.
+
 ## El desafío legendario
 
 `generarOfertaReclutar` marca `esDesafio: true`. La pantalla enseña **un solo rival** con su sprite,

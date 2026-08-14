@@ -76,7 +76,7 @@ export default function CharacterSelectScreen({ onConfirmar }) {
           único momento en que todavía no hay mapa detrás que enseñar. */}
       <div className="max-w-3xl w-full text-center flex flex-col gap-6">
         <CabeceraPantalla antetitulo="A new path" titulo="Choose your ninja" />
-        <p className="text-[10px] text-pergamino-200/60 -mt-4">
+        <p className="text-[10px] text-pergamino-200 -mt-4">
           The rest of your team is built by recruiting during the adventure.
         </p>
 

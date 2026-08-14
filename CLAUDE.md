@@ -304,6 +304,19 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   PNG de debajo no cambia. Se hace redefiniendo los tokens en ese subárbol, no cambiando clases a colores
   fijos.
 
+- [x] **Primer playtest real (2026-08-14)** — cuatro bugs, y los tres primeros son el mismo tipo de
+  fallo: una decisión razonable en su sitio que produce un efecto absurdo a distancia.
+  **(1)** `_aplicarDerrota` reordenaba el equipo a `[...vivos, ...caidos]` de forma **permanente**, así
+  que el orden que el jugador había elegido arrastrando desaparecía sin que él tocara nada. Borrado:
+  `obtenerPersonajeActivo` ya coge al primero VIVO, o sea que "posición 1" nunca quiso decir índice 0.
+  **(2)** El pergamino dorado —que es un COMBATE a nivel fijo— podía caer en el piso 2 o ser el único
+  nodo de su piso, o sea un peaje obligatorio que se pierde la mitad de las veces
+  (`rarezasPermitidasEnElPiso`, con dos tests de invariante). **(3)** ⚠️ **La defensa se resta ahora en
+  proporción a la potencia del ataque**: plana se comía el 59% de un básico y el 16% de un jutsu, así
+  que un 3,6× de los datos salía a 7,4× en pantalla. **Una resta plana no es neutral entre golpes de
+  tamaños distintos.** **(4)** Equipar arrastrando el objeto sobre el personaje, que el mapa ya
+  insinuaba dejando arrastrar. Ver `documentacion/05-roadmap.md` sección "Playtest 2026-08-14".
+
 ## Bugs ya resueltos (para no repetirlos)
 
 - **Función de normalización no idempotente** (`normalizarPasivas`): el store normalizaba las pasivas

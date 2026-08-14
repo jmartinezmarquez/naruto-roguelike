@@ -123,7 +123,19 @@ export function calcularDano(atacante, defensor, ataque, contexto = {}) {
   );
 
   const danoBruto = ataqueEfectivo * ataque.danoBase * eficacia;
-  const cantidad = danoBruto - defensaEfectiva * 0.5;
+  // ⚠️ La defensa se resta **en proporción a la potencia del ataque**, no como una
+  // cantidad plana igual para todos. Con la resta plana el mismo escudo se comía el
+  // 59% de un ataque básico y el 16% de un jutsu (Naruto Nv.1, ataque 9, contra
+  // defensa 7), así que un jutsu que en los datos pega 3,6 veces más acababa
+  // pegando 7,4 veces más en pantalla — y el básico caía al suelo de 1 y dejaba de
+  // existir. El jugador lo describió como "los ataques básicos son negligibles", y
+  // lo eran: no por su potencia, sino porque la resta plana castiga al golpe
+  // pequeño el triple que al grande.
+  //
+  // Multiplicar la defensa por `danoBase` deja la reducción en el MISMO porcentaje
+  // para los dos ataques, así que la diferencia entre básico y jutsu vuelve a ser
+  // la que declaran los datos. Salió del playtest.
+  const cantidad = danoBruto - defensaEfectiva * 0.5 * ataque.danoBase;
   return { cantidad: Math.max(1, Math.round(cantidad)), danoBruto, eficacia };
 }
 

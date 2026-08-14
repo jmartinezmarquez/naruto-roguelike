@@ -1195,13 +1195,24 @@ export const useGameStore = create((set, get) => ({
     const actualizado = equipo.map((p) =>
       p.id === idPersonaje ? { ...p, derrotado: true, hpActual: 0 } : p,
     );
+
+    // ⚠️ El orden del equipo NO se toca al caer alguien. Antes se reordenaba a
+    // `[...vivos, ...caidos]` para mandar al caído al final, y era un reorden
+    // **permanente y silencioso**: el jugador colocaba su equipo arrastrando, se
+    // le moría alguien, y al curar el equipo entero al terminar el arco se
+    // encontraba con otro orden que él no había elegido — con el último que quedó
+    // en pie al frente. La curación no tenía la culpa; solo dejaba a la vista el
+    // estropicio de veinte minutos antes.
+    //
+    // Y no hacía ninguna falta: `obtenerPersonajeActivo` es
+    // `equipo.find((p) => !p.derrotado)`, o sea que ya coge al primero VIVO esté
+    // donde esté. "Posición 1" nunca ha querido decir el índice 0, quiere decir el
+    // primero en pie. (Salido del playtest, punto 5 de la tanda.)
     const vivos = actualizado.filter((p) => !p.derrotado);
-    const caidos = actualizado.filter((p) => p.derrotado);
-    const equipoReordenado = [...vivos, ...caidos];
 
     const todosDerrotados = vivos.length === 0;
     set({
-      equipo: equipoReordenado,
+      equipo: actualizado,
       runTerminada: todosDerrotados,
       runGanada: false,
       huboDerrotaEnEsteArco: true,

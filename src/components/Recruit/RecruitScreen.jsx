@@ -148,7 +148,7 @@ export default function RecruitScreen() {
           antetitulo={desafioGanado ? 'The scroll is yours' : cabecera.antetitulo}
           titulo={desafioGanado ? 'They Yield' : cabecera.titulo}
         />
-        <p className="text-[10px] text-pergamino-200/60 text-center max-w-md">
+        <p className="text-[10px] text-pergamino-200 text-center max-w-md">
           {desafioPendiente
             ? 'Beat them in combat and they will join you'
             : desafioGanado
@@ -204,7 +204,7 @@ export default function RecruitScreen() {
               />
             ))
           ) : (
-            <p className="col-span-3 text-center text-pergamino-200/50 text-[10px] py-8">
+            <p className="col-span-3 text-center text-pergamino-200 text-[10px] py-8">
               No ninjas available to recruit here.
             </p>
           )}

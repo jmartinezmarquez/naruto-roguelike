@@ -115,7 +115,7 @@ export default function ShopScreen() {
         titulo="Shop"
         contador={`${oro} gold available`}
       />
-      <p className="text-[10px] text-pergamino-200/45 italic text-center max-w-sm leading-relaxed -mt-3">
+      <p className="text-[10px] text-pergamino-200 italic text-center max-w-sm leading-relaxed -mt-3">
         {flavor}
       </p>
 
@@ -135,7 +135,7 @@ export default function ShopScreen() {
             </div>
           ))
         ) : (
-          <p className="text-center text-pergamino-200/50 text-[10px] py-8">
+          <p className="text-center text-pergamino-200 text-[10px] py-8">
             The merchant has nothing left to offer.
           </p>
         )}

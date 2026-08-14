@@ -42,6 +42,12 @@ const PAUSA_ENTRE_RONDAS_MS = 1400;
 // transformación. Sin esta espera, el overlay salía encima del cartel y el
 // jugador no llegaba a ver que había subido — que es lo que la explica.
 const MS_CELEBRAR_NIVEL = 1500;
+// El respiro entre dos enemigos de una cadena de entrenador. Corto a propósito: la
+// cadena es UN combate con relevos, no tres combates, y lo que se quiere es que se
+// note el cambio de rival sin cortar el ritmo. Va multiplicado por el factor de
+// velocidad como todo lo demás — antes era un 1600 fijo, así que era lo único de la
+// pantalla que no obedecía al ajuste de animación.
+const MS_ENTRE_ESLABONES = 700;
 
 // Verde / oro / rojo son SEMÁNTICOS aquí: dicen cuánta vida queda, no de qué
 // naturaleza es el luchador. Ojo, `colorDelDano` de más abajo es lo contrario —
@@ -799,6 +805,14 @@ export default function CombatScreen() {
     ? (resultado?.transformacionesDesbloqueadas ?? [])[transformacionesVistas] ?? null
     : null;
 
+  // ¿Queda alguna transformación por enseñar? No es lo mismo que
+  // `transformacionEnPantalla`: esto es true TAMBIÉN durante el segundo y medio que
+  // el cartel de subida de nivel tarda en dejarle sitio. Justo esa ventana era el
+  // agujero — el botón de salir ya estaba en pantalla y quien lo pulsaba se saltaba
+  // su propia transformación.
+  const quedanTransformaciones = combateTotalTerminado && !saltarTransformacion
+    && (resultado?.transformacionesDesbloqueadas ?? []).length > transformacionesVistas;
+
   // Cuántas transformaciones de este combate ya se han enseñado. En cuanto una
   // sale de su pantalla, la tarjeta de ese personaje pasa a pintarse con su
   // nivel NUEVO: sprite transformado y nombre del modo, sin esperar al siguiente
@@ -826,18 +840,29 @@ export default function CombatScreen() {
   const hayMasEnCadena = cadenaEnemigos
     ? cadenaEnemigos.indiceActual < cadenaEnemigos.enemigos.length - 1
     : false;
+
+  /**
+   * ¿Va a entrar otro enemigo detrás de este? Un solo derivado, porque la
+   * respuesta la necesitan dos sitios que ANTES llevaban la lista de condiciones
+   * duplicada: el temporizador que encadena y el bloque de cierre del combate.
+   */
+  const seguiraLaCadena = combateTotalTerminado
+    && Boolean(resultado?.jugadorGanoFinal)
+    && hayMasEnCadena
+    && !runTerminada && !resultado?.arcoCompletado && !recompensaMiniJefe;
+
   useEffect(() => {
-    if (!combateTotalTerminado) return undefined;
-    if (!resultado?.jugadorGanoFinal) return undefined;
-    if (!hayMasEnCadena) return undefined;
-    if (runTerminada || resultado.arcoCompletado || recompensaMiniJefe) return undefined;
-    // No encadenar mientras haya una transformación en pantalla: si no, el
-    // siguiente combate empezaría por detrás del overlay.
-    if (transformacionEnPantalla) return undefined;
-    const t = setTimeout(continuarCadena, 1600);
+    if (!seguiraLaCadena) return undefined;
+    // Nada de encadenar mientras quede una transformación por enseñar. Y se mira
+    // `quedanTransformaciones` y no `transformacionEnPantalla`: la segunda todavía
+    // es null durante el segundo y medio que tarda en salir, que es justo cuando el
+    // eslabón siguiente se la llevaba por delante.
+    if (quedanTransformaciones) return undefined;
+    // Ni antes de que se vea el cartel de subida de nivel, por lo mismo.
+    if (!nivelYaCelebrado) return undefined;
+    const t = setTimeout(continuarCadena, MS_ENTRE_ESLABONES * factorAnimacion);
     return () => clearTimeout(t);
-  }, [combateTotalTerminado, resultado, hayMasEnCadena, runTerminada, recompensaMiniJefe,
-    continuarCadena, transformacionEnPantalla]);
+  }, [seguiraLaCadena, quedanTransformaciones, nivelYaCelebrado, continuarCadena, factorAnimacion]);
 
   if (!resultado || !ronda || !estadoEnTurnoActual) {
     return (
@@ -1047,9 +1072,21 @@ export default function CombatScreen() {
           </button>
         )}
 
-        {combateTotalTerminado && (
+        {/* ⚠️ En un eslabón intermedio de una cadena NO se pinta nada de esto: ni
+            "Victory", ni las recompensas, ni el "Next up...". Una cadena de
+            entrenador es UN combate con relevos, y cantar la victoria tres veces
+            —cada una tapada 0,7 s después por el siguiente rival— cortaba el ritmo
+            sin decir nada nuevo. El cierre es el del nodo, no el de cada rival. */}
+        {combateTotalTerminado && !seguiraLaCadena && (
           <div className="mt-6 text-center flex flex-col items-center gap-4">
-            <p className={`font-naruto contorno-fijo text-4xl ${resultado.jugadorGanoFinal ? 'text-exito' : 'text-sello-500'}`}>
+            {/* Victory NO va en verde. El verde es un color semántico de "esto es
+                bueno" que aquí competía con toda la paleta de pergamino y tinta, y
+                era lo único de la pantalla que no parecía del mismo juego. En crema
+                sigue al tema —crema sobre tinta, tinta sobre pergamino— y por eso
+                lleva el contorno por defecto y no `contorno-fijo`, que es para los
+                rellenos que no cambian. Defeat sí se queda en rojo de sello: el rojo
+                ya significa derrota en esta paleta, y es un color propio de ella. */}
+            <p className={`font-naruto text-4xl ${resultado.jugadorGanoFinal ? 'text-pergamino-100' : 'text-sello-500 contorno-fijo'}`}>
               {resultado.jugadorGanoFinal ? 'Victory' : 'Defeat'}
             </p>
 
@@ -1060,13 +1097,22 @@ export default function CombatScreen() {
                 total acumulado (lo suma el store en `cadenaEnemigos`). Salía en
                 cada eslabón, con lo de ese combate: tres carteles que aparecían y
                 se iban en 1,6 s y ninguno decía cuánto llevabas. */}
-            {resultado.jugadorGanoFinal && !hayMasEnCadena && (
+            {resultado.jugadorGanoFinal && (
               <PanelRecompensas recompensas={resultado.recompensas} />
             )}
 
-            {runTerminada ? (
+            {/* ⚠️ La salida del combate NO se pinta mientras quede una transformación
+                por enseñar. El desbloqueo se celebra con retraso —primero el cartel de
+                subida de nivel, `MS_CELEBRAR_NIVEL`— pero este bloque salía en cuanto
+                terminaba el combate, así que durante ese segundo y medio había un botón
+                de "Continue" en pantalla: quien lo pulsaba rápido se iba del combate y
+                **no veía nunca su transformación**. Salió del playtest, y es un fallo de
+                los que solo aparecen "a veces" porque depende de lo deprisa que pulses.
+                Cubre también la cola entera, no solo la primera: dos personajes pueden
+                cruzar su umbral en la misma victoria. */}
+            {!quedanTransformaciones && (runTerminada ? (
               <div>
-                <p className="text-[10px] text-pergamino-200/80 leading-relaxed mb-3">
+                <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
                   {runGanada
                     ? 'You completed the entire run! Konoha is safe.'
                     : 'Your entire team has fallen. The run is over.'}
@@ -1077,7 +1123,7 @@ export default function CombatScreen() {
               </div>
             ) : resultado.arcoCompletado ? (
               <div>
-                <p className="text-[10px] text-pergamino-200/80 leading-relaxed mb-3">
+                <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
                   You have beaten {arcoActualDatos?.nombre}. A new arc begins.
                 </p>
                 <BotonPrincipal onClick={avanzarSiguienteArco} className="elevar-hover">
@@ -1086,7 +1132,7 @@ export default function CombatScreen() {
               </div>
             ) : recompensaMiniJefe ? (
               <div>
-                <p className="text-[10px] text-pergamino-200/80 leading-relaxed mb-3">
+                <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
                   You defeated the mini-boss! A reward awaits you.
                 </p>
                 <BotonPrincipal onClick={irARecompensaMiniJefe} className="elevar-hover">
@@ -1097,22 +1143,18 @@ export default function CombatScreen() {
               // El desafío del pergamino dorado: se ha ganado, así que la vuelta
               // no es al mapa sino al pergamino, ya en modo "recluta a tu rival".
               <div>
-                <p className="text-[10px] text-pergamino-200/80 leading-relaxed mb-3">
+                <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
                   You have earned their respect.
                 </p>
                 <BotonPrincipal onClick={irAReclutaDesafio} className="elevar-hover">
                   Recruit them
                 </BotonPrincipal>
               </div>
-            ) : hayMasEnCadena ? (
-              // Sin texto: el panel de la derecha ya enseña la cadena entera y a
-              // quién le toca. Solo el respiro antes de que entre el siguiente.
-              <p className="text-[10px] text-pergamino-200/50 animate-pulse">Next up...</p>
             ) : (
               <BotonPrincipal onClick={volverAlMapa} className="elevar-hover">
                 Continue
               </BotonPrincipal>
-            )}
+            ))}
           </div>
         )}
       </div>
