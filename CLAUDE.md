@@ -317,6 +317,17 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   tamaños distintos.** **(4)** Equipar arrastrando el objeto sobre el personaje, que el mapa ya
   insinuaba dejando arrastrar. Ver `documentacion/05-roadmap.md` sección "Playtest 2026-08-14".
 
+- [x] **Eventos rediseñados (punto 6)** — `documentacion/35-diseño-de-eventos.md`, el documento MVP que
+  le faltaba. El diagnóstico dio la vuelta al punto: la pantalla ya estaba en estilo y lo que fallaba era
+  el **contenido** — 4 de las 24 opciones no hacían literalmente nada y la pista decía exactamente lo que
+  te llevabas, así que **un evento era un regalo con dos envoltorios, no una decisión**. Ahora son 15 (5
+  por arco, cada uno pegado a la ficción del suyo), **toda opción cuesta algo** y 9 llevan **tirada de
+  azar con las probabilidades a la vista** — esconder las reglas no es tensión, es una trampa.
+  ⚠️ **Un evento NUNCA mata** (suelo de 1 HP) y su daño no pasa del **25%** de la vida: las dos con test,
+  y son la condición que hizo aceptable el azar en runs cortas. Tipos nuevos `azar` y `varios`, que son
+  **contenedores** y hacen recursivo a `_aplicarEfectoDeEvento` — con un `switch` plano habría hecho
+  falta un tipo por combinación. El store devuelve **datos** y la pantalla escribe el texto.
+
 ## Bugs ya resueltos (para no repetirlos)
 
 - **Función de normalización no idempotente** (`normalizarPasivas`): el store normalizaba las pasivas

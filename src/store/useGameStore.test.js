@@ -3,6 +3,7 @@ import { useGameStore } from './useGameStore';
 import { useAchievementsStore, VISTOS_VACIO } from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
 import configGlobal from '../data/config.json';
+import eventosData from '../data/events.json';
 
 const enemigoHakuDePrueba = {
   // Mismo id que el mini-jefe real del arco de prueba (miniJefeId: 'haku'),
@@ -494,6 +495,230 @@ describe('reordenarEquipo', () => {
     useGameStore.getState().reordenarEquipo(['sakura', 'naruto', 'sasuke']);
     const { equipo } = useGameStore.getState();
     expect(equipo.map((p) => p.id)).toEqual(['sakura', 'naruto', 'sasuke']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Eventos (punto 6 — ver documentacion/35-diseño-de-eventos.md)
+// ---------------------------------------------------------------------------
+
+/** Planta un evento a mano con las elecciones que haga falta probar. */
+function ponerEvento(...efectos) {
+  useGameStore.setState({
+    eventoActual: {
+      id: 'evento_de_prueba',
+      titulo: 'Evento de Prueba',
+      descripcion: '...',
+      elecciones: efectos.map((efecto, i) => ({ texto: `Opción ${i}`, efecto })),
+    },
+    resultadoEvento: null,
+    pantalla: 'evento', // es lo que hace `avanzarANodo` al entrar en el nodo
+  });
+}
+
+describe('eventos — resolución', () => {
+  it('no vuelve al mapa al elegir: deja el resultado a la vista', () => {
+    // Desde que una elección puede llevar una tirada, resolver en silencio y
+    // devolver al jugador al mapa le escondía justo lo que acababa de apostar.
+    ponerEvento({ tipo: 'ganarOro', cantidad: 30 });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    expect(useGameStore.getState().pantalla).toBe('evento');
+    expect(useGameStore.getState().resultadoEvento).toMatchObject({ tipo: 'ganarOro', cantidad: 30 });
+
+    useGameStore.getState().cerrarEvento();
+    expect(useGameStore.getState().pantalla).toBe('mapa');
+    expect(useGameStore.getState().eventoActual).toBeNull();
+    expect(useGameStore.getState().resultadoEvento).toBeNull();
+  });
+
+  it('un efecto `varios` aplica todas sus partes', () => {
+    // Es lo que permite que una opción tenga PRECIO ("ganas XP, pero acabas
+    // molido"): sin él, cada elección solo podía dar o solo podía quitar.
+    const oroAntes = useGameStore.getState().oro;
+    ponerEvento({
+      tipo: 'varios',
+      efectos: [{ tipo: 'ganarOro', cantidad: 50 }, { tipo: 'perderHpEquipo', porcentaje: 0.2 }],
+    });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    expect(useGameStore.getState().oro).toBe(oroAntes + 50);
+    useGameStore.getState().equipo.forEach((p) => {
+      expect(p.hpActual).toBeLessThan(useGameStore.getState().obtenerHpMaximo(p.id));
+    });
+  });
+
+  it('una tirada de azar aplica una rama u otra, y cuenta cuál salió', () => {
+    const salidas = new Set();
+    for (let i = 0; i < 60; i++) {
+      useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+      ponerEvento({
+        tipo: 'azar',
+        probabilidad: 0.5,
+        exito: { tipo: 'ganarOro', cantidad: 10 },
+        fallo: { tipo: 'perderHpEquipo', porcentaje: 0.1 },
+      });
+      useGameStore.getState().resolverEventoEleccion(0);
+      const { tirada, tipo } = useGameStore.getState().resultadoEvento;
+      // La rama aplicada y lo que dice la tirada tienen que ser la misma cosa:
+      // si no, el jugador leería "sale bien" y cobraría el castigo.
+      expect(tipo).toBe(tirada.salioBien ? 'ganarOro' : 'perderHpEquipo');
+      salidas.add(tirada.salioBien);
+    }
+    expect(salidas.size).toBe(2); // con 60 tiradas al 50% salen las dos
+  });
+
+  it('⚠️ un evento NUNCA puede matar a nadie: el HP baja como mucho a 1', () => {
+    // Es la condición que hizo aceptable meter azar de verdad. Perder una run por
+    // un dado, en un roguelike de runs cortas, no es tensión: es un castigo por
+    // jugar. Si algún día alguien "arregla" el suelo de 1, este test cae.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p) => ({ ...p, hpActual: 1 })),
+    }));
+    ponerEvento({ tipo: 'perderHpEquipo', porcentaje: 0.9 });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    useGameStore.getState().equipo.forEach((p) => {
+      expect(p.hpActual).toBe(1);
+      expect(p.derrotado).toBe(false);
+    });
+    expect(useGameStore.getState().runTerminada).toBe(false);
+  });
+
+  it('comprar sin oro suficiente no compra ni cobra, y lo dice', () => {
+    useGameStore.setState({ oro: 5 });
+    ponerEvento({ tipo: 'comprarObjetoAleatorio', coste: 40 });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    expect(useGameStore.getState().oro).toBe(5);
+    expect(useGameStore.getState().inventario).toEqual([]);
+    expect(useGameStore.getState().resultadoEvento.tipo).toBe('sinOro');
+  });
+
+  it('perder oro sin tenerlo no deja el contador en negativo, y cuenta lo pagado de verdad', () => {
+    useGameStore.setState({ oro: 10 });
+    ponerEvento({ tipo: 'perderOro', cantidad: 40 });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    expect(useGameStore.getState().oro).toBe(0);
+    expect(useGameStore.getState().resultadoEvento.cantidad).toBe(10);
+  });
+});
+
+describe('eventos — invariantes de los datos', () => {
+  const TIPOS_CONOCIDOS = new Set([
+    'varios', 'azar', 'curarEquipoPorcentaje', 'perderHpEquipo', 'buffTemporalEquipo',
+    'ganarXpEquipo', 'ganarOro', 'perderOro', 'comprarObjetoAleatorio',
+    'mejoraPermanenteAleatoria', 'ninguno',
+  ]);
+  const ARCOS = new Set(['pais_de_las_olas', 'examen_chunin', 'invasion_de_pain']);
+  const todosLosEfectos = (efecto) => (
+    efecto.tipo === 'varios' ? efecto.efectos.flatMap(todosLosEfectos)
+      : efecto.tipo === 'azar' ? [efecto, ...todosLosEfectos(efecto.exito), ...todosLosEfectos(efecto.fallo)]
+        : [efecto]
+  );
+
+  it('todo efecto declara un tipo que el store sabe aplicar', () => {
+    // El fallo que este test evita es el silencioso de siempre: un tipo mal
+    // escrito cae en el `default` del switch, no pasa nada, y el evento parece
+    // funcionar. Mismo criterio que el catálogo de pasivas.
+    eventosData.eventos.forEach((evento) => {
+      evento.elecciones.forEach(({ efecto }) => {
+        todosLosEfectos(efecto).forEach((e) => {
+          expect(TIPOS_CONOCIDOS.has(e.tipo), `${evento.id}: tipo desconocido "${e.tipo}"`).toBe(true);
+        });
+      });
+    });
+  });
+
+  it('todo evento pertenece a un arco real y ofrece al menos dos elecciones', () => {
+    eventosData.eventos.forEach((evento) => {
+      expect(ARCOS.has(evento.arcoId), `${evento.id}: arco "${evento.arcoId}"`).toBe(true);
+      expect(evento.elecciones.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  it('⚠️ ninguna elección es "no pasa nada" de primeras', () => {
+    // La regla de diseño del punto 6: un evento es un INTERCAMBIO, no un regalo.
+    // "Márchate sin nada" no es una decisión — antes había cuatro opciones así, y
+    // eran cuatro botones que nadie iba a pulsar nunca. `ninguno` sigue siendo
+    // legítimo DENTRO de una tirada (el mercader se ofende y se va), y por eso el
+    // test mira solo el efecto de primer nivel.
+    eventosData.eventos.forEach((evento) => {
+      evento.elecciones.forEach((eleccion, i) => {
+        expect(eleccion.efecto.tipo, `${evento.id}, elección ${i}`).not.toBe('ninguno');
+      });
+    });
+  });
+
+  it('las tiradas declaran una probabilidad de verdad y sus dos ramas', () => {
+    eventosData.eventos.forEach((evento) => {
+      evento.elecciones.forEach(({ efecto }) => {
+        todosLosEfectos(efecto).filter((e) => e.tipo === 'azar').forEach((e) => {
+          expect(e.probabilidad, `${evento.id}`).toBeGreaterThan(0);
+          expect(e.probabilidad, `${evento.id}`).toBeLessThan(1);
+          expect(e.exito, `${evento.id}`).toBeTruthy();
+          expect(e.fallo, `${evento.id}`).toBeTruthy();
+        });
+      });
+    });
+  });
+
+  it('⚠️ toda apuesta paga MÁS que la opción segura de su propio evento', () => {
+    // La regla que faltaba, y que el playtest cazó antes que ningún número: una
+    // apuesta tiene que pagar una PRIMA sobre la opción segura, porque la varianza
+    // es en sí misma un coste — en un roguelike una mala tirada se arrastra al
+    // combate siguiente. Si la apuesta solo empata en valor esperado, nadie la
+    // coge, y un botón que nadie pulsa es contenido muerto (es exactamente lo que
+    // le pasaba a las opciones `ninguno` de la versión anterior).
+    //
+    // ⚠️ La tabla de abajo es un MODELO, no una verdad: cuánto vale 1 de XP contra
+    // 1 de oro es discutible y depende del arco. Vale para lo que se usa aquí, que
+    // es comparar las dos opciones de un MISMO evento entre sí — las dos se miden
+    // con la misma vara, así que un error de la tabla se cancela en el cociente.
+    // Si alguien cambia la tabla, lo que hay que revisar es el umbral, no borrar
+    // el test.
+    const VALOR_OBJETO = 55; // media de `precioTienda` de los objetos comprables
+    const VALOR_XP = 0.55;
+    const VALOR_HP = 0.45; // por punto porcentual de vida del equipo
+    const VALOR_MEJORA_PERMANENTE = 90; // dura toda la run y no se consigue de otra forma
+    const valor = (e) => {
+      switch (e.tipo) {
+        case 'varios': return e.efectos.reduce((t, x) => t + valor(x), 0);
+        case 'azar': return e.probabilidad * valor(e.exito) + (1 - e.probabilidad) * valor(e.fallo);
+        case 'curarEquipoPorcentaje': return e.cantidad * 100 * VALOR_HP;
+        case 'perderHpEquipo': return -e.porcentaje * 100 * VALOR_HP;
+        case 'ganarXpEquipo': return e.cantidad * VALOR_XP;
+        case 'ganarOro': return e.cantidad;
+        case 'perderOro': return -e.cantidad;
+        case 'comprarObjetoAleatorio': return VALOR_OBJETO - e.coste;
+        case 'mejoraPermanenteAleatoria': return VALOR_MEJORA_PERMANENTE;
+        case 'buffTemporalEquipo': return ((e.multiplicador - 1) * 100 / 10) * 25;
+        default: return 0;
+      }
+    };
+
+    eventosData.eventos.forEach((evento) => {
+      const iApuesta = evento.elecciones.findIndex((o) => o.efecto.tipo === 'azar');
+      if (iApuesta === -1) return;
+      const apuesta = valor(evento.elecciones[iApuesta].efecto);
+      const segura = valor(evento.elecciones[1 - iApuesta].efecto);
+      expect(apuesta / segura, `${evento.id}: la apuesta no compensa`).toBeGreaterThanOrEqual(1.2);
+    });
+  });
+
+  it('el daño de un evento nunca pasa del 25% de la vida', () => {
+    // Un evento no mata (el suelo de 1 HP lo garantiza), pero tampoco puede dejar
+    // al equipo tan tocado que el siguiente combate esté perdido de antemano. El
+    // tope es de diseño y va escrito aquí porque los datos son los que lo pueden
+    // romper.
+    eventosData.eventos.forEach((evento) => {
+      evento.elecciones.forEach(({ efecto }) => {
+        todosLosEfectos(efecto).filter((e) => e.tipo === 'perderHpEquipo').forEach((e) => {
+          expect(e.porcentaje, `${evento.id}`).toBeLessThanOrEqual(0.25);
+        });
+      });
+    });
   });
 });
 

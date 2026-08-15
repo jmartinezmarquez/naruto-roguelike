@@ -859,6 +859,46 @@ El triaje entra por delante del 5a, como dice el [31](./31-plan-siguientes-pasos
   salgan del mismo estilo.
 - [ ] **El mapa se ve pequeño** comparado con Pokelike: es el **punto 9**, que ya lo tenía anotado.
 
+**Eventos (punto 6) — ver [35](./35-diseño-de-eventos.md)**
+
+Era el único punto **sin documento MVP**, y por eso llevaba meses sin poder planificarse. El documento se
+escribió con libertad creativa delegada por el usuario; lo único que se consultó antes de tocar nada fue
+meter azar de verdad.
+
+- [x] **El diagnóstico cambió el punto entero: la pantalla no era el problema.** El lavado de cara ya
+  había pasado por `EventScreen`, así que "es la única que parece una web" estaba caducado. Lo que había
+  eran **12 eventos donde 4 de las 24 opciones no hacían literalmente nada** y donde la pista decía
+  exactamente lo que te llevabas: un evento no era una decisión, era **un regalo con dos envoltorios**.
+- [x] **Regla nueva: un evento es un intercambio, no un regalo.** Toda opción cuesta algo. Con test: si
+  una elección de primer nivel es `ninguno`, falla.
+- [x] **15 eventos, 5 por arco, cada uno pegado a la ficción del suyo** (la niebla de Zabuza, el Bosque
+  de la Muerte, los escombros y la voz de Pain). Los 8 que ya existían conservan título e `id`; lo que
+  cambia es que ahora cuestan algo.
+- [x] **Azar de verdad en 9 de los 15**, con las **probabilidades a la vista antes de elegir**: una
+  apuesta a ciegas no es una decisión, es una trampa. Lo que se esconde es el resultado del dado, no las
+  reglas.
+- [x] ⚠️ **Un evento NUNCA mata** (suelo de 1 HP) y **su daño no pasa del 25%** de la vida. Las dos con
+  test. Es la condición que hizo aceptable el azar: perder una run por un dado, en runs cortas, no es
+  tensión sino un castigo por jugar.
+- [x] **Pantalla de resultado**: el evento ya no se resuelve en silencio. Con tiradas, devolver al
+  jugador al mapa le escondía justo lo que acababa de apostar. Se lleva por delante el toast de curación
+  del mapa, que desde entonces contaba lo mismo dos veces y encima después.
+- [x] **Dos tipos de efecto nuevos que son contenedores** (`azar` y `varios`) más `perderHpEquipo`, y
+  `_aplicarEfectoDeEvento` pasa a ser **recursivo**: una rama de una tirada es un efecto, una parte de un
+  `varios` es un efecto, y una rama puede llevar un `varios` dentro. Con un `switch` plano habría hecho
+  falta un tipo por combinación.
+- [x] **El store devuelve datos y la pantalla escribe el texto** (`describirResultado`), separado de la
+  promesa que se lee antes de elegir (`generarPista`): una es futuro y la otra pasado.
+- [x] 🐛 **Primera versión de los números, corregida tras verla**: *"la opción sin azar es demasiado
+  potente, apenas vale la pena la otra"*. Medido: **5 de las 9 apuestas no compensaban**, y la peor
+  —*Forbidden Scroll Merchant*— estaba a **×0,08** porque el fallo cobraba **tres veces** (perdías el
+  objeto, el dinero y vida). ⚠️ Regla nueva, con test: **una apuesta tiene que pagar una prima sobre la
+  opción segura de su propio evento** (≥ ×1,2; hoy están entre ×1,32 y ×2,19), porque la varianza es en
+  sí misma un coste y una apuesta que solo empata no la coge nadie. Y dos lecciones de método: el error
+  no estaba en la probabilidad sino en la **estructura** del fallo, y en un caso lo que desequilibraba
+  era la **opción segura** (comprar a ciegas por 30 algo que vale 55 de media ya era un chollo).
+- [x] 242 tests (eran 230): 6 de resolución y 6 de invariantes de los datos.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -885,10 +925,11 @@ diseño, es **material que enseñar**: hay 7 logros y su documento MVP está esc
 lo que más rendimiento le saca a lo ya construido, porque el registro de vistos del Bingo Book ya metió
 contadores persistidos en `useAchievementsStore`, que es exactamente donde 5a necesita los suyos.
 
-**3.º — el 6 (eventos).** Le falta lo mismo que al 5 pero al revés: aquí el diseño está sin decidir. Es
-el único punto **sin documento MVP**, y una de sus preguntas es de diseño de juego y no de pantalla.
+**3.º — el 9 (columna central).** Cosmético y acotado; buen relleno cuando quede medio hueco. Va con la
+tanda de arte pendiente (iconos de chakra y del menú vertical), que es lo único que le queda a la
+interfaz por depender de algo externo.
 
-**4.º — el 9 (columna central).** Cosmético y acotado; buen relleno cuando quede medio hueco.
+*(El 6 —eventos— está hecho: ver [35](./35-diseño-de-eventos.md).)*
 
 **Lo más grande que le falta al MVP y no es un punto de esta lista: el sonido.** Está en el backlog
 porque no es un retoque de pantalla sino un sistema entero (assets, precarga, mezcla, volumen). Es, con
@@ -915,13 +956,10 @@ el rediseño de fondo de eventos es el 6.
    - **5c — la pantalla**: hecha (ver "Hecho"), incluidas las pestañas por acto con su contador y el
      icono de cada logro sacado de su recompensa.
 
-6. **Interfaz de eventos** — el kit visual ya está aplicado, así que la pantalla no desentona; lo que
-   falta es el **rediseño de fondo**, y es el único punto **sin documento MVP**. Hay que escribirlo antes
-   (como se hizo con el [23](./23-diseño-tarjeta-de-inventario.md) o el
-   [25](./25-diseño-pantalla-logros.md)), y tiene que contestar cuatro preguntas anotadas en
-   `EventScreen.jsx` y en el [31](./31-plan-siguientes-pasos.md). Una de ellas **no es de pantalla sino
-   de diseño de juego**: si la pista del efecto se sigue viendo antes de elegir. Hoy sí, y eso hace del
-   evento una decisión informada en vez de una apuesta.
+~~6. **Interfaz de eventos**~~ — **HECHO**, ver [35](./35-diseño-de-eventos.md) y la sección "Hecho".
+   El diagnóstico dio la vuelta al punto: la pantalla ya estaba en estilo y lo que fallaba era el
+   **contenido**. La pregunta de diseño de juego que lo bloqueaba está contestada: la pista **sigue a la
+   vista**, incluidas las probabilidades — lo que se esconde es el resultado del dado, no las reglas.
 
 7. **Playtest jugando** — la recalibración numérica está hecha (punto 1 fase 4, con el simulador contra
     los datos rediseñados). Lo que queda es lo que un script no puede medir: jugar runs enteras y ver

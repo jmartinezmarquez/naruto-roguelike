@@ -40,5 +40,6 @@
 - [32 - Enciclopedia](./32-enciclopedia.md)
 - [33 - Dirección visual: el kit de piezas compartidas](./33-direccion-visual.md)
 - [34 - Ajustes](./34-ajustes.md)
+- [35 - Diseño de los eventos](./35-diseño-de-eventos.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.
