@@ -15,6 +15,7 @@ import InventoryScreen from './components/Inventory/InventoryScreen';
 import LogroToast from './components/Achievements/LogroToast';
 import AvisoToast from './components/Map/AvisoToast';
 import CharacterSelectScreen from './components/CharacterSelect/CharacterSelectScreen';
+import MusicaDeFondo from './components/common/MusicaDeFondo';
 import arcoPaisDeLasOlas from './data/arcs/pais-de-las-olas.json';
 import gameBgDark from './assets/game-background-dark-theme.png';
 import gameBgLight from './assets/game-background-light-theme.png';
@@ -57,6 +58,7 @@ export default function App() {
   const tema = useSettingsStore((s) => s.tema);
   const velocidadCombate = useSettingsStore((s) => s.velocidadCombate);
   const mapa = useGameStore((s) => s.mapa);
+  const arcoActualId = useGameStore((s) => s.arcoActualId);
   const pantalla = useGameStore((s) => s.pantalla);
 
   // Los logros de sesiones anteriores se cargan una vez al montar, antes de
@@ -95,6 +97,11 @@ export default function App() {
         backgroundAttachment: 'fixed',
       }}
     >
+      {/* Cuelga de App y NO de una pantalla: si colgara de la pantalla, React lo
+          desmontaría en cada cambio (mapa → combate → mapa) y la música empezaría de
+          cero cada vez. Con `arcoId` a null suena la pista de menú, si la hay. */}
+      <MusicaDeFondo arcoId={mapa ? arcoActualId : null} />
+
       {!mapa ? (
         <CharacterSelectScreen
           onConfirmar={(idsElegidos) => iniciarRun(idsElegidos, arcoPaisDeLasOlas)}

@@ -30,7 +30,20 @@ export const AJUSTES_POR_DEFECTO = {
   tema: 'oscuro', // 'oscuro' | 'claro'
   velocidadCombate: 'normal', // 'normal' | 'rapida' | 'instantanea'
   saltarTransformacion: false,
+  // Volumen de la música de fondo, de 0 a 1. Arranca **sonando**: es una pista
+  // lo-fi por arco y es la mitad del tono que se busca, no un extra. Lo aplica
+  // `MusicaDeFondo`, que es quien tiene el `<audio>` — este store no toca el DOM.
+  volumenMusica: 0.5,
 };
+
+/** Los cuatro pasos de volumen que ofrece Ajustes. Discretos y no un deslizador:
+ *  un slider es de interfaz de móvil y esto quiere parecerse a un menú de GBA. */
+export const PASOS_VOLUMEN = [
+  { id: 'off', etiqueta: 'OFF', valor: 0 },
+  { id: 'bajo', etiqueta: 'LOW', valor: 0.25 },
+  { id: 'medio', etiqueta: 'MID', valor: 0.5 },
+  { id: 'alto', etiqueta: 'HIGH', valor: 0.8 },
+];
 
 /**
  * Cuánto se multiplica la duración de cada animación de combate. Un solo número
@@ -71,10 +84,10 @@ export const useSettingsStore = create((set, get) => ({
       throw new Error(`Ajuste desconocido: "${clave}". Válidos: ${Object.keys(AJUSTES_POR_DEFECTO).join(', ')}`);
     }
     set({ [clave]: valor });
-    const { tema, velocidadCombate, saltarTransformacion } = get();
+    const { tema, velocidadCombate, saltarTransformacion, volumenMusica } = get();
     localStorage.setItem(
       CLAVE_STORAGE,
-      JSON.stringify({ tema, velocidadCombate, saltarTransformacion }),
+      JSON.stringify({ tema, velocidadCombate, saltarTransformacion, volumenMusica }),
     );
   },
 

@@ -328,6 +328,15 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   **contenedores** y hacen recursivo a `_aplicarEfectoDeEvento` — con un `switch` plano habría hecho
   falta un tipo por combinación. El store devuelve **datos** y la pantalla escribe el texto.
 
+- [x] **Música de fondo** (`components/common/MusicaDeFondo.jsx`, `documentacion/36-musica.md`): una
+  pista por arco en bucle, **sin efectos de sonido** — la referencia no los tiene y el juego es de jugar
+  con calma. ⚠️ Llevaba meses estimado como "un sistema entero" y no lo era: **antes de estimar un
+  sistema, comprobar qué hace de verdad la referencia.** Tres reglas que no son obvias: cuelga de `App` y
+  no de una pantalla (si no, la música reempieza en cada cambio), **reintenta al primer gesto** porque el
+  navegador bloquea el autoplay (sin eso no suena en Chrome), y `import.meta.glob` en vez de `import`
+  para que **la carpeta pueda estar vacía sin romper el build**. Las pistas van en `src/assets/music/`
+  con el `id` del arco como nombre.
+
 ## Bugs ya resueltos (para no repetirlos)
 
 - **Función de normalización no idempotente** (`normalizarPasivas`): el store normalizaba las pasivas

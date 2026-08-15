@@ -931,6 +931,30 @@ meter azar de verdad.
   era la **opción segura** (comprar a ciegas por 30 algo que vale 55 de media ya era un chollo).
 - [x] 242 tests (eran 230): 6 de resolución y 6 de invariantes de los datos.
 
+**Música de fondo — ver [36](./36-musica.md)**
+
+- [x] **Resulta que no era "un sistema entero".** Llevaba meses en el backlog descrito como assets +
+  precarga + mezcla + volumen, y como *lo más grande que le falta al MVP*. Lo deshizo una frase del
+  usuario: **la referencia no tiene efectos de sonido** — Pokelike es un juego de jugar con calma, con una
+  pista lo-fi por región. Lo que quedaba no era un sistema, era un `<audio>` con tres reglas. ⚠️ Lección
+  de método: **antes de estimar un sistema, comprobar qué hace de verdad la referencia**; "sonido" y "un
+  bucle por arco" se parecen en la lista de tareas y no se parecen en nada al implementarlos.
+- [x] `MusicaDeFondo.jsx`: una pista por arco, en bucle, con fundido de 600 ms al cambiar de arco.
+- [x] ⚠️ **La carpeta de música puede estar vacía y el juego funciona igual, en silencio** — que es como
+  nace esto, con el sistema montado y los huecos por rellenar. Lo permite `import.meta.glob`: con un
+  `import` normal **un fichero que falta rompe el build**.
+- [x] ⚠️ **Cuelga de `App`, no de una pantalla** (si no, la música empieza de cero en cada cambio de
+  pantalla) y **reintenta al primer gesto del usuario**, porque el navegador bloquea el autoplay y sin ese
+  reintento el sistema entero no suena en Chrome.
+- [x] Ajuste de volumen en cuatro pasos (OFF/LOW/MID/HIGH), persistido con el resto. Arranca **sonando**.
+- [x] 245 tests (eran 242).
+- [x] **Respaldo `principal`**: el MVP sale con **una sola canción para todo el juego** y una por
+  campaña más adelante. Al ser un respaldo y no un caso aparte, añadir la pista de un arco el día de
+  mañana no exige tocar código. Y como la URL no cambia entre pantallas que comparten pista, la música
+  no se reinicia al cambiar de arco: hoy el juego entero suena como una pieza continua.
+- [ ] **La pista.** `src/assets/music/principal.mp3` (hay `LEEME.md` en la carpeta). Es lo único que
+  falta y no es código.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { useSettingsStore } from '../../store/useSettingsStore';
+import { useSettingsStore, PASOS_VOLUMEN } from '../../store/useSettingsStore';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import { VentanaModal, TituloBloque, BotonSecundario } from '../common/PiezasUI';
 
@@ -90,6 +90,7 @@ export default function SettingsScreen() {
   const tema = useSettingsStore((s) => s.tema);
   const velocidadCombate = useSettingsStore((s) => s.velocidadCombate);
   const saltarTransformacion = useSettingsStore((s) => s.saltarTransformacion);
+  const volumenMusica = useSettingsStore((s) => s.volumenMusica);
   const cambiarAjuste = useSettingsStore((s) => s.cambiarAjuste);
   const reiniciarLogros = useAchievementsStore((s) => s.reiniciarLogros);
 
@@ -142,6 +143,27 @@ export default function SettingsScreen() {
             etiqueta="Fullscreen"
             activo={pantallaCompleta}
             onCambiar={alternarPantallaCompleta}
+          />
+        </FilaAjuste>
+      </section>
+
+      <section className="flex flex-col gap-1 mt-3">
+        <TituloBloque>Sound</TituloBloque>
+        {/* Solo música: el juego no tiene efectos de sonido a propósito, así que no
+            hay un segundo control que no controle nada. Misma regla que dejó esta
+            sección entera fuera hasta que hubo sistema. */}
+        <FilaAjuste
+          etiqueta="Music"
+          pista="One looping track per arc. Silent if the track file is missing."
+        >
+          <SelectorOpciones
+            etiqueta="Music volume"
+            valor={PASOS_VOLUMEN.find((p) => p.valor === volumenMusica)?.id ?? 'medio'}
+            onCambiar={(id) => cambiarAjuste(
+              'volumenMusica',
+              PASOS_VOLUMEN.find((p) => p.id === id)?.valor ?? 0.5,
+            )}
+            opciones={PASOS_VOLUMEN.map(({ id, etiqueta }) => ({ id, etiqueta }))}
           />
         </FilaAjuste>
       </section>
