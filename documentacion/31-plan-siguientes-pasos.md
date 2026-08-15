@@ -463,3 +463,166 @@ prueba manual tuya. El simulador no aplica: no hay balance en juego.
 3. **Punto 6** — ¿la pista del efecto se sigue viendo antes de elegir?
 4. **Sonido** — sigue en backlog. Es lo que más notaría el jugador de todo lo que queda; si el MVP
    tiene fecha, merece decidirse a propósito y no por omisión.
+
+---
+
+# Plan — Qué del post-MVP debería entrar en el MVP (2026-08-15)
+
+> ⚖️ **Veredicto del usuario, el mismo día: NO a las dos propuestas.** Guardar/continuar la run no entra;
+> la transición entre arcos tampoco, *"no sé muy bien cómo llevarlo"* — que es un motivo mejor que un
+> problema de tamaño: lo que le falta a ese punto es la **idea** de qué pasa en esa pantalla, no las
+> horas. En cambio salió de aquí un punto que no estaba en ninguna lista y que sí entra: el **18, Home
+> con selector de campañas** (ver el roadmap).
+>
+> El documento se conserva entero porque **el análisis sigue siendo cierto aunque la respuesta sea que
+> no**, y en dos sitios ya está dando fruto: el hallazgo de que `guardarRun` no guarda el `mapa` está
+> anotado en "Descartado", y el de que sin guardado **toda salida de la run la pierde** es lo que obliga
+> a que el Home del punto 18 confirme antes de irse. Lo que NO hay que volver a hacer es re-proponer los
+> dos puntos: están contestados.
+
+Escrito el día que la lista de puntos se quedó vacía. La pregunta del usuario fue *"de lo que está en
+post-MVP, ¿qué recomiendas que sea parte del MVP?"*, y contestarla bien exige un criterio antes que una
+lista, porque el backlog está lleno de cosas buenas y **casi ninguna es del MVP**.
+
+## El criterio (tres filtros, y hay que pasar los tres)
+
+1. **Arregla algo que el juego hace MAL hoy**, no algo que todavía no tiene. Un juego al que le falta
+   una idea está incompleto; un juego que pierde tu partida está roto. Solo lo segundo es del MVP.
+2. **No toca el balance.** Se acaba de recalibrar entero (punto 1 fase 4) y el playtest está a medias:
+   meter ahora un nodo nuevo o modificadores de dificultad es invalidar la medición en curso.
+3. **No trae contenido que escribir.** Si hay que redactar 15 textos nuevos, es un punto de contenido y
+   compite con el playtest, que es lo único que puede decir si el juego se siente bien.
+
+## Recomendación
+
+**Entran dos puntos: el 15 (grande, con dos mitades que se necesitan) y el 16 (pequeño).** El resto del
+backlog se queda donde está, y abajo digo por qué uno a uno — que es la parte útil, porque las razones
+volverán a hacer falta la próxima vez que alguien mire esa lista.
+
+---
+
+## Punto 15 — La puerta de entrada y continuar la run
+
+Son dos cosas y las presento como una sola porque **la segunda no tiene dónde vivir sin la primera**: si
+la run se puede continuar, hace falta un sitio donde pulsar "Continue".
+
+### 15a — La run se pierde entera al recargar
+
+Está en **"Descartado"** con esta razón: *"no compensa la complejidad — las runs son cortas, no hay tanto
+que perder si se cierra la pestaña a mitad"*. ⚠️ **Esa frase se escribió cuando la run era UN arco.** Hoy
+son tres, ~24 nodos, con animación de combate, pantallas de transformación y de recompensa: entre media
+hora y tres cuartos. Perder eso por un F5 no es "no compensa la complejidad", es el peor momento que
+puede tener el juego, y encima uno que el jugador no provoca a propósito.
+
+⚠️ **Y hay un descubrimiento que deshace el consuelo del descarte.** El texto dice que *"las funciones ya
+existen en el store por si hiciera falta"*, y las funciones existen pero **no pueden funcionar**:
+`guardarRun` no guarda el `mapa`, y `App.jsx` decide si hay run mirando precisamente `mapa`. O sea que
+cargar una run guardada deja al jugador en la pantalla de selección de personaje, con el equipo cargado y
+sin tablero. No es "conectar un hook": es escribir el guardado de verdad, y por eso el punto no es de
+media hora.
+
+**Qué se guarda y qué no** — la regla es *guardar el estado, no la pantalla*:
+
+- **Sí**: `equipo`, `oro`, `inventario`, `buffsTemporales`, `mapa`, `nodoActualId`, `arcoActualId`,
+  `huboDerrotaEnEsteArco` (si no, se regala el logro de arco sin bajas recargando).
+- **No**: `arcoActualDatos` — es el JSON del arco y se **rehace** desde `arcoActualId` con `ORDEN_ARCOS`
+  al cargar. Guardar datos derivados es cómo se desincronizan dos copias, la misma razón por la que
+  `arcoDelLogro` se calcula y no es un campo.
+- **No**: `pantalla`, `ultimoResultadoCombate`, `cadenaEnemigos`, `eventoActual`, `tiendaActual`…
+  **Se vuelve SIEMPRE al mapa.** Un combate a medias no se puede reanudar (su resumen es transitorio) y
+  no merece la pena inventarlo: el mapa es el único punto estable de la run.
+
+⚠️ **Dónde se guarda es una decisión de diseño, no de implementación: es lo que decide si se puede hacer
+trampa.** Si se guarda solo al volver al mapa, recargar a mitad de un nodo devuelve al jugador al mapa
+con ese nodo **sin resolver** — o sea, **repetir cualquier jefe hasta que salga bien**. Recomendación:
+guardar **dos veces**, al entrar en el nodo (ya marcado como visitado) y al volver al mapa. El coste es
+que recargar en mitad de un combate pierde la recompensa de ese nodo; a cambio, no se puede repetir un
+combate perdido, que es lo que se llevaría por delante la tensión de la run entera.
+
+### 15b — La meta-progresión solo se ve DURANTE una run
+
+Al arrancar, `App.jsx` va directo a `CharacterSelectScreen`, y esa pantalla no tiene ningún botón:
+**Missions, el Bingo Book y los Ajustes solo se abren desde el menú del mapa**. O sea que las tres
+pantallas que existen para mirarse *entre* partidas solo son accesibles *dentro* de una partida — justo
+cuando el jugador está a otra cosa. Y tras un game over, "New Run" devuelve a la selección de personaje
+sin pasar por ninguna de ellas: se acaba de desbloquear un logro y no hay forma de ir a verlo.
+
+Una pantalla de título lo resuelve y de paso es donde vive "Continue" (15a), donde el usuario elige tema
+y volumen antes de jugar, y **donde por fin tiene sentido `menu.mp3`**, la pista que `MusicaDeFondo` ya
+sabe usar cuando no hay arco y que hoy no se oye nunca porque la selección de personaje dura diez
+segundos.
+
+Entradas: **Continue** (solo si hay run guardada), **New Run**, **Missions**, **Bingo Book**,
+**Settings**. Reutiliza el kit entero; no hay nada nuevo que dibujar.
+
+### Fases
+
+0. **Guardado real**: reescribir `guardarRun`/`cargarRun` con la lista de arriba, `arcoActualDatos`
+   rehecho al cargar, `hayRunGuardada()` para que el título sepa si pintar "Continue". Tests: que una run
+   guardada y cargada tiene el mismo mapa y el mismo equipo, que **no** conserva `pantalla`, y que
+   `iniciarRun` y el game over **borran** la guardada (o "Continue" resucitaría una run muerta).
+1. **Los enganches del guardado**, con la regla anti-trampa: al entrar en el nodo y al volver al mapa.
+2. **`TitleScreen`** + `pantalla: 'titulo'` como estado inicial, y las cinco entradas. Las tres pantallas
+   de consulta ya existen; lo único que hay que mirar es que **no den por hecho que hay run** (hoy se
+   dibujan sobre el mapa: `AchievementsScreen` y `EncyclopediaScreen` usan `volverAlMapa` para cerrarse,
+   y desde el título tienen que volver al título).
+3. **Salida de la run**: "Abandon run" en Ajustes, con confirmación, que devuelve al título. Sin esto la
+   única forma de salir de una run es perderla.
+4. Documentación: doc nuevo del guardado + título, roadmap, `CLAUDE.md`.
+
+⚠️ **Trampa conocida**: `localStorage` guarda el mapa entero, que es el objeto más grande de la run.
+Conviene mirar el tamaño real una vez (unos pocos KB, no hay problema), pero **más importante es la
+versión**: una run guardada por una versión anterior del juego puede tener un mapa con otra forma. Como
+mínimo, un número de versión en el guardado y descartarlo si no coincide — es más barato que un bug
+irreproducible dentro de tres meses.
+
+---
+
+## Punto 16 — La transición entre arcos
+
+El único del backlog que recomiendo subir tal cual. Hoy, derrotar a Zabuza —el momento más grande de la
+run después de ganarla— es **un `<p>` y un botón dentro del cartel de victoria del combate**:
+*"You have beaten Land of Waves. A new arc begins."* Y ahí mismo pasan dos cosas que el jugador no ve:
+el equipo **revive y se cura entero** (regalo estilo Slay the Spire) y cambia la música.
+
+Es la definición de lo que sí es del MVP: **no falta una idea, está mal contado algo que ya ocurre.** No
+toca balance, no toca motor, no hay contenido que escribir más allá de una línea por arco, y reutiliza
+lo que ya hizo la pantalla de transformación (que es exactamente el mismo problema resuelto: dar su
+momento a algo que se resolvía en un renglón).
+
+Alcance mínimo: pantalla propia entre el combate y el mapa nuevo, con el nombre del arco que se cierra y
+el que se abre, el equipo curado a la vista (que es lo que **hoy no se ve**) y el fondo/columna del arco
+siguiente. Ni cinemática ni texto narrativo largo.
+
+---
+
+## Lo que NO entra, y por qué
+
+- **Bifurcación riesgo/recompensa (nodo élite).** ⚠️ **Ya existe y se llama pergamino dorado**: un
+  combate opcional a nivel fijo contra un legendario, que se gana el 52% en el piso 3 y el 87% en el 6.
+  Añadir otro nodo de riesgo no añade una decisión, **duplica la que ya hay** — y encima tocando las
+  proporciones de nodo que se acaban de calibrar contra las de Slay the Spire.
+- **Nodo `?` (un evento que a veces es combate).** Idea del jugador, y buena, pero llega en el peor
+  momento: los eventos **acaban de rediseñarse para ser decisiones con su precio a la vista**, y
+  convertirlos a veces en una pelea los devuelve a ser una tirada. Además mueve otra vez los ratios de
+  nodo. Se queda aparcado con la razón escrita en [10](./10-generador-de-mapa.md).
+- **Modificadores de dificultad entre runs ("ascensión").** Necesita que el balance esté **cerrado**, y
+  hoy está en playtest. Es el clásico multiplicador sobre una base que todavía se mueve.
+- **Más logros.** Ya no es un punto: con `contadorMinimo` y `coleccionMinima` es escribir datos. Se hace
+  cuando apetezca, sin plan.
+- **5b — recompensas numéricas permanentes.** Sigue descartado, y con más razón desde que el 5a
+  demostró que la pantalla funciona sin ellas.
+- **Campañas, cuentas/guardado remoto, tests de componentes React.** Post-MVP de verdad: los dos primeros
+  son productos distintos y el tercero es infraestructura para bugs que este proyecto no ha tenido — los
+  suyos han estado todos en motor y store, que es donde están los 275 tests.
+
+## Orden sugerido
+
+**El playtest sigue siendo el 1.º** — nada de esto es más urgente que saber si el juego se siente bien, y
+además el 15 es justo lo que hace cómodo jugar runs largas seguidas. Luego el **15** (que es el que
+convierte "una demo que se abre y juegas" en "un juego que abres, sigues y cierras") y por último el
+**16**, que es una tarde.
+
+⚠️ Y una advertencia de método, porque este documento ya se ha equivocado dos veces igual: **el 15 parece
+pequeño y no lo es** (el guardado que "ya existía" no funciona), y **el 16 parece grande y no lo es**
+(una pantalla sin lógica). Es el mismo error que con el sonido, al revés y del derecho.

@@ -1069,21 +1069,26 @@ meter azar de verdad.
 >
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas por
 > comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar. Los
-> huecos —hoy **todos menos el 7**: 1-6 y 8-14— son puntos hechos que se han movido a "Hecho"
-> **conservando su número en el título**, no errores de numeración. Un punto nuevo coge el siguiente
-> número libre (el 15) y nunca uno de los huecos.
+> huecos (1-6 y 8-14) son puntos hechos que se han movido a "Hecho" **conservando su número en el
+> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 18) y nunca
+> uno de los huecos.
 >
-> ⚠️ **De esta sección solo queda el punto 7.** Eso no quiere decir que esté vacía de trabajo: quiere
-> decir que el trabajo que queda no se planifica por puntos. Lo que hay pendiente vive en "Pendiente de
-> arte" (dibujo), en la pista de música y en lo que salga del playtest.
+> **Abiertos: el 7, el 15, el 16 y el 17.** Los tres últimos son de 2026-08-15 y ninguno es de mecánica:
+> el juego está completo y lo que le falta es **presentarse** — el dibujo que aún es placeholder, el
+> único menú que sigue siendo una imagen pegada, y no existir todavía fuera de `npm run dev`.
 
 ### Por dónde seguir
 
-> **Estado (2026-08-15).** **No queda ningún punto de código abierto del MVP.** El 9 (columna central)
-> y el 5a (contenido de logros) se cerraron el mismo día; el 6 (eventos) y el 14 (ajustes), antes. Lo que
-> queda es **playtest**, la pista de música y la tanda de arte — nada de eso se resuelve escribiendo
-> lógica. Es la lista más corta que ha tenido este documento, y la primera vez que no tiene un "siguiente
-> punto".
+> **Estado (2026-08-15).** **No queda ningún punto de MECÁNICA abierto**: el 9 (columna central) y el 5a
+> (contenido de logros) se cerraron el mismo día; el 6 (eventos) y el 14 (ajustes), antes. Lo que se
+> abrió después —15, 16 y 17— es de otra naturaleza: **el juego ya está, falta presentarlo.** Arte que
+> sigue siendo placeholder, el último menú montado sobre una imagen, y publicarlo en algún sitio.
+>
+> 📋 De la revisión del backlog del 2026-08-15 ([31](./31-plan-siguientes-pasos.md)) salieron dos
+> propuestas y **el usuario dijo que no a las dos**: guardar/continuar la run y la transición entre
+> arcos. Lo que sí salió de esa conversación es el **punto 18** (Home + selector de campañas), que no
+> estaba en ninguna lista. Las razones de cada veredicto están anotadas en su sitio, para no volver a
+> proponerlas.
 
 **1.º — el playtest, que ya no es un punto sino una costumbre.** Con la lista vacía pasa de tercero a
 único. Las cinco últimas tandas de mejoras han salido enteras de partidas reales, y ninguna de la lista:
@@ -1127,11 +1132,98 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
       si algo se pierde al invertir la superficie: los botones sobre acento y el texto encima de un
       dibujo son los sitios donde ya ha fallado dos veces.
 
+15. **Los sprites que faltan** — la lista completa está en "Pendiente de arte", más abajo, y **no se
+    repite aquí a propósito**: lo que aporta el punto es dejar de ser una lista pasiva y pasar a ser
+    trabajo con orden. Hoy son 8 entradas que van en **cuatro tandas**, y el orden importa porque dos de
+    ellas comparten estilo:
+    - **Tanda 1 — los 9 iconos** (5 naturalezas de chakra + 4 del menú vertical). ⚠️ **Van juntos o
+      salen de dos estilos distintos**, y se ven a la vez en la misma pantalla. Es además la que
+      desbloquea el punto 16.
+    - **Tanda 2 — los nodos de entrenador, mini-jefe y jefe**, que hoy comparten el sprite de combate y
+      se distinguen por borde y badge. El material existe (`map-sprites-idle-all-characters.png`), pero
+      en paneles de tamaño irregular: hay que recortarlos uno a uno antes de mapearlos por `enemigoId`.
+    - **Tanda 3 — los personajes sin sprite propio**: Sai, Yamato y Kakashi (este último lleva hoy un
+      recoloreado del genin raiton), más los tier 2 que caen al tier 1.
+    - **Tanda 4 — los proyectiles de jutsu** que faltan: los genin rivales (los más vistos de todo el
+      juego, porque son la mayoría de los combates) y seis personajes que lanzan kunai en su técnica.
+      ⚠️ El de los genin **ya está dibujado**: está en la última casilla de cada panel de la fila 5 y el
+      script coge el primer fotograma — es media hora de script, no de dibujo.
+    ⚠️ **Todo sprite nuevo entra por su script `generar-sprites-*.py` y en el lienzo común de 96×96.**
+    No se editan a mano los PNG generados: se pisan al regenerar. Y el pixel art a escalas no enteras
+    duplica unas columnas de píxeles y otras no, que es la razón del lienzo común.
+
+16. **Arreglar el menú vertical de la derecha** — el de Missions / Bingo Book / Settings / Restart run.
+    Funciona, pero está montado sobre un apaño con tres consecuencias, y las tres se arreglan a la vez:
+    - **Es una sola imagen** (`assets/menu/columna-menu.png`: marco, huecos e iconos dibujados juntos),
+      con cuatro botones transparentes encima colocados por porcentaje. ⚠️ **Eso lo deja clavado a
+      EXACTAMENTE cuatro entradas**: añadir o quitar una obliga a redibujar la hoja. Es un problema de
+      ahora mismo y no teórico — cualquier entrada nueva (salir al título, abandonar la run) choca con
+      esto.
+    - **El hover realza el HUECO, no el icono**, porque el icono es parte del fondo y no se puede tocar
+      por separado. Se lee como que se ilumina el agujero.
+    - **"Restart run" pregunta con un `window.confirm`**, que es un diálogo del navegador: tipografía
+      del sistema, botones del sistema y cero relación con el juego. Es lo único que queda de la
+      interfaz del navegador en toda la partida, y encima está en la acción más destructiva.
+    **El arreglo**: el marco pasa a CSS (`PanelMarco` ya lo hace en el resto del juego), los iconos
+    pasan a ser cuatro PNG sueltos —**tanda 1 del punto 15**, de ahí el orden— y la confirmación pasa a
+    `VentanaModal`, que ya existe. Con eso el menú se vuelve una lista normal a la que se le pueden
+    añadir entradas.
+
+17. **Build y publicación web** — hoy el juego solo existe en `npm run dev`. `npm run build` funciona,
+    pero **subirlo a una página tiene tres cosas que comprobar antes**, y ninguna se ve en local:
+    - ⚠️ **`vite.config.js` no declara `base`**, así que el build asume que la página vive en la raíz del
+      dominio. En un GitHub Pages de proyecto (`usuario.github.io/naruto-roguelike/`) **todas las rutas
+      de assets apuntan a un sitio que no existe** y sale una página en blanco sin error visible. Es
+      `base: './'` o la ruta del repo, y es el fallo más típico de este despliegue.
+    - **El peso**: el build son ~9,6 MB, de los que 6,2 MB son 86 PNG y 2,9 MB la pista de música. Para
+      un juego que se abre en el navegador eso es una primera carga larga con conexión normal. No hace
+      falta resolverlo para publicar, pero sí **mirarlo con datos** antes de decidir si compensa: los dos
+      fondos de pantalla completa son los PNG más gordos con diferencia.
+    - **Qué NO hace falta**, para no inventar trabajo: no hay router, así que no hace falta el `404.html`
+      de las SPA; no hay backend ni variables de entorno; y `localStorage` funciona igual en hosting
+      estático, así que los logros, la enciclopedia y los ajustes persisten sin tocar nada.
+    Alcance: elegir hosting (GitHub Pages / Netlify / Vercel — los tres sirven y son gratis para esto),
+    dejar el `base` correcto, **probar el build servido de verdad** (`npm run preview`, que es lo único
+    que reproduce el problema del `base`), y anotar el procedimiento para no redescubrirlo cada vez.
+    ⚠️ Y una comprobación propia del proyecto: que el **registro de texto del combate** sigue fuera del
+    build (va detrás de `import.meta.env.DEV`, Vite lo elimina) y que no se ha colado ningún otro resto
+    de desarrollo.
+
+18. **Home: la pantalla principal con el selector de campañas** — una pantalla que lista las campañas
+    del juego y desde la que se empieza una. **Hoy hay una sola** (los tres arcos del MVP: País de las
+    Olas → Examen Chunin → Invasión de Pain), y aun así el punto tiene sentido, por un motivo que no es
+    de interfaz: **hoy la campaña no existe como dato**. Está repartida entre una constante del store
+    (`ORDEN_ARCOS`) y una llamada de `App.jsx` que arranca en el arco 1 a pelo. Sacarla a
+    `src/data/campaigns.json` es lo que convierte la segunda campaña en **contenido** en vez de en
+    código, que es la regla del proyecto — y esa es la razón de hacerlo con una sola: es cuando sale
+    barato.
+    - **Cómo se llega**: una **quinta entrada** del menú vertical. ⚠️ Y ahí está el dato que más cambia
+      la planificación: **el menú está clavado a exactamente cuatro huecos, porque son un dibujo**
+      (punto 16). O sea que **el 16 deja de ser cosmético y pasa a ser requisito del 18** — hacerlos en
+      el orden contrario obliga a redibujar la hoja del menú para tirarla después.
+    - ⚠️ **Salir al Home a mitad de una run la pierde**, porque guardar la run está descartado (ver
+      "Descartado"). Así que la entrada **tiene que confirmar antes**, igual que "Restart run" — y con
+      la ventana del kit, no con el `window.confirm` del navegador, que es justo lo otro que arregla el
+      punto 16. No es un detalle de pulido: es la diferencia entre un botón y una trampa.
+    - **Alcance mínimo**: `campaigns.json` con una entrada (id, nombre, descripción, sus arcos en
+      orden), `pantalla: 'home'`, una tarjeta por campaña con el kit que ya existe, y `ORDEN_ARCOS`
+      pasando a leerse de la campaña elegida en vez de ser una constante del store.
+    - **Fuera de alcance, a propósito**: escribir una segunda campaña (eso es el "Sistema de campañas"
+      del backlog, que es contenido nuevo: arcos, enemigos y objetos), los desbloqueos entre campañas y
+      cualquier forma de guardado.
+    - 📋 **Decisión pendiente del usuario**: si Home es además **la pantalla de arranque** del juego (hoy
+      se arranca directamente en la selección de personaje). Si lo es, sale gratis una cosa que hoy no
+      existe: poder abrir Missions, el Bingo Book y los Ajustes **entre partidas** y no solo dentro de
+      una. La recomendación es que sí, pero no está decidido y por eso no entra en el alcance de arriba.
+
 ### Pendiente de arte
 
 Cosas que no están hechas por falta de dibujo, no por falta de código. Van juntas aquí y no dentro
 del punto que las dejó a medias, porque los puntos terminados se marcan `[x]` y nadie vuelve a
 leerlos buscando trabajo.
+
+📋 **El trabajo de hacerlas es el punto 15**, que las agrupa en cuatro tandas y explica en qué orden
+conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactamente; el punto dice cómo.
 
 - **Los nodos de entrenador, mini-jefe y jefe no llevan sprite del personaje concreto.** Comparten el
   sprite de combate y se distinguen por color de borde + badge de rango (`★` / `☠` / `危`) y, en el jefe,
@@ -1209,6 +1301,15 @@ leerlos buscando trabajo.
   complejidad — las runs son cortas, no hay tanto que perder si se cierra la pestaña a mitad. Las
   funciones ya existen en el store por si hiciera falta más adelante, simplemente no se conectan a
   ningún hook automático.
+  **Revisado el 2026-08-15 y confirmado que NO entra**, aunque la revisión encontró dos cosas que
+  conviene dejar dichas para no repetir el análisis una tercera vez:
+  - ⚠️ **Las funciones que "ya existen" no pueden funcionar.** `guardarRun` no guarda el `mapa`, y
+    `App.jsx` decide si hay run mirando precisamente `mapa`: cargar una run guardada dejaría al jugador
+    en la selección de personaje con el equipo puesto y sin tablero. O sea que esto **no es "conectar un
+    hook"**, es escribir el guardado entero. Si algún día entra, empieza por ahí.
+  - **Y tiene una consecuencia viva**: sin guardado, cualquier salida de la run —el "Restart run" del
+    menú, y el futuro Home del punto 18— **pierde la partida**, así que todas tienen que confirmar
+    antes. Es la razón de que esa confirmación esté dentro del alcance del 18 y no sea pulido.
 
 ## Backlog (post-MVP)
 
@@ -1227,7 +1328,12 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
   con mejor recompensa o uno seguro con menos, al estilo "elite fight" de Slay the Spire.
 
 - **Evento narrativo de transición entre arcos** (ver [20](./20-arcos-encadenados.md)) — hoy es
-  instantáneo, un botón directo al mapa del siguiente arco.
+  instantáneo, un botón directo al mapa del siguiente arco. **Propuesto para el MVP el 2026-08-15 y no
+  tomado**, y el motivo es útil: no está claro **qué forma tiene**. La observación que lo motivó sigue
+  siendo válida y se guarda aquí — al cerrar un arco el equipo **revive y se cura entero** y cambia la
+  música, y el jugador no ve ninguna de las dos cosas: se las cuenta un `<p>` dentro del cartel de
+  victoria del combate. Cuando alguien sepa qué quiere que pase en esa pantalla, el trabajo es una tarde;
+  lo que falta no es tiempo, es la idea.
 - Arte propio (sustituir placeholders).
 - **Más logros**, que ya no es "ampliar el sistema" sino escribir datos: con `contadorMinimo` y
   `coleccionMinima` añadir uno no toca `engine/`. Lo que sí sería sistema es un tipo de condición nuevo
