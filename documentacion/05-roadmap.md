@@ -955,6 +955,55 @@ meter azar de verdad.
 - [ ] **La pista.** `src/assets/music/principal.mp3` (hay `LEEME.md` en la carpeta). Es lo único que
   falta y no es código.
 
+**Columna central del mapa (punto 9) — ver [13](./13-ui-mapa-y-combate.md)**
+
+- [x] **El fondo se DIBUJA, ya no se compone.** `scripts/generar-columnas-mapa.py` se reescribió entero:
+  antes recortaba el paisaje del artista y le aplanaba el centro, y seguía siendo una ilustración densa
+  recortada —centro lavado, bordes sucios—. **Una ruta de Pokémon no es un paisaje recortado**: es un
+  color plano con cuatro cosas encima, y eso no se consigue filtrando una foto. Los originales se quedan
+  en `originales/` como referencia de paleta.
+- [x] **Tres reglas, sacadas de mirar la referencia**: suelo liso de un color por arco; **el borde es lo
+  único denso** (encuadra la columna y da todo el sabor); y el detalle suelto es escaso y **se aparta de
+  donde van los nodos**.
+- [x] ⚠️ **Lo de "se aparta" es medible, no una intención**: las filas de nodo son fijas y conocidas
+  (y = 52, 156, 260…), así que el peso de cada decoración baja al acercarse a una fila y baja hacia el
+  centro horizontal. No es un veto: la decoración va DETRÁS del nodo, así que un solape ocasional no se
+  ve — lo que se nota es la **densidad**.
+- [x] 🐛 **Tres fallos del primer dibujo, y los tres enseñan algo:** las copas de los árboles se salían de
+  la banda porque el tope se medía contra el **centro** del árbol y no contra el borde de la copa; el
+  azar uniforme hacía **corrillos** de flores en una esquina con medio mapa vacío (se arregla con una
+  distancia mínima, no con más tiradas); y los arbustos —un disco verde oscuro sobre suelo verde— se
+  leían como **agujeros en el suelo**. Lo último se resolvió mirando otra vez la referencia: una ruta no
+  tiene arbustos sueltos, tiene **macizos de flores y matas de hierba**, que son cosas con color o con
+  silueta. De ahí que cada arco tenga ahora su **repertorio propio** de decoraciones.
+- [x] **La columna se ve más grande**, que era la queja literal del playtest. La palanca no era obvia: la
+  escala es `min(ancho/520, alto/alturaLienzo)` y **siempre manda la altura**, así que bajar la
+  separación entre pisos (120 → 104) hace el lienzo menos alto, la escala sube y **la columna se
+  ensancha** con el mismo hueco. Más 16 px de `py-4` → `py-2` y la fila a `max-w-4xl`, que no toca los
+  paneles laterales porque miden fijo.
+- [x] **Segunda pasada tras verlo**: ⚠️ **cada arco tiene ahora su propio BORDE, no solo su paleta** —
+  el País de las Olas era "el mismo mapa que el Examen Chunin en otro verde", porque con la misma silueta
+  (una fila de copas) el color no separa nada. Ahora el arco 1 es un camino de **arena entre el mar**,
+  con orilla ondulada, espuma, juncos y madera de deriva; el 2 es **bosque cerrado y más oscuro**; y el 3,
+  **lienzos de muro roto**. Rectas y esquinas contra curvas: se distinguen de un vistazo.
+- [x] **Tercera pasada, ya sobre capturas del juego**: el País de las Olas seguía sin parecerlo porque
+  era **arena con dos rayas de agua** — un río al lado de un desierto. Ahora la orilla son **cinco
+  franjas** (mar hondo → mar bajo → espuma → arena mojada → arena seca → hierba) que se desplazan con la
+  MISMA onda, y el suelo vuelve a ser hierba, pero verde claro azulado contra el verde muy oscuro del
+  Bosque de la Muerte. Es lo que la hace leerse como una costa y no como dos colores pegados.
+- [x] 🐛 **Los paneles laterales estaban lejísimos de la columna**, y en Pokelike van pegados: el mapa era
+  el `flex-1` de la fila, así que ocupaba todo el ancho sobrante y los empujaba contra los bordes. Ahora
+  **mide lo que mide su dibujo** y `justify-center` junta los tres. La escala se calcula midiendo la fila
+  y descontando los paneles, que además evita el pez que se muerde la cola (ancho ← escala ← ancho).
+- [x] 🐛 **El título del arco salía descentrado.** No lo estaba: los paneles medían 160 y 128, así que el
+  mapa quedaba 16 px a la derecha del centro de la pantalla mientras el título iba centrado en ella.
+  **El torcido era el mapa.** Los dos laterales miden ya lo mismo.
+- [x] **El marco negro, a los cuatro lados y dentro del PNG.** Lo ponía solo el `box-shadow`, y como las
+  bandas laterales tapan los costados, el remate se leía únicamente arriba y abajo.
+- [x] ⚠️ **`ALTO_POR_PISO` está en dos sitios y tienen que ir a la vez** (`MapScreen.jsx` y el script):
+  el fondo se pinta con `100% 100%`, así que descuadrarlos **deforma** el dibujo en vez de recortarlo —
+  árboles ovalados. Los dos llevan el aviso al lado de la constante.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -969,31 +1018,37 @@ meter azar de verdad.
 
 ### Por dónde seguir
 
-**1.º — el 7 (playtest), y no como formalidad.** Es lo único de esta lista que no puedo hacer yo, y
-nada de lo demás lo sustituye: las tres últimas tandas de mejoras salieron enteras de partidas reales,
-no de la lista. Desde el último playtest han cambiado el balance de los jefes, el roster (Kakashi), la
-frecuencia y rareza de los reclutas, el final del combate y **las ocho pantallas del juego**. Cualquier
-punto que se elija sin haber jugado se elige a ciegas. Los hallazgos van al roadmap con la plantilla del
-[31](./31-plan-siguientes-pasos.md) y su triaje entra por delante de cualquier punto empezado.
+> **Estado (2026-08-15).** Quedan **dos puntos abiertos** —el 9 y el 5a— más el playtest, que es continuo.
+> El 6 (eventos) y el 14 (ajustes) están hechos, y **el sonido ya no es un punto pendiente**: resultó ser
+> una pista en bucle y está montado, a falta del fichero. Es la lista más corta que ha tenido este
+> documento.
 
-**2.º — el 5a (contenido de logros).** La pantalla ya está hecha y en estilo; lo que le falta no es
-diseño, es **material que enseñar**: hay 7 logros y su documento MVP está escrito para 38. Es también
-lo que más rendimiento le saca a lo ya construido, porque el registro de vistos del Bingo Book ya metió
-contadores persistidos en `useAchievementsStore`, que es exactamente donde 5a necesita los suyos.
+**1.º — el 9 (columna central del mapa).** Sube de último a primero por un motivo concreto: **es la única
+queja del playtest que sigue sin atender.** El jugador lo dijo con estas palabras — *"el mapa es un poco
+pequeño, el de Pokelike tiene la columna central algo más grande"*— y todo lo demás de esa tanda ya está
+arreglado. Es corto y acotado (ver el enunciado del punto 9, más abajo), y cierra la línea visual.
+⚠️ Cuidado con el mínimo de 44 px, que es **en pantalla** y no en lienzo: ya hubo un bug de nodos de
+48 px que acababan en ~31 al escalar.
 
-**3.º — el 9 (columna central).** Cosmético y acotado; buen relleno cuando quede medio hueco. Va con la
-tanda de arte pendiente (iconos de chakra y del menú vertical), que es lo único que le queda a la
-interfaz por depender de algo externo.
+**2.º — el 5a (contenido de logros).** El último punto de contenido que queda. La pantalla está hecha y en
+estilo; lo que falta es **material que enseñar** (7 logros contra los 38 de su documento MVP). Tiene plan
+detallado en el [31](./31-plan-siguientes-pasos.md), con el hallazgo que le cambia la forma: hoy los logros
+solo se evalúan al ganar un combate, así que **el trabajo son los enganches, no el JSON**. Y una decisión
+que hay que tomar antes de escribir código: **si un logro puede no dar nada** — quedan pocos personajes y
+objetos que desbloquear, así que veinte logros nuevos no tienen premio. La recomendación es que sí.
 
-*(El 6 —eventos— está hecho: ver [35](./35-diseño-de-eventos.md).)*
+**3.º — el playtest, que ya no es un punto sino una costumbre.** Las cuatro últimas tandas de mejoras han
+salido enteras de partidas reales, y ninguna de la lista: los eventos que no eran decisiones, el equipo que
+se reordenaba solo, el pergamino dorado obligatorio, los ataques básicos que no se sentían. Los hallazgos
+van al roadmap con la plantilla del [31](./31-plan-siguientes-pasos.md) y su triaje entra **por delante de
+cualquier punto empezado**.
 
-**Lo más grande que le falta al MVP y no es un punto de esta lista: el sonido.** Está en el backlog
-porque no es un retoque de pantalla sino un sistema entero (assets, precarga, mezcla, volumen). Es, con
-diferencia, lo que más notaría el jugador ahora que lo visual está resuelto.
+**Lo que queda y no es código:** la pista de música (`src/assets/music/principal.mp3`) y la tanda de arte —
+los **5 iconos de chakra** y los **4 del menú vertical**, que van juntos porque hacerlos por separado es la
+forma segura de que salgan de dos estilos distintos. Ver "Pendiente de arte".
 
-**De la interfaz solo queda una cosa que espere a algo externo**: los **cuatro sprites del menú vertical**
-(ver "Pendiente de arte" — su etiqueta flotante ya está hecha). El modo claro/oscuro ya está (punto 14) y
-el rediseño de fondo de eventos es el 6.
+**Decisión de diseño abierta, sin prisa:** el **nodo `?`** de Slay the Spire (un evento que a veces es un
+combate). Propuesto por el jugador y aparcado con motivo — ver [10](./10-generador-de-mapa.md).
 
 ---
 
@@ -1041,12 +1096,18 @@ el rediseño de fondo de eventos es el 6.
     - Y ahora también **las ocho pantallas rediseñadas en una partida entera**, no en capturas: si el
       mapa en oscuro resulta lúgubre, eso decide cuánta prisa tiene el modo claro.
 
-9. **Diseño de la columna central** — Con unos nodos más grandes la columna central puede volver a su
-   tamaño anterior, manteniendo las proporciones y ajustándose a la pantalla. El sprite de la columna
-   tiene que ser más sencillo y más representativo del arco actual. Y el nombre del arco debería llevar
-   ese estilo tan característico de Naruto: fuente negra con reborde blanco.
-   *(Del punto, ya hecho: el lienzo del mapa lleva el marco del kit con sus esquinas en corchete y se le
-   quitó el redondeo — ver [33](./33-direccion-visual.md). Lo de arriba sigue pendiente.)*
+~~9. **Diseño de la columna central**~~ — **HECHO**, ver la sección "Hecho" y
+   [13](./13-ui-mapa-y-combate.md). El enunciado original decía "con unos nodos más grandes la columna
+   central puede volver a su tamaño anterior, manteniendo las proporciones y ajustándose a la pantalla.
+   El sprite de la columna tiene que ser más sencillo y más representativo del arco actual.
+   Lo confirmó el playtest del 2026-08-14: *"el mapa es un poco pequeño, el de Pokelike tiene la columna
+   central algo más grande"*. Es la única queja de esa tanda que sigue sin atender.
+   ⚠️ Al tocar `tamanoNodo()` y el escalado con `ResizeObserver` de `MapScreen.jsx`, recordar que el
+   mínimo de 44 px es **en pantalla** y no en lienzo — ya hubo un bug de nodos de 48 px que acababan en
+   ~31 al escalar, y es exactamente el mismo cálculo que hay que volver a tocar.
+   *(Del punto, ya hecho: el lienzo lleva el marco del kit con sus esquinas en corchete y sin redondeo
+   —ver [33](./33-direccion-visual.md)—, y **el nombre del arco con reborde ya está**, resuelto para
+   todos los títulos a la vez con el contorno de `font-naruto`.)*
 
 ### Pendiente de arte
 
@@ -1054,6 +1115,9 @@ Cosas que no están hechas por falta de dibujo, no por falta de código. Van jun
 del punto que las dejó a medias, porque los puntos terminados se marcan `[x]` y nadie vuelve a
 leerlos buscando trabajo.
 
+- **Los 5 tipos de chakra y los 4 iconos del menú van JUNTOS.** Son dos entradas de esta lista (la de
+  aquí abajo y la de la rueda de chakra), pero es una sola tanda de trabajo: hacerlos por separado es la
+  forma segura de que salgan de dos estilos distintos, y se ven a la vez en la misma pantalla.
 - **El menú vertical no tiene sprites propios de icono.** Usa la maqueta entera
   (`assets/menu/columna-menu.png`) con cuatro botones transparentes encima, porque esa hoja es un menú
   ya dibujado —marco, huecos e iconos juntos— y recortarla se lleva el marco o agujerea el sombreado.

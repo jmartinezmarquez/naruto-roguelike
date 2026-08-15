@@ -122,7 +122,23 @@ const FONDO_COLUMNA = {
 const ARRASTRE_OBJETO = 'application/x-objeto';
 
 const ANCHO = 520;
-const ALTO_POR_PISO = 120;
+// Los dos paneles laterales miden lo mismo para que el mapa quede centrado de verdad
+// (ver el comentario de la fila, más abajo), y su ancho vive aquí porque el cálculo de
+// la escala tiene que descontarlo. `SEPARACION_PANELES` es el `gap-4` de Tailwind.
+const ANCHO_PANELES = 160;
+const SEPARACION_PANELES = 16;
+// ⚠️ **Este número decide lo ANCHA que se ve la columna**, aunque no lo parezca. La
+// escala es `min(ancho/ANCHO, alto/alturaLienzo)` y siempre manda la altura (el
+// lienzo es mucho más alto que ancho), así que bajar la separación entre pisos hace
+// el lienzo menos alto → la escala sube → **la columna se ensancha en pantalla** con
+// el mismo hueco disponible. Era la queja del playtest: "el mapa es un poco pequeño".
+// Bajado de 120 a 104; con los nodos a 56 px de lienzo quedan 48 px de aire entre
+// filas, que es lo que impide que se toquen.
+//
+// ⚠️ Va emparejado con `scripts/generar-columnas-mapa.py`: el fondo se genera a
+// 520 × (ALTO_POR_PISO × 8) y se pinta con `100% 100%`, así que cambiar uno sin el
+// otro DEFORMA el dibujo en vez de recortarlo. El script lleva el mismo aviso.
+const ALTO_POR_PISO = 104;
 
 // Tamaño del nodo, en píxeles del LIENZO (520 × 120·pisos). El lienzo entero se
 // escala para caber sin scroll, así que un tamaño fijo aquí se traduce en un
@@ -907,19 +923,30 @@ export default function MapScreen() {
   const contenedorRef = useRef(null);
   const [escala, setEscala] = useState(1);
 
+  // ⚠️ Se mide la FILA entera y se descuentan los paneles, en vez de medir el hueco
+  // que le sobra al mapa. Parece lo mismo y no lo es: mientras el mapa era el
+  // `flex-1`, ocupaba **todo** el ancho sobrante y empujaba los dos paneles contra
+  // los bordes de la pantalla, lejísimos del mapa. Ahora el mapa mide exactamente lo
+  // que ocupa su dibujo (`ANCHO * escala`) y el `justify-center` de la fila junta los
+  // tres en el medio, como en Pokelike.
+  //
+  // Medir la fila y no el hueco evita además el pez que se muerde la cola: si el
+  // ancho del contenedor dependiera de la escala y la escala del ancho, el layout
+  // podría oscilar. El ancho de la fila no depende de nada de esto.
   useLayoutEffect(() => {
-    const contenedor = contenedorRef.current;
-    if (!contenedor || !mapa) return undefined;
+    const fila = contenedorRef.current;
+    if (!fila || !mapa) return undefined;
 
     function recalcular() {
-      const { clientWidth, clientHeight } = contenedor;
+      const { clientWidth, clientHeight } = fila;
       if (clientWidth === 0 || clientHeight === 0) return;
-      setEscala(Math.min(clientWidth / ANCHO, clientHeight / alturaLienzo));
+      const disponible = clientWidth - ANCHO_PANELES * 2 - SEPARACION_PANELES * 2;
+      setEscala(Math.max(0.1, Math.min(disponible / ANCHO, clientHeight / alturaLienzo)));
     }
 
     recalcular();
     const observer = new ResizeObserver(recalcular);
-    observer.observe(contenedor);
+    observer.observe(fila);
     return () => observer.disconnect();
   }, [mapa, alturaLienzo]);
 
@@ -932,7 +959,9 @@ export default function MapScreen() {
   }
 
   return (
-    <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
+    // `py-2` y no `py-4`: son 16 px de alto que se le devuelven al mapa, y como la
+    // escala la manda la altura, cada píxel de alto se convierte en columna más ancha.
+    <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-2 relative flex flex-col overflow-hidden">
       <MenuVertical
         abrirLogros={abrirLogros}
         abrirEnciclopedia={abrirEnciclopedia}
@@ -947,7 +976,13 @@ export default function MapScreen() {
         </h1>
       </header>
 
-      <div className="flex-1 min-h-0 flex justify-center items-start gap-4 max-w-3xl mx-auto w-full">
+      {/* Sin `max-w`: el ancho ya no importa, porque el mapa mide lo que mide su
+          dibujo y `justify-center` junta los tres bloques. Los dos paneles laterales
+          miden **lo mismo** (`ANCHO_PANELES`) a propósito: con 160 a un lado y 128 al
+          otro, el centro del mapa quedaba 16 px a la derecha del centro de la
+          pantalla y el título del arco —que va centrado en la pantalla— se veía
+          descolocado respecto a la columna. */}
+      <div ref={contenedorRef} className="flex-1 min-h-0 flex justify-center items-start gap-4 w-full">
         <PanelEquipo
           equipo={equipo}
           obtenerHpMaximo={obtenerHpMaximo}
@@ -963,8 +998,8 @@ export default function MapScreen() {
             sobraban bandas negras a los lados — el lienzo casi nunca es tan ancho
             como el hueco, porque la escala la manda la altura. */}
         <div
-          ref={contenedorRef}
-          className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden"
+          className="min-h-0 shrink-0 flex items-start justify-center"
+          style={{ width: ANCHO * escala }}
         >
           <div
             // `escena-oscura` no pinta nada: le devuelve la paleta OSCURA a este
@@ -1104,7 +1139,9 @@ export default function MapScreen() {
         {/* Columna derecha: mochila arriba, chuleta de chakra debajo. Los dos
             son consulta rápida (qué llevo / qué le gana a qué), frente a la
             columna izquierda, que es la que se toca para jugar. */}
-        <div className="w-32 shrink-0 flex flex-col gap-4">
+        {/* `w-40` como el panel de equipo: los dos laterales tienen que medir lo
+            mismo o el mapa no queda centrado (ver `ANCHO_PANELES`). */}
+        <div className="w-40 shrink-0 flex flex-col gap-4">
           <PanelObjetos inventario={inventario} oro={oro} abrirMochila={abrirMochila} />
           <RuedaChakra />
         </div>

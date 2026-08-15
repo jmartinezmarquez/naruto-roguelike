@@ -216,6 +216,63 @@ texto puro cuando ya existían los sprites. Rehecha con los puntos 8 y 11 del ro
   la tarjeta y el objeto le caía encima con su botón. Abajo cabe entero y la X no pisa nada.
 - Panel más ancho (`w-32` → `w-40`): había sitio y la letra no tiene por qué ser diminuta.
 
+### El fondo de columna, al estilo de una ruta de Pokémon (punto 9)
+
+`scripts/generar-columnas-mapa.py` **dibuja** los tres fondos; ya no compone recortes del paisaje del
+artista. Tres reglas:
+
+1. **Suelo liso**, un color por arco, con marcas de hierba de 1 px para que no parezca un rectángulo
+   pintado. Nada que compita con un nodo.
+2. **El borde es lo único denso**, y ⚠️ **cada arco tiene el suyo, no solo su paleta**: mar con orilla
+   ondulada y espuma (Olas), copas apretadas (Chunin), lienzos de muro roto (Pain). Con `arbol` para los
+   tres y solo los colores cambiados, los arcos 1 y 2 salían **el mismo mapa en dos verdes** — la
+   silueta manda mucho más que el color, y una fila de copas redondas es una fila de copas redondas se
+   pinte del verde que se pinte. El tope de ancho es duro: el nodo más a la izquierda cae en x = 104 y
+   mide como mucho 76, así que su borde llega a x ≈ 66. ⚠️ Y el tope se mide contra **el borde de la copa,
+   no contra su centro** — medirlo contra el centro fue el primer fallo y metía 17 px de vegetación bajo
+   los nodos.
+   ⚠️ En la ruina, **el lado de fuera va a ras y solo varía el de dentro**, con mordiscos pocos y
+   grandes: moviendo los dos lados y picándolos mucho no parecía un muro roto, parecía ruido. Una ruina
+   se lee por sus rectas largas y sus esquinas.
+3. **El detalle suelto es escaso y se aparta.** Va detrás de los nodos, así que un solape ocasional no se
+   ve: lo que se nota es la densidad. El peso de cada sitio baja al acercarse a una fila de nodos —que
+   son fijas y conocidas— y hacia el centro horizontal. Con una **distancia mínima** entre decoraciones,
+   sin la cual el azar uniforme hace corrillos.
+
+⚠️ **Cada arco tiene su repertorio de decoraciones**, y no es sabor. Con una lista común salían arbustos
+en los arcos verdes —un disco verde oscuro sobre suelo verde— y a la escala del mapa se leían como
+**agujeros en el suelo**. Mirando otra vez la referencia: una ruta de Pokémon no tiene arbustos sueltos,
+tiene macizos de flores y matas de hierba, que son cosas con **color** o con **silueta**.
+
+⚠️ **El marco negro va a los cuatro lados y DENTRO del PNG.** Antes el encuadre lo ponía solo el
+`box-shadow` del lienzo, y como las bandas de vegetación tapan los costados, el remate se leía únicamente
+arriba y abajo: la columna parecía abierta por los lados. Dibujarlo en el propio fondo lo ata al dibujo
+—se escala con él— y no depende de que nadie se acuerde del CSS.
+
+⚠️ **`ALTO_POR_PISO` vive en `MapScreen.jsx` y en el script, y tienen que cambiar a la vez**: el fondo se
+pinta con `backgroundSize: 100% 100%`, así que descuadrarlos deforma el dibujo (árboles ovalados) en vez
+de recortarlo.
+
+### Los tres bloques van juntos en el centro
+
+⚠️ **El mapa mide lo que mide su dibujo (`ANCHO × escala`), no "lo que sobre".** Mientras fue el
+`flex-1` de la fila ocupaba todo el ancho disponible y **empujaba los dos paneles contra los bordes de
+la pantalla**, lejísimos de la columna; en Pokelike van pegados a ella. Ahora la escala se calcula
+midiendo la **fila entera** y descontando los paneles, y el `justify-center` junta los tres.
+
+Medir la fila y no el hueco evita además el pez que se muerde la cola: si el ancho del contenedor
+dependiera de la escala y la escala del ancho, el layout podría oscilar. El ancho de la fila no depende
+de ninguno de los dos.
+
+⚠️ **Los dos paneles laterales miden lo mismo** (`ANCHO_PANELES`), y no es simetría por gusto: con 160 a
+un lado y 128 al otro, el centro del mapa quedaba 16 px a la derecha del centro de la pantalla, y el
+título del arco —que va centrado en la PANTALLA— se veía descolocado respecto a la columna. Se notaba en
+el título, pero el que estaba torcido era el mapa.
+
+Y la palanca que hace que **la columna se vea más grande**, que no es la que parece: la escala es
+`min(ancho/520, alto/alturaLienzo)` y siempre manda la altura, así que **bajar la separación entre
+pisos** (120 → 104) sube la escala y ensancha la columna con el mismo hueco disponible.
+
 ## `components/Combat/CombatScreen.jsx`
 
 ### El cierre del combate en una cadena de entrenador (playtest 2026-08-14)

@@ -21,10 +21,14 @@ Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeraci�
 > invertida, y desde el último han cambiado el balance de los jefes, el roster, el final del combate y
 > **las ocho pantallas**. Nada de lo que se haga mientras tanto lo sustituye.
 >
-> **Siguiente punto a implementar: el 5a (contenido y condiciones de logros).** Su plan está al final
-> de este documento. Y ojo, que la sección "5 — Logros" de más abajo se escribió antes de que existiera
-> la pantalla: **5c ya está hecho y el campo `categoria` se decidió NO añadirlo** — lo dice también ahí,
-> corregido en su sitio.
+> **Actualización (2026-08-15).** Desde entonces se han cerrado también el **6** (eventos, con su
+> documento MVP nuevo — [35](./35-diseño-de-eventos.md)) y la **música** ([36](./36-musica.md)), que
+> resultó no ser el sistema que decía el backlog sino una pista en bucle.
+>
+> **Quedan dos puntos: el 9 y el 5a**, en ese orden — el 9 primero porque es la única queja del playtest
+> sin atender. El plan del 5a está al final de este documento. Y ojo, que la sección "5 — Logros" de más
+> abajo se escribió antes de que existiera la pantalla: **5c ya está hecho y el campo `categoria` se
+> decidió NO añadirlo** — lo dice también ahí, corregido en su sitio.
 
 ## Orden recomendado
 
@@ -37,10 +41,10 @@ Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeraci�
 | 5.º | **6 — Eventos** | No se puede planificar todavía: es el **único punto sin documento MVP**. Antes hay que escribir qué se quiere de esa pantalla | Pequeña + doc previo | No |
 | 6.º | **9 — Columna central** | Cosmético y acotado. Buen cierre de sesión o relleno cuando quede medio hueco | Pequeña | No |
 
-**Fuera de la lista y más importante que la mitad de ella: el sonido.** Vive en el backlog porque no
-es un retoque de pantalla sino un sistema entero (assets, precarga, mezcla, volumen). Los ganchos ya
-existen: cada evento del historial de combate dice si fue básico o jutsu, si impactó y qué pasivas
-saltaron.
+~~**Fuera de la lista y más importante que la mitad de ella: el sonido.**~~ **HECHO**, y la estimación
+estaba mal: no era un sistema (assets, precarga, mezcla) sino **una pista en bucle**, porque la
+referencia no tiene efectos de sonido. Ver [36](./36-musica.md). ⚠️ La lección se guarda porque volverá a
+pasar: **antes de estimar un sistema, comprobar qué hace de verdad la referencia.**
 
 ---
 
