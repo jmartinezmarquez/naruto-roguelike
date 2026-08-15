@@ -225,13 +225,17 @@ export function VentanaModal({
  * pantalla ("MISIONES" sobre "Logros", "REGISTRO" sobre "Enciclopedia"), y en las
  * maquetas es la primera línea de las dos.
  */
-export function CabeceraPantalla({ antetitulo, titulo, contador = null }) {
+export function CabeceraPantalla({ antetitulo, titulo, contador = null, tamanoTitulo = 'text-4xl' }) {
   return (
     <header className="text-center">
       {antetitulo && (
         <p className="text-sello-500 text-[10px] tracking-[0.35em] uppercase mb-1">{antetitulo}</p>
       )}
-      <h1 className="font-naruto text-4xl text-pergamino-100">
+      {/* `tamanoTitulo` existe por los eventos: su título es el del evento
+          ("The Bridge Under Construction") y a 4xl en la fuente de Naruto se parte
+          en tres líneas. Los títulos de pantalla, que son de una o dos palabras,
+          siguen a 4xl. */}
+      <h1 className={`font-naruto ${tamanoTitulo} text-pergamino-100`}>
         {titulo}
       </h1>
       {/* ⚠️ Sin opacidad rebajada, y no es un descuido: esta cabecera va sobre el

@@ -87,7 +87,13 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
         {nombrePersonaje(personajeId)} is changing
       </p>
 
-      <div className="relative flex items-center justify-center w-80 h-80">
+      {/* La caja medía 320 px de lado —el tamaño del anillo de chakra en su fotograma
+          más abierto— y el sprite ocupa 192, así que sobraban 64 px por abajo que se
+          leían como un agujero entre el ninja y su nombre. Ahora la caja es del
+          tamaño del SPRITE y los anillos desbordan con `overflow-visible`, que es lo
+          que tenían que haber hecho desde el principio: un adorno que se sale no
+          debería reservar sitio. */}
+      <div className="relative flex items-center justify-center w-48 h-48 overflow-visible">
         {/* Dos anillos desfasados: uno solo se leía como un parpadeo, dos dan
             sensación de que algo se está cerrando encima. */}
         {enCarga && (
@@ -122,8 +128,13 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
       {/* El nombre y las pasivas solo cuando termina el espectáculo: leerlos
           mientras el sprite parpadea es imposible, y son lo que importa. */}
       {fase === 'listo' && (
-        <div className="mt-6 text-center max-w-md">
-          <p className="font-naruto contorno-fijo text-3xl text-oro">
+        <div className="mt-3 text-center max-w-md">
+          {/* En blanco y no en oro: el oro es el color de "recompensa / legendario"
+              y aquí competía con el propio destello. Con el relleno claro, el contorno
+              vuelve a ser el de por defecto —oscuro— sin tener que decir nada: dentro
+              de `escena-oscura`, `pergamino-100` es crema y `tinta-950` es tinta, que
+              es exactamente la pareja que pide la regla. */}
+          <p className="font-naruto text-3xl text-pergamino-100">
             {modo.nombre}
           </p>
           <p className="font-display text-[11px] uppercase tracking-widest text-pergamino-200/40 mt-1">

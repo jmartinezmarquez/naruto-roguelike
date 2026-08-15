@@ -852,6 +852,38 @@ El triaje entra por delante del 5a, como dice el [31](./31-plan-siguientes-pasos
   guardas van con la acción, no con el camino** — cada camino nuevo hacia una acción vieja hay que
   mirarlo con la lista de guardas en la mano. Misma ventana y mismo texto que la mochila.
 
+### Playtest 2026-08-15 — segunda tanda (sobre los eventos ya rediseñados)
+
+- [x] **La pantalla de evento tenía TRES rótulos** antes de poder leer nada: "ON THE ROAD", "EVENT" y el
+  nombre del evento otra vez dentro del panel. Dos no decían nada que el jugador no supiera —está en un
+  nodo de evento porque acaba de pulsarlo—, así que el nombre sube a cabecera y los otros dos se van.
+  `CabeceraPantalla` gana un `tamanoTitulo` porque "The Bridge Under Construction" a 4xl en la fuente de
+  Naruto se parte en tres líneas.
+- [x] **La tienda decía "TRADING POST" encima de "SHOP"**: dos formas de decir lo mismo, una debajo de la
+  otra. Se queda "Trading Post" como título. Y el oro pasa a pintarse **como en el resto del juego**
+  (número + `g` en dorado, igual que el panel del mapa) en vez de "255 gold available" en crema.
+- [x] 🐛 **El nombre de la transformación no tenía contorno visible**, y sí lo tenía: era **negro sobre
+  negro**. ⚠️ El matiz que le faltaba a la regla: *el contorno es el negativo del relleno, y cuando el
+  relleno **y el fondo** son oscuros no hay contorno que valga*. La primera solución fue una clase nueva
+  con filo claro alrededor del oro; la buena resultó ser **aclarar el relleno** —el nombre pasa a ir en
+  blanco, que además quita un oro que competía con el destello— y con eso el contorno vuelve a ser el de
+  por defecto sin clase ninguna. La clase se retiró: **una variante que existe para un solo caso, y que
+  se evita cambiando el caso, es una variante de más.**
+- [x] **Hueco enorme entre el sprite y el nombre del modo**: la caja medía 320 px —el tamaño del anillo
+  de chakra en su fotograma más abierto— y el sprite ocupa 192. Ahora la caja es del tamaño del sprite y
+  los anillos desbordan con `overflow-visible`: **un adorno que se sale no debería reservar sitio**.
+- [x] **Los pesos de los nodos, calibrados contra Slay the Spire** — ver
+  [10](./10-generador-de-mapa.md). "A veces hay muchos eventos" no era una sensación: teníamos **34% de
+  eventos y 18% de tiendas** contra el ~19% y 5% de la referencia. Ahora 20-24% y 8-9%, con el combate
+  del 38% al 52-58%. ⚠️ **Subir el combate sube la XP de la run**, que es justo lo que vigilan los
+  invariantes de `leveling.test.js`: lo que manda es el **producto** `cuota × xpCombateComun`, así que se
+  bajó el segundo en la misma proporción (65→48, 80→58, 100→78) y **la curva de niveles piso a piso sale
+  idéntica**, comprobado con el simulador.
+- [ ] **El nodo `?` de Slay the Spire** (un evento que a veces es un combate) — propuesto por el jugador
+  y **descartado por ahora**: con los pesos arreglados los eventos ya bajan de 5,3 a 3,7 por mapa, y
+  nuestro mapa sí dibuja lo que es cada nodo, así que exigiría rebautizarlo, cambiarle el icono y el
+  tooltip para no mentir. Es una decisión de diseño con su coste, no un ajuste de números.
+
 **Lo que queda de esta tanda, y no es código:**
 
 - [ ] **Pictogramas propios para los 5 tipos de chakra**, en vez de los emojis de la rueda. Va con los

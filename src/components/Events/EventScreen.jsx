@@ -1,6 +1,6 @@
 import { useGameStore } from '../../store/useGameStore';
 import { nombrePersonaje, nombreObjeto } from '../common/nombres';
-import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
+import { PanelMarco, CabeceraPantalla, BotonPrincipal } from '../common/PiezasUI';
 
 /**
  * Nodo de evento: un texto y dos elecciones, sin combate.
@@ -159,13 +159,17 @@ export default function EventScreen() {
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center gap-5">
-      <CabeceraPantalla antetitulo="On the road" titulo="Event" />
+      {/* Un solo título, y es el del evento. Antes había TRES rótulos antes de poder
+          leer nada: "ON THE ROAD", "EVENT" y el nombre del evento otra vez dentro del
+          panel. Dos de los tres no decían nada que el jugador no supiera ya —está en
+          un nodo de evento porque acaba de pulsar uno—, así que el nombre sube a
+          cabecera y los otros dos desaparecen. */}
+      <CabeceraPantalla titulo={evento.titulo} tamanoTitulo="text-3xl" />
 
       <PanelMarco className="max-w-md w-full p-5 flex flex-col gap-4">
-        <div className="text-center flex flex-col gap-2">
-          <TituloBloque tono="seccion" className="text-center">{evento.titulo}</TituloBloque>
-          <p className="text-[11px] text-pergamino-200 leading-relaxed">{evento.descripcion}</p>
-        </div>
+        <p className="text-[11px] text-pergamino-200 leading-relaxed text-center">
+          {evento.descripcion}
+        </p>
 
         {resultado ? (
           <div className="flex flex-col gap-4 border-t border-marco pt-4">
