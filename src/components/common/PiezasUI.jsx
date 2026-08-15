@@ -299,6 +299,7 @@ export function FilaPestanas({ pestanas, activaId, onElegir }) {
  */
 export function IconoEnmarcado({
   src, bloqueado = false, colorMarco = 'border-marco', tamano = 'w-14 h-14', vacio = '?',
+  glifo = null,
 }) {
   return (
     <div
@@ -317,6 +318,13 @@ export function IconoEnmarcado({
           className={`w-full h-full object-contain select-none ${bloqueado ? 'opacity-40' : ''}`}
           style={bloqueado ? { filter: 'brightness(0)' } : undefined}
         />
+      ) : glifo ? (
+        // Un glifo dibujado con tipografía en vez de un sprite, para lo que no
+        // tiene dibujo y **tampoco es un hueco**: hoy, el rango de una misión sin
+        // recompensa. Se atenúa si está bloqueado, pero no se ensombrece como un
+        // sprite (`brightness(0)`): eso es para lo que hay que descubrir, y un
+        // rango no es una sorpresa que se esconda, es la categoría de la entrada.
+        <span className={bloqueado ? 'opacity-40' : ''}>{glifo}</span>
       ) : (
         <span className="text-pergamino-200/25 font-display text-xs">{vacio}</span>
       )}

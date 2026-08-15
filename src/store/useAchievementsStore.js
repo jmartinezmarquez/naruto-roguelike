@@ -11,6 +11,7 @@ import { evaluarLogrosDesbloqueables } from '../engine/achievements';
 
 const CLAVE_STORAGE = 'naruto-roguelike-logros';
 const CLAVE_VISTOS = 'naruto-roguelike-vistos';
+const CLAVE_CONTADORES = 'naruto-roguelike-contadores';
 
 /**
  * Las cuatro categorías del registro de "visto" de la enciclopedia. Están aquí y
@@ -23,6 +24,33 @@ const CLAVE_VISTOS = 'naruto-roguelike-vistos';
  */
 export const VISTOS_VACIO = { personajes: [], enemigos: [], modos: [], objetos: [] };
 
+/**
+ * Los contadores acumulados **entre runs**, que es lo que permite logros del tipo
+ * "gana 50 combates" o "consigue 5000 de oro" (punto 5a del roadmap). Suman
+ * siempre: perder la run no los baja, igual que no baja un logro ya conseguido.
+ *
+ * Están aquí y no en `useGameStore` por la misma razón que los vistos: un game
+ * over borraría la mitad de la meta-progresión. Y como los vistos, se mezclan con
+ * este objeto al cargar, para que añadir un contador nuevo no invalide lo que el
+ * jugador ya tenga guardado.
+ *
+ * ⚠️ **Un contador cuesta un enganche**, y un enganche es un sitio donde
+ * olvidarse. Por eso son siete y no quince: cada uno tiene que incrementarse en
+ * el único sitio donde la cosa ocurre de verdad. Lo que se puede DEDUCIR de lo ya
+ * guardado no lleva contador — cuántos ninjas distintos has llevado o cuántas
+ * transformaciones has visto salen del registro de `vistos`, con la condición
+ * `coleccionMinima`.
+ */
+export const CONTADORES_VACIO = {
+  combatesGanados: 0,
+  oroGanado: 0,
+  reclutas: 0,
+  eventosResueltos: 0,
+  objetosComprados: 0,
+  runsCompletadas: 0,
+  runsPerdidas: 0,
+};
+
 export const useAchievementsStore = create((set, get) => ({
   logrosDesbloqueados: [], // array de ids de logros — cargarLogros() los rellena desde localStorage
   notificacionesPendientes: [], // cola de logros (objetos completos) recién desbloqueados, para el toast — ver LogroToast
@@ -32,6 +60,9 @@ export const useAchievementsStore = create((set, get) => ({
   // sobrevivir a perder la run: es meta-progresión, como los logros. Si viviera
   // en la run, un game over borraría la enciclopedia entera.
   vistos: VISTOS_VACIO,
+
+  // Lo mismo, para los logros de "hazlo N veces". Ver CONTADORES_VACIO.
+  contadores: CONTADORES_VACIO,
 
   /** Carga los logros ya desbloqueados en sesiones anteriores. Llamar una vez al arrancar la app. */
   cargarLogros() {
@@ -44,6 +75,43 @@ export const useAchievementsStore = create((set, get) => ({
     // guardado por una versión anterior.
     const vistosGuardados = localStorage.getItem(CLAVE_VISTOS);
     if (vistosGuardados) set({ vistos: { ...VISTOS_VACIO, ...JSON.parse(vistosGuardados) } });
+
+    const contadoresGuardados = localStorage.getItem(CLAVE_CONTADORES);
+    if (contadoresGuardados) {
+      set({ contadores: { ...CONTADORES_VACIO, ...JSON.parse(contadoresGuardados) } });
+    }
+  },
+
+  /**
+   * Suma al progreso acumulado y lo persiste. Recibe un lote (`{ combatesGanados: 1,
+   * oroGanado: 40 }`) por la misma razón que `registrarVistos`: quien llama suele
+   * tener varias cosas a la vez y así se escribe en `localStorage` una sola vez.
+   *
+   * Devuelve los contadores YA actualizados, para que quien acaba de sumar pueda
+   * evaluar sin volver a leer el store.
+   *
+   * ⚠️ Ignora las claves que no estén en `CONTADORES_VACIO`: un contador con una
+   * errata de nombre se quedaría a cero para siempre y el logro no saltaría nunca,
+   * que es el tipo de fallo silencioso que este proyecto ya ha pagado dos veces.
+   */
+  sumarContadores(lote) {
+    const actuales = get().contadores;
+    const siguiente = { ...actuales };
+    let hayNovedad = false;
+
+    for (const [clave, cantidad] of Object.entries(lote ?? {})) {
+      if (!(clave in CONTADORES_VACIO)) {
+        throw new Error(`Contador de logros desconocido: ${clave}`);
+      }
+      if (!cantidad) continue;
+      siguiente[clave] = (actuales[clave] ?? 0) + cantidad;
+      hayNovedad = true;
+    }
+
+    if (!hayNovedad) return actuales;
+    set({ contadores: siguiente });
+    localStorage.setItem(CLAVE_CONTADORES, JSON.stringify(siguiente));
+    return siguiente;
   },
 
   /**
@@ -86,10 +154,17 @@ export const useAchievementsStore = create((set, get) => ({
    * (ver `notificar`), porque el desbloqueo puede ocurrir antes de que la UI
    * termine de mostrar lo que lo causó (p. ej. la animación de un combate) y
    * el toast no debe saltar hasta que eso termine.
+   *
+   * ⚠️ **El contexto se completa aquí con los contadores y los vistos**, y quien
+   * llama solo pasa lo del momento ("acaba de morir este jefe"). Es lo que hace
+   * que un logro de contador salte desde CUALQUIER punto de evaluación sin que
+   * ese punto sepa que existe: durante meses hubo uno solo —ganar un combate— y
+   * ningún logro que no fuera "derrota a X" tenía dónde dispararse.
    */
-  evaluarLogros(contexto) {
-    const { logrosDesbloqueados } = get();
-    const nuevos = evaluarLogrosDesbloqueables(achievementsData.logros, logrosDesbloqueados, contexto);
+  evaluarLogros(contexto = {}) {
+    const { logrosDesbloqueados, contadores, vistos } = get();
+    const contextoCompleto = { ...contexto, contadores, vistos };
+    const nuevos = evaluarLogrosDesbloqueables(achievementsData.logros, logrosDesbloqueados, contextoCompleto);
     if (nuevos.length === 0) return [];
 
     const actualizados = [...logrosDesbloqueados, ...nuevos.map((l) => l.id)];
@@ -113,14 +188,24 @@ export const useAchievementsStore = create((set, get) => ({
     set((estado) => ({ notificacionesPendientes: estado.notificacionesPendientes.slice(1) }));
   },
 
-  // TEMPORAL: solo para probar el desbloqueo en desarrollo (botón en
-  // AchievementsScreen). Quitar cuando el sistema esté verificado.
-  // Borra también el registro de vistos: es el botón de "empezar de cero" de toda
-  // la meta-progresión, y dejar la enciclopedia llena mientras los logros vuelven
-  // a cero haría imposible probar cómo se ve una entrada bloqueada.
+  /**
+   * El "empezar de cero" de toda la meta-progresión, que es una opción de verdad
+   * en Ajustes (ver documentacion/34-ajustes.md).
+   *
+   * ⚠️ **Borra las TRES claves.** Dejar los contadores llenos mientras los logros
+   * vuelven a cero es peor que no reiniciar: los de contador se volverían a
+   * desbloquear en el acto, en el primer combate, y el jugador vería su reinicio
+   * deshacerse solo. Lo mismo con los vistos y la enciclopedia.
+   */
   reiniciarLogros() {
-    set({ logrosDesbloqueados: [], notificacionesPendientes: [], vistos: VISTOS_VACIO });
+    set({
+      logrosDesbloqueados: [],
+      notificacionesPendientes: [],
+      vistos: VISTOS_VACIO,
+      contadores: CONTADORES_VACIO,
+    });
     localStorage.removeItem(CLAVE_STORAGE);
     localStorage.removeItem(CLAVE_VISTOS);
+    localStorage.removeItem(CLAVE_CONTADORES);
   },
 }));

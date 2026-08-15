@@ -25,8 +25,11 @@ Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeraci�
 > documento MVP nuevo — [35](./35-diseño-de-eventos.md)) y la **música** ([36](./36-musica.md)), que
 > resultó no ser el sistema que decía el backlog sino una pista en bucle.
 >
-> **Quedan dos puntos: el 9 y el 5a**, en ese orden — el 9 primero porque es la única queja del playtest
-> sin atender. El plan del 5a está al final de este documento. Y ojo, que la sección "5 — Logros" de más
+> **Actualización (2026-08-15, misma tarde): se han cerrado el 9 y el 5a, y con ellos la lista entera.**
+> No queda ningún punto de código abierto del MVP. Lo que sigue es playtest, la pista de música y la
+> tanda de arte. El plan del 5a se queda al final de este documento **como registro de lo que se
+> decidió** —sus cuatro preguntas abiertas están contestadas en el propio plan y en
+> [18](./18-sistema-de-logros.md)—, no como trabajo pendiente. Y ojo, que la sección "5 — Logros" de más
 > abajo se escribió antes de que existiera la pantalla: **5c ya está hecho y el campo `categoria` se
 > decidió NO añadirlo** — lo dice también ahí, corregido en su sitio.
 
@@ -37,9 +40,9 @@ Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeraci�
 | 1.º | **7 — Playtest** | Va en paralelo y lo hace el usuario: desde el último han cambiado el balance de los jefes, la frecuencia y rareza de los reclutas, el final del combate, todas las tarjetas de personaje y el roster. Su triaje entra por delante de cualquier punto empezado | 1 sesión corta (jugar) + lo que salga | No (salvo lo que aparezca) |
 | ~~2.º~~ | ~~**13 — Kakashi + cascabeles**~~ | **HECHO el 2026-08-13** — desarrollo en [05-roadmap.md](./05-roadmap.md) y calibración en [11](./11-progresion-y-arcos.md) | — | Fueron tres ficheros de datos |
 | ~~3.º~~ | ~~**10 — Enciclopedia**~~ | **HECHO el 2026-08-13** — ver [32](./32-enciclopedia.md) | — | No (solo lectura) |
-| 2.º | **5a — Logros: contenido y condiciones** | *Lo siguiente.* La pantalla ya está (5c) y en estilo; lo que le falta no es diseño sino **material que enseñar**. Y el registro de vistos ya dejó montado en `useAchievementsStore` el patrón exacto que necesitan sus contadores | Media | Sí — `achievements.json`, `engine/achievements.js`, los dos stores |
+| ~~2.º~~ | ~~**5a — Logros: contenido y condiciones**~~ | **HECHO el 2026-08-15** — ver [18](./18-sistema-de-logros.md). El plan acertó en lo importante: el trabajo eran **los enganches, no el JSON**, y el registro de vistos era en efecto el patrón a copiar (tanto, que cuatro logros salen de él sin contador propio) | — | Sí — `achievements.json`, `engine/achievements.js`, los dos stores |
 | 5.º | **6 — Eventos** | No se puede planificar todavía: es el **único punto sin documento MVP**. Antes hay que escribir qué se quiere de esa pantalla | Pequeña + doc previo | No |
-| 6.º | **9 — Columna central** | Cosmético y acotado. Buen cierre de sesión o relleno cuando quede medio hueco | Pequeña | No |
+| ~~6.º~~ | ~~**9 — Columna central**~~ | **HECHO el 2026-08-15** — ver [13](./13-ui-mapa-y-combate.md). No fue tan cosmético: el fondo pasó a dibujarse en vez de recortarse, y la queja de "el mapa es pequeño" se resolvió por la altura del lienzo, no por el ancho | — | No |
 
 ~~**Fuera de la lista y más importante que la mitad de ella: el sonido.**~~ **HECHO**, y la estimación
 estaba mal: no era un sistema (assets, precarga, mezcla) sino **una pista en bucle**, porque la
@@ -226,6 +229,15 @@ El más pequeño y el más acotado. Tres cosas, tal como las escribiste:
 ---
 
 # Plan del punto 5a — Contenido y condiciones de los logros
+
+> ✅ **HECHO el 2026-08-15.** Se conserva porque explica **por qué** el punto tiene la forma que tiene, y
+> ese razonamiento vuelve a hacer falta la próxima vez que se añada un logro. Cómo quedó, en
+> [18](./18-sistema-de-logros.md). Las cuatro decisiones se tomaron **por la recomendación**: una
+> condición genérica de contador; siete contadores (los cuatro recomendados más eventos, compras y runs
+> perdidas); **sí, un logro puede no dar nada**; y 23 logros. Lo único que el plan no vio venir es que la
+> mitad del contenido nuevo **no necesitaba contador ninguno**: `coleccionMinima` lee el registro de la
+> enciclopedia, que ya estaba, y por eso hay cuatro logros más sin un solo enganche nuevo.
+
 
 Preparado el 2026-08-13 para arrancar la sesión siguiente. La pantalla (5c) ya está hecha y en estilo:
 lo que falta es **material que enseñar**, y el trabajo de verdad no está en el JSON.

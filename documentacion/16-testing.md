@@ -19,7 +19,7 @@ sin mocks ni DOM.
 - Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
   hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (225 tests)
+## Cobertura actual (274 tests)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -75,7 +75,9 @@ sin mocks ni DOM.
   distintos.
 - **`engine/achievements.test.js`** — qué condiciones desbloquean qué logros, no repetir un logro
   ya desbloqueado, extraer las recompensas de personaje reclutable/objeto inicial de los logros ya
-  conseguidos.
+  conseguidos. Y las dos condiciones acumuladas: `contadorMinimo` se cumple **en la cantidad exacta**
+  (no un combate después) y un contador ausente cuenta como 0 sin reventar; `coleccionMinima` mide una
+  categoría de vistos y no mira las otras; `progresoDeLogro` devuelve `null` para los de suceso.
 - **`store/useGameStore.test.js`** — `iniciarRun` crea el equipo correcto, `jugarCombate` en
   victoria y en derrota (incluida la cadena completa de rondas hasta que cae todo el equipo),
   `reordenarEquipo`, `reiniciarRun`, la tienda (comprar, fondos insuficientes, objeto gratuito,
@@ -115,7 +117,13 @@ sin mocks ni DOM.
   red de seguridad en `abrirEnciclopedia` y sin idempotencia cada apertura sería un bucle de renders.
   Los ganchos del lado del juego están en `useGameStore.test.js`, incluido que se apunta al enemigo
   **aunque se pierda** el combate y que el modo apuntado es el que usó en la pelea, no el que tenga
-  después.
+  después. Más los **contadores** (punto 5a): acumulan y persisten, no escriben si el lote no suma,
+  **revientan con un contador desconocido** (una errata lo dejaría a cero para siempre y el logro no
+  saltaría nunca), `cargarLogros` completa las claves que falten, y `reiniciarLogros` los borra —con
+  test propio, porque dejarlos llenos haría que los logros se redesbloquearan en el acto. Y seis
+  **invariantes sobre `achievements.json`**: ids únicos, tipos de condición y de recompensa que el
+  motor y la pantalla conocen, contadores y categorías que existen de verdad, e ids de
+  personaje/objeto que están en los JSON.
 
 ## Convención para nuevos tests
 
@@ -123,6 +131,13 @@ Cada `describe` cubre una función o flujo concreto. Los tests de store usan `be
 reiniciar la run entera (`iniciarRun`) y evitar que el estado se arrastre entre tests — al ser un
 store global de Zustand (no una instancia nueva por test), esto es obligatorio o los tests se
 contaminan entre sí.
+
+⚠️ **Y hay que reiniciar TODO lo persistido, no solo la run.** `useAchievementsStore` guarda tres
+cosas —logros, vistos y contadores— y el `beforeEach` tiene que vaciar las tres. Se descubrió
+dejándose los contadores: los combates y eventos de cada test se sumaban a los del siguiente y
+acababan desbloqueando "gana 10 combates" en mitad de una prueba que iba de otra cosa. Es la misma
+trampa que en el juego, donde reiniciar la meta-progresión tiene que borrar las tres claves de
+`localStorage`.
 
 ## Pendiente
 

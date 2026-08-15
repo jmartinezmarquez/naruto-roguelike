@@ -91,11 +91,220 @@
         "tipo": "desbloquearObjetoInicial",
         "objetoId": "sello_chakra"
       }
+    },
+    {
+      "id": "arco2_sin_bajas",
+      "nombre": "Flawless Exam",
+      "descripcion": "Complete the Chunin Exams without any character falling in battle.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "examen_chunin"
+      },
+      "recompensa": {
+        "tipo": "desbloquearObjetoInicial",
+        "objetoId": "pergamino_reserva"
+      }
+    },
+    {
+      "id": "arco3_sin_bajas",
+      "nombre": "Not a Scratch on the Village",
+      "descripcion": "Complete Pain's Invasion without any character falling in battle.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "invasion_de_pain"
+      },
+      "recompensa": {
+        "tipo": "desbloquearObjetoInicial",
+        "objetoId": "semilla_sabio"
+      }
+    },
+    {
+      "id": "combates_10",
+      "nombre": "D-Rank No More",
+      "descripcion": "Win 10 battles.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "combatesGanados",
+        "cantidad": 10
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "combates_50",
+      "nombre": "Seasoned Shinobi",
+      "descripcion": "Win 50 battles.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "combatesGanados",
+        "cantidad": 50
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "combates_150",
+      "nombre": "Village Veteran",
+      "descripcion": "Win 150 battles.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "combatesGanados",
+        "cantidad": 150
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "reclutas_5",
+      "nombre": "Squad Leader",
+      "descripcion": "Recruit 5 ninja across all your runs.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "reclutas",
+        "cantidad": 5
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "oro_1000",
+      "nombre": "Full Purse",
+      "descripcion": "Earn 1000 gold in total.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "oroGanado",
+        "cantidad": 1000
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "oro_5000",
+      "nombre": "War Chest",
+      "descripcion": "Earn 5000 gold in total.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "oroGanado",
+        "cantidad": 5000
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "compras_10",
+      "nombre": "Regular Customer",
+      "descripcion": "Buy 10 items at trading posts.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "objetosComprados",
+        "cantidad": 10
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "eventos_20",
+      "nombre": "Off the Beaten Path",
+      "descripcion": "Resolve 20 events on the road.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "eventosResueltos",
+        "cantidad": 20
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "runs_3",
+      "nombre": "Three Times a Hero",
+      "descripcion": "Complete 3 full runs.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "runsCompletadas",
+        "cantidad": 3
+      },
+      "recompensa": {
+        "tipo": "desbloquearPersonajeInicial",
+        "personajeId": "yamato"
+      }
+    },
+    {
+      "id": "caidas_7",
+      "nombre": "Stand Up Eight",
+      "descripcion": "Lose 7 runs. Falling down is part of the road.",
+      "condicion": {
+        "tipo": "contadorMinimo",
+        "contador": "runsPerdidas",
+        "cantidad": 7
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "vistos_personajes_8",
+      "nombre": "Bonds of Konoha",
+      "descripcion": "Have 8 different ninja in your squad.",
+      "condicion": {
+        "tipo": "coleccionMinima",
+        "categoria": "personajes",
+        "cantidad": 8
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "vistos_enemigos_10",
+      "nombre": "Bingo Book Regular",
+      "descripcion": "Face 10 different enemies.",
+      "condicion": {
+        "tipo": "coleccionMinima",
+        "categoria": "enemigos",
+        "cantidad": 10
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "vistos_modos_10",
+      "nombre": "Beyond the Limit",
+      "descripcion": "Witness 10 different transformations.",
+      "condicion": {
+        "tipo": "coleccionMinima",
+        "categoria": "modos",
+        "cantidad": 10
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "vistos_objetos_8",
+      "nombre": "Well Equipped",
+      "descripcion": "Get hold of 8 different items.",
+      "condicion": {
+        "tipo": "coleccionMinima",
+        "categoria": "objetos",
+        "cantidad": 8
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
     }
   ],
   "_pendienteDeImplementar": {
     "tiposDeCondicion": [
-      "alcanzarNivel (nivel)",
+      "alcanzarNivel (nivel) — hoy no hay dónde apuntarlo: los contadores SUMAN, y un nivel máximo es un máximo. Haría falta otra forma de registro, y de momento no compensa: el nivel de la run va tan pegado a lo lejos que llegas que un logro de nivel sería el mismo logro que 'derrota a X' con otro nombre",
       "reclutarATodos (arcoId)",
       "completarRunEnDificultad (dificultad) — si se añade selector de dificultad más adelante"
     ],

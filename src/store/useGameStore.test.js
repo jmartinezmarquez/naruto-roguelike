@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
-import { useAchievementsStore, VISTOS_VACIO } from './useAchievementsStore';
+import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO } from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
 import configGlobal from '../data/config.json';
 import eventosData from '../data/events.json';
@@ -49,7 +49,17 @@ const enemigoImbatibleDePrueba = {
 // propósito (es meta-progresión entre runs), así que hay que limpiarlo aquí.
 beforeEach(() => {
   localStorage.clear();
-  useAchievementsStore.setState({ logrosDesbloqueados: [], vistos: VISTOS_VACIO });
+  // ⚠️ Los contadores acumulados también se resetean, y esto no es opcional: sin
+  // ellos, los combates y eventos de un test se suman a los del siguiente y
+  // acaban desbloqueando logros de contador ("gana 10 combates") en mitad de una
+  // prueba que iba de otra cosa. Es la misma trampa que en el juego, donde
+  // reiniciar la meta-progresión tiene que borrar las TRES claves.
+  useAchievementsStore.setState({
+    logrosDesbloqueados: [],
+    vistos: VISTOS_VACIO,
+    contadores: CONTADORES_VACIO,
+    notificacionesPendientes: [],
+  });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -1369,5 +1379,90 @@ describe('registro de vistos para la enciclopedia', () => {
     useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
     useGameStore.getState().abrirEnciclopedia();
     expect(vistos().objetos).toContain('semilla_sabio');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Contadores de meta-progresión (punto 5a). Lo que se prueba aquí no es el
+// contador —eso es del store de logros— sino **los enganches**: que cada cosa se
+// cuente en el sitio donde ocurre de verdad, y una sola vez.
+// ---------------------------------------------------------------------------
+
+describe('contadores de logros — enganches', () => {
+  const contadores = () => useAchievementsStore.getState().contadores;
+
+  it('ganar un combate cuenta UNO, aunque haya hecho falta relevar a todo el equipo', () => {
+    // ⚠️ Una cadena de rondas es UN combate. Contar por ronda inflaría el
+    // contador ~2× y ningún test de combate lo habría cazado.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i < 2 ? { ...p, hpActual: 1 } : p)),
+    }));
+    useGameStore.getState().jugarCombate(enemigoHakuDePrueba, 1);
+
+    expect(contadores().combatesGanados).toBe(1);
+  });
+
+  it('el oro de un combate ganado se suma a lo GANADO en total', () => {
+    useGameStore.getState().jugarCombate(enemigoHakuDePrueba, 1);
+    expect(contadores().oroGanado).toBeGreaterThan(0);
+  });
+
+  it('perder la run cuenta una caída', () => {
+    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+    expect(contadores().runsPerdidas).toBe(1);
+    expect(contadores().combatesGanados).toBe(0);
+  });
+
+  it('reclutar cuenta, tanto en hueco libre como reemplazando', () => {
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.slice(0, 2) }));
+    useGameStore.getState().reclutarPersonaje('rock_lee', 5);
+    expect(contadores().reclutas).toBe(1);
+
+    useGameStore.getState().reclutarPersonaje('neji', 5, 'rock_lee');
+    expect(contadores().reclutas).toBe(2);
+  });
+
+  it('comprar en la tienda cuenta un objeto comprado', () => {
+    useGameStore.setState({ oro: 1000, tiendaActual: { items: [{ id: 'pildora_soldado', precio: 25 }] } });
+    useGameStore.getState().comprarItemTienda('pildora_soldado');
+    expect(contadores().objetosComprados).toBe(1);
+  });
+
+  it('resolver un evento cuenta, salga bien o mal la tirada', () => {
+    ponerEvento({ tipo: 'perderOro', cantidad: 10 });
+    useGameStore.getState().resolverEventoEleccion(0);
+    expect(contadores().eventosResueltos).toBe(1);
+  });
+
+  it('el oro de un evento también entra en el total ganado', () => {
+    ponerEvento({ tipo: 'ganarOro', cantidad: 30 });
+    useGameStore.getState().resolverEventoEleccion(0);
+    expect(contadores().oroGanado).toBe(30);
+  });
+
+  it('abrir la pantalla de logros evalúa lo ya acumulado (red de seguridad)', () => {
+    // El caso real: el logro se añade DESPUÉS de que el jugador tenga el progreso.
+    // Sin esta evaluación al abrir, la tarjeta enseñaba la barra llena y "Locked"
+    // al lado hasta el siguiente combate — el juego diciendo dos cosas contrarias.
+    useAchievementsStore.getState().sumarContadores({ combatesGanados: 10 });
+    expect(useAchievementsStore.getState().estaDesbloqueado('combates_10')).toBe(false);
+
+    useGameStore.getState().abrirLogros();
+    expect(useAchievementsStore.getState().estaDesbloqueado('combates_10')).toBe(true);
+    // Y en silencio: el jugador está mirando la lista, la fila cambiando a
+    // "Unlocked" delante de él ES el aviso.
+    expect(useAchievementsStore.getState().notificacionesPendientes).toEqual([]);
+  });
+
+  it('un logro de contador que salta fuera de combate se notifica en el acto', () => {
+    // Fuera de combate no hay animación que respetar, así que el toast puede
+    // salir ya. En combate NO: los logros viajan en el resumen y los notifica
+    // CombatScreen al terminar, para no tapar lo que los ha provocado.
+    useAchievementsStore.getState().sumarContadores({ eventosResueltos: 19 });
+    ponerEvento({ tipo: 'ninguno' });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    const notificados = useAchievementsStore.getState().notificacionesPendientes.map((l) => l.id);
+    expect(notificados).toContain('eventos_20');
   });
 });

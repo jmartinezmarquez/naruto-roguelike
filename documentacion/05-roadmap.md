@@ -159,11 +159,7 @@
   recortaron a `assets/nodes/*.png` (media resolución) en vez de cargar la hoja de 1,4 MB entera;
   las coordenadas del recorte quedan anotadas en [13](./13-ui-mapa-y-combate.md) por si hay que
   rehacerlo. Cubiertos: combate, evento, tienda, descanso y reclutar.
-- [ ] **Pendiente de arte**: combate entrenador, mini-jefe y jefe final deberían llevar el sprite
-  del personaje concreto. Hoy comparten el sprite de combate y se distinguen por color de borde +
-  badge de rango (`★` / `☠` / `危`) y, en el jefe, tamaño mayor con borde doble. El asset
-  `map-sprites-idle-all-characters.png` tiene los personajes, pero en una hoja con paneles de
-  tamaño irregular: hace falta recortarlos uno a uno antes de poder mapearlos por `enemigoId`.
+  *(Lo que falta de estos nodos es dibujo y está en "Pendiente de arte", no aquí.)*
 
 **Fondo de columna central del mapa**
 - [x] Cada arco pinta su propia columna de fondo detrás del mapa (`FONDO_COLUMNA` en
@@ -898,7 +894,9 @@ El triaje entra por delante del 5a, como dice el [31](./31-plan-siguientes-pasos
 - [ ] **Pictogramas propios para los 5 tipos de chakra**, en vez de los emojis de la rueda. Va con los
   cuatro iconos del menú vertical, en "Pendiente de arte" — de una tacada, que es la única forma de que
   salgan del mismo estilo.
-- [ ] **El mapa se ve pequeño** comparado con Pokelike: es el **punto 9**, que ya lo tenía anotado.
+- [x] **El mapa se ve pequeño** comparado con Pokelike: era el **punto 9**, hecho el 2026-08-15 — ver el
+  bloque "Columna central del mapa (punto 9)" más abajo. La palanca no era el ancho sino la **altura del
+  lienzo**.
 
 **Eventos (punto 6) — ver [35](./35-diseño-de-eventos.md)**
 
@@ -1012,6 +1010,56 @@ meter azar de verdad.
 - [x] ⚠️ **`ALTO_POR_PISO` está en dos sitios y tienen que ir a la vez** (`MapScreen.jsx` y el script):
   el fondo se pinta con `100% 100%`, así que descuadrarlos **deforma** el dibujo en vez de recortarlo —
   árboles ovalados. Los dos llevan el aviso al lado de la constante.
+- ⚠️ **Para quien vuelva a tocar el encuadre** (venía en el enunciado del punto y se queda aquí, que es
+  donde se va a leer): el mínimo de tamaño de nodo es de 44 px **en pantalla**, no en lienzo. Ya hubo un
+  bug de nodos declarados a 48 px que acababan en ~31 al escalar, y `tamanoNodo()` con el
+  `ResizeObserver` es exactamente el mismo cálculo que hay que volver a tocar.
+
+**Contenido y condiciones de los logros (punto 5a) — ver [18](./18-sistema-de-logros.md)**
+
+- [x] De **7 logros a 23**, con las cinco pestañas de la pantalla llenas: los tres arcos sin bajas, una
+  escalera de combates ganados, reclutas, oro, compras, eventos, runs completadas, runs perdidas y
+  cuatro de colección leídos del Bingo Book.
+- [x] 🐛 ⚠️ **El hallazgo que cambió el punto: había UN SOLO punto de evaluación.** Los logros solo se
+  miraban al ganar un combate, con un contexto de "acaba de morir este jefe", así que **ningún logro que
+  no fuera "derrota a X" tenía dónde dispararse** por bien escrito que estuviera. Se arregló donde menos
+  ruido hace: `evaluarLogros` **completa el contexto por su cuenta** con los contadores y los vistos, y
+  quien llama solo pasa lo del momento. Un logro de contador salta ahora desde cualquier sitio sin que
+  ese sitio sepa que existe.
+- [x] **Una condición genérica y no una por métrica** (`contadorMinimo`, `coleccionMinima`): añadir un
+  logro vuelve a ser **solo datos**. Con un tipo por métrica, cada logro nuevo obligaría a tocar `engine/`.
+- [x] **Siete contadores** (`CONTADORES_VACIO`, clave propia de `localStorage`), y ni uno más: ⚠️ **un
+  contador cuesta un enganche, y un enganche es un sitio donde olvidarse**. Lo que se puede **deducir**
+  de lo ya guardado no lleva contador — "cuántas transformaciones has visto" sale del registro de la
+  enciclopedia con `coleccionMinima`, gratis, y además contesta la pregunta correcta: pelear doce veces
+  contra el mismo bandido no es haber visto doce enemigos.
+- [x] ⚠️ **Decidido: un logro PUEDE no dar nada** (`recompensa: { tipo: 'ninguna' }`, "A mark of honour").
+  La alternativa era el 5b —recompensas numéricas que mueven la curva de niveles de la run entera—, y un
+  juego de runs cortas no quiere meta-progresión que cambie números. Se dice con todas las letras: un
+  hueco vacío no dice "marca de honor", dice "aquí falta algo".
+- [x] **Barra de progreso "12 / 30"** en los logros de acumulación, y solo mientras se persiguen. Sin
+  ella, "gana 50 combates" sin decir por cuántos vas no es una meta, es un rumor.
+- [x] **Test de invariante** sobre `achievements.json`: tipos conocidos, contadores que existen,
+  categorías que existen, ids de personaje/objeto reales. ⚠️ Un tipo desconocido **no revienta**: no se
+  cumple jamás y la pantalla se queda muda, que es el fallo silencioso que ya nos ha costado dos bugs.
+- [x] 🐛 ⚠️ **`reiniciarLogros` borra las TRES claves.** Con los contadores intactos, los logros de
+  contador se volverían a desbloquear en el primer combate y el jugador vería su reinicio deshacerse
+  solo. La misma trampa aparece en los tests: sin resetear contadores en el `beforeEach`, los combates
+  de un test se suman a los del siguiente y desbloquean cosas en mitad de otra prueba (pasó).
+- [x] **`desbloquearPersonajeInicial` deja de ser código sin usar**: existía el tipo de recompensa y
+  ningún logro lo usaba. Completar 3 runs abre a **Yamato** como elección de partida.
+- [x] 🐛 ⚠️ **Barra llena y "Locked" en la misma tarjeta**, visto en el primer vistazo a la pantalla. No
+  era el contador: los logros se evalúan **cuando pasa algo**, y el progreso que ya estaba guardado el
+  día que se añade un logro no lo ha visto nadie. `abrirLogros` evalúa ahora al abrir —el mismo
+  catch-all que `abrirEnciclopedia`—, **en silencio**: el jugador está mirando la lista y la fila
+  cambiando a "Unlocked" delante de él es el aviso. Volvería a pasar con cada logro nuevo, así que el
+  arreglo no es de esta tanda de datos sino del sistema.
+- [x] **Rango S para los logros que no dan nada**, en vez del marco vacío: es el escalafón de las
+  misiones ninja, hecho con **tipografía y no con un sprite** (`RANGO_S`, prop `glifo` de
+  `IconoEnmarcado`) — una letra es exactamente lo que llevaría una hoja de misión, así que no hace falta
+  arte. Bloqueado se atenúa y no se ensombrece: el `brightness(0)` es para lo que hay que descubrir, y
+  esta pantalla no esconde nada.
+- [x] 275 tests (eran 245).
 
 ## Próximos pasos (en orden sugerido)
 
@@ -1021,65 +1069,37 @@ meter azar de verdad.
 >
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas por
 > comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar. Los
-> huecos (1-4, 8, 10-14) son puntos hechos que se han movido a "Hecho" **conservando su número en el
-> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre y nunca uno de los
-> huecos.
+> huecos —hoy **todos menos el 7**: 1-6 y 8-14— son puntos hechos que se han movido a "Hecho"
+> **conservando su número en el título**, no errores de numeración. Un punto nuevo coge el siguiente
+> número libre (el 15) y nunca uno de los huecos.
+>
+> ⚠️ **De esta sección solo queda el punto 7.** Eso no quiere decir que esté vacía de trabajo: quiere
+> decir que el trabajo que queda no se planifica por puntos. Lo que hay pendiente vive en "Pendiente de
+> arte" (dibujo), en la pista de música y en lo que salga del playtest.
 
 ### Por dónde seguir
 
-> **Estado (2026-08-15).** Quedan **dos puntos abiertos** —el 9 y el 5a— más el playtest, que es continuo.
-> El 6 (eventos) y el 14 (ajustes) están hechos, y **el sonido ya no es un punto pendiente**: resultó ser
-> una pista en bucle y está montado, a falta del fichero. Es la lista más corta que ha tenido este
-> documento.
+> **Estado (2026-08-15).** **No queda ningún punto de código abierto del MVP.** El 9 (columna central)
+> y el 5a (contenido de logros) se cerraron el mismo día; el 6 (eventos) y el 14 (ajustes), antes. Lo que
+> queda es **playtest**, la pista de música y la tanda de arte — nada de eso se resuelve escribiendo
+> lógica. Es la lista más corta que ha tenido este documento, y la primera vez que no tiene un "siguiente
+> punto".
 
-**1.º — el 9 (columna central del mapa).** Sube de último a primero por un motivo concreto: **es la única
-queja del playtest que sigue sin atender.** El jugador lo dijo con estas palabras — *"el mapa es un poco
-pequeño, el de Pokelike tiene la columna central algo más grande"*— y todo lo demás de esa tanda ya está
-arreglado. Es corto y acotado (ver el enunciado del punto 9, más abajo), y cierra la línea visual.
-⚠️ Cuidado con el mínimo de 44 px, que es **en pantalla** y no en lienzo: ya hubo un bug de nodos de
-48 px que acababan en ~31 al escalar.
+**1.º — el playtest, que ya no es un punto sino una costumbre.** Con la lista vacía pasa de tercero a
+único. Las cinco últimas tandas de mejoras han salido enteras de partidas reales, y ninguna de la lista:
+los eventos que no eran decisiones, el equipo que se reordenaba solo, el pergamino dorado obligatorio,
+los ataques básicos que no se sentían, los menús lejos de la columna. Los hallazgos van al roadmap con la
+plantilla del [31](./31-plan-siguientes-pasos.md).
 
-**2.º — el 5a (contenido de logros).** El último punto de contenido que queda. La pantalla está hecha y en
-estilo; lo que falta es **material que enseñar** (7 logros contra los 38 de su documento MVP). Tiene plan
-detallado en el [31](./31-plan-siguientes-pasos.md), con el hallazgo que le cambia la forma: hoy los logros
-solo se evalúan al ganar un combate, así que **el trabajo son los enganches, no el JSON**. Y una decisión
-que hay que tomar antes de escribir código: **si un logro puede no dar nada** — quedan pocos personajes y
-objetos que desbloquear, así que veinte logros nuevos no tienen premio. La recomendación es que sí.
+**2.º — lo que no es código:** la pista de música y los 9 iconos (5 de chakra + 4 del menú vertical), que
+van en una sola tanda. Ver "Pendiente de arte".
 
-**3.º — el playtest, que ya no es un punto sino una costumbre.** Las cuatro últimas tandas de mejoras han
-salido enteras de partidas reales, y ninguna de la lista: los eventos que no eran decisiones, el equipo que
-se reordenaba solo, el pergamino dorado obligatorio, los ataques básicos que no se sentían. Los hallazgos
-van al roadmap con la plantilla del [31](./31-plan-siguientes-pasos.md) y su triaje entra **por delante de
-cualquier punto empezado**.
-
-**Lo que queda y no es código:** la pista de música (`src/assets/music/principal.mp3`) y la tanda de arte —
-los **5 iconos de chakra** y los **4 del menú vertical**, que van juntos porque hacerlos por separado es la
-forma segura de que salgan de dos estilos distintos. Ver "Pendiente de arte".
-
-**Decisión de diseño abierta, sin prisa:** el **nodo `?`** de Slay the Spire (un evento que a veces es un
-combate). Propuesto por el jugador y aparcado con motivo — ver [10](./10-generador-de-mapa.md).
+**3.º — y si se quiere seguir construyendo**, lo honesto es abrir un punto nuevo con su número libre en
+vez de estirar uno cerrado. Los candidatos con razonamiento ya escrito son el **nodo `?`** de Slay the
+Spire (aparcado, ver [10](./10-generador-de-mapa.md)) y el **5b** (recompensas numéricas permanentes),
+que sigue **descartado para el MVP** por mover la curva de niveles de la run entera.
 
 ---
-
-5. **Interfaz de logros** — (MVP en [25](./25-diseño-pantalla-logros.md)). ⚠️ **Partido en tres, y solo
-   la pantalla está hecha.** El documento está escrito para un juego que todavía no existe: pide 38
-   logros, categorías, recompensas de oro y una barra de hitos permanentes, y hoy hay **7 logros**, dos
-   tipos de condición y dos de recompensa, las dos de desbloqueo.
-   - **5a — contenido y condiciones** (*lo siguiente a hacer*): más logros, y los tipos de condición que
-     necesitan **contadores acumulados entre runs** (combates ganados, reclutas, oro total). Sin esto la
-     pantalla es una interfaz de meta-progresión con siete tarjetas. Las **categorías por acto NO hacen
-     falta como campo**: se calculan de los JSON de arco, ya está hecho.
-   - **5b — recompensas numéricas permanentes** (+% oro, +% XP, +1 hueco de inventario). **Decidido:
-     fuera del MVP.** Mueven la curva de niveles que vigilan los invariantes de arco de
-     `leveling.test.js`, y el raíl de la maqueta no se pinta hasta que se decida — pintar premios que no
-     existen es peor que no tenerlos.
-   - **5c — la pantalla**: hecha (ver "Hecho"), incluidas las pestañas por acto con su contador y el
-     icono de cada logro sacado de su recompensa.
-
-~~6. **Interfaz de eventos**~~ — **HECHO**, ver [35](./35-diseño-de-eventos.md) y la sección "Hecho".
-   El diagnóstico dio la vuelta al punto: la pantalla ya estaba en estilo y lo que fallaba era el
-   **contenido**. La pregunta de diseño de juego que lo bloqueaba está contestada: la pista **sigue a la
-   vista**, incluidas las probabilidades — lo que se esconde es el resultado del dado, no las reglas.
 
 7. **Playtest jugando** — la recalibración numérica está hecha (punto 1 fase 4, con el simulador contra
     los datos rediseñados). Lo que queda es lo que un script no puede medir: jugar runs enteras y ver
@@ -1102,21 +1122,10 @@ combate). Propuesto por el jugador y aparcado con motivo — ver [10](./10-gener
       Zabuza sino con los arcos 2 y 3?
     - El salto de dificultad cuando un personaje de banquillo entra en una ronda encadenada contra un
       jefe con la barra de jutsu ya cargada (la conserva a propósito, ver [11](./11-progresion-y-arcos.md)).
-    - Y ahora también **las ocho pantallas rediseñadas en una partida entera**, no en capturas: si el
-      mapa en oscuro resulta lúgubre, eso decide cuánta prisa tiene el modo claro.
-
-~~9. **Diseño de la columna central**~~ — **HECHO**, ver la sección "Hecho" y
-   [13](./13-ui-mapa-y-combate.md). El enunciado original decía "con unos nodos más grandes la columna
-   central puede volver a su tamaño anterior, manteniendo las proporciones y ajustándose a la pantalla.
-   El sprite de la columna tiene que ser más sencillo y más representativo del arco actual.
-   Lo confirmó el playtest del 2026-08-14: *"el mapa es un poco pequeño, el de Pokelike tiene la columna
-   central algo más grande"*. Es la única queja de esa tanda que sigue sin atender.
-   ⚠️ Al tocar `tamanoNodo()` y el escalado con `ResizeObserver` de `MapScreen.jsx`, recordar que el
-   mínimo de 44 px es **en pantalla** y no en lienzo — ya hubo un bug de nodos de 48 px que acababan en
-   ~31 al escalar, y es exactamente el mismo cálculo que hay que volver a tocar.
-   *(Del punto, ya hecho: el lienzo lleva el marco del kit con sus esquinas en corchete y sin redondeo
-   —ver [33](./33-direccion-visual.md)—, y **el nombre del arco con reborde ya está**, resuelto para
-   todos los títulos a la vez con el contorno de `font-naruto`.)*
+    - Y ahora también **las pantallas rediseñadas en una partida entera**, no en capturas — y en los
+      **dos temas**, que ya existen los dos (punto 14). Lo que se mira aquí no es si "se ve bien" sino
+      si algo se pierde al invertir la superficie: los botones sobre acento y el texto encima de un
+      dibujo son los sitios donde ya ha fallado dos veces.
 
 ### Pendiente de arte
 
@@ -1124,6 +1133,12 @@ Cosas que no están hechas por falta de dibujo, no por falta de código. Van jun
 del punto que las dejó a medias, porque los puntos terminados se marcan `[x]` y nadie vuelve a
 leerlos buscando trabajo.
 
+- **Los nodos de entrenador, mini-jefe y jefe no llevan sprite del personaje concreto.** Comparten el
+  sprite de combate y se distinguen por color de borde + badge de rango (`★` / `☠` / `危`) y, en el jefe,
+  tamaño mayor con borde doble. El asset `map-sprites-idle-all-characters.png` tiene los personajes,
+  pero en una hoja con paneles de tamaño irregular: hace falta recortarlos uno a uno antes de poder
+  mapearlos por `enemigoId`. *(Lo que sí está hecho es el **hover**, que ya dice con qué jefe vienes a
+  pelear — nombre, nivel, tipo y transformación.)*
 - **Los 5 tipos de chakra y los 4 iconos del menú van JUNTOS.** Son dos entradas de esta lista (la de
   aquí abajo y la de la rueda de chakra), pero es una sola tanda de trabajo: hacerlos por separado es la
   forma segura de que salgan de dos estilos distintos, y se ven a la vez en la misma pantalla.
@@ -1183,6 +1198,13 @@ leerlos buscando trabajo.
 
 ### Descartado
 
+- **5b — recompensas numéricas permanentes de los logros** (+% oro, +% XP, +1 hueco de inventario).
+  **Fuera del MVP**, y la decisión se ha sostenido dos veces: mueven la curva de niveles que vigilan los
+  invariantes de arco de `leveling.test.js`, y un juego de runs cortas no quiere meta-progresión que
+  cambie números. El raíl que pedía la maqueta de la pantalla **no se pinta** — premios que no existen
+  son peores que ningún premio. Su consecuencia directa es que **un logro puede no dar nada**
+  (`recompensa: 'ninguna'`), que es lo que desbloqueó el 5a — ver [18](./18-sistema-de-logros.md).
+
 - **Hook de autoguardado tras cada nodo** (`guardarRun`/`cargarRun`): decidido que no compensa la
   complejidad — las runs son cortas, no hay tanto que perder si se cierra la pestaña a mitad. Las
   funciones ya existen en el store por si hiciera falta más adelante, simplemente no se conectan a
@@ -1193,11 +1215,13 @@ leerlos buscando trabajo.
 Ideas nuevas pensadas para encajar con el formato Pokelike/Slay the Spire, marcadas aparte por ser
 más grandes de lo que cabe en una sesión de bugfixing/ajuste:
 
-- **Sonido.** Lo que más juice añadiría de todo lo que queda, y por eso está aquí y no en los
-  próximos pasos: no es un retoque de pantalla sino un sistema entero (assets, precarga, mezcla,
-  ajuste de volumen, y decidir qué pasa cuando el jugador silencia la pestaña). El combate ya tiene
-  los ganchos donde irían los golpes: cada evento del historial dice si fue básico o jutsu, si
-  impactó, y qué pasivas saltaron.
+- ~~**Sonido.**~~ **HECHO** — ver "Música de fondo" en la sección "Hecho" y [36](./36-musica.md). Estuvo
+  aquí meses descrito como "un sistema entero (assets, precarga, mezcla, volumen)" y **no lo era**: la
+  referencia no tiene efectos de sonido, así que era una pista en bucle. ⚠️ La entrada se conserva
+  tachada porque la lección volverá a hacer falta: **antes de estimar un sistema, comprobar qué hace de
+  verdad la referencia.** Lo que sigue sin existir son los efectos por golpe, y es una decisión de
+  diseño tomada, no una tarea pendiente: los ganchos del combate están ahí (cada evento del historial
+  dice si fue básico o jutsu, si impactó y qué pasivas saltaron) y aun así no se usan.
 
 - **Bifurcación de riesgo/recompensa** en algún nodo de evento: elegir entre un camino más difícil
   con mejor recompensa o uno seguro con menos, al estilo "elite fight" de Slay the Spire.
@@ -1205,9 +1229,10 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
 - **Evento narrativo de transición entre arcos** (ver [20](./20-arcos-encadenados.md)) — hoy es
   instantáneo, un botón directo al mapa del siguiente arco.
 - Arte propio (sustituir placeholders).
-- Ampliar sistema de logros
-- Ampliar enemigos y objetos
-- Sistema de campañas para incluir más niveles
+- **Más logros**, que ya no es "ampliar el sistema" sino escribir datos: con `contadorMinimo` y
+  `coleccionMinima` añadir uno no toca `engine/`. Lo que sí sería sistema es un tipo de condición nuevo
+  (ver `_pendienteDeImplementar` en `achievements.json`).
+- Sistema de campañas para incluir más niveles, enemigos y objetos
 - Sistema de cuentas / guardado remoto.
 - Tests de componentes React (hoy solo motor + store).
 - **Modificadores de dificultad entre runs** ("ascensión"): ligado a la condición de logro ya

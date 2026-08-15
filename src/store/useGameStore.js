@@ -482,6 +482,8 @@ export const useGameStore = create((set, get) => ({
 
     if (equipo.length < configGlobal.equipo.tamanoMaximo) {
       set({ equipo: [...equipo, crearInstanciaPersonaje(id, nivelInicial)] });
+      get()._registrarVistosDeLaRun();
+      get()._registrarProgreso({ reclutas: 1 });
       return true;
     }
 
@@ -506,6 +508,7 @@ export const useGameStore = create((set, get) => ({
     equipoActualizado[indiceAReemplazar] = nuevaInstancia;
     set({ equipo: equipoActualizado, inventario: inventarioActualizado });
     get()._registrarVistosDeLaRun();
+    get()._registrarProgreso({ reclutas: 1 });
     return true;
   },
 
@@ -702,10 +705,6 @@ export const useGameStore = create((set, get) => ({
           transformaciones: transformacionesDesbloqueadas, subidasDeNivel, recompensas,
         } = get()._aplicarVictoria(
           activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate));
-        // Se desbloquean ya (persisten y afectan a tienda/inventario desde
-        // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
-        // cuando termine la animación, para no arruinar el suspense.
-        logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase);
 
         // ¿Este enemigo era el jefe final del arco en curso? Si además lleva
         // recompensa.finDeLaRun (solo Pain la tiene), la run entera se ha
@@ -721,9 +720,25 @@ export const useGameStore = create((set, get) => ({
           get()._curarEquipoCompleto();
           set({ avisoUltimoNodo: 'Team fully healed after completing the arc.' });
         }
-        if (arcoCompletado && enemigoBase.recompensa?.finDeLaRun) {
+        const runGanadaAqui = arcoCompletado && enemigoBase.recompensa?.finDeLaRun;
+        if (runGanadaAqui) {
           set({ runTerminada: true, runGanada: true });
         }
+
+        // ⚠️ **Los contadores se suman ANTES de evaluar**, o el logro de "gana 10
+        // combates" saltaría en el combate 11. Y se suman UNA vez por nodo aunque
+        // la cadena de relevos haya durado tres rondas: `jugarCombate` resuelve el
+        // nodo entero y este es el único punto por el que se sale ganando, así que
+        // contar aquí no puede inflarse.
+        useAchievementsStore.getState().sumarContadores({
+          combatesGanados: 1,
+          oroGanado: recompensas?.oro ?? 0,
+          runsCompletadas: runGanadaAqui ? 1 : 0,
+        });
+        // Se desbloquean ya (persisten y afectan a tienda/inventario desde
+        // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
+        // cuando termine la animación, para no arruinar el suspense.
+        logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase);
 
         jugadorGanoFinal = true;
         break;
@@ -750,6 +765,16 @@ export const useGameStore = create((set, get) => ({
         set({ cadenaEnemigos: { ...cadena, recompensasAcumuladas: acumuladas } });
         recompensas = acumuladas;
       }
+    }
+
+    // Perder también es progreso: hay logros que se ganan cayendo, que en un
+    // roguelike es la mitad de lo que va a pasar. Va aquí fuera y no en la rama que
+    // corta el bucle porque el bucle es de RONDAS y esto es de la run entera.
+    // Viaja en el resumen igual que en la victoria — `CombatScreen` notifica al
+    // acabar la animación, se haya ganado o perdido.
+    if (!jugadorGanoFinal && get().runTerminada) {
+      useAchievementsStore.getState().sumarContadores({ runsPerdidas: 1 });
+      logrosDesbloqueados = useAchievementsStore.getState().evaluarLogros({});
     }
 
     if (consumirBuffs) get()._consumirUsoBuffsTemporales();
@@ -851,6 +876,22 @@ export const useGameStore = create((set, get) => ({
 
   /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */
   abrirLogros() {
+    // ⚠️ **Red de seguridad: se evalúa al abrir.** Los logros se miran cuando pasa
+    // algo (ganar, reclutar, comprar, resolver un evento), y eso deja un hueco: el
+    // progreso que YA estaba guardado cuando el logro se añadió no lo ha visto
+    // nadie. Al estrenar el punto 5a, quien tuviera 8 objetos en la enciclopedia
+    // veía la barra llena y la palabra "Locked" al lado — el juego decía dos cosas
+    // contrarias en la misma línea. Volvería a pasar con cada logro nuevo.
+    //
+    // Es el mismo catch-all que `abrirEnciclopedia` con `registrarVistos`, y se
+    // apoya en lo mismo: `evaluarLogros` no toca el estado si no hay novedad, así
+    // que abrir la pantalla cien veces no cuesta nada.
+    //
+    // **Desbloquea en silencio, sin toast**: el jugador está mirando la lista, y
+    // que la fila cambie a "Unlocked" delante de él ES el aviso. Encolar cinco
+    // toasts encima de la pantalla que los explica sería taparla con su propio
+    // contenido.
+    useAchievementsStore.getState().evaluarLogros({});
     set({ pantalla: 'logros' });
   },
 
@@ -929,6 +970,7 @@ export const useGameStore = create((set, get) => ({
       },
     });
     get()._registrarVistosDeLaRun();
+    get()._registrarProgreso({ objetosComprados: 1 });
     return true;
   },
 
@@ -1166,6 +1208,24 @@ export const useGameStore = create((set, get) => ({
    * desbloqueados (ya persistidos) para que CombatScreen los notifique
    * cuando termine la animación — ver el comentario en `jugarCombate`.
    */
+  /**
+   * Interno: suma progreso acumulado, vuelve a evaluar los logros y **notifica en
+   * el acto** los que hayan saltado.
+   *
+   * Es para lo que pasa FUERA de combate —reclutar, comprar, resolver un evento—,
+   * donde no hay animación que respetar y el toast puede salir ya. En combate no
+   * se usa a propósito: allí los logros viajan en el resumen y los notifica
+   * `CombatScreen` al terminar, porque un toast a mitad de la pelea taparía
+   * justo lo que lo ha provocado.
+   */
+  _registrarProgreso(sumas) {
+    const logros = useAchievementsStore.getState();
+    logros.sumarContadores(sumas);
+    const nuevos = logros.evaluarLogros({});
+    logros.notificar(nuevos);
+    return nuevos;
+  },
+
   _evaluarLogrosPorVictoria(enemigoBase) {
     const { arcoActualDatos, huboDerrotaEnEsteArco } = get();
     const esJefeFinalDelArco = enemigoBase.id === arcoActualDatos?.jefeFinalId;
@@ -1272,6 +1332,9 @@ export const useGameStore = create((set, get) => ({
 
     const resultado = get()._aplicarEfectoDeEvento(efectoQueSeAplica);
     set({ resultadoEvento: { ...resultado, tirada } });
+    // El evento cuenta por haberlo RESUELTO, salga bien o mal: lo que se premia es
+    // haber parado a mirar, no haber acertado el dado.
+    get()._registrarProgreso({ eventosResueltos: 1 });
   },
 
   /** Cierra el evento ya resuelto y vuelve al mapa. */
@@ -1362,6 +1425,11 @@ export const useGameStore = create((set, get) => ({
 
       case 'ganarOro': {
         set({ oro: oro + efecto.cantidad });
+        // El oro se GANA en dos sitios (aquí y al ganar un combate) y se gasta en
+        // otros tres. El contador es de lo ganado, así que solo esos dos lo tocan
+        // — un logro de "acumula 5000 de oro" que bajara al comprar mediría la
+        // avaricia, no el recorrido.
+        useAchievementsStore.getState().sumarContadores({ oroGanado: efecto.cantidad });
         return { tipo: efecto.tipo, cantidad: efecto.cantidad };
       }
 

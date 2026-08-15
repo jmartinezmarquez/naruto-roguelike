@@ -5,6 +5,7 @@ import achievementsData from '../../data/achievements.json';
 import arcoPaisDeLasOlas from '../../data/arcs/pais-de-las-olas.json';
 import arcoExamenChunin from '../../data/arcs/examen-chunin.json';
 import arcoInvasionDePain from '../../data/arcs/invasion-de-pain.json';
+import { progresoDeLogro } from '../../engine/achievements';
 import { nombrePersonaje as nombrePersonajeOJefe, nombreObjeto } from '../common/nombres';
 import { spriteDeLuchador } from '../common/characterSprites';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
@@ -22,8 +23,8 @@ import { PanelMarco, VentanaModal, FilaPestanas, IconoEnmarcado } from '../commo
  * `leveling.test.js`. Pintar un raíl con premios que no existen es peor que no
  * tenerlo, así que el hueco se queda reservado y sin dibujar.
  *
- * La maqueta también da por hechos 28 logros y hay 7. Los contadores dicen la
- * verdad (7) en vez de imitar el número de la maqueta.
+ * La maqueta también da por hechos 28 logros. Los contadores dicen la verdad —
+ * `achievementsData.logros.length`— en vez de imitar el número de la maqueta.
  */
 
 const ARCOS = [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain];
@@ -61,9 +62,20 @@ function textoRecompensa(recompensa) {
   if (recompensa.tipo === 'desbloquearPersonajeReclutable') {
     return `Unlocks ${nombrePersonajeOJefe(recompensa.personajeId)} as recruitable.`;
   }
+  if (recompensa.tipo === 'desbloquearPersonajeInicial') {
+    return `Unlocks ${nombrePersonajeOJefe(recompensa.personajeId)} as a starting pick.`;
+  }
   if (recompensa.tipo === 'desbloquearObjetoInicial') {
     return `You start any future run with ${nombreObjeto(recompensa.objetoId)}.`;
   }
+  // ⚠️ **Un logro puede no dar nada, y se dice.** Solo hay tres tipos de premio y
+  // los tres son desbloqueos; quedan pocos ninjas y pocos objetos por desbloquear,
+  // así que la alternativa era inventar recompensas numéricas (+% oro, +% XP) que
+  // mueven la curva de niveles de toda la run — descartadas en el punto 5b. Un
+  // juego de runs cortas no quiere meta-progresión que cambie números. Lo que se
+  // devuelve NO es cadena vacía: un hueco no dice "esto es una marca de honor",
+  // dice "aquí falta algo".
+  if (recompensa.tipo === 'ninguna') return 'A mark of honour. No reward beyond the telling.';
   return '';
 }
 
@@ -78,21 +90,71 @@ function textoRecompensa(recompensa) {
  */
 function iconoDeLogro(logro) {
   const { recompensa } = logro;
-  if (recompensa.tipo === 'desbloquearPersonajeReclutable') {
+  if (recompensa.tipo === 'desbloquearPersonajeReclutable' || recompensa.tipo === 'desbloquearPersonajeInicial') {
     return spriteDeLuchador(recompensa.personajeId);
   }
   if (recompensa.tipo === 'desbloquearObjetoInicial') {
     return SPRITE_OBJETO[recompensa.objetoId] ?? null;
   }
+  // Los que no dan nada no tienen de dónde sacar sprite. No se quedan con el marco
+  // vacío: llevan el **rango S** de las misiones ninja (ver `RANGO_S`), que dice
+  // algo — "esto no da objeto, da rango" — en vez de parecer un icono que falta.
   return null;
 }
 
-function FilaLogro({ logro, desbloqueado }) {
+/**
+ * El rango de una misión sin recompensa material, a la manera del escalafón ninja
+ * (D-C-B-A-S). Es tipografía y no un sprite: no hay arte para esto y **no hace
+ * falta**, porque una letra es exactamente lo que una hoja de misión llevaría.
+ *
+ * `font-naruto` ya trae el contorno (ver documentacion/33-direccion-visual.md), y
+ * `contorno-fijo` porque el relleno es oro y no sigue al tema — el contorno tiene
+ * que ser el negativo del RELLENO, no del fondo.
+ *
+ * ⚠️ **El `translate-y` no es un retoque a ojo, es la corrección medida.** Centrar
+ * con flex centra la CAJA DE LÍNEA, no la letra, y las dos solo coinciden si la
+ * tipografía es de proporciones normales. `njnaruto.ttf` no lo es: su "S" ocupa
+ * de 8 a 1852 de 2048 unidades, o sea casi la em entera, así que su centro óptico
+ * cae a 0,393em del alto de línea en vez de a 0,5 y la letra se ve **alta**.
+ * 0,5 − 0,393 = **0,107em** hacia abajo (unos 2,6 px a `text-2xl`), calculado con
+ * el ascenso/descenso de la `hhea` del propio fichero. Y `block` porque las
+ * transformaciones **no se aplican a un elemento inline**.
+ */
+const RANGO_S = (
+  <span className="block font-naruto contorno-fijo text-oro text-2xl leading-none translate-y-[0.107em]">
+    S
+  </span>
+);
+
+/**
+ * "12 / 30" con su barra, para los logros que se miden acumulando.
+ *
+ * Sin esto un logro de contador es una condición a ciegas: "gana 50 combates" sin
+ * decir por cuántos vas no es una meta, es un rumor. Los de suceso (derrota a
+ * Zabuza) no llevan barra a propósito — `progresoDeLogro` devuelve `null` y una
+ * barra al 0% de algo binario dice menos que el propio "Locked".
+ */
+function BarraProgreso({ actual, objetivo }) {
+  const porcentaje = Math.min(100, Math.round((actual / objetivo) * 100));
+  return (
+    <div className="flex items-center gap-2 mt-0.5">
+      <div className="flex-1 h-1.5 bg-tinta-950 rounded-sm border border-marco overflow-hidden">
+        <div className="h-full bg-oro/70" style={{ width: `${porcentaje}%` }} />
+      </div>
+      <span className="font-display text-[8px] text-pergamino-200/60 shrink-0">
+        {Math.min(actual, objetivo)} / {objetivo}
+      </span>
+    </div>
+  );
+}
+
+function FilaLogro({ logro, desbloqueado, progreso }) {
   return (
     <PanelMarco tono={desbloqueado ? 'panel' : 'hueco'} className="p-3">
       <div className="flex items-start gap-3">
         <IconoEnmarcado
           src={iconoDeLogro(logro)}
+          glifo={logro.recompensa.tipo === 'ninguna' ? RANGO_S : null}
           bloqueado={!desbloqueado}
           colorMarco={desbloqueado ? 'border-oro/50' : 'border-marco'}
           tamano="w-14 h-14"
@@ -103,6 +165,9 @@ function FilaLogro({ logro, desbloqueado }) {
             {logro.nombre}
           </p>
           <p className="text-[10px] text-pergamino-200/70 leading-relaxed">{logro.descripcion}</p>
+          {/* La barra solo mientras se persigue: una vez conseguido, "50 / 50" no
+              añade nada a la palabra "Unlocked" de al lado. */}
+          {!desbloqueado && progreso && <BarraProgreso {...progreso} />}
           <p className="text-[9px] text-oro/70 leading-relaxed italic">{textoRecompensa(logro.recompensa)}</p>
         </div>
 
@@ -122,6 +187,8 @@ function FilaLogro({ logro, desbloqueado }) {
 export default function AchievementsScreen() {
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const logrosDesbloqueados = useAchievementsStore((s) => s.logrosDesbloqueados);
+  const contadores = useAchievementsStore((s) => s.contadores);
+  const vistos = useAchievementsStore((s) => s.vistos);
   const [pestanaId, setPestanaId] = useState('todos');
 
   const logros = achievementsData.logros;
@@ -169,6 +236,7 @@ export default function AchievementsScreen() {
           key={logro.id}
           logro={logro}
           desbloqueado={logrosDesbloqueados.includes(logro.id)}
+          progreso={progresoDeLogro(logro, { contadores, vistos })}
         />
       ))}
     </VentanaModal>

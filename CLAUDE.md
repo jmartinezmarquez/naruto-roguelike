@@ -106,16 +106,27 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 225 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 274 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 225 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 274 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
+- [x] **Contenido y condiciones de los logros** (punto 5a): de 7 a **23**, con contadores acumulados entre
+  runs (`contadores` en `useAchievementsStore`, tercera clave de `localStorage`) y dos condiciones
+  **genéricas** —`contadorMinimo` y `coleccionMinima`—, para que añadir un logro siga siendo *solo datos*.
+  ⚠️ **El hallazgo del punto: había UN SOLO punto de evaluación** —ganar un combate—, así que ningún logro
+  que no fuera "derrota a X" tenía dónde dispararse. Ahora `evaluarLogros` **completa el contexto por su
+  cuenta** con contadores y vistos y quien llama solo pasa lo del momento. ⚠️ **Un contador cuesta un
+  enganche**: los que se pueden DEDUCIR de lo ya guardado no lo llevan (las cuatro condiciones de colección
+  leen el registro de la enciclopedia). ⚠️ **`reiniciarLogros` borra las TRES claves** —con los contadores
+  intactos, los logros se redesbloquean en el acto—, y el `beforeEach` de los tests también, o los combates
+  de un test se suman a los del siguiente. Y **un logro puede no dar nada** (`recompensa: 'ninguna'`, "a
+  mark of honour"): la alternativa era el 5b, que mueve la curva de niveles de la run entera.
 - [x] `App.jsx` real: `CharacterSelectScreen` (elige 1 personaje inicial, roster = "inicial" + desbloqueados por logro; el resto del equipo se completa reclutando) sustituye al arranque fijo con Naruto/Sasuke/Sakura — ver `documentacion/19-seleccion-de-personaje.md`.
 - [x] Reclutar con el equipo lleno deja elegir a quién reemplazar (`RecruitScreen.jsx` → `PanelReemplazo`, `reclutarPersonaje(id, nivel, idAReemplazar)`) — ver `documentacion/19-seleccion-de-personaje.md`.
 - [x] Tarjeta de hover con stats/tipo/jutsu/HP en todo sitio donde se muestra un personaje (`components/common/PersonajeHoverCard.jsx` / `FichaPersonaje`), y pictograma del ciclo de ventaja de chakra en el mapa (`RuedaChakra`).
