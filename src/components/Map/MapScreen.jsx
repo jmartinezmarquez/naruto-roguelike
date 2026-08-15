@@ -1,8 +1,11 @@
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { spriteDeCombate } from '../common/datosDeLuchador';
+import { spriteDeCombate, nombreDeModo } from '../common/datosDeLuchador';
 import typesData from '../../data/types.json';
-import { nombreObjeto, nombreCorto } from '../common/nombres';
+import {
+  nombreObjeto, nombreCorto, nombrePersonaje, tipoDeLuchador, nombreDeTipo,
+  emojiDeTipo, clasePastillaDeTipo,
+} from '../common/nombres';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
 import ItemHoverCard from '../common/ItemHoverCard';
 import HoverTooltip from '../common/HoverTooltip';
@@ -178,6 +181,38 @@ function calcularPosiciones(mapa) {
   return posiciones;
 }
 
+/**
+ * Lo que se ve al pasar por encima de un mini-jefe o de un jefe final: quién es, a
+ * qué nivel pelea y de qué naturaleza es.
+ *
+ * El modo activo se enseña **solo si lo tiene a ese nivel**, y no destripa nada que
+ * el mapa no cuente ya: el sprite del nodo se pinta con `spriteDeCombate(id, nivel)`,
+ * o sea que a un jefe transformado ya se le ve transformado desde el mapa.
+ */
+function EtiquetaFichaDeJefe({ id, nivel }) {
+  const tipo = tipoDeLuchador(id);
+  const modo = nombreDeModo(id, nivel);
+  return (
+    <EtiquetaFlotante>
+      {/* Sin el "BOSS" / "MINI-BOSS" en rojo que llevaba encima: el nodo ya lo dice
+          por tres vías —el sprite del personaje en vez de un icono genérico, el borde
+          rojo y el badge de rango (☠ / 危)—, así que el rótulo solo repetía. Y con el
+          nombre propio del jefe justo debajo, era además la línea menos informativa
+          de las cuatro. */}
+      <p className="leading-tight">{nombrePersonaje(id)}</p>
+      <div className="flex items-center gap-2 mt-1.5 text-[9px]">
+        <span className="text-oro">Lv.{nivel}</span>
+        {tipo && (
+          <span className={`px-1.5 py-0.5 rounded-sm border ${clasePastillaDeTipo(id)}`}>
+            {emojiDeTipo(id)} {nombreDeTipo(id)}
+          </span>
+        )}
+      </div>
+      {modo && <p className="text-[9px] text-pergamino-200/70 mt-1.5">{modo}</p>}
+    </EtiquetaFlotante>
+  );
+}
+
 function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onClick, arco }) {
   const tipoEfectivo = nodo.tipo === 'combate' && nodo.subtipo === 'entrenador' ? 'combateEntrenador' : nodo.tipo;
   // Los mapas generados antes de que existiera la rareza (y los tests que montan
@@ -231,10 +266,25 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
     estadoClases = 'cursor-not-allowed opacity-40';
   }
 
-  // Solo el título, como en Pokelike: la descripción larga de cada tipo de nodo
+  // Para los nodos corrientes, solo el título: la descripción larga de cada tipo
   // ocupaba media pantalla y se lee una vez en la vida. Lo que hace un nodo se
   // aprende jugando; el tooltip solo tiene que recordar cuál es cuál.
-  const contenidoTooltip = <EtiquetaFlotante>{etiqueta}</EtiquetaFlotante>;
+  //
+  // **Los dos jefes son la excepción**, como en Pokelike, que al pasar por encima de
+  // un gimnasio te enseña quién es y con qué viene. Aquí eso significa nombre, nivel
+  // y naturaleza de chakra: es lo que decide a quién pones en la posición 1, y sin
+  // ello el jugador entra a la pelea más importante del arco a ciegas.
+  //
+  // ⚠️ **El pergamino dorado NO lo lleva**, a propósito: ahí la gracia es no saber a
+  // quién te vas a encontrar. Por eso esto mira `nodo.tipo` y no "si hay un jefe
+  // detrás" — el desafío legendario también es un jefe.
+  const idDelJefe = nodo.tipo === 'miniJefe' ? arco?.miniJefeId
+    : nodo.tipo === 'jefe' ? arco?.jefeFinalId : null;
+  const nivelDelJefe = nodo.tipo === 'miniJefe' ? arco?.nivelMiniJefe : arco?.nivelJefeFinal;
+
+  const contenidoTooltip = idDelJefe
+    ? <EtiquetaFichaDeJefe id={idDelJefe} nivel={nivelDelJefe} />
+    : <EtiquetaFlotante>{etiqueta}</EtiquetaFlotante>;
 
   return (
     <div className="absolute" style={{ left: posicion.x - lado / 2, top: posicion.y - lado / 2 }}>

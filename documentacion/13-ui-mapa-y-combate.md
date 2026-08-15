@@ -253,6 +253,24 @@ arriba y abajo: la columna parecía abierta por los lados. Dibujarlo en el propi
 pinta con `backgroundSize: 100% 100%`, así que descuadrarlos deforma el dibujo (árboles ovalados) en vez
 de recortarlo.
 
+### El hover de un jefe enseña con qué viene
+
+Como Pokelike, que al pasar por encima de un gimnasio te dice quién es y con qué Pokémon viene. Aquí eso
+son **nombre, nivel y naturaleza de chakra** — sin rótulo de "BOSS" encima: el nodo ya lo dice por tres
+vías (el sprite del personaje en vez de un icono genérico, el borde rojo y el badge de rango ☠ / 危), y
+con el nombre propio justo debajo era la línea menos informativa de las cuatro. Lo que queda es exactamente lo que decide a quién pones en la
+posición 1 del equipo. Sin ello el jugador entra a la pelea más importante del arco a ciegas, y en un
+juego donde el emparejamiento de tipos multiplica o divide el daño, eso no es tensión: es una moneda al
+aire.
+
+El nombre del modo activo sale **solo si lo tiene a ese nivel**, y no destripa nada que el mapa no cuente
+ya: el sprite del nodo se pinta con `spriteDeCombate(id, nivel)`, o sea que a un jefe transformado se le
+ve transformado desde el mapa desde que sus umbrales bajaron al nivel de su propio combate.
+
+⚠️ **El pergamino dorado no lo lleva, a propósito**: ahí la gracia es no saber a quién te vas a
+encontrar. Por eso la ficha se decide mirando `nodo.tipo` y no "si hay un jefe detrás" — el desafío
+legendario también pelea contra un jefe, y con la segunda regla se habría destapado solo.
+
 ### Los tres bloques van juntos en el centro
 
 ⚠️ **El mapa mide lo que mide su dibujo (`ANCHO × escala`), no "lo que sobre".** Mientras fue el

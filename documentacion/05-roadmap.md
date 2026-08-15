@@ -884,6 +884,15 @@ El triaje entra por delante del 5a, como dice el [31](./31-plan-siguientes-pasos
   nuestro mapa sí dibuja lo que es cada nodo, así que exigiría rebautizarlo, cambiarle el icono y el
   tooltip para no mentir. Es una decisión de diseño con su coste, no un ajuste de números.
 
+### Playtest 2026-08-15 (tercera tanda, sobre Pokelike)
+
+- [x] **El hover de un mini-jefe o de un jefe enseña con qué viene**: nombre, nivel y naturaleza de
+  chakra, como el hover de un gimnasio en Pokelike. Es lo que decide a quién pones en la posición 1, y en
+  un juego donde el tipo multiplica o divide el daño, no saberlo no es tensión: es una moneda al aire.
+  ⚠️ **El pergamino dorado se queda sin ficha a propósito** — ahí la gracia es no saber a quién te
+  encuentras—, y por eso se mira `nodo.tipo` y no "si hay un jefe detrás": el desafío legendario también
+  es un jefe y se habría destapado solo.
+
 **Lo que queda de esta tanda, y no es código:**
 
 - [ ] **Pictogramas propios para los 5 tipos de chakra**, en vez de los emojis de la rueda. Va con los

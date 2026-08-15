@@ -335,8 +335,12 @@ export function IconoEnmarcado({
  */
 export function EtiquetaFlotante({ children }) {
   return (
-    <div className="bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap">
-      <p className="font-display text-[11px] leading-none">{children}</p>
+    // `div` y no `p`: desde que el hover de un jefe enseña su nombre, su nivel y su
+    // naturaleza de chakra (ver `NodoMapa`), esto tiene que poder llevar varias
+    // líneas — y un `<p>` no puede contener bloques. Los usos de una sola línea, que
+    // son casi todos, se ven exactamente igual.
+    <div className="bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap font-display text-[11px] leading-none">
+      {children}
     </div>
   );
 }
