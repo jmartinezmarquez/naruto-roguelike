@@ -197,12 +197,128 @@ texto puro cuando ya existían los sprites. Rehecha con los puntos 8 y 11 del ro
   no se intercambia — intercambiar deja el orden intermedio como estaba y el gesto no cuadra con lo
   que ve el jugador, que es "he metido a este aquí". El id que se arrastra es estado local del
   componente, no del store: no es información de la run, solo del gesto en curso.
+- **Equipar arrastrando el objeto encima del personaje** (playtest 2026-08-14). ⚠️ **Si el destino ya
+  lleva algo puesto, se pregunta antes**, con el mismo texto que la mochila: equipar encima devuelve el
+  objeto anterior a la bolsa, y eso no se ve venir desde un arrastre. La mochila ya lo preguntaba desde
+  que existe, y al abrir esta segunda puerta se coló sin la guarda — **las guardas van con la acción, no
+  con el camino**, y cada camino nuevo hacia una acción vieja hay que mirarlo con esa lista en la mano. El panel ya dejaba
+  arrastrar objetos y no dejaba equiparlos así, que es el único sitio donde arrastrar significa algo;
+  el jugador lo dijo tal cual. La tarjeta acepta **dos** arrastres distintos —un compañero (reordenar)
+  y un objeto (equipar)— y los distingue por el **tipo de dato del `dataTransfer`**, no por un estado
+  compartido entre los dos paneles: el dato ya viaja con el gesto. ⚠️ `getData` solo se puede leer al
+  soltar, pero `types` sí antes, que es lo que hace falta para el resaltado.
+  Y **el componente no mira de qué tipo es el objeto**: intenta equipar y, si el store dice que no,
+  intenta usar. Los dos validan el tipo y devuelven `false`, así que quien distingue un equipable de un
+  consumible sigue siendo el store. El clic sigue abriendo la mochila: el arrastre es el atajo, no el
+  único camino.
 - **El objeto equipado va en su propia fila debajo**, con su sprite, su nombre y una X para quitarlo.
   Se probó en la esquina del retrato y tapaba justo al ninja: el sprite es lo primero que identifica
   la tarjeta y el objeto le caía encima con su botón. Abajo cabe entero y la X no pisa nada.
 - Panel más ancho (`w-32` → `w-40`): había sitio y la letra no tiene por qué ser diminuta.
 
+### El fondo de columna, al estilo de una ruta de Pokémon (punto 9)
+
+`scripts/generar-columnas-mapa.py` **dibuja** los tres fondos; ya no compone recortes del paisaje del
+artista. Tres reglas:
+
+1. **Suelo liso**, un color por arco, con marcas de hierba de 1 px para que no parezca un rectángulo
+   pintado. Nada que compita con un nodo.
+2. **El borde es lo único denso**, y ⚠️ **cada arco tiene el suyo, no solo su paleta**: mar con orilla
+   ondulada y espuma (Olas), copas apretadas (Chunin), lienzos de muro roto (Pain). Con `arbol` para los
+   tres y solo los colores cambiados, los arcos 1 y 2 salían **el mismo mapa en dos verdes** — la
+   silueta manda mucho más que el color, y una fila de copas redondas es una fila de copas redondas se
+   pinte del verde que se pinte. El tope de ancho es duro: el nodo más a la izquierda cae en x = 104 y
+   mide como mucho 76, así que su borde llega a x ≈ 66. ⚠️ Y el tope se mide contra **el borde de la copa,
+   no contra su centro** — medirlo contra el centro fue el primer fallo y metía 17 px de vegetación bajo
+   los nodos.
+   ⚠️ En la ruina, **el lado de fuera va a ras y solo varía el de dentro**, con mordiscos pocos y
+   grandes: moviendo los dos lados y picándolos mucho no parecía un muro roto, parecía ruido. Una ruina
+   se lee por sus rectas largas y sus esquinas.
+3. **El detalle suelto es escaso y se aparta.** Va detrás de los nodos, así que un solape ocasional no se
+   ve: lo que se nota es la densidad. El peso de cada sitio baja al acercarse a una fila de nodos —que
+   son fijas y conocidas— y hacia el centro horizontal. Con una **distancia mínima** entre decoraciones,
+   sin la cual el azar uniforme hace corrillos.
+
+⚠️ **Cada arco tiene su repertorio de decoraciones**, y no es sabor. Con una lista común salían arbustos
+en los arcos verdes —un disco verde oscuro sobre suelo verde— y a la escala del mapa se leían como
+**agujeros en el suelo**. Mirando otra vez la referencia: una ruta de Pokémon no tiene arbustos sueltos,
+tiene macizos de flores y matas de hierba, que son cosas con **color** o con **silueta**.
+
+⚠️ **El marco negro va a los cuatro lados y DENTRO del PNG.** Antes el encuadre lo ponía solo el
+`box-shadow` del lienzo, y como las bandas de vegetación tapan los costados, el remate se leía únicamente
+arriba y abajo: la columna parecía abierta por los lados. Dibujarlo en el propio fondo lo ata al dibujo
+—se escala con él— y no depende de que nadie se acuerde del CSS.
+
+⚠️ **`ALTO_POR_PISO` vive en `MapScreen.jsx` y en el script, y tienen que cambiar a la vez**: el fondo se
+pinta con `backgroundSize: 100% 100%`, así que descuadrarlos deforma el dibujo (árboles ovalados) en vez
+de recortarlo.
+
+### El hover de un jefe enseña con qué viene
+
+Como Pokelike, que al pasar por encima de un gimnasio te dice quién es y con qué Pokémon viene. Aquí eso
+son **nombre, nivel y naturaleza de chakra** — sin rótulo de "BOSS" encima: el nodo ya lo dice por tres
+vías (el sprite del personaje en vez de un icono genérico, el borde rojo y el badge de rango ☠ / 危), y
+con el nombre propio justo debajo era la línea menos informativa de las cuatro. Lo que queda es exactamente lo que decide a quién pones en la
+posición 1 del equipo. Sin ello el jugador entra a la pelea más importante del arco a ciegas, y en un
+juego donde el emparejamiento de tipos multiplica o divide el daño, eso no es tensión: es una moneda al
+aire.
+
+El nombre del modo activo sale **solo si lo tiene a ese nivel**, y no destripa nada que el mapa no cuente
+ya: el sprite del nodo se pinta con `spriteDeCombate(id, nivel)`, o sea que a un jefe transformado se le
+ve transformado desde el mapa desde que sus umbrales bajaron al nivel de su propio combate.
+
+⚠️ **El pergamino dorado no lo lleva, a propósito**: ahí la gracia es no saber a quién te vas a
+encontrar. Por eso la ficha se decide mirando `nodo.tipo` y no "si hay un jefe detrás" — el desafío
+legendario también pelea contra un jefe, y con la segunda regla se habría destapado solo.
+
+### Los tres bloques van juntos en el centro
+
+⚠️ **El mapa mide lo que mide su dibujo (`ANCHO × escala`), no "lo que sobre".** Mientras fue el
+`flex-1` de la fila ocupaba todo el ancho disponible y **empujaba los dos paneles contra los bordes de
+la pantalla**, lejísimos de la columna; en Pokelike van pegados a ella. Ahora la escala se calcula
+midiendo la **fila entera** y descontando los paneles, y el `justify-center` junta los tres.
+
+Medir la fila y no el hueco evita además el pez que se muerde la cola: si el ancho del contenedor
+dependiera de la escala y la escala del ancho, el layout podría oscilar. El ancho de la fila no depende
+de ninguno de los dos.
+
+⚠️ **Los dos paneles laterales miden lo mismo** (`ANCHO_PANELES`), y no es simetría por gusto: con 160 a
+un lado y 128 al otro, el centro del mapa quedaba 16 px a la derecha del centro de la pantalla, y el
+título del arco —que va centrado en la PANTALLA— se veía descolocado respecto a la columna. Se notaba en
+el título, pero el que estaba torcido era el mapa.
+
+Y la palanca que hace que **la columna se vea más grande**, que no es la que parece: la escala es
+`min(ancho/520, alto/alturaLienzo)` y siempre manda la altura, así que **bajar la separación entre
+pisos** (120 → 104) sube la escala y ensancha la columna con el mismo hueco disponible.
+
 ## `components/Combat/CombatScreen.jsx`
+
+### El cierre del combate en una cadena de entrenador (playtest 2026-08-14)
+
+⚠️ **En un eslabón intermedio no se pinta nada del bloque de cierre**: ni "Victory", ni las
+recompensas, ni el "Next up...". Una cadena de entrenador es **UN combate con relevos**, y cantar la
+victoria tres veces —cada cartel tapado por el rival siguiente un segundo después— cortaba el ritmo sin
+decir nada nuevo. El cierre es el del **nodo**, no el de cada rival.
+
+Lo decide un único derivado, `seguiraLaCadena`, que usan los dos sitios que antes llevaban la lista de
+condiciones duplicada: el temporizador que encadena y el bloque de cierre.
+
+Dos cosas que se arreglaron de paso:
+
+- El respiro entre eslabones era un **1600 ms fijo**: lo único de la pantalla que no obedecía al ajuste
+  de velocidad de animación. Ahora es `MS_ENTRE_ESLABONES * factorAnimacion`, y más corto (700 ms),
+  porque ya no tiene que dar tiempo a leer un cartel.
+- El temporizador espera a `quedanTransformaciones` y a `nivelYaCelebrado`. Sin eso, acortar la pausa
+  habría reintroducido en la cadena el bug de la transformación que no se ve: el eslabón siguiente
+  entraba antes de que la celebración llegara a salir.
+
+### "Victory" no va en verde
+
+El verde (`exito`) es un color **semántico** —"esto es bueno", "desbloqueado", "eficaz"— y como rótulo
+gigante competía con toda la paleta de pergamino y tinta: era lo único de la pantalla que no parecía del
+mismo juego. Va en `pergamino-100`, que **sigue al tema** (crema sobre tinta, tinta sobre pergamino), y
+por eso lleva el contorno por defecto y no `contorno-fijo`. "Defeat" sí se queda en rojo de sello: el
+rojo ya significa derrota en esta paleta y es un color propio de ella.
 
 - Lee `ultimoResultadoCombate` del store (resumen enriquecido: nombres, HP máximo, modo activo).
 - **Reproduce el combate golpe a golpe, no turno a turno.** Un turno del motor trae 2-4 eventos (los

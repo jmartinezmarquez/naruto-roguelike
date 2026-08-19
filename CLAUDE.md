@@ -106,16 +106,27 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   borrar una función que otra seguía llamando (`resolverTurno` desapareció al introducir
   `resolverCombateCompleto`, y quedó una llamada a una función inexistente). Un `grep` del nombre
   antes de tocarla es más barato que el bug después. **Corre `npm test` tras cualquier cambio en
-  `engine/` o `store/`** — hay 225 tests que cubren justo este tipo de regresión.
+  `engine/` o `store/`** — hay 274 tests que cubren justo este tipo de regresión.
 - **Antes de una respuesta grande y ambigua, plantea primero el plan** en un mensaje corto.
 
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 225 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — 274 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
+- [x] **Contenido y condiciones de los logros** (punto 5a): de 7 a **23**, con contadores acumulados entre
+  runs (`contadores` en `useAchievementsStore`, tercera clave de `localStorage`) y dos condiciones
+  **genéricas** —`contadorMinimo` y `coleccionMinima`—, para que añadir un logro siga siendo *solo datos*.
+  ⚠️ **El hallazgo del punto: había UN SOLO punto de evaluación** —ganar un combate—, así que ningún logro
+  que no fuera "derrota a X" tenía dónde dispararse. Ahora `evaluarLogros` **completa el contexto por su
+  cuenta** con contadores y vistos y quien llama solo pasa lo del momento. ⚠️ **Un contador cuesta un
+  enganche**: los que se pueden DEDUCIR de lo ya guardado no lo llevan (las cuatro condiciones de colección
+  leen el registro de la enciclopedia). ⚠️ **`reiniciarLogros` borra las TRES claves** —con los contadores
+  intactos, los logros se redesbloquean en el acto—, y el `beforeEach` de los tests también, o los combates
+  de un test se suman a los del siguiente. Y **un logro puede no dar nada** (`recompensa: 'ninguna'`, "a
+  mark of honour"): la alternativa era el 5b, que mueve la curva de niveles de la run entera.
 - [x] `App.jsx` real: `CharacterSelectScreen` (elige 1 personaje inicial, roster = "inicial" + desbloqueados por logro; el resto del equipo se completa reclutando) sustituye al arranque fijo con Naruto/Sasuke/Sakura — ver `documentacion/19-seleccion-de-personaje.md`.
 - [x] Reclutar con el equipo lleno deja elegir a quién reemplazar (`RecruitScreen.jsx` → `PanelReemplazo`, `reclutarPersonaje(id, nivel, idAReemplazar)`) — ver `documentacion/19-seleccion-de-personaje.md`.
 - [x] Tarjeta de hover con stats/tipo/jutsu/HP en todo sitio donde se muestra un personaje (`components/common/PersonajeHoverCard.jsx` / `FichaPersonaje`), y pictograma del ciclo de ventaja de chakra en el mapa (`RuedaChakra`).
@@ -271,6 +282,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   cada apertura sería un bucle de renders. Un modo se identifica por su ÍNDICE (`naruto_1`) porque no
   tiene id propio en los JSON, con un test de invariante que prohíbe dos modos homónimos en el mismo
   personaje.
+- [x] **El juego está publicado en GitHub Pages** (`.github/workflows/deploy.yml`, punto 17) — ver
+  `documentacion/37-publicacion-web.md`. ⚠️ **`base: './'` en `vite.config.js` no se toca**: sin él, el
+  sitio cuelga de `/naruto-roguelike/`, las rutas salen absolutas y **la página queda en blanco sin
+  ningún error**. Relativo y no con el nombre del repo, para que siga valiendo en otro hosting. Y ⚠️ el
+  peso de la primera carga son **dos archivos, no los 86 sprites** (que solo se descargan al pintarse):
+  el fondo, ya en JPEG con el PNG guardado en `src/assets/originales/`, y la música con `preload="none"`
+  — con `auto` se bajaban 3 MB **antes de que el navegador pudiera reproducirlos**, porque el autoplay
+  está bloqueado hasta el primer gesto.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [x] **Pantalla de ajustes** (punto 14): `components/Settings/SettingsScreen.jsx` + `useSettingsStore`
   (store propio, clave propia de `localStorage`). Tema **claro/oscuro**, pantalla completa (mudada desde el
@@ -303,6 +322,39 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   columna del menú vertical, pantalla de transformación—, que se queda oscuro en los dos temas porque el
   PNG de debajo no cambia. Se hace redefiniendo los tokens en ese subárbol, no cambiando clases a colores
   fijos.
+
+- [x] **Primer playtest real (2026-08-14)** — cuatro bugs, y los tres primeros son el mismo tipo de
+  fallo: una decisión razonable en su sitio que produce un efecto absurdo a distancia.
+  **(1)** `_aplicarDerrota` reordenaba el equipo a `[...vivos, ...caidos]` de forma **permanente**, así
+  que el orden que el jugador había elegido arrastrando desaparecía sin que él tocara nada. Borrado:
+  `obtenerPersonajeActivo` ya coge al primero VIVO, o sea que "posición 1" nunca quiso decir índice 0.
+  **(2)** El pergamino dorado —que es un COMBATE a nivel fijo— podía caer en el piso 2 o ser el único
+  nodo de su piso, o sea un peaje obligatorio que se pierde la mitad de las veces
+  (`rarezasPermitidasEnElPiso`, con dos tests de invariante). **(3)** ⚠️ **La defensa se resta ahora en
+  proporción a la potencia del ataque**: plana se comía el 59% de un básico y el 16% de un jutsu, así
+  que un 3,6× de los datos salía a 7,4× en pantalla. **Una resta plana no es neutral entre golpes de
+  tamaños distintos.** **(4)** Equipar arrastrando el objeto sobre el personaje, que el mapa ya
+  insinuaba dejando arrastrar. Ver `documentacion/05-roadmap.md` sección "Playtest 2026-08-14".
+
+- [x] **Eventos rediseñados (punto 6)** — `documentacion/35-diseño-de-eventos.md`, el documento MVP que
+  le faltaba. El diagnóstico dio la vuelta al punto: la pantalla ya estaba en estilo y lo que fallaba era
+  el **contenido** — 4 de las 24 opciones no hacían literalmente nada y la pista decía exactamente lo que
+  te llevabas, así que **un evento era un regalo con dos envoltorios, no una decisión**. Ahora son 15 (5
+  por arco, cada uno pegado a la ficción del suyo), **toda opción cuesta algo** y 9 llevan **tirada de
+  azar con las probabilidades a la vista** — esconder las reglas no es tensión, es una trampa.
+  ⚠️ **Un evento NUNCA mata** (suelo de 1 HP) y su daño no pasa del **25%** de la vida: las dos con test,
+  y son la condición que hizo aceptable el azar en runs cortas. Tipos nuevos `azar` y `varios`, que son
+  **contenedores** y hacen recursivo a `_aplicarEfectoDeEvento` — con un `switch` plano habría hecho
+  falta un tipo por combinación. El store devuelve **datos** y la pantalla escribe el texto.
+
+- [x] **Música de fondo** (`components/common/MusicaDeFondo.jsx`, `documentacion/36-musica.md`): una
+  pista por arco en bucle, **sin efectos de sonido** — la referencia no los tiene y el juego es de jugar
+  con calma. ⚠️ Llevaba meses estimado como "un sistema entero" y no lo era: **antes de estimar un
+  sistema, comprobar qué hace de verdad la referencia.** Tres reglas que no son obvias: cuelga de `App` y
+  no de una pantalla (si no, la música reempieza en cada cambio), **reintenta al primer gesto** porque el
+  navegador bloquea el autoplay (sin eso no suena en Chrome), y `import.meta.glob` en vez de `import`
+  para que **la carpeta pueda estar vacía sin romper el build**. Las pistas van en `src/assets/music/`
+  con el `id` del arco como nombre.
 
 ## Bugs ya resueltos (para no repetirlos)
 

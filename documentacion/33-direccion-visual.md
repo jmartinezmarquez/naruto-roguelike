@@ -37,6 +37,11 @@ Tokens nuevos en `index.css`:
 `marco` existe porque el borde estaba escrito como `pergamino-100/20` en cada pantalla: cambiar el
 grosor o el tono obligaba a un buscar-y-reemplazar por todo el proyecto.
 
+⚠️ **Un color semántico no sirve como color de rótulo.** `exito` significa "esto es bueno / desbloqueado
+/ eficaz", y de rótulo gigante ("Victory" al ganar un combate) competía con toda la paleta de pergamino y
+tinta: era lo único de la pantalla que no parecía del mismo juego. Los rótulos van en la paleta base, que
+además sigue al tema; los semánticos se quedan para marcar estados dentro de una lista o una tabla.
+
 ⚠️ Los colores de elemento **siguen usándose como elemento** (el marco de una casilla por naturaleza de
 chakra, la rueda, las pastillas de tipo). Lo que ya no se hace es usarlos como significado.
 
@@ -300,6 +305,13 @@ Tras verlo funcionando salieron tres cosas. Las dos primeras son la misma idea �
 valor o una relación, y una relación no se invierte**— y la tercera es que **no todo lo que hay en
 pantalla es interfaz**.
 
+- ⚠️ **Sobre el fondo del juego, el texto va a opacidad COMPLETA.** Apagar un texto con alpha da por
+  hecho que debajo hay una superficie con la que mezclarse: dentro de un panel funciona, pero sobre la
+  ilustración de fondo un 45-60% de tinta se queda en gris lavado, y "65 gold available" o el reclamo
+  del mercader dejaban de leerse en modo claro. Eran **ocho textos sueltos con cuatro opacidades
+  distintas** —el contador de `CabeceraPantalla` y la línea de subtítulo que cada pantalla completa
+  escribía por su cuenta debajo—, todos de cuando el fondo era oscuro y el alpha no se notaba. El alpha
+  es para el texto **de dentro de un panel**.
 - ⚠️ **La rampa `tinta-950 → 800` conserva su DIRECCIÓN** (hundido → panel → realzado), no sus valores.
   El primer pase invirtió los tres uno a uno y con eso el panel salía más oscuro que la página —se hundía
   en ella en vez de despegarse—, los huecos más claros que el panel que los contiene y el hover

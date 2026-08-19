@@ -1,84 +1,194 @@
 {
-  "_comentario": "Narrative events with 2 choices each, Slay the Spire style, themed by arc (arcoId field). No event effect triggers combat — there are already enough combat nodes per floor in poolTiposNodo. cantidad in curarEquipoPorcentaje is a fraction 0-1 (0.3 = 30%).",
   "eventos": [
     {
       "id": "tsunade_y_jiraiya",
       "arcoId": "pais_de_las_olas",
       "titulo": "The Sannin on the Road",
-      "descripcion": "Tsunade and Jiraiya cross your path, passing through on another mission. They offer to help you for a moment before continuing their journey.",
+      "descripcion": "Tsunade and Jiraiya cross your path, passing through on another mission. Neither of them works for free.",
       "elecciones": [
         {
-          "texto": "Ask Tsunade to heal the team",
-          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.4 }
+          "texto": "Pay Tsunade for a healing session",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "curarEquipoPorcentaje",
+                "cantidad": 0.45
+              },
+              {
+                "tipo": "perderOro",
+                "cantidad": 20
+              }
+            ]
+          }
         },
         {
-          "texto": "Train with Jiraiya (+20% attack, 3 battles)",
-          "efecto": { "tipo": "buffTemporalEquipo", "stat": "ataque", "multiplicador": 1.2, "combates": 3 }
+          "texto": "Train with Jiraiya until you drop",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "buffTemporalEquipo",
+                "stat": "ataque",
+                "multiplicador": 1.2,
+                "combates": 3
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.15
+              }
+            ]
+          }
         }
       ]
     },
     {
-      "id": "puente_de_tazuna",
+      "id": "puente_en_construccion",
       "arcoId": "pais_de_las_olas",
       "titulo": "The Bridge Under Construction",
-      "descripcion": "You find Tazuna supervising the construction. He offers you a moment of rest before you continue.",
+      "descripcion": "Tazuna's bridge is behind schedule. The workers could use another pair of hands, and there is a dry shed to sleep in.",
       "elecciones": [
         {
-          "texto": "Rest by the bridge",
-          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.25 }
+          "texto": "Haul timber for a shift",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 20
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.12
+              }
+            ]
+          }
         },
         {
-          "texto": "Keep training in the forest",
-          "efecto": { "tipo": "ganarXpEquipo", "cantidad": 15 }
+          "texto": "Sleep in the workers' shed",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.35
+          }
         }
       ]
     },
     {
-      "id": "mercader_de_las_olas",
+      "id": "mercader_ambulante",
       "arcoId": "pais_de_las_olas",
       "titulo": "Traveling Merchant",
-      "descripcion": "A nervous merchant fleeing from Gato's men offers you part of his wares at a good price.",
+      "descripcion": "A merchant unrolls a mat by the road. Half his stock is still sealed — he swears he does not know what is inside either.",
       "elecciones": [
         {
-          "texto": "Buy an item (30 gold)",
-          "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 30 }
+          "texto": "Buy a sealed package",
+          "efecto": {
+            "tipo": "comprarObjetoAleatorio",
+            "coste": 40
+          }
         },
         {
-          "texto": "Give him some gold for information (-10 gold)",
-          "efecto": { "tipo": "perderOro", "cantidad": 10 }
+          "texto": "Haggle hard",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.5,
+            "exito": {
+              "tipo": "comprarObjetoAleatorio",
+              "coste": 10
+            },
+            "fallo": {
+              "tipo": "ninguno"
+            }
+          }
         }
       ]
     },
     {
-      "id": "pergamino_abandonado_olas",
+      "id": "pergamino_abandonado",
       "arcoId": "pais_de_las_olas",
       "titulo": "Abandoned Scroll",
-      "descripcion": "Someone dropped an unfinished technique scroll in the underbrush.",
+      "descripcion": "A scroll lies half buried by the path, its seal still intact. Someone left in a hurry, or never came back.",
       "elecciones": [
         {
-          "texto": "Study it carefully",
-          "efecto": { "tipo": "mejoraPermanenteAleatoria" }
+          "texto": "Break the seal and read it",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.6,
+            "exito": {
+              "tipo": "mejoraPermanenteAleatoria"
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.2
+            }
+          }
         },
         {
-          "texto": "Ignore it — can't be trusted",
-          "efecto": { "tipo": "ninguno" }
+          "texto": "Sell it unopened in the village",
+          "efecto": {
+            "tipo": "ganarOro",
+            "cantidad": 25
+          }
         }
       ]
     },
-
     {
-      "id": "anko_os_pone_a_prueba",
-      "arcoId": "examen_chunin",
-      "titulo": "Anko Mitarashi Puts You to the Test",
-      "descripcion": "The examiner appears among the trees of the Forest of Death, evaluating your level with a sharp smile.",
+      "id": "niebla_sobre_el_agua",
+      "arcoId": "pais_de_las_olas",
+      "titulo": "Mist Over the Water",
+      "descripcion": "The mist rolls in thick over the channel. There is a smuggler's path straight through it, and a long dry road around.",
       "elecciones": [
         {
-          "texto": "Accept her intensive training",
-          "efecto": { "tipo": "ganarXpEquipo", "cantidad": 60 }
+          "texto": "Cross through the mist",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.55,
+            "exito": {
+              "tipo": "ganarOro",
+              "cantidad": 30
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.18
+            }
+          }
         },
         {
-          "texto": "Stay cautious and rest",
-          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.3 }
+          "texto": "Take the long way around",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.15
+          }
+        }
+      ]
+    },
+    {
+      "id": "prueba_de_anko",
+      "arcoId": "examen_chunin",
+      "titulo": "Anko Mitarashi Puts You to the Test",
+      "descripcion": "Anko blocks the path with a grin. She will not let you through without seeing what your squad is made of.",
+      "elecciones": [
+        {
+          "texto": "Take her survival drill",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 55
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.2
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Watch the other teams instead",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 20
+          }
         }
       ]
     },
@@ -86,96 +196,239 @@
       "id": "pergamino_robado",
       "arcoId": "examen_chunin",
       "titulo": "A Stolen Scroll",
-      "descripcion": "You find the remains of another team's camp — it looks like they lost their scroll to a rival.",
+      "descripcion": "A scroll from another team lies unguarded at the foot of a tree. Their voices are still close.",
       "elecciones": [
         {
-          "texto": "Take what they left behind",
-          "efecto": { "tipo": "ganarOro", "cantidad": 25 }
+          "texto": "Take it and run",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.55,
+            "exito": {
+              "tipo": "varios",
+              "efectos": [
+                {
+                  "tipo": "ganarOro",
+                  "cantidad": 55
+                },
+                {
+                  "tipo": "ganarXpEquipo",
+                  "cantidad": 25
+                }
+              ]
+            },
+            "fallo": {
+              "tipo": "varios",
+              "efectos": [
+                {
+                  "tipo": "perderOro",
+                  "cantidad": 25
+                },
+                {
+                  "tipo": "perderHpEquipo",
+                  "porcentaje": 0.1
+                }
+              ]
+            }
+          }
         },
         {
-          "texto": "Leave it — it's not yours",
-          "efecto": { "tipo": "ninguno" }
+          "texto": "Hand it to the proctors",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 30
+          }
         }
       ]
     },
     {
-      "id": "mercader_de_rollos",
+      "id": "mercader_prohibido",
       "arcoId": "examen_chunin",
       "titulo": "Forbidden Scroll Merchant",
-      "descripcion": "A rogue ninja offers items of dubious origin in exchange for gold, hidden among the trees.",
+      "descripcion": "A hooded dealer offers forbidden techniques from inside his coat. Some of those seals are not the kind you open twice.",
       "elecciones": [
         {
-          "texto": "Buy an item (35 gold)",
-          "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 35 }
+          "texto": "Buy the sealed scroll",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.7,
+            "exito": {
+              "tipo": "comprarObjetoAleatorio",
+              "coste": 20
+            },
+            "fallo": {
+              "tipo": "varios",
+              "efectos": [
+                {
+                  "tipo": "comprarObjetoAleatorio",
+                  "coste": 20
+                },
+                {
+                  "tipo": "perderHpEquipo",
+                  "porcentaje": 0.15
+                }
+              ]
+            }
+          }
         },
         {
-          "texto": "Don't trust him and move on",
-          "efecto": { "tipo": "ninguno" }
+          "texto": "Report him and collect the bounty",
+          "efecto": {
+            "tipo": "ganarOro",
+            "cantidad": 25
+          }
         }
       ]
     },
     {
-      "id": "trampa_del_bosque",
+      "id": "trampa_bosque_muerte",
       "arcoId": "examen_chunin",
       "titulo": "Forest of Death Trap",
-      "descripcion": "A hidden trap causes you to lose part of your supplies while escaping through the trees.",
+      "descripcion": "A tripwire runs across the clearing, tied to a supply crate someone rigged to keep it.",
       "elecciones": [
         {
-          "texto": "Recover what you can on the go",
-          "efecto": { "tipo": "perderOro", "cantidad": 15 }
+          "texto": "Disarm it carefully",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.6,
+            "exito": {
+              "tipo": "ganarOro",
+              "cantidad": 45
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.22
+            }
+          }
         },
         {
-          "texto": "Abandon it and keep moving (+XP for the effort)",
-          "efecto": { "tipo": "ganarXpEquipo", "cantidad": 25 }
+          "texto": "Mark it and walk around",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 25
+          }
         }
       ]
     },
-
     {
-      "id": "katsuyu_os_encuentra",
+      "id": "rival_observa",
+      "arcoId": "examen_chunin",
+      "titulo": "A Rival Team Watches You",
+      "descripcion": "Another squad has been shadowing you since the second gate. They stop and wait, openly, in the middle of the path.",
+      "elecciones": [
+        {
+          "texto": "Spar with them",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 45
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.15
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Study their formation",
+          "efecto": {
+            "tipo": "buffTemporalEquipo",
+            "stat": "defensa",
+            "multiplicador": 1.25,
+            "combates": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "katsuyu",
       "arcoId": "invasion_de_pain",
       "titulo": "Katsuyu, Tsunade's Slug",
-      "descripcion": "A fragment of Katsuyu locates you among the rubble, transmitting Tsunade's voice from a distance.",
+      "descripcion": "A fragment of Katsuyu finds your squad among the ruins. She can mend you, or lend you the chakra to keep moving.",
       "elecciones": [
         {
-          "texto": "Request healing through Katsuyu",
-          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.5 }
+          "texto": "Let her heal the squad",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.5
+          }
         },
         {
-          "texto": "Request intel on enemy positions (+XP)",
-          "efecto": { "tipo": "ganarXpEquipo", "cantidad": 80 }
+          "texto": "Take her chakra and push on",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 80
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.1
+              }
+            ]
+          }
         }
       ]
     },
     {
-      "id": "escombros_de_konoha",
+      "id": "escombros_konoha",
       "arcoId": "invasion_de_pain",
       "titulo": "Konoha Rubble",
-      "descripcion": "Among the remains of a collapsed building, something glints under the debris.",
+      "descripcion": "What is left of a supply depot lies under a collapsed roof. There are voices under the rubble two streets away.",
       "elecciones": [
         {
-          "texto": "Search for survivors and useful items",
-          "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 0 }
+          "texto": "Dig through the ruins",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.6,
+            "exito": {
+              "tipo": "comprarObjetoAleatorio",
+              "coste": 0
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.2
+            }
+          }
         },
         {
-          "texto": "Secure the area and advance cautiously",
-          "efecto": { "tipo": "buffTemporalEquipo", "stat": "defensa", "multiplicador": 1.25, "combates": 3 }
+          "texto": "Help the wounded instead",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.35
+          }
         }
       ]
     },
     {
-      "id": "fukasaku_el_sabio",
+      "id": "fukasaku",
       "arcoId": "invasion_de_pain",
       "titulo": "Fukasaku, the Toad Sage",
-      "descripcion": "The old sage of Myoboku appears for a moment to offer his help before the final battle.",
+      "descripcion": "The old toad sizes up your squad. Senjutsu is not learned in an afternoon, and those who rush it do not come back whole.",
       "elecciones": [
         {
-          "texto": "Lightning-fast senjutsu training",
-          "efecto": { "tipo": "mejoraPermanenteAleatoria" }
+          "texto": "Attempt senjutsu training",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.5,
+            "exito": {
+              "tipo": "mejoraPermanenteAleatoria"
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.25
+            }
+          }
         },
         {
-          "texto": "Fall back and heal wounds",
-          "efecto": { "tipo": "curarEquipoPorcentaje", "cantidad": 0.35 }
+          "texto": "Ask him for a healing balm",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.4
+          }
         }
       ]
     },
@@ -183,15 +436,62 @@
       "id": "mercader_superviviente",
       "arcoId": "invasion_de_pain",
       "titulo": "Survivor Merchant",
-      "descripcion": "Amid the chaos of the invasion, a merchant keeps trying to sell his last remaining stock.",
+      "descripcion": "A shopkeeper sits on what he could pull out of his own shop. He is not really selling — he just has nowhere else to be.",
       "elecciones": [
         {
-          "texto": "Buy an item (45 gold)",
-          "efecto": { "tipo": "comprarObjetoAleatorio", "coste": 45 }
+          "texto": "Buy what he salvaged",
+          "efecto": {
+            "tipo": "comprarObjetoAleatorio",
+            "coste": 45
+          }
         },
         {
-          "texto": "No time to shop — keep going",
-          "efecto": { "tipo": "ninguno" }
+          "texto": "Pay for medicine for the street",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "perderOro",
+                "cantidad": 30
+              },
+              {
+                "tipo": "curarEquipoPorcentaje",
+                "cantidad": 0.4
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "voz_del_camino_deva",
+      "arcoId": "invasion_de_pain",
+      "titulo": "The Voice of the Deva Path",
+      "descripcion": "Pain's voice reaches every corner of the village at once, explaining, patiently, why Konoha has to burn.",
+      "elecciones": [
+        {
+          "texto": "Stand and listen to the end",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.5,
+            "exito": {
+              "tipo": "buffTemporalEquipo",
+              "stat": "ataque",
+              "multiplicador": 1.3,
+              "combates": 3
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.2
+            }
+          }
+        },
+        {
+          "texto": "Cover your ears and move on",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 45
+          }
         }
       ]
     }

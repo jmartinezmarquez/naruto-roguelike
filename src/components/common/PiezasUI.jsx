@@ -225,16 +225,26 @@ export function VentanaModal({
  * pantalla ("MISIONES" sobre "Logros", "REGISTRO" sobre "Enciclopedia"), y en las
  * maquetas es la primera línea de las dos.
  */
-export function CabeceraPantalla({ antetitulo, titulo, contador = null }) {
+export function CabeceraPantalla({ antetitulo, titulo, contador = null, tamanoTitulo = 'text-4xl' }) {
   return (
     <header className="text-center">
       {antetitulo && (
         <p className="text-sello-500 text-[10px] tracking-[0.35em] uppercase mb-1">{antetitulo}</p>
       )}
-      <h1 className="font-naruto text-4xl text-pergamino-100">
+      {/* `tamanoTitulo` existe por los eventos: su título es el del evento
+          ("The Bridge Under Construction") y a 4xl en la fuente de Naruto se parte
+          en tres líneas. Los títulos de pantalla, que son de una o dos palabras,
+          siguen a 4xl. */}
+      <h1 className={`font-naruto ${tamanoTitulo} text-pergamino-100`}>
         {titulo}
       </h1>
-      {contador && <p className="text-[10px] text-pergamino-200/60 mt-1">{contador}</p>}
+      {/* ⚠️ Sin opacidad rebajada, y no es un descuido: esta cabecera va sobre el
+          FONDO DEL JUEGO, no sobre un panel. Apagar un texto con alpha da por hecho
+          que debajo hay una superficie con la que mezclarse; sobre una ilustración
+          clara, un 60% de tinta se convierte en un gris lavado y "65 gold available"
+          dejaba de leerse. La regla: **sobre el fondo, el texto va a opacidad
+          completa**; el alpha es para el texto de dentro de un panel. */}
+      {contador && <p className="text-[10px] text-pergamino-200 mt-1">{contador}</p>}
     </header>
   );
 }
@@ -289,6 +299,7 @@ export function FilaPestanas({ pestanas, activaId, onElegir }) {
  */
 export function IconoEnmarcado({
   src, bloqueado = false, colorMarco = 'border-marco', tamano = 'w-14 h-14', vacio = '?',
+  glifo = null,
 }) {
   return (
     <div
@@ -307,6 +318,13 @@ export function IconoEnmarcado({
           className={`w-full h-full object-contain select-none ${bloqueado ? 'opacity-40' : ''}`}
           style={bloqueado ? { filter: 'brightness(0)' } : undefined}
         />
+      ) : glifo ? (
+        // Un glifo dibujado con tipografía en vez de un sprite, para lo que no
+        // tiene dibujo y **tampoco es un hueco**: hoy, el rango de una misión sin
+        // recompensa. Se atenúa si está bloqueado, pero no se ensombrece como un
+        // sprite (`brightness(0)`): eso es para lo que hay que descubrir, y un
+        // rango no es una sorpresa que se esconda, es la categoría de la entrada.
+        <span className={bloqueado ? 'opacity-40' : ''}>{glifo}</span>
       ) : (
         <span className="text-pergamino-200/25 font-display text-xs">{vacio}</span>
       )}
@@ -325,8 +343,12 @@ export function IconoEnmarcado({
  */
 export function EtiquetaFlotante({ children }) {
   return (
-    <div className="bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap">
-      <p className="font-display text-[11px] leading-none">{children}</p>
+    // `div` y no `p`: desde que el hover de un jefe enseña su nombre, su nivel y su
+    // naturaleza de chakra (ver `NodoMapa`), esto tiene que poder llevar varias
+    // líneas — y un `<p>` no puede contener bloques. Los usos de una sola línea, que
+    // son casi todos, se ven exactamente igual.
+    <div className="bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap font-display text-[11px] leading-none">
+      {children}
     </div>
   );
 }

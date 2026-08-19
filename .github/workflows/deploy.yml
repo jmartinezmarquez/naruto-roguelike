@@ -1,0 +1,65 @@
+# Publica el juego en GitHub Pages en cada push a `main`.
+#
+# ⚠️ Requiere que en el repositorio esté puesto **Settings → Pages → Source:
+# GitHub Actions**. Con la opción antigua ("Deploy from a branch") GitHub sirve la
+# RAÍZ del repositorio, que es el `index.html` de desarrollo — el que apunta a
+# `/src/main.jsx`, un archivo que solo existe sin compilar. El resultado es una
+# página en blanco, y ninguna de las dos partes avisa de nada.
+#
+# Ver documentacion/37-publicacion-web.md.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Permite lanzarlo a mano desde la pestaña Actions sin tener que hacer un commit.
+  workflow_dispatch:
+
+# Los permisos que pide el despliegue de Pages. `id-token` es para la autenticación
+# del propio deploy, no para nada nuestro.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Si se empujan dos commits seguidos, que el segundo espere en vez de pelearse con el
+# primero — pero sin cancelar el que ya está publicando, que dejaría el sitio a medias.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` y no `npm install`: instala exactamente el `package-lock.json`, así
+      # que lo que se publica se construye con las mismas versiones que en local.
+      - run: npm ci
+
+      # Los 275 tests corren ANTES de construir. Publicar es el único sitio del
+      # proyecto donde el juego llega a alguien que no somos nosotros: si el motor
+      # está roto, es mejor que no se publique a que se publique roto.
+      - run: npm test
+
+      - run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

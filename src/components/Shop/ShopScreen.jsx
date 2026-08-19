@@ -110,12 +110,15 @@ export default function ShopScreen() {
     // A pantalla completa y no como ventana: la tienda es una parada del camino,
     // un momento propio de la run, no una consulta sobre el mapa.
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body flex flex-col items-center justify-center px-4 py-8 gap-5">
+      {/* Sin antetítulo: "TRADING POST" encima de "SHOP" eran dos formas de decir
+          lo mismo, una debajo de la otra. Y el oro se pinta como en el resto del
+          juego —número y `g` en dorado, como el panel del mapa—, que es lo que hace
+          que se lea como una moneda y no como una frase. */}
       <CabeceraPantalla
-        antetitulo="Trading post"
-        titulo="Shop"
-        contador={`${oro} gold available`}
+        titulo="Trading Post"
+        contador={<span className="font-display text-oro">{oro}g</span>}
       />
-      <p className="text-[10px] text-pergamino-200/45 italic text-center max-w-sm leading-relaxed -mt-3">
+      <p className="text-[10px] text-pergamino-200 italic text-center max-w-sm leading-relaxed -mt-3">
         {flavor}
       </p>
 
@@ -135,7 +138,7 @@ export default function ShopScreen() {
             </div>
           ))
         ) : (
-          <p className="text-center text-pergamino-200/50 text-[10px] py-8">
+          <p className="text-center text-pergamino-200 text-[10px] py-8">
             The merchant has nothing left to offer.
           </p>
         )}

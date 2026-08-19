@@ -18,7 +18,8 @@ Genera un grafo de nodos por pisos a partir de la config de un arco (cualquiera 
   inicio salen todas las aristas de ese piso, y con 4-5 el arranque parecía una estrella en vez del
   pico de un rombo), y el piso anterior al jefe se fuerza a ≥2, tanto para romper con el 1 del jefe
   como para que `garantizarDescansoAntesDelJefe` tenga dónde poner el descanso sin pisar al mini-jefe.
-- El tipo de cada nodo normal se elige por peso según `poolTiposNodo`.
+- El tipo de cada nodo normal se elige por peso según `poolTiposNodo`. **Los pesos se calibraron
+  contra Slay the Spire** en el playtest del 2026-08-15 — ver abajo.
 - **Piso 2 (el primer piso jugable): nunca `descanso` ni `tienda`.** Descanso no tiene sentido a HP
   completo; tienda no tiene sentido sin oro todavía. Se filtran del pool solo para ese piso. La
   regla era del piso 1 hasta que el 1 pasó a ser la casilla de salida.
@@ -76,3 +77,50 @@ evento/tienda/descanso (sin combate):
 
 Como `common-enemies.json` y `enemies.json` usan el mismo esquema que un personaje, no hace falta
 normalizar nada antes de pasarlo a `crearLuchador`.
+
+
+## Los pesos del pool, y de dónde salen (playtest 2026-08-15)
+
+El jugador lo dijo así: *"a veces hay muchos eventos"*. Puesto al lado de la referencia, no era una
+sensación — eran el doble.
+
+Slay the Spire reparte sus salas ([wiki](https://slaythespire.wiki.gg/wiki/Map_Generation)) con
+**53% combate normal, 8% élite, 12% descanso, 5% mercader y 22% `?`**, y ese `?` se resuelve al entrar:
+10% monstruo, 3% tienda, 2% tesoro y **evento en todo lo demás**
+([Spire Codex](https://spire-codex.com/mechanics/unknown-rooms)). O sea, en la práctica: **~61% de
+combate y ~19% de evento**, con un **5% de tienda**.
+
+Nosotros teníamos, en el pool sorteado del arco 1: **38% combate, 34% evento, 18% tienda, 10% descanso**.
+Casi el doble de eventos y **más del triple de tiendas**.
+
+| | Slay the Spire | Nosotros (antes) | Nosotros (ahora) |
+|---|---|---|---|
+| Combate | ~61% | 38% | 52-58% |
+| Evento | ~19% | 34% | 20-24% |
+| Descanso | 12% | 10% | 14-15% |
+| Tienda | 5% | 18% | 8-9% |
+
+El descanso se queda **por encima** de la referencia a propósito: nuestro HP persiste entre combates,
+no hay pociones y ahora hay más peleas por piso. La tienda se queda por encima del 5% por lo contrario:
+es el único sitio fiable donde gastar oro.
+
+⚠️ **Subir el peso de combate sube la XP de la run, y eso lo vigilan los invariantes de arco de
+`leveling.test.js`.** Lo que marca el ritmo de nivel es el **producto** `cuota de combate ×
+xpCombateComun` (ver `nivelesEstimadosDeLaRun` en `engine/leveling.js`), así que al subir la cuota hay
+que bajar `xpCombateComun` en la misma proporción: 65→48, 80→58 y 100→78. Con eso la curva de niveles
+piso a piso sale **idéntica** a la de antes —comprobado con `simular-combates.mjs`— y lo único que
+cambia es de qué nodos viene esa XP. Si algún día se vuelven a tocar los pesos, hay que tocar las dos
+cosas o el jugador llegará a los jefes con el nivel cambiado.
+
+### Lo que NO se copió: el nodo `?`
+
+Slay the Spire no tiene nodo de evento: tiene un `?` que **puede** ser un evento, un combate, una tienda
+o un tesoro. Se valoró copiarlo —la idea era del propio jugador: "ponerle a los eventos un porcentaje de
+que sean una batalla"— y se descartó por ahora, por dos razones:
+
+1. Con los pesos arreglados, los eventos ya bajan de 5,3 a 3,7 por mapa. El problema que motivaba el
+   cambio se resuelve sin tocar mecánica.
+2. Nuestro mapa **sí dibuja** lo que es cada nodo, y acabamos de escribir la regla contraria para los
+   eventos: las probabilidades se enseñan antes de elegir. Un nodo que dice "evento" y a veces es una
+   emboscada mentiría; habría que rebautizarlo a `?` y cambiar su icono y su tooltip. Es una decisión de
+   diseño con su propio coste, no un ajuste de números.

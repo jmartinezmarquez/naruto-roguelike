@@ -328,6 +328,10 @@ export const useGameStore = create((set, get) => ({
   mochilaItemId: null, // objeto preseleccionado al abrir la mochila (ver abrirMochila)
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
+  // Qué ha pasado al elegir, en datos (la pantalla escribe el texto). Existe
+  // porque un evento ya no se resuelve en silencio: desde que hay tiradas de azar
+  // el jugador tiene que ver qué le ha salido antes de volver al mapa.
+  resultadoEvento: null,
   tiendaActual: null, // { items: [{id, precio}] } — oferta de 3 objetos al entrar al nodo de tienda
   reclutarActual: null, // { personajes, nivelReclutamiento, rareza, esDesafio, nivelDesafio } — oferta del nodo de reclutar
   desafioRecluta: null, // { personajeId } — desafío legendario en curso; sobrevive al combate para poder reclutarlo al ganar
@@ -369,6 +373,7 @@ export const useGameStore = create((set, get) => ({
       pantalla: 'mapa',
       ultimoResultadoCombate: null,
       eventoActual: null,
+      resultadoEvento: null,
       tiendaActual: null,
       reclutarActual: null,
       desafioRecluta: null,
@@ -477,6 +482,8 @@ export const useGameStore = create((set, get) => ({
 
     if (equipo.length < configGlobal.equipo.tamanoMaximo) {
       set({ equipo: [...equipo, crearInstanciaPersonaje(id, nivelInicial)] });
+      get()._registrarVistosDeLaRun();
+      get()._registrarProgreso({ reclutas: 1 });
       return true;
     }
 
@@ -501,6 +508,7 @@ export const useGameStore = create((set, get) => ({
     equipoActualizado[indiceAReemplazar] = nuevaInstancia;
     set({ equipo: equipoActualizado, inventario: inventarioActualizado });
     get()._registrarVistosDeLaRun();
+    get()._registrarProgreso({ reclutas: 1 });
     return true;
   },
 
@@ -697,10 +705,6 @@ export const useGameStore = create((set, get) => ({
           transformaciones: transformacionesDesbloqueadas, subidasDeNivel, recompensas,
         } = get()._aplicarVictoria(
           activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate));
-        // Se desbloquean ya (persisten y afectan a tienda/inventario desde
-        // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
-        // cuando termine la animación, para no arruinar el suspense.
-        logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase);
 
         // ¿Este enemigo era el jefe final del arco en curso? Si además lleva
         // recompensa.finDeLaRun (solo Pain la tiene), la run entera se ha
@@ -716,9 +720,25 @@ export const useGameStore = create((set, get) => ({
           get()._curarEquipoCompleto();
           set({ avisoUltimoNodo: 'Team fully healed after completing the arc.' });
         }
-        if (arcoCompletado && enemigoBase.recompensa?.finDeLaRun) {
+        const runGanadaAqui = arcoCompletado && enemigoBase.recompensa?.finDeLaRun;
+        if (runGanadaAqui) {
           set({ runTerminada: true, runGanada: true });
         }
+
+        // ⚠️ **Los contadores se suman ANTES de evaluar**, o el logro de "gana 10
+        // combates" saltaría en el combate 11. Y se suman UNA vez por nodo aunque
+        // la cadena de relevos haya durado tres rondas: `jugarCombate` resuelve el
+        // nodo entero y este es el único punto por el que se sale ganando, así que
+        // contar aquí no puede inflarse.
+        useAchievementsStore.getState().sumarContadores({
+          combatesGanados: 1,
+          oroGanado: recompensas?.oro ?? 0,
+          runsCompletadas: runGanadaAqui ? 1 : 0,
+        });
+        // Se desbloquean ya (persisten y afectan a tienda/inventario desde
+        // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
+        // cuando termine la animación, para no arruinar el suspense.
+        logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase);
 
         jugadorGanoFinal = true;
         break;
@@ -745,6 +765,16 @@ export const useGameStore = create((set, get) => ({
         set({ cadenaEnemigos: { ...cadena, recompensasAcumuladas: acumuladas } });
         recompensas = acumuladas;
       }
+    }
+
+    // Perder también es progreso: hay logros que se ganan cayendo, que en un
+    // roguelike es la mitad de lo que va a pasar. Va aquí fuera y no en la rama que
+    // corta el bucle porque el bucle es de RONDAS y esto es de la run entera.
+    // Viaja en el resumen igual que en la victoria — `CombatScreen` notifica al
+    // acabar la animación, se haya ganado o perdido.
+    if (!jugadorGanoFinal && get().runTerminada) {
+      useAchievementsStore.getState().sumarContadores({ runsPerdidas: 1 });
+      logrosDesbloqueados = useAchievementsStore.getState().evaluarLogros({});
     }
 
     if (consumirBuffs) get()._consumirUsoBuffsTemporales();
@@ -779,6 +809,7 @@ export const useGameStore = create((set, get) => ({
       pantalla: 'mapa',
       ultimoResultadoCombate: null,
       eventoActual: null,
+      resultadoEvento: null,
       tiendaActual: null,
       reclutarActual: null,
       desafioRecluta: null,
@@ -826,6 +857,7 @@ export const useGameStore = create((set, get) => ({
       pantalla: 'mapa',
       ultimoResultadoCombate: null,
       eventoActual: null,
+      resultadoEvento: null,
       tiendaActual: null,
       reclutarActual: null,
       desafioRecluta: null,
@@ -844,6 +876,22 @@ export const useGameStore = create((set, get) => ({
 
   /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */
   abrirLogros() {
+    // ⚠️ **Red de seguridad: se evalúa al abrir.** Los logros se miran cuando pasa
+    // algo (ganar, reclutar, comprar, resolver un evento), y eso deja un hueco: el
+    // progreso que YA estaba guardado cuando el logro se añadió no lo ha visto
+    // nadie. Al estrenar el punto 5a, quien tuviera 8 objetos en la enciclopedia
+    // veía la barra llena y la palabra "Locked" al lado — el juego decía dos cosas
+    // contrarias en la misma línea. Volvería a pasar con cada logro nuevo.
+    //
+    // Es el mismo catch-all que `abrirEnciclopedia` con `registrarVistos`, y se
+    // apoya en lo mismo: `evaluarLogros` no toca el estado si no hay novedad, así
+    // que abrir la pantalla cien veces no cuesta nada.
+    //
+    // **Desbloquea en silencio, sin toast**: el jugador está mirando la lista, y
+    // que la fila cambie a "Unlocked" delante de él ES el aviso. Encolar cinco
+    // toasts encima de la pantalla que los explica sería taparla con su propio
+    // contenido.
+    useAchievementsStore.getState().evaluarLogros({});
     set({ pantalla: 'logros' });
   },
 
@@ -922,6 +970,7 @@ export const useGameStore = create((set, get) => ({
       },
     });
     get()._registrarVistosDeLaRun();
+    get()._registrarProgreso({ objetosComprados: 1 });
     return true;
   },
 
@@ -1006,6 +1055,7 @@ export const useGameStore = create((set, get) => ({
       pantalla: 'mapa',
       ultimoResultadoCombate: null,
       eventoActual: null,
+      resultadoEvento: null,
       tiendaActual: null,
       reclutarActual: null,
       desafioRecluta: null,
@@ -1158,6 +1208,24 @@ export const useGameStore = create((set, get) => ({
    * desbloqueados (ya persistidos) para que CombatScreen los notifique
    * cuando termine la animación — ver el comentario en `jugarCombate`.
    */
+  /**
+   * Interno: suma progreso acumulado, vuelve a evaluar los logros y **notifica en
+   * el acto** los que hayan saltado.
+   *
+   * Es para lo que pasa FUERA de combate —reclutar, comprar, resolver un evento—,
+   * donde no hay animación que respetar y el toast puede salir ya. En combate no
+   * se usa a propósito: allí los logros viajan en el resumen y los notifica
+   * `CombatScreen` al terminar, porque un toast a mitad de la pelea taparía
+   * justo lo que lo ha provocado.
+   */
+  _registrarProgreso(sumas) {
+    const logros = useAchievementsStore.getState();
+    logros.sumarContadores(sumas);
+    const nuevos = logros.evaluarLogros({});
+    logros.notificar(nuevos);
+    return nuevos;
+  },
+
   _evaluarLogrosPorVictoria(enemigoBase) {
     const { arcoActualDatos, huboDerrotaEnEsteArco } = get();
     const esJefeFinalDelArco = enemigoBase.id === arcoActualDatos?.jefeFinalId;
@@ -1195,13 +1263,24 @@ export const useGameStore = create((set, get) => ({
     const actualizado = equipo.map((p) =>
       p.id === idPersonaje ? { ...p, derrotado: true, hpActual: 0 } : p,
     );
+
+    // ⚠️ El orden del equipo NO se toca al caer alguien. Antes se reordenaba a
+    // `[...vivos, ...caidos]` para mandar al caído al final, y era un reorden
+    // **permanente y silencioso**: el jugador colocaba su equipo arrastrando, se
+    // le moría alguien, y al curar el equipo entero al terminar el arco se
+    // encontraba con otro orden que él no había elegido — con el último que quedó
+    // en pie al frente. La curación no tenía la culpa; solo dejaba a la vista el
+    // estropicio de veinte minutos antes.
+    //
+    // Y no hacía ninguna falta: `obtenerPersonajeActivo` es
+    // `equipo.find((p) => !p.derrotado)`, o sea que ya coge al primero VIVO esté
+    // donde esté. "Posición 1" nunca ha querido decir el índice 0, quiere decir el
+    // primero en pie. (Salido del playtest, punto 5 de la tanda.)
     const vivos = actualizado.filter((p) => !p.derrotado);
-    const caidos = actualizado.filter((p) => p.derrotado);
-    const equipoReordenado = [...vivos, ...caidos];
 
     const todosDerrotados = vivos.length === 0;
     set({
-      equipo: equipoReordenado,
+      equipo: actualizado,
       runTerminada: todosDerrotados,
       runGanada: false,
       huboDerrotaEnEsteArco: true,
@@ -1228,19 +1307,71 @@ export const useGameStore = create((set, get) => ({
   },
 
   /**
-   * Aplica la elección del jugador en el evento actual y vuelve al mapa.
-   * Tipos de efecto soportados: curarEquipoPorcentaje, buffTemporalEquipo,
-   * ganarXpEquipo, ganarOro, perderOro, comprarObjetoAleatorio,
-   * mejoraPermanenteAleatoria, ninguno. Ningún efecto de evento desencadena
-   * combate — hay ya suficientes combates por piso.
+   * Resuelve la elección del jugador en el evento actual. **No vuelve al mapa**:
+   * deja el resultado en `resultadoEvento` y la pantalla del evento lo cuenta,
+   * porque desde que hay tiradas de azar el jugador TIENE que ver qué ha salido.
+   * Cerrar es cosa de `cerrarEvento`.
+   *
+   * Aquí solo vive el sorteo; aplicar el efecto que salga es
+   * `_aplicarEfectoDeEvento`, que es recursivo por eso mismo: una rama de una
+   * tirada es un efecto normal y corriente.
    */
   resolverEventoEleccion(indiceEleccion) {
-    const { eventoActual, equipo, oro, inventario, buffsTemporales } = get();
+    const { eventoActual } = get();
     if (!eventoActual) return;
     const efecto = eventoActual.elecciones[indiceEleccion]?.efecto;
     if (!efecto) return;
 
+    let tirada = null;
+    let efectoQueSeAplica = efecto;
+    if (efecto.tipo === 'azar') {
+      const salioBien = Math.random() < efecto.probabilidad;
+      tirada = { salioBien, probabilidad: efecto.probabilidad };
+      efectoQueSeAplica = salioBien ? efecto.exito : efecto.fallo;
+    }
+
+    const resultado = get()._aplicarEfectoDeEvento(efectoQueSeAplica);
+    set({ resultadoEvento: { ...resultado, tirada } });
+    // El evento cuenta por haberlo RESUELTO, salga bien o mal: lo que se premia es
+    // haber parado a mirar, no haber acertado el dado.
+    get()._registrarProgreso({ eventosResueltos: 1 });
+  },
+
+  /** Cierra el evento ya resuelto y vuelve al mapa. */
+  cerrarEvento() {
+    set({ pantalla: 'mapa', eventoActual: null, resultadoEvento: null });
+  },
+
+  /**
+   * Interno: aplica UN efecto de evento y devuelve **qué ha pasado**, en datos y
+   * no en prosa — el texto lo escribe la pantalla (`describirResultado`), que es
+   * la que sabe de idioma. Se llama también con la rama que sale de una tirada.
+   *
+   * Tipos: curarEquipoPorcentaje, perderHpEquipo, buffTemporalEquipo,
+   * ganarXpEquipo, ganarOro, perderOro, comprarObjetoAleatorio,
+   * mejoraPermanenteAleatoria, ninguno. Ningún efecto de evento desencadena
+   * combate — hay ya suficientes combates por piso.
+   */
+  _aplicarEfectoDeEvento(efecto) {
+    const { equipo, oro, inventario, buffsTemporales } = get();
+    if (!efecto) return { tipo: 'ninguno' };
+
     switch (efecto.tipo) {
+      /**
+       * Varios efectos en una misma elección, que es lo que permite que una
+       * opción tenga PRECIO: "entrenas y ganas XP, pero acabas molido". Sin esto
+       * cada elección solo podía dar o solo podía quitar, y por eso los eventos
+       * eran regalos con dos envoltorios (ver documentacion/35-diseño-de-eventos.md).
+       *
+       * Se aplica en orden y **leyendo el estado en cada paso** (por eso la
+       * llamada recursiva y no un bucle sobre `equipo`): si una parte cura y la
+       * siguiente cobra, la segunda tiene que ver lo que hizo la primera.
+       */
+      case 'varios': {
+        const partes = (efecto.efectos ?? []).map((sub) => get()._aplicarEfectoDeEvento(sub));
+        return { tipo: 'varios', partes };
+      }
+
       case 'curarEquipoPorcentaje': {
         const equipoActualizado = equipo.map((p) => {
           if (p.derrotado) return p;
@@ -1248,8 +1379,30 @@ export const useGameStore = create((set, get) => ({
           const curado = Math.min(hpMax, p.hpActual + Math.round(hpMax * efecto.cantidad));
           return { ...p, hpActual: curado };
         });
-        set({ equipo: equipoActualizado, avisoUltimoNodo: 'The team has recovered.' });
-        break;
+        // Ya no deja aviso para el toast del mapa: desde que el evento tiene
+        // pantalla de resultado, el toast contaba lo mismo dos veces y encima
+        // aparecía después, ya en el mapa.
+        set({ equipo: equipoActualizado });
+        return { tipo: efecto.tipo, cantidad: efecto.cantidad };
+      }
+
+      /**
+       * El precio en carne. ⚠️ **Un evento no puede matar a nadie**: el HP baja
+       * como mucho a 1, y quien ya estaba caído no cae "más". Es la condición que
+       * hizo aceptable meter azar de verdad — perder una run por un dado, en un
+       * roguelike de runs cortas, no es tensión, es un castigo por jugar. Con el
+       * suelo en 1 la tirada mala duele de verdad (llegas al siguiente combate
+       * hecho polvo) pero la decisión sigue siendo tuya.
+       */
+      case 'perderHpEquipo': {
+        const equipoActualizado = equipo.map((p) => {
+          if (p.derrotado) return p;
+          const hpMax = calcularHpMaximo(p);
+          const perdida = Math.round(hpMax * efecto.porcentaje);
+          return { ...p, hpActual: Math.max(1, p.hpActual - perdida) };
+        });
+        set({ equipo: equipoActualizado });
+        return { tipo: efecto.tipo, porcentaje: efecto.porcentaje };
       }
 
       case 'buffTemporalEquipo': {
@@ -1259,7 +1412,7 @@ export const useGameStore = create((set, get) => ({
             { multiplicadores: { [efecto.stat]: efecto.multiplicador }, combatesRestantes: efecto.combates },
           ],
         });
-        break;
+        return { tipo: efecto.tipo, stat: efecto.stat, multiplicador: efecto.multiplicador, combates: efecto.combates };
       }
 
       case 'ganarXpEquipo': {
@@ -1267,54 +1420,58 @@ export const useGameStore = create((set, get) => ({
           p.derrotado ? p : aplicarXpYActualizarHp(p, efecto.cantidad),
         );
         set({ equipo: equipoActualizado });
-        break;
+        return { tipo: efecto.tipo, cantidad: efecto.cantidad };
       }
 
       case 'ganarOro': {
         set({ oro: oro + efecto.cantidad });
-        break;
+        // El oro se GANA en dos sitios (aquí y al ganar un combate) y se gasta en
+        // otros tres. El contador es de lo ganado, así que solo esos dos lo tocan
+        // — un logro de "acumula 5000 de oro" que bajara al comprar mediría la
+        // avaricia, no el recorrido.
+        useAchievementsStore.getState().sumarContadores({ oroGanado: efecto.cantidad });
+        return { tipo: efecto.tipo, cantidad: efecto.cantidad };
       }
 
       case 'perderOro': {
-        set({ oro: Math.max(0, oro - efecto.cantidad) });
-        break;
+        // Lo que se pierde de verdad, no lo que pedía el efecto: si no tenías
+        // tanto, el resultado no puede decir que has pagado 40 monedas.
+        const perdido = Math.min(oro, efecto.cantidad);
+        set({ oro: oro - perdido });
+        return { tipo: efecto.tipo, cantidad: perdido };
       }
 
       case 'comprarObjetoAleatorio': {
-        if (oro >= efecto.coste) {
-          const comprables = itemsData.objetos.filter((o) => o.precioTienda !== null);
-          const objeto = comprables[Math.floor(Math.random() * comprables.length)];
-          set({ oro: oro - efecto.coste, inventario: [...inventario, objeto.id] });
-          get()._registrarVistosDeLaRun();
-        }
-        break;
+        if (oro < efecto.coste) return { tipo: 'sinOro', coste: efecto.coste };
+        const comprables = itemsData.objetos.filter((o) => o.precioTienda !== null);
+        const objeto = comprables[Math.floor(Math.random() * comprables.length)];
+        set({ oro: oro - efecto.coste, inventario: [...inventario, objeto.id] });
+        get()._registrarVistosDeLaRun();
+        return { tipo: efecto.tipo, objetoId: objeto.id, coste: efecto.coste };
       }
 
       case 'mejoraPermanenteAleatoria': {
         const vivos = equipo.filter((p) => !p.derrotado);
-        if (vivos.length > 0) {
-          const elegido = vivos[Math.floor(Math.random() * vivos.length)];
-          const stats = ['ataque', 'defensa', 'velocidad', 'hp'];
-          const stat = stats[Math.floor(Math.random() * stats.length)];
-          const equipoActualizado = equipo.map((p) => {
-            if (p.id !== elegido.id) return p;
-            const bonificaciones = { ...p.bonificaciones, [stat]: p.bonificaciones[stat] + 2 };
-            const actualizado = { ...p, bonificaciones };
-            // Si la mejora es de HP, sube también el HP actual, no solo el máximo.
-            if (stat === 'hp') actualizado.hpActual = p.hpActual + 2;
-            return actualizado;
-          });
-          set({ equipo: equipoActualizado });
-        }
-        break;
+        if (vivos.length === 0) return { tipo: 'ninguno' };
+        const elegido = vivos[Math.floor(Math.random() * vivos.length)];
+        const stats = ['ataque', 'defensa', 'velocidad', 'hp'];
+        const stat = stats[Math.floor(Math.random() * stats.length)];
+        const equipoActualizado = equipo.map((p) => {
+          if (p.id !== elegido.id) return p;
+          const bonificaciones = { ...p.bonificaciones, [stat]: p.bonificaciones[stat] + 2 };
+          const actualizado = { ...p, bonificaciones };
+          // Si la mejora es de HP, sube también el HP actual, no solo el máximo.
+          if (stat === 'hp') actualizado.hpActual = p.hpActual + 2;
+          return actualizado;
+        });
+        set({ equipo: equipoActualizado });
+        return { tipo: efecto.tipo, personajeId: elegido.id, stat };
       }
 
       case 'ninguno':
       default:
-        break;
+        return { tipo: 'ninguno' };
     }
-
-    set({ pantalla: 'mapa', eventoActual: null });
   },
 
   /** HP máximo actual de una instancia del equipo (nivel + modo + bonificaciones, sin buffs temporales de combate). */

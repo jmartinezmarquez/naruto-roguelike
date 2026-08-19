@@ -1,8 +1,11 @@
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { spriteDeCombate } from '../common/datosDeLuchador';
+import { spriteDeCombate, nombreDeModo } from '../common/datosDeLuchador';
 import typesData from '../../data/types.json';
-import { nombreObjeto, nombreCorto } from '../common/nombres';
+import {
+  nombreObjeto, nombreCorto, nombrePersonaje, tipoDeLuchador, nombreDeTipo,
+  emojiDeTipo, clasePastillaDeTipo,
+} from '../common/nombres';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
 import ItemHoverCard from '../common/ItemHoverCard';
 import HoverTooltip from '../common/HoverTooltip';
@@ -17,7 +20,10 @@ import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
 import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
 import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
 import COLUMNA_MENU from '../../assets/menu/columna-menu.png';
-import { PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante } from '../common/PiezasUI';
+import itemsData from '../../data/items.json';
+import {
+  PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante, VentanaModal, BotonSecundario,
+} from '../common/PiezasUI';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
@@ -112,8 +118,30 @@ const FONDO_COLUMNA = {
   invasion_de_pain: fondoColumnaPain,
 };
 
+// El tipo de dato que viaja en un arrastre de objeto, de la rejilla de la mochila
+// a una tarjeta del equipo. Es un tipo propio y no `text/plain` para que la
+// tarjeta pueda distinguir "me traen un objeto" de "me traen un compañero" (que
+// es el otro arrastre que acepta) sin compartir estado entre los dos paneles.
+const ARRASTRE_OBJETO = 'application/x-objeto';
+
 const ANCHO = 520;
-const ALTO_POR_PISO = 120;
+// Los dos paneles laterales miden lo mismo para que el mapa quede centrado de verdad
+// (ver el comentario de la fila, más abajo), y su ancho vive aquí porque el cálculo de
+// la escala tiene que descontarlo. `SEPARACION_PANELES` es el `gap-4` de Tailwind.
+const ANCHO_PANELES = 160;
+const SEPARACION_PANELES = 16;
+// ⚠️ **Este número decide lo ANCHA que se ve la columna**, aunque no lo parezca. La
+// escala es `min(ancho/ANCHO, alto/alturaLienzo)` y siempre manda la altura (el
+// lienzo es mucho más alto que ancho), así que bajar la separación entre pisos hace
+// el lienzo menos alto → la escala sube → **la columna se ensancha en pantalla** con
+// el mismo hueco disponible. Era la queja del playtest: "el mapa es un poco pequeño".
+// Bajado de 120 a 104; con los nodos a 56 px de lienzo quedan 48 px de aire entre
+// filas, que es lo que impide que se toquen.
+//
+// ⚠️ Va emparejado con `scripts/generar-columnas-mapa.py`: el fondo se genera a
+// 520 × (ALTO_POR_PISO × 8) y se pinta con `100% 100%`, así que cambiar uno sin el
+// otro DEFORMA el dibujo en vez de recortarlo. El script lleva el mismo aviso.
+const ALTO_POR_PISO = 104;
 
 // Tamaño del nodo, en píxeles del LIENZO (520 × 120·pisos). El lienzo entero se
 // escala para caber sin scroll, así que un tamaño fijo aquí se traduce en un
@@ -151,6 +179,38 @@ function calcularPosiciones(mapa) {
   });
 
   return posiciones;
+}
+
+/**
+ * Lo que se ve al pasar por encima de un mini-jefe o de un jefe final: quién es, a
+ * qué nivel pelea y de qué naturaleza es.
+ *
+ * El modo activo se enseña **solo si lo tiene a ese nivel**, y no destripa nada que
+ * el mapa no cuente ya: el sprite del nodo se pinta con `spriteDeCombate(id, nivel)`,
+ * o sea que a un jefe transformado ya se le ve transformado desde el mapa.
+ */
+function EtiquetaFichaDeJefe({ id, nivel }) {
+  const tipo = tipoDeLuchador(id);
+  const modo = nombreDeModo(id, nivel);
+  return (
+    <EtiquetaFlotante>
+      {/* Sin el "BOSS" / "MINI-BOSS" en rojo que llevaba encima: el nodo ya lo dice
+          por tres vías —el sprite del personaje en vez de un icono genérico, el borde
+          rojo y el badge de rango (☠ / 危)—, así que el rótulo solo repetía. Y con el
+          nombre propio del jefe justo debajo, era además la línea menos informativa
+          de las cuatro. */}
+      <p className="leading-tight">{nombrePersonaje(id)}</p>
+      <div className="flex items-center gap-2 mt-1.5 text-[9px]">
+        <span className="text-oro">Lv.{nivel}</span>
+        {tipo && (
+          <span className={`px-1.5 py-0.5 rounded-sm border ${clasePastillaDeTipo(id)}`}>
+            {emojiDeTipo(id)} {nombreDeTipo(id)}
+          </span>
+        )}
+      </div>
+      {modo && <p className="text-[9px] text-pergamino-200/70 mt-1.5">{modo}</p>}
+    </EtiquetaFlotante>
+  );
 }
 
 function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onClick, arco }) {
@@ -206,10 +266,25 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
     estadoClases = 'cursor-not-allowed opacity-40';
   }
 
-  // Solo el título, como en Pokelike: la descripción larga de cada tipo de nodo
+  // Para los nodos corrientes, solo el título: la descripción larga de cada tipo
   // ocupaba media pantalla y se lee una vez en la vida. Lo que hace un nodo se
   // aprende jugando; el tooltip solo tiene que recordar cuál es cuál.
-  const contenidoTooltip = <EtiquetaFlotante>{etiqueta}</EtiquetaFlotante>;
+  //
+  // **Los dos jefes son la excepción**, como en Pokelike, que al pasar por encima de
+  // un gimnasio te enseña quién es y con qué viene. Aquí eso significa nombre, nivel
+  // y naturaleza de chakra: es lo que decide a quién pones en la posición 1, y sin
+  // ello el jugador entra a la pelea más importante del arco a ciegas.
+  //
+  // ⚠️ **El pergamino dorado NO lo lleva**, a propósito: ahí la gracia es no saber a
+  // quién te vas a encontrar. Por eso esto mira `nodo.tipo` y no "si hay un jefe
+  // detrás" — el desafío legendario también es un jefe.
+  const idDelJefe = nodo.tipo === 'miniJefe' ? arco?.miniJefeId
+    : nodo.tipo === 'jefe' ? arco?.jefeFinalId : null;
+  const nivelDelJefe = nodo.tipo === 'miniJefe' ? arco?.nivelMiniJefe : arco?.nivelJefeFinal;
+
+  const contenidoTooltip = idDelJefe
+    ? <EtiquetaFichaDeJefe id={idDelJefe} nivel={nivelDelJefe} />
+    : <EtiquetaFlotante>{etiqueta}</EtiquetaFlotante>;
 
   return (
     <div className="absolute" style={{ left: posicion.x - lado / 2, top: posicion.y - lado / 2 }}>
@@ -310,11 +385,15 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
  * - El panel es más ancho (`w-40`): había sitio de sobra y la letra no tiene por
  *   qué ser diminuta.
  */
-function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjeto }) {
+function PanelEquipo({
+  equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjeto, equiparObjeto, usarConsumible,
+}) {
   // El id que se está arrastrando. Es estado local y no del store a propósito:
   // no es información de la run, solo del gesto en curso.
   const [arrastrando, setArrastrando] = useState(null);
   const [encima, setEncima] = useState(null);
+  // `{ itemId, idPersonaje }` del reemplazo que espera confirmación, o null.
+  const [reemplazoPendiente, setReemplazoPendiente] = useState(null);
 
   function soltarSobre(idDestino) {
     if (!arrastrando || arrastrando === idDestino) return;
@@ -328,6 +407,34 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
     ids.splice(desde, 1);
     ids.splice(hasta, 0, arrastrando);
     reordenarEquipo(ids);
+  }
+
+  /**
+   * Soltar un objeto de la mochila encima de un personaje (salido del playtest:
+   * el mapa dejaba arrastrar objetos y no dejaba equiparlos así, que es el único
+   * sitio donde arrastrar significa algo).
+   *
+   * ⚠️ **Si el destino ya lleva algo puesto, se pregunta antes.** La mochila ya
+   * lo preguntaba desde que existe (`InventoryScreen`), y al abrir esta segunda
+   * puerta para equipar se coló sin ella: equipar encima devuelve el objeto
+   * anterior a la bolsa, y eso no se ve venir desde un arrastre. Es el fallo
+   * clásico de añadir un camino nuevo a una acción que ya tenía guardas — las
+   * guardas van con la acción, no con el camino.
+   *
+   * Con lo demás no se pregunta: un consumible se gasta en quien lo recibe y un
+   * hueco vacío no pisa nada.
+   */
+  function soltarObjetoSobre(itemId, personaje) {
+    const objeto = itemsData.objetos.find((o) => o.id === itemId);
+    if (objeto?.tipo === 'equipable' && personaje.objetoEquipadoId) {
+      setReemplazoPendiente({ itemId, idPersonaje: personaje.id });
+      return;
+    }
+    // Aparte de ese caso, no se mira de qué tipo es: se intenta equipar y, si el
+    // store dice que no, se intenta usar. Los dos validan y devuelven `false` si
+    // no les toca, así que quien distingue equipable de consumible sigue siendo él.
+    if (equiparObjeto(itemId, personaje.id)) return;
+    usarConsumible(itemId, personaje.id);
   }
 
   return (
@@ -358,15 +465,27 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
                   draggable={!p.derrotado}
                   onDragStart={() => setArrastrando(p.id)}
                   onDragEnd={() => { setArrastrando(null); setEncima(null); }}
+                  // La tarjeta acepta DOS cosas: otro compañero (reordenar) y un
+                  // objeto de la mochila (equipar o usar). Se distinguen por el tipo
+                  // de dato que lleva el arrastre, no por un estado compartido entre
+                  // los dos paneles: `dataTransfer` ya viaja con el gesto.
+                  // `getData` solo se puede leer al soltar, pero `types` sí se puede
+                  // consultar antes, que es lo que hace falta para el resaltado.
                   onDragOver={(e) => { e.preventDefault(); setEncima(p.id); }}
                   onDragLeave={() => setEncima((actual) => (actual === p.id ? null : actual))}
-                  onDrop={(e) => { e.preventDefault(); soltarSobre(p.id); setEncima(null); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const itemId = e.dataTransfer.getData(ARRASTRE_OBJETO);
+                    if (itemId) soltarObjetoSobre(itemId, p);
+                    else soltarSobre(p.id);
+                    setEncima(null);
+                  }}
                   className={[
                     'w-full text-left rounded-sm p-1.5 border transition-colors',
                     esActivo ? 'border-sello-500 bg-sello-600/15' : 'border-marco bg-tinta-950/40',
                     p.derrotado ? 'opacity-40' : 'cursor-grab active:cursor-grabbing',
                     arrastrando === p.id ? 'opacity-50' : '',
-                    encima === p.id && arrastrando && arrastrando !== p.id ? 'border-oro border-dashed' : '',
+                    encima === p.id && arrastrando !== p.id ? 'border-oro border-dashed' : '',
                   ].join(' ')}
                 >
                   {/* El nombre va en su propia línea, a lo ancho de la
@@ -458,10 +577,70 @@ function PanelEquipo({ equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjet
           })}
         </div>
         <p className="text-[8px] text-pergamino-200/45 leading-snug">
-          Drag to reorder. The first one fights.
+          Drag to reorder, or drop an item on a ninja.
         </p>
       </PanelMarco>
+
+      {/* La confirmación de reemplazo, con el mismo texto que la de la mochila
+          (`InventoryScreen`): las dos puertas para equipar tienen que contar lo
+          mismo, sobre todo la que se abre sin querer. Va como ventana y no como
+          `window.confirm` por lo de siempre —el diálogo del navegador rompe la
+          ilusión— y porque el criterio del kit ya dice que una decisión corta se
+          resuelve en una ventana sobre el mapa (ver documentacion/33). */}
+      {reemplazoPendiente && (
+        <PanelReemplazoObjeto
+          itemId={reemplazoPendiente.itemId}
+          personaje={equipo.find((p) => p.id === reemplazoPendiente.idPersonaje)}
+          onCancelar={() => setReemplazoPendiente(null)}
+          onConfirmar={() => {
+            equiparObjeto(reemplazoPendiente.itemId, reemplazoPendiente.idPersonaje);
+            setReemplazoPendiente(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+/**
+ * "Ya lleva algo puesto, ¿lo cambio?" — la ventana que aparece al soltar un
+ * equipable encima de un personaje que ya tiene su hueco ocupado.
+ *
+ * Vive aquí y no en el kit porque solo la usa esta pantalla, que es la regla del
+ * propio kit. Lo que sí se comparte con la mochila es el **texto**: decir lo mismo
+ * con otras palabras en los dos sitios es una forma barata de que parezcan dos
+ * mecánicas distintas.
+ */
+function PanelReemplazoObjeto({ itemId, personaje, onCancelar, onConfirmar }) {
+  if (!personaje) return null;
+  return (
+    <VentanaModal titulo="Replace item" onCerrar={onCancelar} ancho="max-w-sm">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          {SPRITE_OBJETO[itemId] && (
+            <img src={SPRITE_OBJETO[itemId]} alt="" aria-hidden="true" className="w-12 h-12 object-contain shrink-0" />
+          )}
+          <p className="font-display text-[11px] text-pergamino-100 leading-tight">
+            {nombreObjeto(itemId)}
+          </p>
+        </div>
+        <p className="text-[9px] text-pergamino-200/70 leading-relaxed border-t border-marco pt-3">
+          <span className="text-pergamino-100">{nombreCorto(personaje.id)}</span> is already carrying{' '}
+          <span className="text-pergamino-100">{nombreObjeto(personaje.objetoEquipadoId)}</span>.
+          It goes back to the bag.
+        </p>
+        <div className="flex justify-end gap-2">
+          <BotonSecundario onClick={onCancelar}>Cancel</BotonSecundario>
+          <button
+            type="button"
+            onClick={onConfirmar}
+            className="font-display text-[9px] px-3 py-2 rounded-sm bg-sello-600 text-sobre-sello hover:bg-sello-500 transition-colors"
+          >
+            Replace
+          </button>
+        </div>
+      </div>
+    </VentanaModal>
   );
 }
 
@@ -507,9 +686,19 @@ function PanelObjetos({ inventario, oro, abrirMochila }) {
               <button
                 type="button"
                 onClick={() => abrirMochila(id)}
+                // Arrastrable hasta una tarjeta del equipo, que lo equipa o lo usa
+                // (ver `soltarObjetoSobre` en PanelEquipo). El clic sigue abriendo la
+                // mochila: el arrastre es el atajo, no el único camino — con el equipo
+                // fuera de pantalla, o para leer lo que hace el objeto antes de
+                // decidir, la mochila sigue siendo lo suyo.
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData(ARRASTRE_OBJETO, id);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
                 title={nombreObjeto(id)}
                 aria-label={nombreObjeto(id)}
-                className="elevar-hover relative w-full aspect-square flex items-center justify-center rounded-sm border border-marco bg-tinta-950/50 hover:border-oro/60 hover:bg-tinta-950/80"
+                className="elevar-hover relative w-full aspect-square flex items-center justify-center rounded-sm border border-marco bg-tinta-950/50 hover:border-oro/60 hover:bg-tinta-950/80 cursor-grab active:cursor-grabbing"
               >
                 {SPRITE_OBJETO[id] ? (
                   <img src={SPRITE_OBJETO[id]} alt="" aria-hidden="true" className="w-7 h-7 object-contain" />
@@ -622,10 +811,17 @@ function RuedaChakra() {
               width={RADIO_NODO_CHAKRA * 2}
               height={RADIO_NODO_CHAKRA * 2}
             >
+              {/* `pointerEvents: none` y `userSelect: none` porque esto es un
+                  dibujo, no texto: el emoji vive en un `foreignObject`, o sea en
+                  HTML de verdad dentro del SVG, así que el navegador lo trataba
+                  como un párrafo — cursor de escritura al pasar por encima y se
+                  podía seleccionar arrastrando. Con los eventos desactivados el
+                  puntero ve el círculo de debajo y no el texto. */}
               <div style={{
                 width: '100%', height: '100%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '11px', lineHeight: 1,
+                pointerEvents: 'none', userSelect: 'none',
               }}>
                 {EMOJI_CHAKRA[tipo]}
               </div>
@@ -734,6 +930,8 @@ export default function MapScreen() {
   const inventario = useGameStore((s) => s.inventario);
   const oro = useGameStore((s) => s.oro);
   const desequiparObjeto = useGameStore((s) => s.desequiparObjeto);
+  const equiparObjeto = useGameStore((s) => s.equiparObjeto);
+  const usarConsumible = useGameStore((s) => s.usarConsumible);
   const abrirMochila = useGameStore((s) => s.abrirMochila);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
   const abrirEnciclopedia = useGameStore((s) => s.abrirEnciclopedia);
@@ -775,19 +973,30 @@ export default function MapScreen() {
   const contenedorRef = useRef(null);
   const [escala, setEscala] = useState(1);
 
+  // ⚠️ Se mide la FILA entera y se descuentan los paneles, en vez de medir el hueco
+  // que le sobra al mapa. Parece lo mismo y no lo es: mientras el mapa era el
+  // `flex-1`, ocupaba **todo** el ancho sobrante y empujaba los dos paneles contra
+  // los bordes de la pantalla, lejísimos del mapa. Ahora el mapa mide exactamente lo
+  // que ocupa su dibujo (`ANCHO * escala`) y el `justify-center` de la fila junta los
+  // tres en el medio, como en Pokelike.
+  //
+  // Medir la fila y no el hueco evita además el pez que se muerde la cola: si el
+  // ancho del contenedor dependiera de la escala y la escala del ancho, el layout
+  // podría oscilar. El ancho de la fila no depende de nada de esto.
   useLayoutEffect(() => {
-    const contenedor = contenedorRef.current;
-    if (!contenedor || !mapa) return undefined;
+    const fila = contenedorRef.current;
+    if (!fila || !mapa) return undefined;
 
     function recalcular() {
-      const { clientWidth, clientHeight } = contenedor;
+      const { clientWidth, clientHeight } = fila;
       if (clientWidth === 0 || clientHeight === 0) return;
-      setEscala(Math.min(clientWidth / ANCHO, clientHeight / alturaLienzo));
+      const disponible = clientWidth - ANCHO_PANELES * 2 - SEPARACION_PANELES * 2;
+      setEscala(Math.max(0.1, Math.min(disponible / ANCHO, clientHeight / alturaLienzo)));
     }
 
     recalcular();
     const observer = new ResizeObserver(recalcular);
-    observer.observe(contenedor);
+    observer.observe(fila);
     return () => observer.disconnect();
   }, [mapa, alturaLienzo]);
 
@@ -800,7 +1009,9 @@ export default function MapScreen() {
   }
 
   return (
-    <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-4 relative flex flex-col overflow-hidden">
+    // `py-2` y no `py-4`: son 16 px de alto que se le devuelven al mapa, y como la
+    // escala la manda la altura, cada píxel de alto se convierte en columna más ancha.
+    <div className="h-screen bg-transparent text-pergamino-100 font-body px-4 py-2 relative flex flex-col overflow-hidden">
       <MenuVertical
         abrirLogros={abrirLogros}
         abrirEnciclopedia={abrirEnciclopedia}
@@ -815,12 +1026,20 @@ export default function MapScreen() {
         </h1>
       </header>
 
-      <div className="flex-1 min-h-0 flex justify-center items-start gap-4 max-w-3xl mx-auto w-full">
+      {/* Sin `max-w`: el ancho ya no importa, porque el mapa mide lo que mide su
+          dibujo y `justify-center` junta los tres bloques. Los dos paneles laterales
+          miden **lo mismo** (`ANCHO_PANELES`) a propósito: con 160 a un lado y 128 al
+          otro, el centro del mapa quedaba 16 px a la derecha del centro de la
+          pantalla y el título del arco —que va centrado en la pantalla— se veía
+          descolocado respecto a la columna. */}
+      <div ref={contenedorRef} className="flex-1 min-h-0 flex justify-center items-start gap-4 w-full">
         <PanelEquipo
           equipo={equipo}
           obtenerHpMaximo={obtenerHpMaximo}
           reordenarEquipo={reordenarEquipo}
           desequiparObjeto={desequiparObjeto}
+          equiparObjeto={equiparObjeto}
+          usarConsumible={usarConsumible}
         />
 
         {/* El contenedor de fuera solo mide el hueco disponible: no pinta nada.
@@ -829,8 +1048,8 @@ export default function MapScreen() {
             sobraban bandas negras a los lados — el lienzo casi nunca es tan ancho
             como el hueco, porque la escala la manda la altura. */}
         <div
-          ref={contenedorRef}
-          className="flex-1 min-h-0 h-full flex items-center justify-center overflow-hidden"
+          className="min-h-0 shrink-0 flex items-start justify-center"
+          style={{ width: ANCHO * escala }}
         >
           <div
             // `escena-oscura` no pinta nada: le devuelve la paleta OSCURA a este
@@ -970,7 +1189,9 @@ export default function MapScreen() {
         {/* Columna derecha: mochila arriba, chuleta de chakra debajo. Los dos
             son consulta rápida (qué llevo / qué le gana a qué), frente a la
             columna izquierda, que es la que se toca para jugar. */}
-        <div className="w-32 shrink-0 flex flex-col gap-4">
+        {/* `w-40` como el panel de equipo: los dos laterales tienen que medir lo
+            mismo o el mapa no queda centrado (ver `ANCHO_PANELES`). */}
+        <div className="w-40 shrink-0 flex flex-col gap-4">
           <PanelObjetos inventario={inventario} oro={oro} abrirMochila={abrirMochila} />
           <RuedaChakra />
         </div>

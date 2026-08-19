@@ -11,18 +11,18 @@
   "poolTiposNodo": [
     {
       "tipo": "combate",
-      "peso": 40
+      "peso": 55
     },
     {
       "tipo": "evento",
-      "peso": 32
-    },
-    {
-      "tipo": "tienda",
-      "peso": 19
+      "peso": 22
     },
     {
       "tipo": "descanso",
+      "peso": 14
+    },
+    {
+      "tipo": "tienda",
       "peso": 9
     }
   ],
@@ -57,5 +57,5 @@
   "escaladoNivelPorPiso": 1.0,
   "nivelMiniJefe": 19,
   "nivelJefeFinal": 27,
-  "xpCombateComun": 80
+  "xpCombateComun": 58
 }

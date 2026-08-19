@@ -396,7 +396,12 @@ function triosDelRoster() {
   console.log('  (mismo método que los jefes: trío en cadena, HP el que deje el camino)\n');
 
   const azar = azarConSemilla(SEMILLA);
-  const PISOS_MUESTRA = [3, 6];
+  // El primer piso de la muestra es el del MINI-JEFE porque desde el playtest el
+  // pergamino dorado no puede salir antes (ver `rarezasPermitidasEnElPiso` en
+  // engine/mapGenerator.js). Medirlo en el piso 3 era medir un caso que el
+  // generador ya no produce, y ese caso era justo el que salía al 52%: el motivo
+  // del veto. El bloque tiene que preguntarle al arco, no llevar el número escrito.
+  const PISOS_MUESTRA = [null, 6]; // null = el piso del mini-jefe de cada arco
   for (const arco of ARCOS) {
     // Los mismos que puede ofrecer el store (ver `candidatosReclutables`): jefes
     // legendarios que no son el jefe ni el mini-jefe de este arco, **más los
@@ -417,7 +422,8 @@ function triosDelRoster() {
       ),
       ...legendariosDeLaPool,
     ];
-    for (const piso of PISOS_MUESTRA) {
+    for (const pisoMuestra of PISOS_MUESTRA) {
+      const piso = pisoMuestra ?? arco.pisoMiniJefe;
       for (const legendario of legendarios) {
         const rs = triosDelRoster().map((trio) => {
           const hpDeEntrada = hpAlLlegarAlPiso(trio, arco, piso, azar);

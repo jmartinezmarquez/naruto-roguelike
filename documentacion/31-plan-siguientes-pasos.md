@@ -21,10 +21,17 @@ Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeraci�
 > invertida, y desde el último han cambiado el balance de los jefes, el roster, el final del combate y
 > **las ocho pantallas**. Nada de lo que se haga mientras tanto lo sustituye.
 >
-> **Siguiente punto a implementar: el 5a (contenido y condiciones de logros).** Su plan está al final
-> de este documento. Y ojo, que la sección "5 — Logros" de más abajo se escribió antes de que existiera
-> la pantalla: **5c ya está hecho y el campo `categoria` se decidió NO añadirlo** — lo dice también ahí,
-> corregido en su sitio.
+> **Actualización (2026-08-15).** Desde entonces se han cerrado también el **6** (eventos, con su
+> documento MVP nuevo — [35](./35-diseño-de-eventos.md)) y la **música** ([36](./36-musica.md)), que
+> resultó no ser el sistema que decía el backlog sino una pista en bucle.
+>
+> **Actualización (2026-08-15, misma tarde): se han cerrado el 9 y el 5a, y con ellos la lista entera.**
+> No queda ningún punto de código abierto del MVP. Lo que sigue es playtest, la pista de música y la
+> tanda de arte. El plan del 5a se queda al final de este documento **como registro de lo que se
+> decidió** —sus cuatro preguntas abiertas están contestadas en el propio plan y en
+> [18](./18-sistema-de-logros.md)—, no como trabajo pendiente. Y ojo, que la sección "5 — Logros" de más
+> abajo se escribió antes de que existiera la pantalla: **5c ya está hecho y el campo `categoria` se
+> decidió NO añadirlo** — lo dice también ahí, corregido en su sitio.
 
 ## Orden recomendado
 
@@ -33,14 +40,14 @@ Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeraci�
 | 1.º | **7 — Playtest** | Va en paralelo y lo hace el usuario: desde el último han cambiado el balance de los jefes, la frecuencia y rareza de los reclutas, el final del combate, todas las tarjetas de personaje y el roster. Su triaje entra por delante de cualquier punto empezado | 1 sesión corta (jugar) + lo que salga | No (salvo lo que aparezca) |
 | ~~2.º~~ | ~~**13 — Kakashi + cascabeles**~~ | **HECHO el 2026-08-13** — desarrollo en [05-roadmap.md](./05-roadmap.md) y calibración en [11](./11-progresion-y-arcos.md) | — | Fueron tres ficheros de datos |
 | ~~3.º~~ | ~~**10 — Enciclopedia**~~ | **HECHO el 2026-08-13** — ver [32](./32-enciclopedia.md) | — | No (solo lectura) |
-| 2.º | **5a — Logros: contenido y condiciones** | *Lo siguiente.* La pantalla ya está (5c) y en estilo; lo que le falta no es diseño sino **material que enseñar**. Y el registro de vistos ya dejó montado en `useAchievementsStore` el patrón exacto que necesitan sus contadores | Media | Sí — `achievements.json`, `engine/achievements.js`, los dos stores |
+| ~~2.º~~ | ~~**5a — Logros: contenido y condiciones**~~ | **HECHO el 2026-08-15** — ver [18](./18-sistema-de-logros.md). El plan acertó en lo importante: el trabajo eran **los enganches, no el JSON**, y el registro de vistos era en efecto el patrón a copiar (tanto, que cuatro logros salen de él sin contador propio) | — | Sí — `achievements.json`, `engine/achievements.js`, los dos stores |
 | 5.º | **6 — Eventos** | No se puede planificar todavía: es el **único punto sin documento MVP**. Antes hay que escribir qué se quiere de esa pantalla | Pequeña + doc previo | No |
-| 6.º | **9 — Columna central** | Cosmético y acotado. Buen cierre de sesión o relleno cuando quede medio hueco | Pequeña | No |
+| ~~6.º~~ | ~~**9 — Columna central**~~ | **HECHO el 2026-08-15** — ver [13](./13-ui-mapa-y-combate.md). No fue tan cosmético: el fondo pasó a dibujarse en vez de recortarse, y la queja de "el mapa es pequeño" se resolvió por la altura del lienzo, no por el ancho | — | No |
 
-**Fuera de la lista y más importante que la mitad de ella: el sonido.** Vive en el backlog porque no
-es un retoque de pantalla sino un sistema entero (assets, precarga, mezcla, volumen). Los ganchos ya
-existen: cada evento del historial de combate dice si fue básico o jutsu, si impactó y qué pasivas
-saltaron.
+~~**Fuera de la lista y más importante que la mitad de ella: el sonido.**~~ **HECHO**, y la estimación
+estaba mal: no era un sistema (assets, precarga, mezcla) sino **una pista en bucle**, porque la
+referencia no tiene efectos de sonido. Ver [36](./36-musica.md). ⚠️ La lección se guarda porque volverá a
+pasar: **antes de estimar un sistema, comprobar qué hace de verdad la referencia.**
 
 ---
 
@@ -222,6 +229,15 @@ El más pequeño y el más acotado. Tres cosas, tal como las escribiste:
 ---
 
 # Plan del punto 5a — Contenido y condiciones de los logros
+
+> ✅ **HECHO el 2026-08-15.** Se conserva porque explica **por qué** el punto tiene la forma que tiene, y
+> ese razonamiento vuelve a hacer falta la próxima vez que se añada un logro. Cómo quedó, en
+> [18](./18-sistema-de-logros.md). Las cuatro decisiones se tomaron **por la recomendación**: una
+> condición genérica de contador; siete contadores (los cuatro recomendados más eventos, compras y runs
+> perdidas); **sí, un logro puede no dar nada**; y 23 logros. Lo único que el plan no vio venir es que la
+> mitad del contenido nuevo **no necesitaba contador ninguno**: `coleccionMinima` lee el registro de la
+> enciclopedia, que ya estaba, y por eso hay cuatro logros más sin un solo enganche nuevo.
+
 
 Preparado el 2026-08-13 para arrancar la sesión siguiente. La pantalla (5c) ya está hecha y en estilo:
 lo que falta es **material que enseñar**, y el trabajo de verdad no está en el JSON.
@@ -447,3 +463,232 @@ prueba manual tuya. El simulador no aplica: no hay balance en juego.
 3. **Punto 6** — ¿la pista del efecto se sigue viendo antes de elegir?
 4. **Sonido** — sigue en backlog. Es lo que más notaría el jugador de todo lo que queda; si el MVP
    tiene fecha, merece decidirse a propósito y no por omisión.
+
+---
+
+# Plan — Qué del post-MVP debería entrar en el MVP (2026-08-15)
+
+> ⚖️ **Veredicto del usuario, el mismo día: NO a las dos propuestas.** Guardar/continuar la run no entra;
+> la transición entre arcos tampoco, *"no sé muy bien cómo llevarlo"* — que es un motivo mejor que un
+> problema de tamaño: lo que le falta a ese punto es la **idea** de qué pasa en esa pantalla, no las
+> horas. En cambio salió de aquí un punto que no estaba en ninguna lista y que sí entra: el **18, Home
+> con selector de campañas** (ver el roadmap).
+>
+> El documento se conserva entero porque **el análisis sigue siendo cierto aunque la respuesta sea que
+> no**, y en dos sitios ya está dando fruto: el hallazgo de que `guardarRun` no guarda el `mapa` está
+> anotado en "Descartado", y el de que sin guardado **toda salida de la run la pierde** es lo que obliga
+> a que el Home del punto 18 confirme antes de irse. Lo que NO hay que volver a hacer es re-proponer los
+> dos puntos: están contestados.
+
+Escrito el día que la lista de puntos se quedó vacía. La pregunta del usuario fue *"de lo que está en
+post-MVP, ¿qué recomiendas que sea parte del MVP?"*, y contestarla bien exige un criterio antes que una
+lista, porque el backlog está lleno de cosas buenas y **casi ninguna es del MVP**.
+
+## El criterio (tres filtros, y hay que pasar los tres)
+
+1. **Arregla algo que el juego hace MAL hoy**, no algo que todavía no tiene. Un juego al que le falta
+   una idea está incompleto; un juego que pierde tu partida está roto. Solo lo segundo es del MVP.
+2. **No toca el balance.** Se acaba de recalibrar entero (punto 1 fase 4) y el playtest está a medias:
+   meter ahora un nodo nuevo o modificadores de dificultad es invalidar la medición en curso.
+3. **No trae contenido que escribir.** Si hay que redactar 15 textos nuevos, es un punto de contenido y
+   compite con el playtest, que es lo único que puede decir si el juego se siente bien.
+
+## Recomendación
+
+**Entran dos puntos: el 15 (grande, con dos mitades que se necesitan) y el 16 (pequeño).** El resto del
+backlog se queda donde está, y abajo digo por qué uno a uno — que es la parte útil, porque las razones
+volverán a hacer falta la próxima vez que alguien mire esa lista.
+
+---
+
+## Punto 15 — La puerta de entrada y continuar la run
+
+Son dos cosas y las presento como una sola porque **la segunda no tiene dónde vivir sin la primera**: si
+la run se puede continuar, hace falta un sitio donde pulsar "Continue".
+
+### 15a — La run se pierde entera al recargar
+
+Está en **"Descartado"** con esta razón: *"no compensa la complejidad — las runs son cortas, no hay tanto
+que perder si se cierra la pestaña a mitad"*. ⚠️ **Esa frase se escribió cuando la run era UN arco.** Hoy
+son tres, ~24 nodos, con animación de combate, pantallas de transformación y de recompensa: entre media
+hora y tres cuartos. Perder eso por un F5 no es "no compensa la complejidad", es el peor momento que
+puede tener el juego, y encima uno que el jugador no provoca a propósito.
+
+⚠️ **Y hay un descubrimiento que deshace el consuelo del descarte.** El texto dice que *"las funciones ya
+existen en el store por si hiciera falta"*, y las funciones existen pero **no pueden funcionar**:
+`guardarRun` no guarda el `mapa`, y `App.jsx` decide si hay run mirando precisamente `mapa`. O sea que
+cargar una run guardada deja al jugador en la pantalla de selección de personaje, con el equipo cargado y
+sin tablero. No es "conectar un hook": es escribir el guardado de verdad, y por eso el punto no es de
+media hora.
+
+**Qué se guarda y qué no** — la regla es *guardar el estado, no la pantalla*:
+
+- **Sí**: `equipo`, `oro`, `inventario`, `buffsTemporales`, `mapa`, `nodoActualId`, `arcoActualId`,
+  `huboDerrotaEnEsteArco` (si no, se regala el logro de arco sin bajas recargando).
+- **No**: `arcoActualDatos` — es el JSON del arco y se **rehace** desde `arcoActualId` con `ORDEN_ARCOS`
+  al cargar. Guardar datos derivados es cómo se desincronizan dos copias, la misma razón por la que
+  `arcoDelLogro` se calcula y no es un campo.
+- **No**: `pantalla`, `ultimoResultadoCombate`, `cadenaEnemigos`, `eventoActual`, `tiendaActual`…
+  **Se vuelve SIEMPRE al mapa.** Un combate a medias no se puede reanudar (su resumen es transitorio) y
+  no merece la pena inventarlo: el mapa es el único punto estable de la run.
+
+⚠️ **Dónde se guarda es una decisión de diseño, no de implementación: es lo que decide si se puede hacer
+trampa.** Si se guarda solo al volver al mapa, recargar a mitad de un nodo devuelve al jugador al mapa
+con ese nodo **sin resolver** — o sea, **repetir cualquier jefe hasta que salga bien**. Recomendación:
+guardar **dos veces**, al entrar en el nodo (ya marcado como visitado) y al volver al mapa. El coste es
+que recargar en mitad de un combate pierde la recompensa de ese nodo; a cambio, no se puede repetir un
+combate perdido, que es lo que se llevaría por delante la tensión de la run entera.
+
+### 15b — La meta-progresión solo se ve DURANTE una run
+
+Al arrancar, `App.jsx` va directo a `CharacterSelectScreen`, y esa pantalla no tiene ningún botón:
+**Missions, el Bingo Book y los Ajustes solo se abren desde el menú del mapa**. O sea que las tres
+pantallas que existen para mirarse *entre* partidas solo son accesibles *dentro* de una partida — justo
+cuando el jugador está a otra cosa. Y tras un game over, "New Run" devuelve a la selección de personaje
+sin pasar por ninguna de ellas: se acaba de desbloquear un logro y no hay forma de ir a verlo.
+
+Una pantalla de título lo resuelve y de paso es donde vive "Continue" (15a), donde el usuario elige tema
+y volumen antes de jugar, y **donde por fin tiene sentido `menu.mp3`**, la pista que `MusicaDeFondo` ya
+sabe usar cuando no hay arco y que hoy no se oye nunca porque la selección de personaje dura diez
+segundos.
+
+Entradas: **Continue** (solo si hay run guardada), **New Run**, **Missions**, **Bingo Book**,
+**Settings**. Reutiliza el kit entero; no hay nada nuevo que dibujar.
+
+### Fases
+
+0. **Guardado real**: reescribir `guardarRun`/`cargarRun` con la lista de arriba, `arcoActualDatos`
+   rehecho al cargar, `hayRunGuardada()` para que el título sepa si pintar "Continue". Tests: que una run
+   guardada y cargada tiene el mismo mapa y el mismo equipo, que **no** conserva `pantalla`, y que
+   `iniciarRun` y el game over **borran** la guardada (o "Continue" resucitaría una run muerta).
+1. **Los enganches del guardado**, con la regla anti-trampa: al entrar en el nodo y al volver al mapa.
+2. **`TitleScreen`** + `pantalla: 'titulo'` como estado inicial, y las cinco entradas. Las tres pantallas
+   de consulta ya existen; lo único que hay que mirar es que **no den por hecho que hay run** (hoy se
+   dibujan sobre el mapa: `AchievementsScreen` y `EncyclopediaScreen` usan `volverAlMapa` para cerrarse,
+   y desde el título tienen que volver al título).
+3. **Salida de la run**: "Abandon run" en Ajustes, con confirmación, que devuelve al título. Sin esto la
+   única forma de salir de una run es perderla.
+4. Documentación: doc nuevo del guardado + título, roadmap, `CLAUDE.md`.
+
+⚠️ **Trampa conocida**: `localStorage` guarda el mapa entero, que es el objeto más grande de la run.
+Conviene mirar el tamaño real una vez (unos pocos KB, no hay problema), pero **más importante es la
+versión**: una run guardada por una versión anterior del juego puede tener un mapa con otra forma. Como
+mínimo, un número de versión en el guardado y descartarlo si no coincide — es más barato que un bug
+irreproducible dentro de tres meses.
+
+---
+
+## Punto 16 — La transición entre arcos
+
+El único del backlog que recomiendo subir tal cual. Hoy, derrotar a Zabuza —el momento más grande de la
+run después de ganarla— es **un `<p>` y un botón dentro del cartel de victoria del combate**:
+*"You have beaten Land of Waves. A new arc begins."* Y ahí mismo pasan dos cosas que el jugador no ve:
+el equipo **revive y se cura entero** (regalo estilo Slay the Spire) y cambia la música.
+
+Es la definición de lo que sí es del MVP: **no falta una idea, está mal contado algo que ya ocurre.** No
+toca balance, no toca motor, no hay contenido que escribir más allá de una línea por arco, y reutiliza
+lo que ya hizo la pantalla de transformación (que es exactamente el mismo problema resuelto: dar su
+momento a algo que se resolvía en un renglón).
+
+Alcance mínimo: pantalla propia entre el combate y el mapa nuevo, con el nombre del arco que se cierra y
+el que se abre, el equipo curado a la vista (que es lo que **hoy no se ve**) y el fondo/columna del arco
+siguiente. Ni cinemática ni texto narrativo largo.
+
+---
+
+## Lo que NO entra, y por qué
+
+- **Bifurcación riesgo/recompensa (nodo élite).** ⚠️ **Ya existe y se llama pergamino dorado**: un
+  combate opcional a nivel fijo contra un legendario, que se gana el 52% en el piso 3 y el 87% en el 6.
+  Añadir otro nodo de riesgo no añade una decisión, **duplica la que ya hay** — y encima tocando las
+  proporciones de nodo que se acaban de calibrar contra las de Slay the Spire.
+- **Nodo `?` (un evento que a veces es combate).** Idea del jugador, y buena, pero llega en el peor
+  momento: los eventos **acaban de rediseñarse para ser decisiones con su precio a la vista**, y
+  convertirlos a veces en una pelea los devuelve a ser una tirada. Además mueve otra vez los ratios de
+  nodo. Se queda aparcado con la razón escrita en [10](./10-generador-de-mapa.md).
+- **Modificadores de dificultad entre runs ("ascensión").** Necesita que el balance esté **cerrado**, y
+  hoy está en playtest. Es el clásico multiplicador sobre una base que todavía se mueve.
+- **Más logros.** Ya no es un punto: con `contadorMinimo` y `coleccionMinima` es escribir datos. Se hace
+  cuando apetezca, sin plan.
+- **5b — recompensas numéricas permanentes.** Sigue descartado, y con más razón desde que el 5a
+  demostró que la pantalla funciona sin ellas.
+- **Campañas, cuentas/guardado remoto, tests de componentes React.** Post-MVP de verdad: los dos primeros
+  son productos distintos y el tercero es infraestructura para bugs que este proyecto no ha tenido — los
+  suyos han estado todos en motor y store, que es donde están los 275 tests.
+
+## Orden sugerido
+
+**El playtest sigue siendo el 1.º** — nada de esto es más urgente que saber si el juego se siente bien, y
+además el 15 es justo lo que hace cómodo jugar runs largas seguidas. Luego el **15** (que es el que
+convierte "una demo que se abre y juegas" en "un juego que abres, sigues y cierras") y por último el
+**16**, que es una tarde.
+
+⚠️ Y una advertencia de método, porque este documento ya se ha equivocado dos veces igual: **el 15 parece
+pequeño y no lo es** (el guardado que "ya existía" no funciona), y **el 16 parece grande y no lo es**
+(una pantalla sin lógica). Es el mismo error que con el sonido, al revés y del derecho.
+
+---
+
+# Plan de cierre — de aquí al 6 de septiembre (escrito el 2026-08-15)
+
+**El objetivo cambia las prioridades, así que va primero.** Esto no es "terminar un juego": es
+**demostrar qué da un mes de trabajo intermitente con Claude**. Primer commit el 2026-08-06, entrega el
+2026-09-06. Hoy quedan **22 días** y se ha trabajado en **10 días distintos** (53 commits), o sea que lo
+realista es **entre 8 y 12 sesiones más**.
+
+## Qué es el entregable de verdad (y por eso se reordena el roadmap)
+
+No es el juego más completo posible. Son tres cosas, y solo la primera está a medias:
+
+1. **Un enlace que un desconocido abre y juega en cinco minutos.** Hoy el juego **solo existe en
+   `npm run dev`**: nadie que no clone el repositorio puede verlo.
+2. **Una portada que se pueda juzgar sin ejecutar nada.** Hoy el `README.md` es la plantilla de Vite.
+3. **Un juego que no parezca sin terminar en los cinco primeros minutos** — que no es lo mismo que estar
+   equilibrado hasta Pain.
+
+De ahí salen dos reordenaciones que van contra el orden "natural" del roadmap:
+
+- ⚠️ **El punto 17 (publicar) pasa de último a PRIMERO.** Un despliegue desconocido a 22 días es un
+  riesgo; a un día, es el fracaso. El bug del `base` —página en blanco, sin error— se lleva una tarde
+  entera él solo. Y publicar pronto tiene un segundo efecto más grande que el primero: **a partir de
+  ahí cada sesión publica**, y se le puede pasar el enlace a otra gente, que es la única forma de
+  conseguir playtest que no sea el del propio autor.
+- **El punto 19 (README) es el segundo entregable, no un adorno.** Los números ya existen y no hay que
+  inflarlos: 275 tests, 38 documentos de diseño, ~9.700 líneas de código y ~3.200 de tests, 53 commits
+  en 10 días de trabajo.
+
+## El arte, que es la pieza lenta — y la mitad no es arte
+
+⚠️ **Parte de lo que está en "Pendiente de arte" es trabajo de script disfrazado de dibujo**, y eso
+cambia quién lo hace y cuánto cuesta. El caso claro: **el proyectil de jutsu de los genin rivales ya
+está dibujado** (última casilla de cada panel de la fila 5) y lo que falla es que el script coge el
+primer fotograma. Son los enemigos de la mayoría de los combates, o sea el sprite que más se ve del
+juego, y no hace falta dibujar nada.
+
+Lo que sí es dibujo de verdad son **los 9 iconos** (5 de chakra + 4 del menú). Y aquí va la
+recomendación incómoda: **si el calendario aprieta, se entregan con emoji**. Es lo único de la interfaz
+sin dibujar, casi nadie lo mira, y sacrificarlo cuesta mucho menos que quedarse sin portada o sin
+enlace. **Fecha de corte: si el 25 de agosto no están, no entran**, y el punto 16 se hace igual con los
+iconos actuales (el marco a CSS no depende de ellos).
+
+## Orden propuesto
+
+| Sesión | Qué | Por qué ahí |
+|---|---|---|
+| **1 (la siguiente)** | **17 — publicar** + el proyectil de los genin si sobra rato | Convierte el proyecto en algo que se puede enseñar. Desactiva el riesgo del despliegue cuando todavía da igual |
+| **2** | **19 — README** | Segundo entregable. Con el enlace ya existiendo, se escribe una vez |
+| **3** | **16 — menú vertical** | Requisito del 18 y mata el último `window.confirm` del juego |
+| **4** | **18 — Home + `campaigns.json`** | La primera pantalla que ve un visitante. Es lo que hace que parezca un producto y no una demo |
+| **5-7** | **15 — arte que llegue** + **7 — playtest** | En paralelo: el dibujo es suyo, la integración es de script |
+| **1-6 sept** | **Congelación** | Ni un sistema nuevo. Solo bugs del playtest, retoques y volver a publicar |
+
+⚠️ **La congelación no es prudencia, es la lección de este propio roadmap**: los últimos cinco puntos
+han descubierto trabajo al abrirlos (el guardado que no guardaba, el menú clavado a cuatro entradas, la
+evaluación única de los logros). Un punto nuevo abierto el 2 de septiembre no se sabe lo que mide.
+
+## Dónde poner el playtest, que es lo único sin fecha
+
+Con el enlace publicado, el playtest deja de ser una tarea de sesión y pasa a ser continuo. Y para este
+objetivo se mira **una cosa concreta**: **los diez primeros minutos**. Un visitante ve el arco 1 y poco
+más; que Pain esté equilibrado al 85% no lo va a comprobar nadie. Zabuza sí — es el jefe con menos
+margen y el único que casi todo el mundo va a pelear.

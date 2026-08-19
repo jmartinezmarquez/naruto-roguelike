@@ -108,6 +108,16 @@
   --contorno-titulo: var(--color-sobre-acento);
 }
 
+/* ⚠️ El caso que estuvo a punto de necesitar una tercera variante, por si alguien
+   vuelve a él: el nombre de la transformación estuvo **en oro sobre el escenario casi
+   negro** de `escena-oscura`, con contorno de tinta, y el contorno no se veía — lo
+   tenía, pero era negro sobre negro. La regla se sostiene igual, con un matiz: **es el
+   negativo del relleno, y cuando el relleno Y el fondo son oscuros no hay contorno que
+   valga.** Se resolvió aclarando el RELLENO (ahora es crema), no inventando un
+   contorno claro: un título en blanco con filo de tinta es el caso normal y no
+   necesita clase. Si algún día vuelve un relleno oscuro sobre fondo oscuro, la salida
+   es la misma — cambiar el relleno. */
+
 /* --- Modo claro -------------------------------------------------------------
    Un tema es redefinir variables, no repasar pantallas: las utilidades de
    Tailwind v4 compilan a `background-color: var(--color-tinta-900)`, así que

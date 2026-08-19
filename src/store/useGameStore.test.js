@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
-import { useAchievementsStore, VISTOS_VACIO } from './useAchievementsStore';
+import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO } from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
 import configGlobal from '../data/config.json';
+import eventosData from '../data/events.json';
 
 const enemigoHakuDePrueba = {
   // Mismo id que el mini-jefe real del arco de prueba (miniJefeId: 'haku'),
@@ -48,7 +49,17 @@ const enemigoImbatibleDePrueba = {
 // propósito (es meta-progresión entre runs), así que hay que limpiarlo aquí.
 beforeEach(() => {
   localStorage.clear();
-  useAchievementsStore.setState({ logrosDesbloqueados: [], vistos: VISTOS_VACIO });
+  // ⚠️ Los contadores acumulados también se resetean, y esto no es opcional: sin
+  // ellos, los combates y eventos de un test se suman a los del siguiente y
+  // acaban desbloqueando logros de contador ("gana 10 combates") en mitad de una
+  // prueba que iba de otra cosa. Es la misma trampa que en el juego, donde
+  // reiniciar la meta-progresión tiene que borrar las TRES claves.
+  useAchievementsStore.setState({
+    logrosDesbloqueados: [],
+    vistos: VISTOS_VACIO,
+    contadores: CONTADORES_VACIO,
+    notificacionesPendientes: [],
+  });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -460,20 +471,32 @@ describe('_aplicarVictoria — HP al subir de nivel', () => {
 });
 
 describe('_aplicarDerrota (a través de jugarCombate)', () => {
-  it('los personajes derrotados quedan al final del orden del equipo', () => {
-    // Solo se enfrenta el enemigo débil (gana el activo), así que forzamos
-    // una derrota directa para aislar el comportamiento de reordenación.
-    useGameStore.setState((estado) => ({
-      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, hpActual: 1 } : p)),
-    }));
-    // Usamos el enemigo imbatible pero solo nos interesa el primer personaje:
-    // comprobamos el orden justo tras la primera ronda perdida.
-    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
-    const { equipo } = useGameStore.getState();
-    // Los 3 caen con este enemigo, así que comprobamos que el que EMPEZÓ
-    // primero (naruto) sigue estando en la lista, y todos están derrotados.
-    expect(equipo.map((p) => p.id)).toContain('naruto');
-    expect(equipo.every((p) => p.derrotado)).toBe(true);
+  it('NO cambia el orden del equipo al caer alguien', () => {
+    // El orden lo elige el jugador arrastrando (`reordenarEquipo`), así que es
+    // suyo y nada puede tocarlo por su cuenta. Antes los caídos se mandaban al
+    // final, y era un reorden permanente: la curación de fin de arco los revivía
+    // pero ya no devolvía el orden, y el jugador se encontraba su equipo
+    // barajado sin haber tocado nada. Salió del playtest.
+    useGameStore.getState().reordenarEquipo(['sakura', 'naruto', 'sasuke']);
+    useGameStore.getState()._aplicarDerrota('sakura');
+
+    expect(useGameStore.getState().equipo.map((p) => p.id)).toEqual(['sakura', 'naruto', 'sasuke']);
+  });
+
+  it('el activo pasa a ser el primero VIVO, que es lo que hacía falta del reorden', () => {
+    // La razón por la que el reorden parecía necesario. No lo era:
+    // `obtenerPersonajeActivo` ya busca al primero en pie, esté en el índice que
+    // esté. "Posición 1" nunca quiso decir índice 0.
+    useGameStore.getState()._aplicarDerrota('naruto');
+
+    expect(useGameStore.getState().obtenerPersonajeActivo().id).toBe('sasuke');
+  });
+
+  it('marca la run como terminada cuando cae el último', () => {
+    for (const id of ['naruto', 'sasuke', 'sakura']) useGameStore.getState()._aplicarDerrota(id);
+
+    expect(useGameStore.getState().runTerminada).toBe(true);
+    expect(useGameStore.getState().obtenerPersonajeActivo()).toBeNull();
   });
 });
 
@@ -482,6 +505,230 @@ describe('reordenarEquipo', () => {
     useGameStore.getState().reordenarEquipo(['sakura', 'naruto', 'sasuke']);
     const { equipo } = useGameStore.getState();
     expect(equipo.map((p) => p.id)).toEqual(['sakura', 'naruto', 'sasuke']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Eventos (punto 6 — ver documentacion/35-diseño-de-eventos.md)
+// ---------------------------------------------------------------------------
+
+/** Planta un evento a mano con las elecciones que haga falta probar. */
+function ponerEvento(...efectos) {
+  useGameStore.setState({
+    eventoActual: {
+      id: 'evento_de_prueba',
+      titulo: 'Evento de Prueba',
+      descripcion: '...',
+      elecciones: efectos.map((efecto, i) => ({ texto: `Opción ${i}`, efecto })),
+    },
+    resultadoEvento: null,
+    pantalla: 'evento', // es lo que hace `avanzarANodo` al entrar en el nodo
+  });
+}
+
+describe('eventos — resolución', () => {
+  it('no vuelve al mapa al elegir: deja el resultado a la vista', () => {
+    // Desde que una elección puede llevar una tirada, resolver en silencio y
+    // devolver al jugador al mapa le escondía justo lo que acababa de apostar.
+    ponerEvento({ tipo: 'ganarOro', cantidad: 30 });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    expect(useGameStore.getState().pantalla).toBe('evento');
+    expect(useGameStore.getState().resultadoEvento).toMatchObject({ tipo: 'ganarOro', cantidad: 30 });
+
+    useGameStore.getState().cerrarEvento();
+    expect(useGameStore.getState().pantalla).toBe('mapa');
+    expect(useGameStore.getState().eventoActual).toBeNull();
+    expect(useGameStore.getState().resultadoEvento).toBeNull();
+  });
+
+  it('un efecto `varios` aplica todas sus partes', () => {
+    // Es lo que permite que una opción tenga PRECIO ("ganas XP, pero acabas
+    // molido"): sin él, cada elección solo podía dar o solo podía quitar.
+    const oroAntes = useGameStore.getState().oro;
+    ponerEvento({
+      tipo: 'varios',
+      efectos: [{ tipo: 'ganarOro', cantidad: 50 }, { tipo: 'perderHpEquipo', porcentaje: 0.2 }],
+    });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    expect(useGameStore.getState().oro).toBe(oroAntes + 50);
+    useGameStore.getState().equipo.forEach((p) => {
+      expect(p.hpActual).toBeLessThan(useGameStore.getState().obtenerHpMaximo(p.id));
+    });
+  });
+
+  it('una tirada de azar aplica una rama u otra, y cuenta cuál salió', () => {
+    const salidas = new Set();
+    for (let i = 0; i < 60; i++) {
+      useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+      ponerEvento({
+        tipo: 'azar',
+        probabilidad: 0.5,
+        exito: { tipo: 'ganarOro', cantidad: 10 },
+        fallo: { tipo: 'perderHpEquipo', porcentaje: 0.1 },
+      });
+      useGameStore.getState().resolverEventoEleccion(0);
+      const { tirada, tipo } = useGameStore.getState().resultadoEvento;
+      // La rama aplicada y lo que dice la tirada tienen que ser la misma cosa:
+      // si no, el jugador leería "sale bien" y cobraría el castigo.
+      expect(tipo).toBe(tirada.salioBien ? 'ganarOro' : 'perderHpEquipo');
+      salidas.add(tirada.salioBien);
+    }
+    expect(salidas.size).toBe(2); // con 60 tiradas al 50% salen las dos
+  });
+
+  it('⚠️ un evento NUNCA puede matar a nadie: el HP baja como mucho a 1', () => {
+    // Es la condición que hizo aceptable meter azar de verdad. Perder una run por
+    // un dado, en un roguelike de runs cortas, no es tensión: es un castigo por
+    // jugar. Si algún día alguien "arregla" el suelo de 1, este test cae.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p) => ({ ...p, hpActual: 1 })),
+    }));
+    ponerEvento({ tipo: 'perderHpEquipo', porcentaje: 0.9 });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    useGameStore.getState().equipo.forEach((p) => {
+      expect(p.hpActual).toBe(1);
+      expect(p.derrotado).toBe(false);
+    });
+    expect(useGameStore.getState().runTerminada).toBe(false);
+  });
+
+  it('comprar sin oro suficiente no compra ni cobra, y lo dice', () => {
+    useGameStore.setState({ oro: 5 });
+    ponerEvento({ tipo: 'comprarObjetoAleatorio', coste: 40 });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    expect(useGameStore.getState().oro).toBe(5);
+    expect(useGameStore.getState().inventario).toEqual([]);
+    expect(useGameStore.getState().resultadoEvento.tipo).toBe('sinOro');
+  });
+
+  it('perder oro sin tenerlo no deja el contador en negativo, y cuenta lo pagado de verdad', () => {
+    useGameStore.setState({ oro: 10 });
+    ponerEvento({ tipo: 'perderOro', cantidad: 40 });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    expect(useGameStore.getState().oro).toBe(0);
+    expect(useGameStore.getState().resultadoEvento.cantidad).toBe(10);
+  });
+});
+
+describe('eventos — invariantes de los datos', () => {
+  const TIPOS_CONOCIDOS = new Set([
+    'varios', 'azar', 'curarEquipoPorcentaje', 'perderHpEquipo', 'buffTemporalEquipo',
+    'ganarXpEquipo', 'ganarOro', 'perderOro', 'comprarObjetoAleatorio',
+    'mejoraPermanenteAleatoria', 'ninguno',
+  ]);
+  const ARCOS = new Set(['pais_de_las_olas', 'examen_chunin', 'invasion_de_pain']);
+  const todosLosEfectos = (efecto) => (
+    efecto.tipo === 'varios' ? efecto.efectos.flatMap(todosLosEfectos)
+      : efecto.tipo === 'azar' ? [efecto, ...todosLosEfectos(efecto.exito), ...todosLosEfectos(efecto.fallo)]
+        : [efecto]
+  );
+
+  it('todo efecto declara un tipo que el store sabe aplicar', () => {
+    // El fallo que este test evita es el silencioso de siempre: un tipo mal
+    // escrito cae en el `default` del switch, no pasa nada, y el evento parece
+    // funcionar. Mismo criterio que el catálogo de pasivas.
+    eventosData.eventos.forEach((evento) => {
+      evento.elecciones.forEach(({ efecto }) => {
+        todosLosEfectos(efecto).forEach((e) => {
+          expect(TIPOS_CONOCIDOS.has(e.tipo), `${evento.id}: tipo desconocido "${e.tipo}"`).toBe(true);
+        });
+      });
+    });
+  });
+
+  it('todo evento pertenece a un arco real y ofrece al menos dos elecciones', () => {
+    eventosData.eventos.forEach((evento) => {
+      expect(ARCOS.has(evento.arcoId), `${evento.id}: arco "${evento.arcoId}"`).toBe(true);
+      expect(evento.elecciones.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  it('⚠️ ninguna elección es "no pasa nada" de primeras', () => {
+    // La regla de diseño del punto 6: un evento es un INTERCAMBIO, no un regalo.
+    // "Márchate sin nada" no es una decisión — antes había cuatro opciones así, y
+    // eran cuatro botones que nadie iba a pulsar nunca. `ninguno` sigue siendo
+    // legítimo DENTRO de una tirada (el mercader se ofende y se va), y por eso el
+    // test mira solo el efecto de primer nivel.
+    eventosData.eventos.forEach((evento) => {
+      evento.elecciones.forEach((eleccion, i) => {
+        expect(eleccion.efecto.tipo, `${evento.id}, elección ${i}`).not.toBe('ninguno');
+      });
+    });
+  });
+
+  it('las tiradas declaran una probabilidad de verdad y sus dos ramas', () => {
+    eventosData.eventos.forEach((evento) => {
+      evento.elecciones.forEach(({ efecto }) => {
+        todosLosEfectos(efecto).filter((e) => e.tipo === 'azar').forEach((e) => {
+          expect(e.probabilidad, `${evento.id}`).toBeGreaterThan(0);
+          expect(e.probabilidad, `${evento.id}`).toBeLessThan(1);
+          expect(e.exito, `${evento.id}`).toBeTruthy();
+          expect(e.fallo, `${evento.id}`).toBeTruthy();
+        });
+      });
+    });
+  });
+
+  it('⚠️ toda apuesta paga MÁS que la opción segura de su propio evento', () => {
+    // La regla que faltaba, y que el playtest cazó antes que ningún número: una
+    // apuesta tiene que pagar una PRIMA sobre la opción segura, porque la varianza
+    // es en sí misma un coste — en un roguelike una mala tirada se arrastra al
+    // combate siguiente. Si la apuesta solo empata en valor esperado, nadie la
+    // coge, y un botón que nadie pulsa es contenido muerto (es exactamente lo que
+    // le pasaba a las opciones `ninguno` de la versión anterior).
+    //
+    // ⚠️ La tabla de abajo es un MODELO, no una verdad: cuánto vale 1 de XP contra
+    // 1 de oro es discutible y depende del arco. Vale para lo que se usa aquí, que
+    // es comparar las dos opciones de un MISMO evento entre sí — las dos se miden
+    // con la misma vara, así que un error de la tabla se cancela en el cociente.
+    // Si alguien cambia la tabla, lo que hay que revisar es el umbral, no borrar
+    // el test.
+    const VALOR_OBJETO = 55; // media de `precioTienda` de los objetos comprables
+    const VALOR_XP = 0.55;
+    const VALOR_HP = 0.45; // por punto porcentual de vida del equipo
+    const VALOR_MEJORA_PERMANENTE = 90; // dura toda la run y no se consigue de otra forma
+    const valor = (e) => {
+      switch (e.tipo) {
+        case 'varios': return e.efectos.reduce((t, x) => t + valor(x), 0);
+        case 'azar': return e.probabilidad * valor(e.exito) + (1 - e.probabilidad) * valor(e.fallo);
+        case 'curarEquipoPorcentaje': return e.cantidad * 100 * VALOR_HP;
+        case 'perderHpEquipo': return -e.porcentaje * 100 * VALOR_HP;
+        case 'ganarXpEquipo': return e.cantidad * VALOR_XP;
+        case 'ganarOro': return e.cantidad;
+        case 'perderOro': return -e.cantidad;
+        case 'comprarObjetoAleatorio': return VALOR_OBJETO - e.coste;
+        case 'mejoraPermanenteAleatoria': return VALOR_MEJORA_PERMANENTE;
+        case 'buffTemporalEquipo': return ((e.multiplicador - 1) * 100 / 10) * 25;
+        default: return 0;
+      }
+    };
+
+    eventosData.eventos.forEach((evento) => {
+      const iApuesta = evento.elecciones.findIndex((o) => o.efecto.tipo === 'azar');
+      if (iApuesta === -1) return;
+      const apuesta = valor(evento.elecciones[iApuesta].efecto);
+      const segura = valor(evento.elecciones[1 - iApuesta].efecto);
+      expect(apuesta / segura, `${evento.id}: la apuesta no compensa`).toBeGreaterThanOrEqual(1.2);
+    });
+  });
+
+  it('el daño de un evento nunca pasa del 25% de la vida', () => {
+    // Un evento no mata (el suelo de 1 HP lo garantiza), pero tampoco puede dejar
+    // al equipo tan tocado que el siguiente combate esté perdido de antemano. El
+    // tope es de diseño y va escrito aquí porque los datos son los que lo pueden
+    // romper.
+    eventosData.eventos.forEach((evento) => {
+      evento.elecciones.forEach(({ efecto }) => {
+        todosLosEfectos(efecto).filter((e) => e.tipo === 'perderHpEquipo').forEach((e) => {
+          expect(e.porcentaje, `${evento.id}`).toBeLessThanOrEqual(0.25);
+        });
+      });
+    });
   });
 });
 
@@ -1132,5 +1379,90 @@ describe('registro de vistos para la enciclopedia', () => {
     useGameStore.getState().equiparObjeto('semilla_sabio', 'naruto');
     useGameStore.getState().abrirEnciclopedia();
     expect(vistos().objetos).toContain('semilla_sabio');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Contadores de meta-progresión (punto 5a). Lo que se prueba aquí no es el
+// contador —eso es del store de logros— sino **los enganches**: que cada cosa se
+// cuente en el sitio donde ocurre de verdad, y una sola vez.
+// ---------------------------------------------------------------------------
+
+describe('contadores de logros — enganches', () => {
+  const contadores = () => useAchievementsStore.getState().contadores;
+
+  it('ganar un combate cuenta UNO, aunque haya hecho falta relevar a todo el equipo', () => {
+    // ⚠️ Una cadena de rondas es UN combate. Contar por ronda inflaría el
+    // contador ~2× y ningún test de combate lo habría cazado.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i < 2 ? { ...p, hpActual: 1 } : p)),
+    }));
+    useGameStore.getState().jugarCombate(enemigoHakuDePrueba, 1);
+
+    expect(contadores().combatesGanados).toBe(1);
+  });
+
+  it('el oro de un combate ganado se suma a lo GANADO en total', () => {
+    useGameStore.getState().jugarCombate(enemigoHakuDePrueba, 1);
+    expect(contadores().oroGanado).toBeGreaterThan(0);
+  });
+
+  it('perder la run cuenta una caída', () => {
+    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+    expect(contadores().runsPerdidas).toBe(1);
+    expect(contadores().combatesGanados).toBe(0);
+  });
+
+  it('reclutar cuenta, tanto en hueco libre como reemplazando', () => {
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.slice(0, 2) }));
+    useGameStore.getState().reclutarPersonaje('rock_lee', 5);
+    expect(contadores().reclutas).toBe(1);
+
+    useGameStore.getState().reclutarPersonaje('neji', 5, 'rock_lee');
+    expect(contadores().reclutas).toBe(2);
+  });
+
+  it('comprar en la tienda cuenta un objeto comprado', () => {
+    useGameStore.setState({ oro: 1000, tiendaActual: { items: [{ id: 'pildora_soldado', precio: 25 }] } });
+    useGameStore.getState().comprarItemTienda('pildora_soldado');
+    expect(contadores().objetosComprados).toBe(1);
+  });
+
+  it('resolver un evento cuenta, salga bien o mal la tirada', () => {
+    ponerEvento({ tipo: 'perderOro', cantidad: 10 });
+    useGameStore.getState().resolverEventoEleccion(0);
+    expect(contadores().eventosResueltos).toBe(1);
+  });
+
+  it('el oro de un evento también entra en el total ganado', () => {
+    ponerEvento({ tipo: 'ganarOro', cantidad: 30 });
+    useGameStore.getState().resolverEventoEleccion(0);
+    expect(contadores().oroGanado).toBe(30);
+  });
+
+  it('abrir la pantalla de logros evalúa lo ya acumulado (red de seguridad)', () => {
+    // El caso real: el logro se añade DESPUÉS de que el jugador tenga el progreso.
+    // Sin esta evaluación al abrir, la tarjeta enseñaba la barra llena y "Locked"
+    // al lado hasta el siguiente combate — el juego diciendo dos cosas contrarias.
+    useAchievementsStore.getState().sumarContadores({ combatesGanados: 10 });
+    expect(useAchievementsStore.getState().estaDesbloqueado('combates_10')).toBe(false);
+
+    useGameStore.getState().abrirLogros();
+    expect(useAchievementsStore.getState().estaDesbloqueado('combates_10')).toBe(true);
+    // Y en silencio: el jugador está mirando la lista, la fila cambiando a
+    // "Unlocked" delante de él ES el aviso.
+    expect(useAchievementsStore.getState().notificacionesPendientes).toEqual([]);
+  });
+
+  it('un logro de contador que salta fuera de combate se notifica en el acto', () => {
+    // Fuera de combate no hay animación que respetar, así que el toast puede
+    // salir ya. En combate NO: los logros viajan en el resumen y los notifica
+    // CombatScreen al terminar, para no tapar lo que los ha provocado.
+    useAchievementsStore.getState().sumarContadores({ eventosResueltos: 19 });
+    ponerEvento({ tipo: 'ninguno' });
+    useGameStore.getState().resolverEventoEleccion(0);
+
+    const notificados = useAchievementsStore.getState().notificacionesPendientes.map((l) => l.id);
+    expect(notificados).toContain('eventos_20');
   });
 });

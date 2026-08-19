@@ -32,6 +32,35 @@ function elegirTipoPorPeso(poolTiposNodo) {
  * (`rarezasReclutarDisponibles`) — sin eso, un mapa recién empezado prometería
  * pergaminos dorados que al abrirlos no tienen a nadie dentro.
  */
+/**
+ * Qué rarezas puede llevar el pergamino de ESTE nodo, además de las que tienen
+ * candidatos en la run. Dos vetos, los dos sobre `legendario` y los dos salidos
+ * del playtest — porque el dorado no es una elección, es un COMBATE contra el
+ * ninja que hay dentro, a un nivel FIJO del arco (`nivelDesafioLegendario`).
+ *
+ * 1. **Nunca antes del mini-jefe.** El nivel del desafío no depende del piso,
+ *    pero el tuyo sí: el mismo combate lo da la simulación al 52% en el piso 3 y
+ *    al 87% en el 6. La misma decisión salía cara o barata según dónde cayera, y
+ *    en el arco 1 encima te pilla con el equipo a medio formar. El corte va en el
+ *    piso del mini-jefe y no en "la mitad" porque es el punto que ya significa
+ *    algo: para cuando llegas ahí tienes equipo completo.
+ * 2. **Nunca si es el único nodo de su piso.** `nodosPorPiso.min` es 1, así que
+ *    un piso puede tener un solo nodo — y ahí el pergamino dorado deja de ser una
+ *    apuesta para ser un peaje obligatorio que pierdes la mitad de las veces. Un
+ *    pergamino verde en esa misma casilla no molesta: es una elección, no una
+ *    pelea.
+ *
+ * En los dos casos el nodo **degrada a verde**, que es el camino que ya existía
+ * para cuando una rareza se queda sin candidatos.
+ */
+function rarezasPermitidasEnElPiso(arco, rarezasDisponibles, numeroPiso, nodosEnElPiso) {
+  const pisoMinimoLegendario = arco.pisoMiniJefe ?? Math.ceil(arco.pisoJefeFinal / 2);
+  const demasiadoPronto = numeroPiso < pisoMinimoLegendario;
+  const esObligatorio = nodosEnElPiso <= 1;
+  if (!demasiadoPronto && !esObligatorio) return rarezasDisponibles;
+  return rarezasDisponibles.filter((rareza) => rareza !== 'legendario');
+}
+
 function elegirRarezaReclutar(arco, rarezasDisponibles) {
   const pool = (arco.poolRarezaReclutar ?? [])
     .filter((r) => rarezasDisponibles.includes(r.rareza));
@@ -216,11 +245,18 @@ export function generarMapa(arco, opciones = {}) {
   colocarNodosDeReclutar(nodos, pisos, arco);
 
   // La rareza se reparte al final, cuando el tipo de cada nodo ya no va a
-  // cambiar.
-  Object.values(nodos).forEach((nodo) => {
-    if (nodo.tipo === 'reclutar') {
-      nodo.rareza = elegirRarezaReclutar(arco, rarezasReclutarDisponibles);
-    }
+  // cambiar. Se recorre por PISOS y no por `Object.values(nodos)` porque la
+  // rareza depende de dónde está el nodo: en qué piso y con cuántos vecinos
+  // (ver `rarezasPermitidasEnElPiso`).
+  pisos.forEach((idsDelPiso, indice) => {
+    const numeroPiso = indice + 1;
+    idsDelPiso.forEach((id) => {
+      if (nodos[id].tipo !== 'reclutar') return;
+      nodos[id].rareza = elegirRarezaReclutar(
+        arco,
+        rarezasPermitidasEnElPiso(arco, rarezasReclutarDisponibles, numeroPiso, idsDelPiso.length),
+      );
+    });
   });
 
   return {

@@ -4,6 +4,7 @@ import {
   obtenerPersonajesReclutablesDesbloqueados,
   obtenerObjetosInicialesDesbloqueados,
   obtenerPersonajesInicialesDesbloqueados,
+  progresoDeLogro,
 } from './achievements';
 
 const logrosDePrueba = [
@@ -97,5 +98,69 @@ describe('obtenerPersonajesInicialesDesbloqueados', () => {
   it('ignora logros no desbloqueados o de otro tipo de recompensa', () => {
     const resultado = obtenerPersonajesInicialesDesbloqueados(logrosDePrueba, ['derrotar_haku']);
     expect(resultado).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Condiciones acumuladas (punto 5a): contadores entre runs y colección de la
+// enciclopedia. Las dos entran POR EL CONTEXTO — el motor no lee stores.
+// ---------------------------------------------------------------------------
+
+const logrosAcumulados = [
+  {
+    id: 'combates_10',
+    condicion: { tipo: 'contadorMinimo', contador: 'combatesGanados', cantidad: 10 },
+    recompensa: { tipo: 'ninguna' },
+  },
+  {
+    id: 'vistos_modos_10',
+    condicion: { tipo: 'coleccionMinima', categoria: 'modos', cantidad: 3 },
+    recompensa: { tipo: 'ninguna' },
+  },
+];
+
+describe('condición contadorMinimo', () => {
+  it('se cumple al alcanzar la cantidad exacta, no un combate después', () => {
+    const contexto = { contadores: { combatesGanados: 10 } };
+    expect(evaluarLogrosDesbloqueables(logrosAcumulados, [], contexto).map((l) => l.id))
+      .toEqual(['combates_10']);
+  });
+
+  it('no se cumple por debajo de la cantidad', () => {
+    const contexto = { contadores: { combatesGanados: 9 } };
+    expect(evaluarLogrosDesbloqueables(logrosAcumulados, [], contexto)).toHaveLength(0);
+  });
+
+  it('un contador que no existe en el contexto cuenta como 0 y no revienta', () => {
+    expect(evaluarLogrosDesbloqueables(logrosAcumulados, [], {})).toHaveLength(0);
+  });
+});
+
+describe('condición coleccionMinima', () => {
+  it('mide cuántas entradas DISTINTAS hay en esa categoría de vistos', () => {
+    const contexto = { vistos: { modos: ['naruto_0', 'sasuke_0', 'sakura_0'] } };
+    expect(evaluarLogrosDesbloqueables(logrosAcumulados, [], contexto).map((l) => l.id))
+      .toEqual(['vistos_modos_10']);
+  });
+
+  it('no mira las otras categorías', () => {
+    const contexto = { vistos: { enemigos: ['a', 'b', 'c', 'd'], modos: ['naruto_0'] } };
+    expect(evaluarLogrosDesbloqueables(logrosAcumulados, [], contexto)).toHaveLength(0);
+  });
+});
+
+describe('progresoDeLogro', () => {
+  it('devuelve actual/objetivo para un logro de contador', () => {
+    const progreso = progresoDeLogro(logrosAcumulados[0], { contadores: { combatesGanados: 4 } });
+    expect(progreso).toEqual({ actual: 4, objetivo: 10 });
+  });
+
+  it('devuelve actual/objetivo para un logro de colección', () => {
+    const progreso = progresoDeLogro(logrosAcumulados[1], { vistos: { modos: ['a', 'b'] } });
+    expect(progreso).toEqual({ actual: 2, objetivo: 3 });
+  });
+
+  it('devuelve null para una condición de suceso: no tiene medias tintas', () => {
+    expect(progresoDeLogro(logrosDePrueba[0], {})).toBeNull();
   });
 });
