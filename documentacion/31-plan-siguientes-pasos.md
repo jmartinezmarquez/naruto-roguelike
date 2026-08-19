@@ -626,3 +626,69 @@ convierte "una demo que se abre y juegas" en "un juego que abres, sigues y cierr
 ⚠️ Y una advertencia de método, porque este documento ya se ha equivocado dos veces igual: **el 15 parece
 pequeño y no lo es** (el guardado que "ya existía" no funciona), y **el 16 parece grande y no lo es**
 (una pantalla sin lógica). Es el mismo error que con el sonido, al revés y del derecho.
+
+---
+
+# Plan de cierre — de aquí al 6 de septiembre (escrito el 2026-08-15)
+
+**El objetivo cambia las prioridades, así que va primero.** Esto no es "terminar un juego": es
+**demostrar qué da un mes de trabajo intermitente con Claude**. Primer commit el 2026-08-06, entrega el
+2026-09-06. Hoy quedan **22 días** y se ha trabajado en **10 días distintos** (53 commits), o sea que lo
+realista es **entre 8 y 12 sesiones más**.
+
+## Qué es el entregable de verdad (y por eso se reordena el roadmap)
+
+No es el juego más completo posible. Son tres cosas, y solo la primera está a medias:
+
+1. **Un enlace que un desconocido abre y juega en cinco minutos.** Hoy el juego **solo existe en
+   `npm run dev`**: nadie que no clone el repositorio puede verlo.
+2. **Una portada que se pueda juzgar sin ejecutar nada.** Hoy el `README.md` es la plantilla de Vite.
+3. **Un juego que no parezca sin terminar en los cinco primeros minutos** — que no es lo mismo que estar
+   equilibrado hasta Pain.
+
+De ahí salen dos reordenaciones que van contra el orden "natural" del roadmap:
+
+- ⚠️ **El punto 17 (publicar) pasa de último a PRIMERO.** Un despliegue desconocido a 22 días es un
+  riesgo; a un día, es el fracaso. El bug del `base` —página en blanco, sin error— se lleva una tarde
+  entera él solo. Y publicar pronto tiene un segundo efecto más grande que el primero: **a partir de
+  ahí cada sesión publica**, y se le puede pasar el enlace a otra gente, que es la única forma de
+  conseguir playtest que no sea el del propio autor.
+- **El punto 19 (README) es el segundo entregable, no un adorno.** Los números ya existen y no hay que
+  inflarlos: 275 tests, 38 documentos de diseño, ~9.700 líneas de código y ~3.200 de tests, 53 commits
+  en 10 días de trabajo.
+
+## El arte, que es la pieza lenta — y la mitad no es arte
+
+⚠️ **Parte de lo que está en "Pendiente de arte" es trabajo de script disfrazado de dibujo**, y eso
+cambia quién lo hace y cuánto cuesta. El caso claro: **el proyectil de jutsu de los genin rivales ya
+está dibujado** (última casilla de cada panel de la fila 5) y lo que falla es que el script coge el
+primer fotograma. Son los enemigos de la mayoría de los combates, o sea el sprite que más se ve del
+juego, y no hace falta dibujar nada.
+
+Lo que sí es dibujo de verdad son **los 9 iconos** (5 de chakra + 4 del menú). Y aquí va la
+recomendación incómoda: **si el calendario aprieta, se entregan con emoji**. Es lo único de la interfaz
+sin dibujar, casi nadie lo mira, y sacrificarlo cuesta mucho menos que quedarse sin portada o sin
+enlace. **Fecha de corte: si el 25 de agosto no están, no entran**, y el punto 16 se hace igual con los
+iconos actuales (el marco a CSS no depende de ellos).
+
+## Orden propuesto
+
+| Sesión | Qué | Por qué ahí |
+|---|---|---|
+| **1 (la siguiente)** | **17 — publicar** + el proyectil de los genin si sobra rato | Convierte el proyecto en algo que se puede enseñar. Desactiva el riesgo del despliegue cuando todavía da igual |
+| **2** | **19 — README** | Segundo entregable. Con el enlace ya existiendo, se escribe una vez |
+| **3** | **16 — menú vertical** | Requisito del 18 y mata el último `window.confirm` del juego |
+| **4** | **18 — Home + `campaigns.json`** | La primera pantalla que ve un visitante. Es lo que hace que parezca un producto y no una demo |
+| **5-7** | **15 — arte que llegue** + **7 — playtest** | En paralelo: el dibujo es suyo, la integración es de script |
+| **1-6 sept** | **Congelación** | Ni un sistema nuevo. Solo bugs del playtest, retoques y volver a publicar |
+
+⚠️ **La congelación no es prudencia, es la lección de este propio roadmap**: los últimos cinco puntos
+han descubierto trabajo al abrirlos (el guardado que no guardaba, el menú clavado a cuatro entradas, la
+evaluación única de los logros). Un punto nuevo abierto el 2 de septiembre no se sabe lo que mide.
+
+## Dónde poner el playtest, que es lo único sin fecha
+
+Con el enlace publicado, el playtest deja de ser una tarea de sesión y pasa a ser continuo. Y para este
+objetivo se mira **una cosa concreta**: **los diez primeros minutos**. Un visitante ve el arco 1 y poco
+más; que Pain esté equilibrado al 85% no lo va a comprobar nadie. Zabuza sí — es el jefe con menos
+margen y el único que casi todo el mundo va a pelear.

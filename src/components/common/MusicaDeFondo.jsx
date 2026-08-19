@@ -127,5 +127,11 @@ export default function MusicaDeFondo({ arcoId }) {
 
   useEffect(() => () => clearInterval(fundidoRef.current), []);
 
-  return <audio ref={audioRef} loop preload="auto" aria-hidden="true" />;
+  // ⚠️ `preload="none"` y no `"auto"`: con `auto`, el navegador se descarga los ~3 MB
+  // de la pista **antes de que pueda siquiera reproducirla**, porque el autoplay está
+  // bloqueado hasta el primer gesto del usuario (ver la regla 2 de arriba). Eran tres
+  // megas gastados a ciegas y por delante de lo que sí hace falta para pintar el juego.
+  // Con `none`, la descarga empieza en el `play()`, que es exactamente el momento en
+  // que la música puede sonar. En la primera carga de la web esto es la mitad del peso.
+  return <audio ref={audioRef} loop preload="none" aria-hidden="true" />;
 }

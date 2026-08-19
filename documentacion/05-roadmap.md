@@ -1061,6 +1061,35 @@ meter azar de verdad.
   esta pantalla no esconde nada.
 - [x] 275 tests (eran 245).
 
+**Publicación web (punto 17) — ver [37](./37-publicacion-web.md)**
+
+- [x] **El juego existe en una URL.** Hasta ahora solo vivía en `npm run dev`: nadie que no clonara el
+  repositorio podía verlo. Publicado en **GitHub Pages** con un workflow de Actions que corre `npm ci`,
+  **los 275 tests** y `npm run build` en cada push a `main` — los tests van antes a propósito, porque es
+  mejor no publicar que publicar roto.
+- [x] ⚠️ **`base: './'` en `vite.config.js`, que es el fallo que se lleva una tarde.** Sin él, Vite
+  escribe rutas absolutas, el sitio cuelga de `/naruto-roguelike/` y **sale una página en blanco sin
+  ningún error útil**. Relativo y no `/naruto-roguelike/` para que siga funcionando si el juego se mueve
+  a otro hosting o a un dominio propio.
+- [x] **Verificado sin navegador headless**, que sigue estando prohibido y no hacía falta: se resuelven a
+  mano contra el disco todas las referencias relativas del HTML y del CSS generados, y se comprueba que
+  no queda ni una ruta absoluta a `/assets/` en el bundle.
+- [x] 🐛 ⚠️ **El diagnóstico del peso que traía este roadmap estaba MAL, y llevaba a optimizar lo que no
+  era.** Decía "9,6 MB, de los que 6,2 MB son 86 PNG"; pero los sprites solo se descargan cuando se
+  pintan. La primera carga eran **dos archivos**: el fondo (2,1 MB) y la música (2,9 MB). **De ~5 MB a
+  ~900 KB** sin tocar un solo sprite: los fondos a JPEG (428 KB, indistinguibles a calidad 82, con los
+  PNG conservados en `src/assets/originales/`) y `preload="none"` en el `<audio>`.
+- [x] ⚠️ **Lo del `preload` no era una optimización, era un error**: con `auto` el navegador se bajaba 3 MB
+  **antes de poder reproducirlos**, porque el autoplay está bloqueado hasta el primer gesto del usuario.
+  Con `none`, la descarga empieza en el `play()`, que es justo cuando puede sonar.
+- [x] **La pestaña del navegador**: el `<title>` era `naruto-roguelike` (el nombre del repo) y el favicon
+  era **el morado de la plantilla de Vite**. Ahora el juego se llama **Narutolike** y el icono es el
+  remolino de Konoha, **recortado del arte que ya existe** (`scripts/generar-favicon.py`: la torre de
+  agua del fondo del tema claro) en vez de dibujado aparte. ⚠️ El criterio de elección es que un favicon
+  se ve **a 16 px**, y ahí no se lee un dibujo sino una silueta y dos colores — por eso gana la placa
+  blanca de la torre y no el mismo símbolo del cartel de madera, que es rojo apagado sobre crema. De
+  paso, `public/icons.svg` no lo referenciaba nadie y se publicaba igual.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -1169,26 +1198,6 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
     `VentanaModal`, que ya existe. Con eso el menú se vuelve una lista normal a la que se le pueden
     añadir entradas.
 
-17. **Build y publicación web** — hoy el juego solo existe en `npm run dev`. `npm run build` funciona,
-    pero **subirlo a una página tiene tres cosas que comprobar antes**, y ninguna se ve en local:
-    - ⚠️ **`vite.config.js` no declara `base`**, así que el build asume que la página vive en la raíz del
-      dominio. En un GitHub Pages de proyecto (`usuario.github.io/naruto-roguelike/`) **todas las rutas
-      de assets apuntan a un sitio que no existe** y sale una página en blanco sin error visible. Es
-      `base: './'` o la ruta del repo, y es el fallo más típico de este despliegue.
-    - **El peso**: el build son ~9,6 MB, de los que 6,2 MB son 86 PNG y 2,9 MB la pista de música. Para
-      un juego que se abre en el navegador eso es una primera carga larga con conexión normal. No hace
-      falta resolverlo para publicar, pero sí **mirarlo con datos** antes de decidir si compensa: los dos
-      fondos de pantalla completa son los PNG más gordos con diferencia.
-    - **Qué NO hace falta**, para no inventar trabajo: no hay router, así que no hace falta el `404.html`
-      de las SPA; no hay backend ni variables de entorno; y `localStorage` funciona igual en hosting
-      estático, así que los logros, la enciclopedia y los ajustes persisten sin tocar nada.
-    Alcance: elegir hosting (GitHub Pages / Netlify / Vercel — los tres sirven y son gratis para esto),
-    dejar el `base` correcto, **probar el build servido de verdad** (`npm run preview`, que es lo único
-    que reproduce el problema del `base`), y anotar el procedimiento para no redescubrirlo cada vez.
-    ⚠️ Y una comprobación propia del proyecto: que el **registro de texto del combate** sigue fuera del
-    build (va detrás de `import.meta.env.DEV`, Vite lo elimina) y que no se ha colado ningún otro resto
-    de desarrollo.
-
 18. **Home: la pantalla principal con el selector de campañas** — una pantalla que lista las campañas
     del juego y desde la que se empieza una. **Hoy hay una sola** (los tres arcos del MVP: País de las
     Olas → Examen Chunin → Invasión de Pain), y aun así el punto tiene sentido, por un motivo que no es
@@ -1215,6 +1224,16 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
       se arranca directamente en la selección de personaje). Si lo es, sale gratis una cosa que hoy no
       existe: poder abrir Missions, el Bingo Book y los Ajustes **entre partidas** y no solo dentro de
       una. La recomendación es que sí, pero no está decidido y por eso no entra en el alcance de arriba.
+
+19. **La portada del repositorio (`README.md`)** — hoy es **la plantilla de Vite sin tocar**: "React +
+    Vite. This template provides a minimal setup...". Es literalmente lo primero que lee cualquiera que
+    abra el proyecto, y ahora mismo dice que aquí no hay nada. No estaba en ninguna lista porque no
+    afecta al juego; entra porque **el juego no es el único entregable**.
+    Lo que tiene que llevar: qué es, una captura o un GIF, **el enlace para jugar** (punto 17) y los
+    números reales del proyecto, que son la evidencia y no hace falta adornarlos. Y un puntero a
+    `documentacion/`, que son 38 documentos con las decisiones, los bugs y las veces que se dio marcha
+    atrás: es lo más difícil de fingir que tiene este repositorio y hoy **no hay ninguna puerta que
+    lleve a él**.
 
 ### Pendiente de arte
 

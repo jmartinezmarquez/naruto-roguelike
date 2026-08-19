@@ -17,8 +17,8 @@ import AvisoToast from './components/Map/AvisoToast';
 import CharacterSelectScreen from './components/CharacterSelect/CharacterSelectScreen';
 import MusicaDeFondo from './components/common/MusicaDeFondo';
 import arcoPaisDeLasOlas from './data/arcs/pais-de-las-olas.json';
-import gameBgDark from './assets/game-background-dark-theme.png';
-import gameBgLight from './assets/game-background-light-theme.png';
+import gameBgDark from './assets/game-background-dark-theme.jpg';
+import gameBgLight from './assets/game-background-light-theme.jpg';
 import { useSettingsStore, FACTOR_ANIMACION } from './store/useSettingsStore';
 
 function pantallaActual(pantalla) {

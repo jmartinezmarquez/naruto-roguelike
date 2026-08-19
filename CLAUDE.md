@@ -282,6 +282,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   cada apertura sería un bucle de renders. Un modo se identifica por su ÍNDICE (`naruto_1`) porque no
   tiene id propio en los JSON, con un test de invariante que prohíbe dos modos homónimos en el mismo
   personaje.
+- [x] **El juego está publicado en GitHub Pages** (`.github/workflows/deploy.yml`, punto 17) — ver
+  `documentacion/37-publicacion-web.md`. ⚠️ **`base: './'` en `vite.config.js` no se toca**: sin él, el
+  sitio cuelga de `/naruto-roguelike/`, las rutas salen absolutas y **la página queda en blanco sin
+  ningún error**. Relativo y no con el nombre del repo, para que siga valiendo en otro hosting. Y ⚠️ el
+  peso de la primera carga son **dos archivos, no los 86 sprites** (que solo se descargan al pintarse):
+  el fondo, ya en JPEG con el PNG guardado en `src/assets/originales/`, y la música con `preload="none"`
+  — con `auto` se bajaban 3 MB **antes de que el navegador pudiera reproducirlos**, porque el autoplay
+  está bloqueado hasta el primer gesto.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [x] **Pantalla de ajustes** (punto 14): `components/Settings/SettingsScreen.jsx` + `useSettingsStore`
   (store propio, clave propia de `localStorage`). Tema **claro/oscuro**, pantalla completa (mudada desde el
