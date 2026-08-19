@@ -1090,6 +1090,26 @@ meter azar de verdad.
   blanca de la torre y no el mismo símbolo del cartel de madera, que es rojo apagado sobre crema. De
   paso, `public/icons.svg` no lo referenciaba nadie y se publicaba igual.
 
+**Portada del repositorio (punto 19) — `README.md`**
+
+- [x] **El juego tiene nombre: Narutolike.** Hasta ahora el `<title>` era el nombre del repositorio. El
+  repo, el `package.json` y la URL siguen llamándose `naruto-roguelike` a propósito: son identificadores,
+  no el nombre de cara al jugador, y renombrarlos rompería el enlace publicado a cambio de nada.
+- [x] **El `README.md` era la plantilla de Vite sin tocar** ("React + Vite. This template provides a
+  minimal setup..."). Ahora abre con el enlace para jugar, cuatro capturas, qué es el juego, qué tiene
+  dentro y cómo está hecho.
+- [x] ⚠️ **Lo que se enseña de "cómo está hecho" no es el código, es `documentacion/`.** Son 39
+  documentos con el porqué de cada decisión, **incluidas las que se tomaron mal y se dieron la vuelta**, y
+  hasta hoy **no había ninguna puerta que llevara ahí**: quien abría el repositorio no podía saber que
+  existían. Es lo más difícil de fingir que tiene este proyecto.
+- [x] **Los números, sin adornar**: 11 días de trabajo, 56 commits, ~9.700 líneas, 275 tests, 39
+  documentos, 106 sprites. Se sacan con `git` y `wc`, no se estiman.
+- [x] **Aviso de proyecto de fan** (Naruto es de Kishimoto/Shueisha, sin ánimo de lucro). Hace falta desde
+  que el juego es público, y es una línea.
+- [ ] **Las cuatro capturas.** Van en `documentacion/capturas/` con los nombres que dice el `LEEME.md` de
+  esa carpeta. Es lo único que falta y **no es código**: las hace el usuario, porque la regla del proyecto
+  prohíbe los navegadores headless.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -1224,16 +1244,6 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
       se arranca directamente en la selección de personaje). Si lo es, sale gratis una cosa que hoy no
       existe: poder abrir Missions, el Bingo Book y los Ajustes **entre partidas** y no solo dentro de
       una. La recomendación es que sí, pero no está decidido y por eso no entra en el alcance de arriba.
-
-19. **La portada del repositorio (`README.md`)** — hoy es **la plantilla de Vite sin tocar**: "React +
-    Vite. This template provides a minimal setup...". Es literalmente lo primero que lee cualquiera que
-    abra el proyecto, y ahora mismo dice que aquí no hay nada. No estaba en ninguna lista porque no
-    afecta al juego; entra porque **el juego no es el único entregable**.
-    Lo que tiene que llevar: qué es, una captura o un GIF, **el enlace para jugar** (punto 17) y los
-    números reales del proyecto, que son la evidencia y no hace falta adornarlos. Y un puntero a
-    `documentacion/`, que son 38 documentos con las decisiones, los bugs y las veces que se dio marcha
-    atrás: es lo más difícil de fingir que tiene este repositorio y hoy **no hay ninguna puerta que
-    lleve a él**.
 
 ### Pendiente de arte
 
