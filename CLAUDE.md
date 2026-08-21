@@ -214,6 +214,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   otras no, y con lienzos distintos las proporciones entre personajes salían mal. Lo que sigue faltando por falta de dibujo está junto en
   `documentacion/05-roadmap.md`, sección "Pendiente de arte" — no repartido por los puntos ya
   cerrados.
+- **`generar-sprites-proyectiles.py` lee DOS hojas**: la suya y la de personajes, de donde saca el jutsu
+  de los cinco genin rivales (último fotograma de su tira de ataque). Manda la **carpeta de destino**, no
+  la hoja de origen. ⚠️ Y ahí los fotogramas **no se parten por huecos** como en el resto del proyecto: en
+  katon y raiton el fuego sale del puño y no hay ni un píxel de papel entre los dos dibujos, así que se
+  separan por **densidad de columna** — una cintura fina no es un hueco, pero se mide igual de bien.
 - [x] **Pantalla de transformación** (`components/Combat/TransformationScreen.jsx`, punto 4 del
   roadmap): carga de chakra con parpadeo de silueta, estallido y luego quietud con el nombre del
   modo y sus pasivas. El store detecta el desbloqueo comparando `obtenerModoActivo` antes y después

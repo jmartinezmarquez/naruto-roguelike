@@ -1231,6 +1231,33 @@ meter azar de verdad.
   **meter una pantalla delante convierte a la siguiente en un paso, y todo paso necesita marcha atrás.**
 - [x] 290 tests (eran 275).
 
+**El jutsu de los genin rivales (punto 15-tanda 4, primera mitad)**
+
+- [x] **Los cinco genin rivales ya lanzan su jutsu y no un kunai.** Es el proyectil que **más se ve de
+  todo el juego** —los genin son la mayoría de los combates—, así que hasta hoy el golpe que el sistema
+  de jutsus existe para subrayar salía por pantalla **idéntico al ataque corriente**. No era una laguna
+  de catálogo: borraba una diferencia mecánica.
+- [x] **Cero dibujo nuevo.** Estaba en la hoja desde el principio, al final de la tira de ataque de cada
+  genin; lo que pasaba es que `generar-sprites-personajes.py` coge **el primer fotograma de la primera
+  tira** (el idle de frente, que es lo que quiere una tarjeta) y nadie miraba la última.
+- [x] ⚠️ **Y no eran los cinco iguales: en katon y en raiton el fuego sale del puño.** Entre el personaje
+  y su efecto no hay **ni un píxel de papel**, así que la detección por huecos —la que usa todo el resto
+  del proyecto para partir fotogramas— los devolvía fundidos y el proyectil salía con medio genin pegado
+  a la izquierda. Lo que sí los separa es la **densidad**: el chorro que une la mano con el efecto ocupa
+  3-10 filas de alto contra las 45-55 del cuerpo. **Una cintura fina no es un hueco, pero se mide igual
+  de bien** — y con el umbral relativo al propio panel, el mismo criterio vale para los cinco.
+- [x] **El recorte lo hace `generar-sprites-proyectiles.py`, que ahora lee DOS hojas.** Manda la carpeta
+  de destino, no la hoja de origen: importa por ruta el script de personajes para reusar cómo mide la
+  rejilla (el mismo truco que ya se usaba con el códec PNG) en vez de duplicar cien líneas. Comprobado
+  que los 18 proyectiles que ya existían salen **byte a byte idénticos** tras el cambio.
+- [ ] **Falta la otra mitad de la tanda**: Neji, Shikamaru, Kiba, Sai y Yamato siguen lanzando kunai en su
+  jutsu, y esos sí que **no están dibujados** en ninguna de las dos hojas.
+- **Nota para el playtest**: los cinco salen en un lienzo de 63-71 px y la caja en pantalla son 48, o sea
+  que se **reducen**. `Proyectil` fuerza `image-rendering: pixelated`, que es lo correcto al ampliar y lo
+  contrario al reducir (la misma trampa que rompió los iconos del menú). No se ha tocado porque **los 18
+  proyectiles de siempre reducen todavía más** y cambiarlo los movería a todos: si se ven sucios, se
+  arregla para el grupo entero con `.imagen-suave`, no solo para estos.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -1313,10 +1340,11 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
       en paneles de tamaño irregular: hay que recortarlos uno a uno antes de mapearlos por `enemigoId`.
     - **Tanda 3 — los personajes sin sprite propio**: Sai, Yamato y Kakashi (este último lleva hoy un
       recoloreado del genin raiton), más los tier 2 que caen al tier 1.
-    - **Tanda 4 — los proyectiles de jutsu** que faltan: los genin rivales (los más vistos de todo el
-      juego, porque son la mayoría de los combates) y seis personajes que lanzan kunai en su técnica.
-      ⚠️ El de los genin **ya está dibujado**: está en la última casilla de cada panel de la fila 5 y el
-      script coge el primer fotograma — es media hora de script, no de dibujo.
+    - **Tanda 4 — los proyectiles de jutsu** que faltan. Los **genin rivales están HECHOS** el
+      2026-08-21 (bloque propio en "Hecho"): eran los más vistos de todo el juego y, como decía esta
+      entrada, ya estaban dibujados — media hora de script y no de dibujo. Quedan **Neji, Shikamaru,
+      Kiba, Sai y Yamato**, y esos sí están bloqueados de verdad: no aparecen en ninguna de las dos
+      hojas. (Rock Lee no cuenta, es cuerpo a cuerpo a propósito.)
     ⚠️ **Todo sprite nuevo entra por su script `generar-sprites-*.py` y en el lienzo común de 96×96.**
     No se editan a mano los PNG generados: se pisan al regenerar. Y el pixel art a escalas no enteras
     duplica unas columnas de píxeles y otras no, que es la razón del lienzo común.
@@ -1376,11 +1404,10 @@ conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactament
   `generar-sprites-objetos.py` como todos los demás.
 - **Camino Animal de Pain comparte sprite y proyectil con Camino Deva**, que es el único Pain que
   hay dibujado. Mismo sitio.
-- **Los genin rivales no tienen proyectil de jutsu**, así que lanzan kunai también en su técnica.
-  Sí existe el dibujo: está en la última casilla de cada panel de la fila 5 de
-  `map-sprites-idle-all-characters.png` (fuego, hoja, rayo, roca, agua), pero el script coge el
-  PRIMER fotograma de cada panel y habría que enseñarle a coger también el último.
-  Es el que más se nota, porque los genins son la mayoría de los combates.
+- ~~**Los genin rivales no tienen proyectil de jutsu**~~ — **HECHO el 2026-08-21**, y era lo que decía
+  esta entrada: el dibujo ya estaba en la última casilla de cada panel de la fila 5 de
+  `map-sprites-idle-all-characters.png`. Lo saca ahora `generar-sprites-proyectiles.py`, que por eso lee
+  las dos hojas.
 - **Neji, Shikamaru, Kiba, Sai y Yamato tampoco tienen proyectil de jutsu**: no están dibujados en
   `projectile-sprites.png`. Lanzan kunai. (Rock Lee no cuenta: es cuerpo a cuerpo a propósito, así
   lo marca la propia hoja.)
