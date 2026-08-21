@@ -1,4 +1,14 @@
 @import "tailwindcss";
+
+/* ⚠️ Los tests NO son fuente de clases. Tailwind v4 detecta el contenido solo y se
+   lee el proyecto entero, así que los `*.test.jsx` también: un selector como
+   `closest('div.flex-1')` o una clase citada en un comentario acaban generando reglas
+   **en el CSS de producción**. Medido: 277 bytes de más el día que se añadieron los
+   primeros tests de componente. Es poco, pero es de la peor clase de poco — crece
+   con cada test, nadie lo mira, y ensucia el bundle con estilos que ningún jugador
+   puede llegar a ver. */
+@source not "**/*.test.{js,jsx}";
+@source not "./test-dom.js";
 @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 
 @font-face {

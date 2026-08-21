@@ -1258,6 +1258,57 @@ meter azar de verdad.
   proyectiles de siempre reducen todavía más** y cambiarlo los movería a todos: si se ven sucios, se
   arregla para el grupo entero con `.imagen-suave`, no solo para estos.
 
+**Tests de componente (backlog) — ver [16](./16-testing.md)**
+
+- [x] **De 290 tests a 359** (y a 403 con la segunda tanda, más abajo), y la razón no es completismo: **casi todos los bugs anotados en este
+  proyecto están en la única capa que no tenía tests.** El guard numérico que pintaba un `0` suelto,
+  comparar ids contra nombres, el `findIndex` que devolvía la ronda equivocada, `EventScreen` sin
+  importar, el `setState` dentro de un `useEffect`, el `markerEnd` tapado del SVG, el tooltip que se
+  salía. Motor y store, con 290 tests, son donde casi no ha fallado nada.
+- [x] ⚠️ **Lo que tienen en común esos bugs es que NO fallan**: ni excepción, ni pantalla en rojo, ni
+  build roto. Simplemente no pasa lo que tenía que pasar. Se descubren jugando, que es el recurso más
+  caro del proyecto. Así que los tests nuevos no comprueban que "se ve bien" sino **reglas que se
+  rompen en silencio**: que cada `pantalla` pinte la suya, que el Bingo Book solo enseñe lo visto, que
+  no haya una barra llena con "Locked" al lado, que el game over tenga sus dos salidas, que la
+  selección de personaje tenga marcha atrás, y que la tarjeta de personaje **calle** la transformación.
+- [x] **Se prueba la contradicción, no el arreglo.** El test de logros no comprueba que exista el
+  catch-all de `abrirLogros`: comprueba que no haya ninguna fila cumplida y bloqueada a la vez. Así
+  sigue valiendo si mañana se arregla de otra forma, y salta con cada logro nuevo que se añada.
+- [x] **Los dos suites se validaron rompiendo el juego a propósito**: quitando la ruta de `EventScreen`
+  de `App.jsx` (fallan 2) y quitando el catch-all de `abrirLogros` (falla 1). Un test nuevo que pasa a
+  la primera no demuestra nada por sí solo.
+- [x] ⚠️ **El entorno global sigue siendo `node`**: los de UI declaran `// @vitest-environment jsdom` en
+  su primera línea. No es por velocidad — con jsdom global se dejaría de comprobar sola la regla de que
+  el motor **no necesita un navegador**.
+- [x] 🐛 ⚠️ **`jsdom` pinado a `^26`**: el 30 hace `require()` de un módulo ESM y solo va en Node ≥22.12.
+  El CI usa la última 22.x, así que **habría pasado en CI y fallado en la máquina de desarrollo** — la
+  peor combinación para unos tests cuyo sentido es correrlos mientras programas.
+- [x] 🐛 ⚠️ **Los tests ensuciaban el CSS de producción.** Tailwind v4 detecta clases leyendo el
+  proyecto entero, y un `closest('div.flex-1')` cuenta como fuente: 277 bytes de reglas que ningún
+  jugador puede ver, creciendo con cada test. Cortado con `@source not` en `index.css` y comprobado
+  como manda la regla de la casa —mirando el bundle, no que compile—: el CSS vuelve al **hash idéntico**
+  al de antes.
+- [x] **Segunda tanda: las cinco pantallas que faltaban** —Mochila, Tienda, Reclutar, Evento y
+  Ajustes—, de 359 a **403 tests**. La primera tanda cubrió donde habían estado los bugs
+  **documentados**; esta se eligió por lo contrario: por dónde es más probable que haya bugs **vivos**.
+  Son las que menos se miran y las que más reglas con esquina tienen.
+- [x] 🐛 **Y encontraron uno de verdad**: `usarConsumible` no mira si el personaje ya está al máximo.
+  Cura de 45 a 45, devuelve `true`, borra el objeto del inventario y la mochila se cierra sola —
+  **el jugador pierde un objeto sin llegar a enterarse**. ⚠️ Chirriaba el doble porque esa misma
+  pantalla SÍ para y avisa antes de reemplazar algo equipado, que encima es **reversible** (el objeto
+  vuelve a la bolsa) y esto no lo es: el aviso estaba puesto en la acción menos grave de las dos.
+  Arreglado en la UI —botón apagado con `Full`— y no en el store, porque el store hace lo que le
+  piden: quien no debía dejar pedirlo era la pantalla.
+- [x] **El agujero que más miedo daba era el del evento**, y ese sí estaba tapado: es el único sitio
+  donde el store devuelve datos y **la pantalla escribe la prosa**, en dos `switch` con un `default`
+  que dice "Nothing happens". Un tipo de efecto que falte no da error — miente. El test **cuenta en
+  vez de buscar** (la frase es legítima en la rama mala de una tirada al 50%) y exige que salga
+  exactamente tantas veces como efectos `ninguno` hay. Comprobado quitándole un `case`: dice
+  *"Heals 45% of the team's HP. Nothing happens."* donde debía decir *"You lose 20 gold."*
+- [ ] **`CombatScreen` y `MapScreen` se quedan fuera a propósito.** Son las dos con relojes (el replay
+  golpe a golpe) y con medidas de maquetación, y **jsdom no maqueta**: todo mide 0. Un test ahí probaría
+  el reloj falso, no el juego.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -1472,6 +1523,7 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
   (ver `_pendienteDeImplementar` en `achievements.json`).
 - Sistema de campañas para incluir más niveles, enemigos y objetos
 - Sistema de cuentas / guardado remoto.
-- Tests de componentes React (hoy solo motor + store).
+- ~~Tests de componentes React (hoy solo motor + store).~~ **HECHOS el 2026-08-21** — bloque propio
+  en "Hecho". Quedan fuera `CombatScreen` y `MapScreen`, y está razonado allí por qué.
 - **Modificadores de dificultad entre runs** ("ascensión"): ligado a la condición de logro ya
   propuesta pero sin implementar `completarRunEnDificultad` en `achievements.json`.

@@ -112,7 +112,19 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 274 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — **403 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+  componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
+  Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
+  ⚠️ **El entorno global sigue siendo `node`**: cada test de UI declara `// @vitest-environment jsdom`
+  en su PRIMERA línea, para que la regla de que el motor no necesita navegador se siga comprobando
+  sola. Se importa de **`src/test-dom.js`** y no de `@testing-library/react`: ahí están los matchers,
+  el `cleanup` (que hay que registrar a mano, sin `globals` no se pone solo) y los huecos de jsdom que
+  el juego pisa — `HTMLMediaElement.play`, `ResizeObserver` y `scrollIntoView`. ⚠️ `jsdom` está pinado
+  a `^26` porque el 30 exige Node ≥22.12, y ⚠️ **los `*.test.jsx` están excluidos de Tailwind**
+  (`@source not` en `index.css`): si no, las clases citadas en un test acaban en el CSS de producción.
+  `CombatScreen` y `MapScreen` no tienen test a propósito: jsdom no maqueta y ahí se probaría el reloj
+  falso, no el juego.
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -376,6 +388,15 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   con el `id` del arco como nombre.
 
 ## Bugs ya resueltos (para no repetirlos)
+
+- **Un consumible que se gasta y no hace nada**: `usarConsumible` no comprueba si el personaje ya
+  está al máximo de HP. Cura de 45 a 45, **devuelve `true`**, borra el objeto del inventario y la
+  mochila se cierra sola — el jugador pierde un objeto sin llegar a enterarse. ⚠️ Lo revelador no es
+  el fallo sino **dónde estaba puesto el aviso**: esa misma pantalla SÍ para y confirma antes de
+  reemplazar un objeto equipado, que es **reversible** (vuelve a la bolsa). O sea que la pantalla
+  protegía la acción menos grave de las dos. **Un aviso vale por lo irreversible que sea lo que
+  detiene, no por lo aparatoso que parezca.** Arreglado en la UI y no en el store: el store hace lo
+  que le piden, quien no debía dejar pedirlo era la pantalla.
 
 - **Función de normalización no idempotente** (`normalizarPasivas`): el store normalizaba las pasivas
   del objeto equipado y `crearLuchador` las volvía a normalizar al juntarlas con las del modo. La

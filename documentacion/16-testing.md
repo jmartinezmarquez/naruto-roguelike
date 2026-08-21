@@ -8,18 +8,27 @@ inexistente), y `EventScreen` sin importar en `App.jsx` (la pantalla de evento n
 renderizaba). El motor (`engine/`) es código puro sin React — el más barato y rentable de testear,
 sin mocks ni DOM.
 
+📌 De esos dos bugs de partida, **solo el primero era de motor**. El segundo —`EventScreen`— es el que
+justificó los tests de componente, y no tuvo uno que lo cubriera hasta el 2026-08-21: ver "Tests de
+componente" al final.
+
 ## Setup
 
 - `npm install -D vitest`
-- `vite.config.js` — bloque `test: { environment: 'node' }` (no hace falta `jsdom`: ni el motor ni
-  el store tocan el DOM) más `setupFiles: ['./src/test-setup.js']`, un polyfill mínimo de
-  `localStorage` en memoria — Node no lo expone por defecto, y `useGameStore`
+- `vite.config.js` — bloque `test: { environment: 'node' }` más `setupFiles: ['./src/test-setup.js']`,
+  un polyfill mínimo de `localStorage` en memoria — Node no lo expone por defecto, y `useGameStore`
   (`guardarRun`/`cargarRun`) y `useAchievementsStore` lo usan para persistir entre sesiones.
 - `package.json` — scripts `"test": "vitest run"`, `"test:watch": "vitest"`.
-- Los tests viven junto al archivo que testean, con sufijo `.test.js` (convención de Vitest, no
-  hace falta carpeta `__tests__/` separada).
+- Los tests viven junto al archivo que testean, con sufijo `.test.js` / `.test.jsx` (convención de
+  Vitest, no hace falta carpeta `__tests__/` separada).
 
-## Cobertura actual (274 tests)
+⚠️ **El entorno global sigue siendo `node` aunque ya haya tests de componente.** Los de UI declaran el
+suyo en la primera línea del archivo (`// @vitest-environment jsdom`) en vez de cambiarlo para todos.
+Dos razones, y ninguna es el rendimiento: el motor **no debe necesitar un navegador** —es la regla del
+proyecto, `engine/` no importa React ni el DOM— y con `jsdom` global esa regla dejaría de comprobarse
+sola. Que los 290 tests de lógica no paguen el arranque de jsdom es un extra.
+
+## Cobertura actual (403 tests: 290 de lógica + 113 de componente)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -139,10 +148,104 @@ acababan desbloqueando "gana 10 combates" en mitad de una prueba que iba de otra
 trampa que en el juego, donde reiniciar la meta-progresión tiene que borrar las tres claves de
 `localStorage`.
 
-## Pendiente
+## Tests de componente (2026-08-21)
 
-No hay tests de componentes React todavía (`MapScreen`, `CombatScreen`, etc.) — de momento toda la
-cobertura es de lógica pura (motor + store), que es donde han estado los bugs reales hasta ahora.
-Si en el futuro se necesitan tests de UI, haría falta añadir `@testing-library/react` y cambiar
-`environment` a `'jsdom'` para esos archivos concretos (Vitest permite mezclar entornos por
-archivo).
+Se añadieron con un argumento concreto, no por completismo: **casi todos los bugs anotados en este
+proyecto están en la única capa que no tenía tests.** El guard numérico que pintaba un `0` suelto,
+comparar ids contra nombres, el `findIndex` que devolvía la ronda equivocada, `EventScreen` sin
+importar, el `setState` dentro de un `useEffect`, el `markerEnd` tapado del SVG, el tooltip que se
+salía de su pastilla. Los 290 tests de motor y store cubrían la parte donde casi no ha fallado nada.
+
+⚠️ **Y lo que tienen en común esos bugs es que no fallan.** No hay excepción, ni pantalla en rojo, ni
+build roto: simplemente no pasa lo que tenía que pasar, o pasa algo feo. Se descubren jugando, que es
+el recurso más caro del proyecto. Por eso los tests de componente de aquí no comprueban que "se ve
+bien", sino **reglas que se pueden romper en silencio**:
+
+- **`App.test.jsx`** — el enrutado: cada valor de `pantalla` pinta la suya, y la regla de
+  `encimaDelMapa` (las consultas cortas se dibujan SOBRE el mapa; los momentos propios de la run lo
+  sustituyen). Recorre TODOS los nombres de pantalla, también los que hoy funcionan: el valor está en
+  que añadir una pantalla nueva sin engancharla salte aquí. Es el test que le faltaba al bug de
+  `EventScreen`.
+- **`EncyclopediaScreen.test.jsx`** — que el Bingo Book **solo enseñe lo ya visto**. Es una regla de
+  spoilers: si `vistos` deja de consultarse, la pantalla se sigue pintando perfectamente, solo que con
+  todo el juego destapado. "Se ve bien" es exactamente el fallo.
+- **`AchievementsScreen.test.jsx`** — que no exista ninguna fila con **la barra llena y "Locked"** al
+  lado. Se prueba la contradicción y no el arreglo (el catch-all de `abrirLogros`), así que el test
+  sigue valiendo si mañana se arregla de otra forma, y salta con cada logro nuevo.
+- **`GameOverScreen.test.jsx`** — las dos salidas. Quitar la del Home no rompe nada: el juego sigue
+  siendo jugable, solo que quien acaba de desbloquear un logro se queda sin puerta para ir a verlo.
+- **`CharacterSelectScreen.test.jsx`** — que haya marcha atrás, y que el roster crezca con los logros.
+- **`PersonajeHoverCard.test.jsx`** — la tarjeta que usan cinco pantallas, y sobre todo **lo que calla
+  a propósito**: que falte algo se ve, que SOBRE no. Destapar la transformación no rompe nada, solo
+  estropea la pantalla que existe para ese momento.
+- **`nombres.test.js`** y **`projectileSprites.test.js`** — sin jsdom, son funciones puras. Recorren
+  **todos** los luchadores de los tres ficheros de datos, que es la única forma de garantizar que
+  ningún id acabe en pantalla sin traducir ni ningún jutsu caiga al kunai por una errata.
+
+### Cómo se escriben
+
+- Primera línea del archivo: `// @vitest-environment jsdom`.
+- Se importa de **`src/test-dom.js`**, no de `@testing-library/react` directamente. Ese archivo trae
+  los matchers, el `cleanup` entre tests y los tres huecos de jsdom que el juego pisa:
+  `HTMLMediaElement.play` (sin él no se puede ni renderizar `App`, porque `MusicaDeFondo` hace
+  `audio.play().catch(...)` y en jsdom `play()` no devuelve promesa), `ResizeObserver` (el mapa y la
+  tarjeta de hover) y `scrollIntoView` (el registro de combate).
+- ⚠️ **`cleanup` hay que registrarlo a mano.** Testing Library solo lo hace sola si `afterEach` es
+  global, y aquí no lo es. Sin él, el segundo test de un archivo encuentra dos botones con el mismo
+  texto y el fallo parece del componente.
+
+### Dos trampas que costaron una vuelta
+
+- ⚠️ **`jsdom` está pinado a `^26` a propósito.** El 30 hace `require()` de un módulo ESM, que solo
+  funciona en Node ≥22.12. El CI usa `node-version: 22` (o sea, la última), así que **habría pasado en
+  CI y fallado en la máquina de desarrollo** — la peor combinación posible para unos tests cuyo
+  sentido es que se corran mientras se programa.
+- ⚠️ **Los tests ensuciaban el CSS de producción.** Tailwind v4 detecta las clases leyendo el proyecto
+  entero, y un `closest('div.flex-1')` o una clase citada en un comentario cuentan como fuente: 277
+  bytes de reglas que ningún jugador puede ver, y creciendo con cada test. Se corta con
+  `@source not "**/*.test.{js,jsx}"` en `index.css`. Comprobado como manda la regla de este proyecto —
+  mirando el bundle, no que compile: el CSS vuelve al **hash idéntico** al de antes de los tests.
+
+### Segunda tanda (las cinco pantallas que faltaban) — y el primer bug que encuentran
+
+La primera tanda cubrió las pantallas donde habían estado los bugs **documentados**. Esta cubre las
+cinco que quedaban —Mochila, Tienda, Reclutar, Evento y Ajustes—, elegidas por lo contrario: por
+dónde es más probable que haya bugs **vivos**. Son las que menos se miran y las que más reglas con
+esquina tienen.
+
+🐛 **Y encontraron uno.** `usarConsumible` no comprueba si el personaje está ya al máximo: cura de 45
+a 45, devuelve `true`, borra el objeto del inventario y la mochila se cierra sola. **El jugador pierde
+un objeto sin llegar a enterarse.** Chirriaba el doble porque esa misma pantalla SÍ para y avisa antes
+de reemplazar algo equipado, que encima es reversible —el objeto vuelve a la bolsa— y esto no lo es.
+Arreglado en la UI (el botón sale apagado y dice `Full`) y no en el store, porque el store hace lo que
+le piden: quien no debía dejar pedirlo era la pantalla.
+
+Qué protege cada archivo:
+
+- **`InventoryScreen.test.jsx`** — el bug de arriba, que lo suelto y lo equipado sean entradas
+  distintas (si se agruparan por id, la copia libre quedaría escondida detrás de la equipada), y que
+  equipar encima pare y avise.
+- **`ShopScreen.test.jsx`** — que no se pueda pulsar "Buy" sin oro, que con el oro **justo** sí (el
+  límite es `>=`, no `>`), y que lo comprado salga del escaparate — que es lo que impide comprarlo dos
+  veces con un doble clic.
+- **`RecruitScreen.test.jsx`** — ⚠️ **que el pergamino dorado no se pueda reclutar sin pelear.** Es la
+  regla entera del nodo: lo que separa al legendario del resto no es lo bueno que sea, es que hay que
+  ganarle. Un botón de más y el desafío se convierte en un regalo. Y que el objeto del personaje
+  sustituido vuelva a la mochila en vez de irse de la run con él.
+- **`EventScreen.test.jsx`** — el `default` de los dos `switch` que escriben el texto. ⚠️ Un tipo de
+  efecto que falte **no da error: cae en el `default` y le dice al jugador que no pasa nada mientras
+  el store le quita 20 de oro.** El test **cuenta en vez de buscar** —"Nothing happens" es legítimo en
+  la rama mala de una tirada al 50%— y exige que aparezca exactamente tantas veces como efectos
+  `ninguno` hay de verdad. Cada sobra es un tipo que la pantalla está tapando con una mentira.
+- **`SettingsScreen.test.jsx`** — que cada control mueva SU ajuste (un copia y pega entre dos
+  selectores deja el botón de la velocidad cambiando el tema, y no falla nada), y que reiniciar la
+  meta-progresión borre **las cuatro** cosas. Dejarse los contadores es peor que no reiniciar: los
+  logros de "gana 50 combates" se redesbloquean en el primer combate y el jugador ve su reinicio
+  deshacerse solo.
+
+### Lo que sigue sin tener test, y a propósito
+
+`CombatScreen` y `MapScreen`. Son las dos pantallas con relojes (el replay golpe a golpe) y con
+medidas de maquetación (el lienzo que se escala con `ResizeObserver`), y jsdom **no maqueta**: todas
+las medidas salen 0. Un test ahí probaría el reloj falso, no el juego. Lo que sí se puede probar de
+ellas es lógica, y esa ya vive en `engine/` y en el store.
