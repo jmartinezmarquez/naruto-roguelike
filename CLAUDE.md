@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **403 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+- [x] Testing con Vitest — **438 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
   componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -388,6 +388,23 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   con el `id` del arco como nombre.
 
 ## Bugs ya resueltos (para no repetirlos)
+
+- **Props nuevas que el envoltorio no reenvía** (`PersonajeHoverCard` → `FichaPersonaje`): se
+  añadieron `bonificaciones` y `multiplicadoresBuffs`, se enchufaron en el mapa y se probaron contra
+  `FichaPersonaje`… y el envoltorio no las declaraba, así que las tiraba por el camino. En pantalla no
+  se veía nada y **los tests estaban todos en verde**. ⚠️ La lección no es sobre props: es que
+  **probar las dos piezas por separado no prueba la unión**, y con un componente envoltorio la unión
+  es justo donde vive el fallo. Si un componente se usa SIEMPRE a través de otro, el test tiene que
+  montar el de fuera.
+
+- **Un efecto que el motor aplica y la UI no enseña** (buffs temporales de evento): "ATK +20% durante
+  3 combates" se aplicaba de verdad en `crearLuchador` y **no salía en ninguna pantalla**. El juego
+  cambiaba los números sin decirlo, así que el jugador no podía saber si seguía bufado ni decidir en
+  consecuencia. ⚠️ Y al arreglarlo apareció la trampa de siempre: en combate hay que leerlos del
+  **resumen** (`buffsAlEmpezar`) y no del store, porque `_consumirUsoBuffsTemporales` corre ANTES de
+  armar el resumen — en vivo se vería `×2` durante la pelea que gastó el `×3`, o nada si era el último
+  uso. Es la tercera vez que muerde lo mismo (`equipoAlEmpezar`, `recompensas`, y ahora esto):
+  **cuando la animación de combate empieza, el store ya tiene el estado FINAL.**
 
 - **Un consumible que se gasta y no hace nada**: `usarConsumible` no comprueba si el personaje ya
   está al máximo de HP. Cura de 45 a 45, **devuelve `true`**, borra el objeto del inventario y la

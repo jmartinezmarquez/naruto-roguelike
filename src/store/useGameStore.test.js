@@ -1313,6 +1313,53 @@ describe('usarConsumible', () => {
 });
 
 
+describe('buffs temporales — la foto para la pantalla de combate', () => {
+  // ⚠️ La misma trampa que ya obligó a `equipoAlEmpezar`: `_consumirUsoBuffsTemporales`
+  // corre ANTES de armar el resumen, así que para cuando `CombatScreen` se monta el
+  // store ya ha gastado el uso de este combate. Si la pantalla leyera el store en vivo
+  // enseñaría "ATK +20% ×2" mientras se ve la pelea que consumió el ×3 — o nada, si a
+  // este combate le tocaba el último uso.
+  beforeEach(() => {
+    useGameStore.setState({
+      buffsTemporales: [{ multiplicadores: { ataque: 1.2 }, combatesRestantes: 3 }],
+    });
+  });
+
+  it('el resumen lleva los buffs VIGENTES durante el combate, no los que quedan después', () => {
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, true);
+
+    expect(resumen.buffsAlEmpezar).toHaveLength(1);
+    expect(resumen.buffsAlEmpezar[0].combatesRestantes).toBe(3);
+    // El store, en cambio, ya lo ha gastado.
+    expect(useGameStore.getState().buffsTemporales[0].combatesRestantes).toBe(2);
+  });
+
+  it('y sigue estando en el resumen aunque el combate lo agote del todo', () => {
+    // El caso peor: con 1 uso restante, leer el store desde la UI no enseñaría NADA
+    // durante la única pelea en la que el buff estaba haciendo algo.
+    useGameStore.setState({
+      buffsTemporales: [{ multiplicadores: { ataque: 1.2 }, combatesRestantes: 1 }],
+    });
+
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, true);
+
+    expect(resumen.buffsAlEmpezar[0].combatesRestantes).toBe(1);
+    expect(useGameStore.getState().buffsTemporales).toEqual([]);
+  });
+
+  it('es una copia: gastar el buff no cambia lo que ya viajó en el resumen', () => {
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, true);
+    useGameStore.getState()._consumirUsoBuffsTemporales();
+    expect(resumen.buffsAlEmpezar[0].combatesRestantes).toBe(3);
+  });
+
+  it('sin buffs, el resumen trae una lista vacía y no undefined', () => {
+    useGameStore.setState({ buffsTemporales: [] });
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1, true);
+    expect(resumen.buffsAlEmpezar).toEqual([]);
+  });
+});
+
 describe('registro de vistos para la enciclopedia', () => {
   const vistos = () => useAchievementsStore.getState().vistos;
 

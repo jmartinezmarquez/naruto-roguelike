@@ -12,6 +12,7 @@ import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { spriteDeLuchador } from '../common/characterSprites';
 import { spriteDeModo } from '../common/transformationSprites';
 import { encontrarBaseDeLuchador } from '../common/datosDeLuchador';
+import { nombreStat } from '../common/efectos';
 import { SPRITE_OBJETO, COLOR_RAREZA, ETIQUETA_RAREZA, lineasDeEfecto } from '../Inventory/itemSprites';
 import {
   nombreCorto, nombreObjeto, tipoDeLuchador, clasePastillaDeNaturaleza,
@@ -64,7 +65,6 @@ const MENSAJE_DESBLOQUEO = {
 
 const MENSAJE_MODO_BLOQUEADO = 'See them transform in battle to unlock this form.';
 
-const ABREVIATURA_STAT = { ataque: 'ATT', defensa: 'DEF', velocidad: 'SPE', hp: 'HP' };
 
 function entradasDeSeccion(seccionId) {
   if (seccionId === 'ninjas') {
@@ -245,7 +245,7 @@ function BloqueTransformaciones({ id, base, modosVistos }) {
               {multiplicadores.length > 0 && (
                 <p className="text-[9px] text-oro/80">
                   {multiplicadores
-                    .map(([stat, valor]) => `${ABREVIATURA_STAT[stat] ?? stat} ×${valor}`)
+                    .map(([stat, valor]) => `${nombreStat(stat)} ×${valor}`)
                     .join('   ')}
                 </p>
               )}

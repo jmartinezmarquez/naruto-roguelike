@@ -1,7 +1,7 @@
 import { useGameStore } from '../../store/useGameStore';
 import { nombrePersonaje } from '../common/nombres';
 import { spriteDeCombate } from '../common/datosDeLuchador';
-import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal, BotonSecundario } from '../common/PiezasUI';
+import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
 
 export default function GameOverScreen() {
   const equipo = useGameStore((s) => s.equipo);
@@ -23,10 +23,17 @@ export default function GameOverScreen() {
             consulta. Que no haya mapa detrás es parte del mensaje.
             El verde va en `exito` y no en `fuuton`: es "has ganado", no chakra de
             viento (ver documentacion/33-direccion-visual.md). */}
-        <CabeceraPantalla
-          antetitulo={runGanada ? 'The Will of Fire' : 'End of the road'}
-          titulo={runGanada ? 'Victory' : 'Game Over'}
-        />
+        {/* ⚠️ **Un solo título.** Antes había dos —"End of the road" encima de "Game
+            Over"— y son la misma frase dicha dos veces, que es el mismo ruido que ya se
+            quitó de la pantalla de evento y de la tienda.
+
+            Y al quedarse uno, el que sobrevive **no es el mismo en los dos casos**, a
+            propósito: ganar pasa una vez cada muchas runs y merece la palabra llana
+            —"Victory", sin coquetear—; perder pasa constantemente y ahí "GAME OVER" a
+            la cara es lenguaje de máquina recreativa. "End of the Road" dice lo mismo
+            desde dentro de la ficción, y de paso rima con el nombre de la campaña,
+            **The Ninja Road**: lo que se acaba es el camino que elegiste al empezar. */}
+        <CabeceraPantalla titulo={runGanada ? 'Victory' : 'End of the Road'} />
         <p className="text-[11px] text-pergamino-200 leading-relaxed">
           {runGanada
             ? 'You have defeated Pain and completed all 3 arcs. Konoha is safe.'
@@ -88,11 +95,16 @@ export default function GameOverScreen() {
             salir cuesta la partida en curso, y aquí ya no hay partida que perder. Una
             confirmación sin nada que confirmar es ruido, y de paso enseña al jugador a
             decir que sí sin leer. */}
+        {/* ⚠️ Las dos con la MISMA forma. Antes eran un `BotonPrincipal` y un
+            `BotonSecundario`, que no son variantes de lo mismo —cambian de forma, de
+            tamaño de letra y de relleno—, así que parecían dos especies distintas una
+            al lado de la otra en vez de dos salidas del mismo rango. Lo que las separa
+            ahora es solo el relleno: cuál es la que se espera que pulses. */}
         <div className="flex items-center justify-center gap-3">
-          <BotonPrincipal onClick={reiniciarRun}>New Run</BotonPrincipal>
-          <BotonSecundario onClick={irAlHome} sobreFondo className="elevar-hover px-6">
+          <BotonPrincipal onClick={reiniciarRun} className="elevar-hover">New Run</BotonPrincipal>
+          <BotonPrincipal onClick={irAlHome} variante="contorno" className="elevar-hover">
             Home
-          </BotonSecundario>
+          </BotonPrincipal>
         </div>
       </div>
     </div>

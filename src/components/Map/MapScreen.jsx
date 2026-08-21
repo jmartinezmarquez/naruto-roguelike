@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
-import { useGameStore } from '../../store/useGameStore';
+import { useGameStore, combinarMultiplicadoresTemporales } from '../../store/useGameStore';
 import { spriteDeCombate, nombreDeModo } from '../common/datosDeLuchador';
 import typesData from '../../data/types.json';
 import {
@@ -29,7 +29,9 @@ import iconoHome from '../../assets/menu/home.png';
 import itemsData from '../../data/items.json';
 import {
   PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante, VentanaModal, BotonSecundario,
+  ChipEfecto,
 } from '../common/PiezasUI';
+import { resumirBuffsActivos } from '../common/efectos';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
@@ -396,6 +398,7 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
  */
 function PanelEquipo({
   equipo, obtenerHpMaximo, reordenarEquipo, desequiparObjeto, equiparObjeto, usarConsumible,
+  multiplicadoresBuffs,
 }) {
   // El id que se está arrastrando. Es estado local y no del store a propósito:
   // no es información de la run, solo del gesto en curso.
@@ -468,6 +471,13 @@ function PanelEquipo({
                 hpActual={p.hpActual}
                 hpMaximo={hpMaximo}
                 objetoEquipadoId={p.objetoEquipadoId}
+                // ⚠️ Sin estos dos, la ficha reconstruía al luchador desde el JSON crudo
+                // y enseñaba un número MÁS BAJO del que de verdad pelea: la mejora
+                // permanente de un evento no aparecía en ninguna pantalla del juego, y
+                // el buff temporal tampoco. Solo los llevan los del equipo — un
+                // candidato de reclutar no tiene ni bonificaciones ni buffs.
+                bonificaciones={p.bonificaciones}
+                multiplicadoresBuffs={multiplicadoresBuffs}
                 className="block w-full"
               >
                 <div
@@ -664,6 +674,37 @@ function PanelReemplazoObjeto({ itemId, personaje, onCancelar, onConfirmar }) {
  * Aquí solo sale lo que está suelto en `inventario`; lo que alguien lleva
  * puesto se ve en `PanelEquipo` y en la mochila.
  */
+/**
+ * Los buffs temporales que están activos ahora mismo, con los combates que les quedan.
+ *
+ * ⚠️ **Existe porque el efecto era INVISIBLE.** Un evento te daba "ATK +20% durante 3
+ * combates", `crearLuchador` lo aplicaba de verdad en cada pelea… y no aparecía en
+ * ninguna pantalla. O sea que el juego te cambiaba los números y no te lo decía: no
+ * podías saber si seguías bufado, ni decidir en consecuencia (pelear al jefe ahora o
+ * dar un rodeo), que es justo para lo que sirve un buff con caducidad.
+ *
+ * El panel **desaparece cuando no hay ninguno**, en vez de quedarse vacío: un hueco
+ * permanente que casi siempre está en blanco enseña a no mirarlo.
+ */
+function PanelBuffs({ buffsTemporales }) {
+  const chips = resumirBuffsActivos(buffsTemporales);
+  if (chips.length === 0) return null;
+
+  return (
+    <PanelMarco className="p-2.5 flex flex-col gap-2">
+      <TituloBloque>Active</TituloBloque>
+      <div className="flex flex-wrap gap-1.5">
+        {chips.map((chip, i) => (
+          <ChipEfecto key={`${chip.texto}-${i}`} {...chip} />
+        ))}
+      </div>
+      {/* El sufijo de cada pastilla es un "3×", que sin esto no se sabe de qué. Una
+          línea para toda la lista y no una explicación por pastilla. */}
+      <p className="text-[8px] text-pergamino-200/45 leading-snug">Battles left.</p>
+    </PanelMarco>
+  );
+}
+
 function PanelObjetos({ inventario, oro, abrirMochila }) {
   const conteoPorId = inventario.reduce((acc, id) => {
     acc[id] = (acc[id] ?? 0) + 1;
@@ -987,6 +1028,13 @@ export default function MapScreen() {
   const reordenarEquipo = useGameStore((s) => s.reordenarEquipo);
   const inventario = useGameStore((s) => s.inventario);
   const oro = useGameStore((s) => s.oro);
+  const buffsTemporales = useGameStore((s) => s.buffsTemporales);
+  // Los mismos multiplicadores que usa `jugarCombate`, para que la ficha de personaje
+  // enseñe el número que de verdad pelea y no uno parecido.
+  const multiplicadoresBuffs = useMemo(
+    () => (buffsTemporales.length > 0 ? combinarMultiplicadoresTemporales(buffsTemporales) : null),
+    [buffsTemporales],
+  );
   const desequiparObjeto = useGameStore((s) => s.desequiparObjeto);
   const equiparObjeto = useGameStore((s) => s.equiparObjeto);
   const usarConsumible = useGameStore((s) => s.usarConsumible);
@@ -1100,6 +1148,7 @@ export default function MapScreen() {
           desequiparObjeto={desequiparObjeto}
           equiparObjeto={equiparObjeto}
           usarConsumible={usarConsumible}
+          multiplicadoresBuffs={multiplicadoresBuffs}
         />
 
         {/* El contenedor de fuera solo mide el hueco disponible: no pinta nada.
@@ -1252,6 +1301,10 @@ export default function MapScreen() {
         {/* `w-40` como el panel de equipo: los dos laterales tienen que medir lo
             mismo o el mapa no queda centrado (ver `ANCHO_PANELES`). */}
         <div className="w-40 shrink-0 flex flex-col gap-4">
+          {/* Encima de la mochila y no debajo: cuando hay un buff activo es lo más
+              perecedero que hay en pantalla —se gasta solo, combate a combate— y es lo
+              que puede cambiar a qué nodo vas ahora mismo. */}
+          <PanelBuffs buffsTemporales={buffsTemporales} />
           <PanelObjetos inventario={inventario} oro={oro} abrirMochila={abrirMochila} />
           <RuedaChakra />
         </div>

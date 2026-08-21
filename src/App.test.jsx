@@ -76,7 +76,7 @@ const PANTALLAS = {
     encimaDelMapa: false,
   },
   reclutar: { preparar: () => irANodoDeTipo('reclutar'), texto: /scroll|recruit/i, encimaDelMapa: false },
-  gameover: { texto: 'Game Over', encimaDelMapa: false },
+  gameover: { texto: 'End of the Road', encimaDelMapa: false },
 
   logros: { texto: 'Missions', encimaDelMapa: true },
   enciclopedia: { texto: 'Bingo Book', encimaDelMapa: true },
@@ -107,6 +107,35 @@ describe('enrutado de pantallas', () => {
       expect(hayMapa).toBe(encimaDelMapa || pantalla === 'mapa');
     });
   }
+});
+
+describe('los buffs temporales se ven en alguna parte', () => {
+  // ⚠️ El fallo que arregla este bloque: un evento daba "ATK +20% durante 3 combates",
+  // el motor lo aplicaba de verdad en cada pelea, y **no aparecía en ninguna pantalla**.
+  // El juego te cambiaba los números y no te lo decía, así que no podías saber si
+  // seguías bufado ni decidir en consecuencia. No fallaba nada: el jugador no se
+  // enteraba, que es el peor modo de fallo de este proyecto.
+  //
+  // Se comprueba a través de `App` porque `MapScreen` no tiene test propio a propósito
+  // (jsdom no maqueta y ahí se probaría el lienzo falso).
+  beforeEach(() => {
+    useGameStore.setState({
+      pantalla: 'mapa',
+      buffsTemporales: [{ multiplicadores: { ataque: 1.2 }, combatesRestantes: 3 }],
+    });
+  });
+
+  it('el mapa dice qué llevas activo y cuántos combates le quedan', () => {
+    render(<App />);
+    expect(screen.getByText('ATK +20%')).toBeInTheDocument();
+    expect(screen.getByText('3×')).toBeInTheDocument();
+  });
+
+  it('y sin ninguno el panel no ocupa sitio en vez de salir vacío', () => {
+    useGameStore.setState({ buffsTemporales: [] });
+    render(<App />);
+    expect(screen.queryByText('Active')).toBeNull();
+  });
 });
 
 describe('sin run empezada', () => {

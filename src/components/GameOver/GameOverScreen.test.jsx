@@ -29,9 +29,9 @@ beforeEach(() => {
 });
 
 describe('victoria y derrota no se leen igual', () => {
-  it('perder dice "Game Over"', () => {
+  it('perder dice "End of the Road"', () => {
     render(<GameOverScreen />);
-    expect(screen.getByText('Game Over')).toBeInTheDocument();
+    expect(screen.getByText('End of the Road')).toBeInTheDocument();
     expect(screen.queryByText('Victory')).toBeNull();
   });
 
@@ -39,7 +39,20 @@ describe('victoria y derrota no se leen igual', () => {
     useGameStore.setState({ runGanada: true });
     render(<GameOverScreen />);
     expect(screen.getByText('Victory')).toBeInTheDocument();
-    expect(screen.queryByText('Game Over')).toBeNull();
+    expect(screen.queryByText('End of the Road')).toBeNull();
+  });
+
+  it('⚠️ y hay UN solo título, no dos', () => {
+    // Había dos —"End of the road" encima de "Game Over"—, que son la misma frase dicha
+    // dos veces: el mismo ruido que ya se quitó del evento y de la tienda. Es fácil que
+    // vuelva, porque `CabeceraPantalla` sigue aceptando un antetítulo.
+    for (const ganada of [true, false]) {
+      useGameStore.setState({ runGanada: ganada });
+      const { container, unmount } = render(<GameOverScreen />);
+      const rotulos = container.querySelectorAll('header p, header h1');
+      expect(rotulos, `con runGanada=${ganada}`).toHaveLength(1);
+      unmount();
+    }
   });
 });
 
@@ -48,6 +61,23 @@ describe('las dos salidas', () => {
     render(<GameOverScreen />);
     expect(screen.getByRole('button', { name: 'New Run' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument();
+  });
+
+  it('⚠️ y las dos tienen la MISMA forma: son salidas del mismo rango', () => {
+    // Antes eran un `BotonPrincipal` y un `BotonSecundario`, que no son variantes de lo
+    // mismo: cambian de forma (`rounded-full` contra `rounded-sm`), de tamaño de letra
+    // (11 contra 9) y de relleno. Puestos uno al lado del otro parecían dos especies
+    // distintas. Lo único que puede separarlos es el relleno — cuál se espera que pulses.
+    render(<GameOverScreen />);
+    const nueva = screen.getByRole('button', { name: 'New Run' });
+    const home = screen.getByRole('button', { name: 'Home' });
+
+    for (const clase of ['rounded-full', 'text-[11px]', 'px-6', 'py-2']) {
+      expect(nueva.className, `New Run pierde ${clase}`).toContain(clase);
+      expect(home.className, `Home pierde ${clase}`).toContain(clase);
+    }
+    // Y siguen sin ser el mismo botón: uno va relleno y el otro no.
+    expect(nueva.className).not.toBe(home.className);
   });
 
   it('"New Run" lleva a elegir personaje, no al Home', async () => {

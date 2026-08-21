@@ -492,3 +492,52 @@ Debe sentirse inmediatamente inspirada en Pokelike, pero adaptada a Naruto.
 Debe ser fácilmente reutilizable para cualquier personaje del juego y funcionar bien con React y JSON.
 
 Además, intenta que el CSS sea mantenible, reutilizable y fácil de extender para futuras funcionalidades (buffs, estados alterados, equipamiento adicional, etc.).
+
+## Las bonificaciones en la ficha (2026-08-21)
+
+La tarjeta reconstruía al luchador con `crearLuchador(base, nivel)` **desde el JSON crudo**, así que
+no veía `instancia.bonificaciones`. Consecuencia: 🐛 **la mejora permanente de un evento no aparecía
+en ninguna pantalla del juego**, y el número de la ficha era **más bajo** que el que de verdad
+peleaba. Salió al pedir que se vieran los buffs temporales, que es el mismo agujero un piso más allá.
+
+Ahora `FichaPersonaje` acepta dos props opcionales, `bonificaciones` y `multiplicadoresBuffs`, y
+**solo se los pasa el panel de equipo del mapa**: un candidato de reclutar o una entrada del Bingo
+Book no tiene ni lo uno ni lo otro, y pasárselos sería inventar.
+
+⚠️ **Los deltas se MIDEN, no se copian del dato**, y por dos razones distintas:
+
+- La mejora permanente se suma a `statsBase` **antes** de escalar por nivel
+  (`calcularStatsPorNivel`), así que un `+4` guardado en la instancia vale +4 a nivel 1 y bastante más
+  a nivel 40. Pintar el número guardado mentiría **cada vez más según avanza la run**.
+- El buff temporal es un **multiplicador**, no una suma: cuántos puntos vale depende del nivel, del
+  modo activo y de la mejora permanente que ya lleve encima.
+
+Por eso se construyen tres luchadores —pelado, con mejora, y efectivo— y los deltas son la resta. Es
+más código que leer `bonificaciones.ataque`, y es la única forma de que el número de la ficha sea el
+que pelea. Por lo mismo, `combinarMultiplicadoresTemporales` **se exporta del store** en vez de
+reimplementarse en la UI: dos versiones de esa fórmula acabarían discrepando, y una discrepancia así
+no falla, miente.
+
+⚠️ **Y los dos deltas van en colores distintos** —dorado el permanente, verde el temporal— porque son
+cosas distintas. Con un solo color la ficha diría que el personaje vale eso, y dentro de tres
+combates ya no.
+
+## ATK, DEF, SPD, HP — un solo sitio donde se escriben
+
+Había **dos** tablas de abreviaturas, una en esta ficha y otra en la enciclopedia, y las dos decían
+`ATT`/`SPE` mientras las pastillas de evento decían `ATK`/`SPD`: **el mismo dato con dos nombres en la
+misma partida**. Ahora las cuatro salen de `nombreStat` (`components/common/efectos.js`), que ya era
+el vocabulario de las pastillas. `ATK` porque es la abreviatura extendida; `SPE` cambió a `SPD` de
+rebote, por venir de la misma tabla.
+
+### 🐛 Y el envoltorio se las comía
+
+Al enchufarlo, `bonificaciones` y `multiplicadoresBuffs` llegaban del mapa a `PersonajeHoverCard`… que
+no las declaraba, así que **las tiraba por el camino** y a `FichaPersonaje` no le llegaba nada. En
+pantalla no se veía ningún delta.
+
+⚠️ Lo grave no es el olvido, es que **los tests estaban todos en verde**: montaban `FichaPersonaje`
+directamente, o sea que probaban las dos piezas y **no la unión**. Con un componente que en el juego
+se usa SIEMPRE a través de un envoltorio, la unión es justo donde vive el fallo. Ahora hay tres tests
+que montan `PersonajeHoverCard`, y el `PersonajeHoverCard` lleva escrito arriba que cualquier prop
+nueva de la ficha hay que añadirla también ahí.

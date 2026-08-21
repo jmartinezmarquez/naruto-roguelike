@@ -169,8 +169,14 @@ function aplicarXpYActualizarHp(instancia, cantidadXp, hpDePartida = instancia.h
   return { ...actualizado, hpActual: Math.min(hpMaxDespues, hpDePartida + delta) };
 }
 
-/** Combina los multiplicadores de todos los buffs temporales activos en un único objeto. */
-function combinarMultiplicadoresTemporales(buffsTemporales) {
+/**
+ * Combina los multiplicadores de todos los buffs temporales activos en un único objeto.
+ *
+ * Se **exporta** para que la tarjeta de personaje enseñe exactamente los mismos números
+ * que pelean: si la UI se hiciera su propia versión de esto, tarde o temprano diría una
+ * cosa distinta de la que aplica el combate, y esa clase de desacuerdo no falla, miente.
+ */
+export function combinarMultiplicadoresTemporales(buffsTemporales) {
   const combinado = { ataque: 1, defensa: 1, velocidad: 1, hp: 1 };
   for (const buff of buffsTemporales) {
     for (const stat of Object.keys(buff.multiplicadores)) {
@@ -692,6 +698,16 @@ export const useGameStore = create((set, get) => ({
       objetoEquipadoId: p.objetoEquipadoId, // la pantalla enseña sus pasivas
     }));
 
+    // Los buffs temporales VIGENTES en este combate, por la misma razón y con la misma
+    // trampa: `_consumirUsoBuffsTemporales` corre antes de armar el resumen, así que
+    // para cuando la pantalla se monta el store ya los ha gastado. Leerlos en vivo desde
+    // la UI enseñaría "ATK +20% ×2" mientras se ve la pelea que consumió el ×3 — o nada
+    // en absoluto, si a este combate le quedaba el último uso.
+    const buffsAlEmpezar = get().buffsTemporales.map((b) => ({
+      multiplicadores: { ...b.multiplicadores },
+      combatesRestantes: b.combatesRestantes,
+    }));
+
     // Como máximo tantas rondas como personajes en el equipo — no puede
     // haber más, cada ronda consume a un personaje (gana o cae).
     while (true) {
@@ -848,7 +864,7 @@ export const useGameStore = create((set, get) => ({
 
     const resumen = {
       rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado, equipoAlEmpezar,
-      transformacionesDesbloqueadas, subidasDeNivel, recompensas,
+      transformacionesDesbloqueadas, subidasDeNivel, recompensas, buffsAlEmpezar,
     };
     set({ ultimoResultadoCombate: resumen });
     return resumen;

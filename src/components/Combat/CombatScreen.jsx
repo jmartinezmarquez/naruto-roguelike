@@ -10,7 +10,8 @@ import HoverTooltip from '../common/HoverTooltip';
 import { spriteDeProyectil } from '../common/projectileSprites';
 import TransformationScreen from './TransformationScreen';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
-import { PanelMarco, TituloBloque, IconoEnmarcado, BotonPrincipal } from '../common/PiezasUI';
+import { PanelMarco, TituloBloque, IconoEnmarcado, BotonPrincipal, ChipEfecto } from '../common/PiezasUI';
+import { resumirBuffsActivos } from '../common/efectos';
 import { useFactorAnimacion, useSettingsStore } from '../../store/useSettingsStore';
 
 // El replay avanza de GOLPE en golpe, no de turno en turno. Un turno trae 2-4
@@ -599,12 +600,26 @@ function PanelRecompensas({ recompensas }) {
 }
 
 /** La caja de un bando, con su rótulo y sus luchadores apilados. */
-function PanelBando({ titulo, children }) {
+function PanelBando({ titulo, chipsBuffs = [], children }) {
   return (
     // El contenedor SÍ lleva las esquinas en corchete: es la caja, y dentro van las
     // tarjetas de luchador con el borde fino.
     <PanelMarco className="flex-1 min-w-0 p-3 flex flex-col">
-      <TituloBloque className="mb-2">{titulo}</TituloBloque>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <TituloBloque>{titulo}</TituloBloque>
+        {/* ⚠️ Los buffs del evento, aquí y no solo en el mapa: **este es el combate en
+            el que se están gastando**, y es donde el jugador puede atar el "+20% ATK"
+            que aceptó hace tres nodos con el daño que está viendo. Vienen del resumen
+            (`buffsAlEmpezar`) y NO del store: para cuando esta pantalla se monta, el
+            store ya los ha consumido. */}
+        {chipsBuffs.length > 0 && (
+          <div className="flex flex-wrap justify-end gap-1">
+            {chipsBuffs.map((chip, i) => (
+              <ChipEfecto key={`${chip.texto}-${i}`} {...chip} />
+            ))}
+          </div>
+        )}
+      </div>
       {/* El contenido se centra en vertical para que las dos cajas, que tienen
           distinto número de tarjetas, dejen a los luchadores activos más o menos
           a la misma altura: es por donde cruza el proyectil. */}
@@ -877,6 +892,9 @@ export default function CombatScreen() {
   const golpeEnVuelo = !yaImpactado && golpesVistos > 0 ? golpes[golpesVistos - 1] : null;
   const ultimoImpacto = golpesAplicados > 0 ? golpes[golpesAplicados - 1] : null;
   const equipoEnPantalla = estadoDelEquipo(resultado, indiceRonda, estadoEnTurnoActual.hpJugador);
+  // Los buffs que estaban vigentes cuando empezó esta pelea. Del resumen y no del
+  // store, que ya los ha gastado (ver `buffsAlEmpezar` en useGameStore.jugarCombate).
+  const chipsBuffs = resumirBuffsActivos(resultado.buffsAlEmpezar);
   const pasivasEnPantalla = pasivasDelUltimoGolpe(ronda, ultimoImpacto);
   const enemigosEnPantalla = estadoDeLosEnemigos(cadenaEnemigos, ronda, estadoEnTurnoActual.hpEnemigo);
   // Solo se sacude quien acaba de recibir daño de verdad: un golpe bloqueado a 0
@@ -931,7 +949,7 @@ export default function CombatScreen() {
             />
           )}
 
-          <PanelBando titulo="Your team">
+          <PanelBando titulo="Your team" chipsBuffs={chipsBuffs}>
             {equipoEnPantalla.map((miembro) => {
               const esElQuePelea = miembro.peleando;
               // El relevo es que entre OTRO, no que cambie el número de ronda: un

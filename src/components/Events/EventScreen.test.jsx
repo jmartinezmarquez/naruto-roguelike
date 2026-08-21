@@ -1,15 +1,19 @@
 // @vitest-environment jsdom
 //
 // El evento es el único sitio del juego donde **el store devuelve datos y la pantalla
-// escribe el texto** (ver documentacion/35-diseño-de-eventos.md). Eso deja la prosa
-// entera fuera de los tests de store, en dos `switch` —la promesa y la crónica— con
-// un `default` que dice "Nothing happens".
+// escribe el texto** (ver documentacion/35-diseño-de-eventos.md). Eso deja la promesa y
+// la crónica enteras fuera de los tests de store, cada una en su `switch`.
 //
 // ⚠️ Y ahí está el riesgo, que es exactamente el patrón que este proyecto ya ha
-// pagado: **un tipo de efecto que falte en el `switch` no da error, cae en el
-// `default` y le miente al jugador** diciéndole que no pasa nada mientras el store le
-// quita 20 de oro. Añadir un efecto nuevo a `events.json` es cambiar un JSON, así que
-// nadie va a acordarse de tocar la pantalla.
+// pagado: **un tipo de efecto que falte en el `switch` no da error**. Añadir un efecto
+// nuevo a `events.json` es cambiar un JSON, así que nadie va a acordarse de tocar la
+// pantalla.
+//
+// 📌 El rediseño del 2026-08-21 cambió el vocabulario —las consecuencias son pastillas
+// y ya no frases—, y con él el `default` **dejó de mentir**: `resumirEfecto` devuelve
+// `?? <tipo>`, que es visible y feo a propósito. Antes decía "Nothing happens" y le
+// contaba al jugador que no pasaba nada mientras el store le quitaba 20 de oro. Los
+// tests de abajo siguen vigilando lo mismo, con las palabras nuevas.
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '../../test-dom';
@@ -48,12 +52,11 @@ beforeEach(() => {
 });
 
 describe('la pista, que es lo que se lee ANTES de elegir', () => {
-  it('dice "Nothing happens" exactamente tantas veces como efectos vacíos hay', () => {
-    // El test que cierra el agujero del `default`, y **cuenta en vez de buscar**: la
-    // frase es legítima en la rama mala de una tirada ("50% un objeto · 50% nada"), así
-    // que prohibirla del todo daba un falso positivo. Lo que no puede pasar es que
-    // aparezca MÁS veces que efectos `ninguno` hay de verdad — cada sobra es un tipo
-    // que la pantalla no sabe pintar y está tapando con una mentira.
+  it('la pastilla "Nothing" sale exactamente tantas veces como efectos vacíos hay', () => {
+    // **Cuenta en vez de buscar**: "Nothing" es legítimo en la rama mala de una tirada
+    // ("50% un objeto · 50% nada"), así que prohibirlo del todo daba un falso positivo
+    // (y lo dio: fue el primer intento de este test). Lo que no puede pasar es que
+    // salga MÁS veces que efectos `ninguno` hay de verdad.
     for (const evento of eventosData.eventos) {
       useGameStore.setState({ eventoActual: evento, resultadoEvento: null });
       const { unmount } = render(<EventScreen />);
@@ -61,7 +64,7 @@ describe('la pista, que es lo que se lee ANTES de elegir', () => {
       evento.elecciones.forEach((eleccion, i) => {
         const vacios = hojasDe(eleccion.efecto).filter((e) => e.tipo === 'ninguno').length;
         const texto = screen.getAllByRole('button')[i].textContent;
-        const dichos = texto.split('Nothing happens').length - 1;
+        const dichos = texto.split('Nothing').length - 1;
         expect(
           dichos,
           `"${evento.id}" / "${eleccion.texto}" → "${texto}"`,
@@ -69,6 +72,42 @@ describe('la pista, que es lo que se lee ANTES de elegir', () => {
       });
       unmount();
     }
+  });
+
+  it('⚠️ un efecto que la pantalla no conozca sale MARCADO, no disfrazado de nada', () => {
+    // El arreglo de fondo del rediseño: el `default` ya no miente. Antes un tipo nuevo
+    // caía en "Nothing happens" y era indistinguible de un efecto vacío de verdad;
+    // ahora sale un `??` que nadie puede confundir con contenido.
+    useGameStore.setState({
+      eventoActual: {
+        id: 'inventado', titulo: 'T', descripcion: 'D',
+        elecciones: [{ texto: 'Una opción', efecto: { tipo: 'efectoQueNadieHaEscritoAun' } }],
+      },
+      resultadoEvento: null,
+    });
+    render(<EventScreen />);
+
+    const texto = screen.getAllByRole('button')[0].textContent;
+    expect(texto).toContain('??');
+    expect(texto).not.toContain('Nothing');
+  });
+
+  it('las consecuencias son pastillas y no una frase corrida', () => {
+    // El problema que motivó el rediseño: con dos elecciones en prosa había que
+    // LEERLAS enteras para compararlas. Cada consecuencia tiene que ser su propia
+    // unidad, o el color y el recuento no dicen nada de un vistazo.
+    const conVarios = eventosData.eventos.find((e) =>
+      e.elecciones.some((el) => el.efecto.tipo === 'varios' && el.efecto.efectos.length > 1));
+    expect(conVarios, 'ya no hay elecciones con varios efectos').toBeTruthy();
+
+    useGameStore.setState({ eventoActual: conVarios, resultadoEvento: null });
+    render(<EventScreen />);
+
+    const eleccion = conVarios.elecciones.find((el) => el.efecto.tipo === 'varios');
+    const indice = conVarios.elecciones.indexOf(eleccion);
+    const chips = screen.getAllByRole('button')[indice].querySelectorAll('span.rounded-sm.border');
+    // Una pastilla por consecuencia, más el número de la elección.
+    expect(chips.length).toBeGreaterThanOrEqual(eleccion.efecto.efectos.length);
   });
 
   it('⚠️ las probabilidades se enseñan antes de apostar, no después', () => {

@@ -466,3 +466,31 @@ Y lo que se **mantuvo**, que es la otra mitad del criterio:
 aldea de noche**, que es donde va a estar de verdad. Pasó con los atajos del Home. Es la misma familia
 de problema que `.escena-oscura` y se resuelve con la misma idea: **lo que se pinta sobre un dibujo
 necesita traerse su propia superficie**, porque no puede contar con la de debajo.
+
+## Dos salidas del mismo rango van en el mismo botón (2026-08-21)
+
+El game over ofrecía "New Run" y "Home" con un `BotonPrincipal` y un `BotonSecundario`, y **esos dos
+no son variantes de lo mismo**: cambian de forma (`rounded-full` contra `rounded-sm`), de tamaño de
+letra (11 contra 9) y de relleno. Puestos uno al lado del otro parecían **dos especies distintas**,
+no dos opciones entre las que elegir.
+
+La regla que sale de ahí:
+
+- **`BotonSecundario` es para IRSE** —volver, cerrar, saltar— y por eso es pequeño y discreto. Su
+  sitio natural es una esquina, no el centro al lado de la acción principal.
+- **Cuando las dos cosas que ofreces son decisiones del mismo rango**, las dos van en
+  `BotonPrincipal` y lo que las separa es el **relleno** (`variante="contorno"`), nunca la geometría.
+  La forma dice "somos hermanas"; el relleno dice cuál se espera que pulses.
+
+## Un solo título por pantalla (2026-08-21)
+
+El game over decía "End of the road" **encima** de "Game Over": la misma frase dos veces, que es el
+mismo ruido que ya se había quitado de la pantalla de evento (tres rótulos) y de la tienda ("TRADING
+POST" sobre "SHOP"). `CabeceraPantalla` sigue aceptando `antetitulo`, así que esto puede volver — hay
+un test que cuenta los rótulos del game over.
+
+⚠️ **Y al quedarse uno, no tiene por qué ser el mismo en los dos casos.** Ganar pasa una vez cada
+muchas runs y merece la palabra llana ("Victory", sin coquetear); perder pasa constantemente, y ahí
+"GAME OVER" a la cara es lenguaje de máquina recreativa. **"End of the Road"** dice lo mismo desde
+dentro de la ficción y además rima con el nombre de la campaña, *The Ninja Road*: lo que se acaba es
+el camino que elegiste al empezar.

@@ -1309,6 +1309,72 @@ meter azar de verdad.
   golpe a golpe) y con medidas de maquetación, y **jsdom no maqueta**: todo mide 0. Un test ahí probaría
   el reloj falso, no el juego.
 
+**Pantalla de evento y buffs visibles (playtest 2026-08-21) — ver [35](./35-diseño-de-eventos.md)**
+
+- [x] 🐛 ⚠️ **Los buffs temporales no se veían en ningún sitio.** Un evento daba "ATK +20% durante 3
+  combates", el motor lo aplicaba **de verdad** en cada pelea, y no salía en ninguna pantalla: el juego
+  te cambiaba los números y no te lo decía. No podías saber si seguías bufado ni decidir en
+  consecuencia —pelear al jefe ahora o dar un rodeo—, que es justo para lo que sirve un buff con
+  caducidad. Ahora sale en el mapa (`PanelBuffs`) y en la cabecera de "Your team" del combate.
+- [x] ⚠️ **Y en el combate viaja en el resumen (`buffsAlEmpezar`), no se lee del store**: la misma
+  trampa que ya obligó a `equipoAlEmpezar`. `_consumirUsoBuffsTemporales` corre ANTES de armar el
+  resumen, así que en vivo se vería `×2` durante la pelea que consumió el `×3` — o **nada**, si a este
+  combate le tocaba el último uso, que es la única pelea en la que el buff hacía algo.
+- [x] **"Cuesta identificar lo que estás eligiendo" era jerarquía, no estilo**: la caja de una opción
+  era **idéntica** a la del texto de arriba (mismo fondo, mismo borde, la misma letra de 10 px) y nada
+  decía "esto se pulsa". Ahora la acción va en grande, se enciende en oro al pasar por encima y lleva
+  un número de ancla — lo que la referencia consigue con los corchetes de `[Leave]`.
+- [x] ⚠️ **Las consecuencias son pastillas y no prosa.** Con una frase corrida había que **leer las dos
+  opciones enteras** para compararlas, que es lo que una decisión de paso no puede pedir; en pastillas
+  se comparan por color y por cuántas hay. Arregla además un caso que la prosa contaba mal: "a random
+  item for 10 gold" es un premio **y** un precio en la misma frase y solo se podía pintar de un color.
+- [x] ⚠️ **Las dos ramas de una tirada van en dos filas**, con barra de probabilidad. Seguidas y
+  separadas por un punto se leían como que **pasan las dos**, y son excluyentes.
+- [x] **Sin arte nuevo**: el sello del panel es el sprite del nodo de evento, el mismo que el jugador
+  acaba de pulsar en el mapa.
+- [x] ⚠️ **De Slay the Spire se copia lo visual, NO lo informativo.** Allí la consecuencia está oculta
+  a propósito; aquí se enseña, y también a propósito — en una run de 24 nodos una apuesta a ciegas no
+  es tensión, es una trampa (regla ya escrita en el doc 35). Comprobarlo antes de imitar evitó
+  deshacer una decisión de diseño tomada.
+- [x] **El vocabulario es compartido** (`components/common/efectos.js`): la pastilla que promete el
+  buff en el evento es la misma que lo enseña activo en el mapa y en el combate. No es ahorro de
+  código — si una dijera "ataque +20%" y la otra "ATK +20%", para el jugador serían dos cosas.
+- [x] 🐛 **El `default` dejó de mentir**: un tipo de efecto sin `case` decía "Nothing happens", que es
+  indistinguible de un efecto vacío legítimo. Ahora sale `?? <tipo>`, visible y feo a propósito.
+- [x] 🐛 **Segunda pasada, tras probarlo (mismo día): fuera el sprite del panel y la barra de
+  probabilidad.** Las dos las había metido yo en la primera pasada y el jugador preguntó por las dos
+  nada más verlas. ⚠️ El sprite **cometía el error que el propio archivo cita dos comentarios más
+  arriba**: "ON THE ROAD" y "EVENT" se borraron por no decir nada que el jugador no supiera, y un
+  icono del nodo de evento dice exactamente eso, dibujado. ⚠️ Y la barra salía sin etiqueta, a todo
+  el ancho, y se leía como una de vida — *"¿qué es la barra amarilla?"* fue la pregunta, que ya es el
+  veredicto: **un elemento que hay que explicar ha fallado**, y encima no añadía ningún dato que los
+  dos porcentajes de al lado no dieran. **Al arreglar "esto está soso" es facilísimo añadir cosas en
+  vez de arreglar la jerarquía**; lo que lo resolvió fueron las pastillas y el tamaño de la acción.
+- [x] **Game over: un solo título y dos botones con la misma forma.** Decía "End of the road" encima
+  de "Game Over" —la misma frase dos veces— y ofrecía las dos salidas con un `BotonPrincipal` y un
+  `BotonSecundario`, que **no son variantes de lo mismo** (cambian forma, letra y relleno), así que
+  parecían dos especies distintas en vez de dos opciones. Ahora `variante="contorno"` mantiene la
+  geometría y solo cambia el relleno. ⚠️ Y el título que sobrevive **no es el mismo en los dos casos**:
+  ganar pasa una vez cada muchas runs y merece la palabra llana ("Victory"); perder pasa
+  constantemente y "GAME OVER" a la cara es lenguaje de recreativa — **"End of the Road"** lo dice
+  desde dentro de la ficción y rima con el nombre de la campaña, *The Ninja Road*.
+- [x] 🐛 ⚠️ **La mejora permanente de los eventos tampoco se veía**, y salió al pedir que se vieran
+  los buffs en la tarjeta: `FichaPersonaje` reconstruía al luchador **desde el JSON crudo**, sin
+  `instancia.bonificaciones`, así que enseñaba un número **más bajo del que de verdad pelea**. Es el
+  mismo agujero que los buffs temporales, un piso más allá.
+- [x] **Los deltas se MIDEN, no se copian del dato.** La bonificación se suma a `statsBase` *antes* de
+  escalar por nivel, así que un `+4` guardado vale +4 a nivel 1 y bastante más a nivel 40 — pintar el
+  número crudo mentiría cada vez más según avanza la run. Y el buff es un multiplicador, no una suma.
+  Se construyen tres luchadores (pelado / con mejora / efectivo) y los deltas son la resta.
+  `combinarMultiplicadoresTemporales` **se exporta del store** en vez de reimplementarse en la UI: dos
+  versiones de esa fórmula acabarían discrepando, y esa clase de desacuerdo no falla, miente.
+- [x] ⚠️ **Dorado el permanente, verde el temporal**: son cosas distintas y con un solo color la ficha
+  diría que el personaje vale eso, y dentro de tres combates ya no.
+- [x] **`ATT` → `ATK` y `SPE` → `SPD`, en un solo sitio.** Había DOS tablas de abreviaturas —la ficha
+  y la enciclopedia— diciendo `ATT`/`SPE` mientras las pastillas de evento decían `ATK`/`SPD`: el
+  mismo dato con dos nombres en la misma partida. Ahora las cuatro salen de `nombreStat`.
+- [x] 435 tests (eran 403).
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
