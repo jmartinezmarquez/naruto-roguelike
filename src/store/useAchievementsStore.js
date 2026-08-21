@@ -12,6 +12,7 @@ import { evaluarLogrosDesbloqueables } from '../engine/achievements';
 const CLAVE_STORAGE = 'naruto-roguelike-logros';
 const CLAVE_VISTOS = 'naruto-roguelike-vistos';
 const CLAVE_CONTADORES = 'naruto-roguelike-contadores';
+const CLAVE_MARCA = 'naruto-roguelike-marca';
 
 /**
  * Las cuatro categorías del registro de "visto" de la enciclopedia. Están aquí y
@@ -51,6 +52,20 @@ export const CONTADORES_VACIO = {
   runsPerdidas: 0,
 };
 
+/**
+ * Hasta dónde se ha llegado NUNCA: el punto más lejano de todas las runs.
+ *
+ * ⚠️ **Vive aparte de los contadores porque su semántica es otra**: los contadores
+ * SUMAN y esto es un MÁXIMO. Meter las dos cosas en el mismo saco es cómo se acaba
+ * sumando un récord — y ya está escrito en `achievements.json` que por eso no existe
+ * una condición de logro por nivel alcanzado.
+ *
+ * `orden` es la posición del arco dentro de su campaña, y viaja con la marca porque
+ * este store **no sabe de campañas**: sin él no se puede comparar "arco 3, piso 1"
+ * con "arco 2, piso 8". Lo pone quien llama, que sí lo sabe.
+ */
+export const MARCA_VACIA = { arcoId: null, orden: -1, piso: 0 };
+
 export const useAchievementsStore = create((set, get) => ({
   logrosDesbloqueados: [], // array de ids de logros — cargarLogros() los rellena desde localStorage
   notificacionesPendientes: [], // cola de logros (objetos completos) recién desbloqueados, para el toast — ver LogroToast
@@ -63,6 +78,9 @@ export const useAchievementsStore = create((set, get) => ({
 
   // Lo mismo, para los logros de "hazlo N veces". Ver CONTADORES_VACIO.
   contadores: CONTADORES_VACIO,
+
+  // El punto más lejano alcanzado nunca. Ver MARCA_VACIA.
+  marca: MARCA_VACIA,
 
   /** Carga los logros ya desbloqueados en sesiones anteriores. Llamar una vez al arrancar la app. */
   cargarLogros() {
@@ -80,6 +98,25 @@ export const useAchievementsStore = create((set, get) => ({
     if (contadoresGuardados) {
       set({ contadores: { ...CONTADORES_VACIO, ...JSON.parse(contadoresGuardados) } });
     }
+
+    const marcaGuardada = localStorage.getItem(CLAVE_MARCA);
+    if (marcaGuardada) set({ marca: { ...MARCA_VACIA, ...JSON.parse(marcaGuardada) } });
+  },
+
+  /**
+   * Apunta un punto alcanzado, y **solo lo guarda si mejora el récord**.
+   *
+   * Se compara por (arco, piso) en ese orden: el piso 1 del arco 3 está más lejos que
+   * el piso 8 del arco 2. Es idempotente y no toca el estado si no hay mejora, que es
+   * lo que permite llamarlo en **cada nodo** sin pensar — igual que `registrarVistos`.
+   */
+  registrarMarca({ arcoId, orden, piso }) {
+    const actual = get().marca;
+    const mejora = orden > actual.orden || (orden === actual.orden && piso > actual.piso);
+    if (!mejora) return;
+    const siguiente = { arcoId, orden, piso };
+    set({ marca: siguiente });
+    localStorage.setItem(CLAVE_MARCA, JSON.stringify(siguiente));
   },
 
   /**
@@ -192,10 +229,13 @@ export const useAchievementsStore = create((set, get) => ({
    * El "empezar de cero" de toda la meta-progresión, que es una opción de verdad
    * en Ajustes (ver documentacion/34-ajustes.md).
    *
-   * ⚠️ **Borra las TRES claves.** Dejar los contadores llenos mientras los logros
+   * ⚠️ **Borra las CUATRO claves.** Dejar los contadores llenos mientras los logros
    * vuelven a cero es peor que no reiniciar: los de contador se volverían a
    * desbloquear en el acto, en el primer combate, y el jugador vería su reinicio
-   * deshacerse solo. Lo mismo con los vistos y la enciclopedia.
+   * deshacerse solo. Lo mismo con los vistos y la enciclopedia, y con la marca — que
+   * es lo primero que se mira en el Home.
+   *
+   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van cuatro.
    */
   reiniciarLogros() {
     set({
@@ -203,9 +243,11 @@ export const useAchievementsStore = create((set, get) => ({
       notificacionesPendientes: [],
       vistos: VISTOS_VACIO,
       contadores: CONTADORES_VACIO,
+      marca: MARCA_VACIA,
     });
     localStorage.removeItem(CLAVE_STORAGE);
     localStorage.removeItem(CLAVE_VISTOS);
     localStorage.removeItem(CLAVE_CONTADORES);
+    localStorage.removeItem(CLAVE_MARCA);
   },
 }));

@@ -167,6 +167,15 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
           {equipo.map((p) => {
             const hpMaximo = obtenerHpMaximo(p.id) ?? p.hpActual ?? 1;
             const yaLoLleva = p.objetoEquipadoId === objeto.id;
+            // ⚠️ Un consumible curativo sobre alguien que está al máximo se GASTA y no
+            // hace nada: `usarConsumible` devuelve `true`, el HP se queda igual y el
+            // objeto desaparece del inventario. Sin esto el botón decía "Use" y la
+            // mochila se cerraba sola, así que el jugador perdía un objeto sin llegar
+            // a enterarse. Chirriaba el doble porque esta misma pantalla SÍ avisa antes
+            // de reemplazar algo equipado, que encima es reversible —el objeto vuelve a
+            // la mochila— y esto no lo es.
+            const noLeHaceNada = esConsumible && !p.derrotado && p.hpActual >= hpMaximo;
+            const bloqueado = yaLoLleva || noLeHaceNada;
             return (
               <div key={p.id} className="flex items-center justify-between gap-2">
                 {/* Con sprite: elegir a quién le pones el objeto es elegir a un
@@ -196,19 +205,21 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
                 </span>
                 <button
                   type="button"
-                  disabled={yaLoLleva}
+                  disabled={bloqueado}
                   onClick={() => alPulsar(p)}
                   className={[
                     'font-display text-[9px] px-3 py-1.5 rounded-sm transition-colors shrink-0',
-                    yaLoLleva
+                    bloqueado
                       ? 'bg-pergamino-100/10 text-pergamino-200/40 cursor-not-allowed'
                       : 'bg-sello-600 text-sobre-sello hover:bg-sello-500',
                   ].join(' ')}
                 >
                   {yaLoLleva
                     ? 'Worn'
-                    : esConsumible
-                      ? 'Use'
+                    : noLeHaceNada
+                      ? 'Full'
+                      : esConsumible
+                        ? 'Use'
                       : p.objetoEquipadoId
                         ? 'Replace'
                         : 'Equip'}

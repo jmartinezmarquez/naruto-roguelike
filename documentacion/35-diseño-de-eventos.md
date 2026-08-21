@@ -115,6 +115,91 @@ una promesa en futuro y `describirResultado` una crónica en pasado.
 De paso desapareció el **toast** de curación en el mapa: desde que hay pantalla de resultado contaba lo
 mismo dos veces, y encima después, ya en el mapa.
 
+## El rediseño de la pantalla (2026-08-21)
+
+El diagnóstico original decía que "la pantalla ya estaba en estilo y lo que fallaba era el
+contenido". Con el contenido arreglado, el jugador volvió con lo otro: **"fea e insulsa, y cuesta
+identificar lo que estás eligiendo"**. Las dos mitades de esa frase tienen causas distintas.
+
+**Lo de "cuesta identificar" era un problema de jerarquía, no de estilo.** La caja de una opción era
+**idéntica** a la del texto de arriba: mismo fondo, mismo borde, la misma letra de 10 px. Nada decía
+"esto se pulsa". Y debajo, la consecuencia iba en **prosa corrida** —"55% You gain 30 gold. · 45% The
+team loses 18% of its HP."—, así que para comparar las dos opciones había que **leerlas enteras**,
+que es justo lo que una decisión de paso no puede pedir.
+
+Lo que se cambió:
+
+- ⚠️ **Las consecuencias son pastillas** (`ChipEfecto`), no frases. `+30 g` en verde, `−18% HP` en
+  rojo. Ahora las dos opciones se comparan **por color y por cuántas hay** antes de leer una palabra.
+  De paso arregla un caso que la prosa contaba mal: "a random item for 10 gold" es un premio **y** un
+  precio en la misma frase, y solo se podía pintar de un color; ahora son dos pastillas.
+- **La acción va en grande y se enciende en oro al pasar por encima**, con un número de ancla a la
+  izquierda — que es lo que la referencia consigue con los corchetes de `[Leave]`.
+- ⚠️ **Las dos ramas de una tirada van en dos filas**, con una barra de probabilidad encima. Antes
+  iban seguidas separadas por un punto y **se leían como que pasan las dos**. Son excluyentes.
+### Dos cosas que duraron un playtest
+
+El primer intento metió además un **sprite del nodo de evento** presidiendo el panel y una **barra de
+proporción** encima de las dos ramas de una tirada. El jugador preguntó por las dos en cuanto las vio,
+y esa pregunta ya era el veredicto.
+
+- ⚠️ **El sprite cometía el error que este mismo documento cita.** Los rótulos "ON THE ROAD" y "EVENT"
+  se borraron por no decir nada que el jugador no supiera —está en un nodo de evento porque *acaba de
+  pulsarlo*—, y un icono del nodo de evento dice **exactamente eso**, solo que dibujado. La regla que
+  deja: **decoración que repite el contexto sigue siendo repetir el contexto.** Si algún día hay
+  ilustración *por evento*, eso sí aporta (sería contenido, no etiqueta) y va ahí.
+- ⚠️ **La barra tenía que explicarse, y por tanto había fallado.** La idea era "que la apuesta se vea
+  antes de leer el número", pero salía sin etiqueta, a todo el ancho y justo debajo del título de la
+  opción: se leía como una barra de vida o de progreso. La primera pregunta fue literalmente *"¿qué es
+  la barra amarilla?"*. Y encima no añadía **ningún dato**: los dos porcentajes están ahí mismo, en su
+  color. **Un elemento de interfaz que necesita explicación ya ha fallado.**
+
+La lección común a las dos: al arreglar "esto está soso" es muy fácil **añadir cosas** en vez de
+arreglar la jerarquía. Lo que resolvió el problema de verdad fueron las pastillas y el tamaño del
+texto de la acción; el sprite y la barra eran relleno, y el relleno se nota.
+
+### Lo que NO se copia de Slay the Spire
+
+La referencia visual es su pantalla de evento, pero hay una cosa que se deja fuera **a sabiendas**:
+allí **la consecuencia está oculta** —casi nunca sabes el HP o el oro exactos antes de pulsar— y parte
+de la gracia es esa. Aquí no, y no por descuido: está en "Las siete reglas" de este mismo documento.
+Las runs son cortas y el azar entró con condiciones; **una apuesta a ciegas en una run de 24 nodos no
+es tensión, es una trampa.** De la referencia se copia la forma, no la información.
+
+⚠️ **Y el `default` dejó de mentir.** Antes un tipo de efecto sin `case` caía en "Nothing happens", que
+es indistinguible de un efecto vacío legítimo: el juego le decía al jugador que no pasaba nada mientras
+el store le quitaba 20 de oro. Ahora `resumirEfecto` devuelve `?? <tipo>`, visible y feo a propósito.
+
+### El vocabulario es compartido, y eso arregla otra cosa
+
+`resumirEfecto` vive en `components/common/efectos.js` y no en la pantalla, porque lo consumen **tres**
+sitios: la promesa de la elección, su resultado, y el indicador de buffs activos del mapa y del
+combate. ⚠️ **Que sean la misma pastilla no es ahorro de código**: el jugador acepta un `ATK +20%` en
+el evento y reconoce **esa misma** pastilla tres nodos después. Si una dijera "ataque +20%" y la otra
+"ATK +20%", para él serían dos cosas distintas. Hay un test que lo comprueba.
+
+## Los buffs temporales, que no se veían (2026-08-21)
+
+Un evento daba "ATK +20% durante 3 combates", `crearLuchador` lo aplicaba **de verdad** en cada
+pelea… y no aparecía en ninguna pantalla. ⚠️ **El juego te cambiaba los números y no te lo decía**:
+no había forma de saber si seguías bufado, ni de decidir en consecuencia —pelear al jefe ahora o dar
+un rodeo—, que es exactamente para lo que sirve un buff con caducidad. No fallaba nada: simplemente
+el jugador no se enteraba.
+
+Ahora sale en dos sitios, con la misma pastilla que lo prometió:
+
+- **En el mapa** (`PanelBuffs`), encima de la mochila: cuando hay uno activo es lo más perecedero que
+  hay en pantalla y es lo que puede cambiar a qué nodo vas ahora. **Desaparece cuando no hay ninguno**
+  en vez de quedarse vacío — un hueco permanente casi siempre en blanco enseña a no mirarlo.
+- **En el combate**, en la cabecera de "Your team": es la pelea en la que se está gastando.
+
+⚠️ **Y en el combate viaja en el resumen (`buffsAlEmpezar`), no se lee del store** — la misma trampa
+que ya obligó a `equipoAlEmpezar`. `_consumirUsoBuffsTemporales()` corre **antes** de armar el
+resumen, así que para cuando `CombatScreen` se monta el store ya ha gastado el uso de este combate:
+en vivo enseñaría `ATK +20% ×2` mientras ves la pelea que consumió el ×3, o **nada en absoluto** si a
+este combate le tocaba el último uso — justo la única pelea en la que el buff estaba haciendo algo.
+Hay cuatro tests de store que lo cubren, incluido el caso de que se agote.
+
 ## Tests
 
 En `store/useGameStore.test.js`, dos bloques. **Resolución**: que no vuelve al mapa al elegir, que
@@ -132,3 +217,42 @@ que ningún daño pasa del 25%.
 - **Tres opciones en algún evento.** Se dejó en dos a propósito: con precio y azar, dos opciones ya son
   una decisión. Una tercera se añade cuando sea un camino de verdad, no para rellenar.
 - **Eventos que encadenan combate.** Hay ya suficientes combates por piso.
+
+## Cuándo hay pantalla de resultado (2026-08-21)
+
+La tanda de ritmo quitó botones de "Continue" por todo el juego, y aquí hubo que trazar una línea
+**dentro** de la misma pantalla. Costó dos intentos y el segundo lo tiró el playtest.
+
+**Primer intento — "sin tirada, se cierra sola".** El razonamiento era que la pantalla existe por el
+azar (punto 6: resolver en silencio "le escondía al jugador justo lo que había apostado"), así que sin
+azar sobraba. En la práctica salió **lo peor de las dos opciones**: la pantalla aparecía y
+desaparecía en poco más de un segundo, ni daba tiempo a leerla ni parecía que no hubiera nada.
+Palabras del jugador: *"da la sensación de que estás perdiéndote algo"*.
+
+⚠️ **La línea buena no es si hubo azar, es si el desenlace AÑADE INFORMACIÓN.** Cuando eliges, la
+pista ya te ha enseñado `+45% HP` y `−20 g`: con un efecto fijo, el resultado es **la promesa otra
+vez**, y una pantalla para repetirte lo que acabas de leer y elegir no es un desenlace, es un trámite.
+
+Pero hay desenlaces **sin tirada** que sí aportan, y son los que tumbaron la primera regla:
+
+| Caso | Qué añade |
+|---|---|
+| `comprarObjetoAleatorio` | La pista decía "Random item". El resultado dice **cuál**. |
+| `mejoraPermanenteAleatoria` | **A quién** y **qué** estadística, para siempre. |
+| `sinOro` | No te llegaba: **no ha pasado lo que prometía**. |
+| `perderOro` por menos de lo pedido | Has pagado menos porque no tenías tanto. |
+| `ninguno` cuando la promesa no era `ninguno` | Algo se ha quedado sin hacer. |
+
+Con eso: **o hay algo que leer y la pantalla se queda con su botón, o no lo hay y vuelves al mapa
+directo. Nunca una pantalla que parpadea.** De los 30 caminos del juego, 16 van directos y 14 abren
+resultado.
+
+⚠️ **Y el cierre inmediato va en el manejador del clic, no en un `useEffect`.** Las dos llamadas al
+store son síncronas, así que React pinta una sola vez y la pantalla de resultado **no se llega a
+ver**. Cerrarla desde un efecto habría dejado un fotograma asomando — que es exactamente la sensación
+que esto viene a quitar.
+
+📌 También se probó y se quitó un cartel de **"SPACE TO CONTINUE"** bajo el resultado: la referencia
+no lo lleva, y un rótulo de instrucciones es ruido. Lo que enseña que se puede adelantar es
+adelantarlo una vez.
+

@@ -2,9 +2,11 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import HoverTooltip from './HoverTooltip';
 import {
-  emojiDeTipo, nombreDeTipo, nombreObjeto, rarezaDeLuchador, nombrePersonaje, nombreCorto,
+  nombreDeTipo, nombreObjeto, rarezaDeLuchador, nombrePersonaje, nombreCorto,
   clasePastillaDeTipo,
 } from './nombres';
+import { nombreStat } from './efectos';
+import { IconoChakraDeLuchador } from './IconoChakra';
 import { spriteDeCombate, encontrarBaseDeLuchador } from './datosDeLuchador';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import { PanelMarco, TituloBloque } from './PiezasUI';
@@ -136,24 +138,51 @@ function BarraHp({ actual, maximo }) {
  *
  * Con las abreviaturas de siempre y sin iconos: "⚔ Attack" y "❤ Max HP" no
  * cabían en media columna con la fuente pixel art, así que "Max HP" se partía en
- * dos líneas y descuadraba la rejilla entera. ATT/DEF/SPE/HP son tres letras,
+ * dos líneas y descuadraba la rejilla entera. ATK/DEF/SPD/HP son tres letras,
  * caben siempre y en un juego de stats no hay que explicarlas.
+ *
+ * ⚠️ **Las abreviaturas salen de `nombreStat`** y ya no de una tabla local. Había DOS
+ * tablas —una aquí y otra en la enciclopedia— y las dos decían `ATT`/`SPE` mientras las
+ * pastillas de evento decían `ATK`/`SPD`: el mismo dato con dos nombres en la misma
+ * partida. Ahora hay un solo sitio donde se escriben.
+ *
+ * `deltas` es opcional: `{ stat: { permanente, temporal } }`, ya ESCALADOS al nivel.
+ * Ver `FichaPersonaje` para por qué no se pueden pintar los números crudos.
  */
-function Estadisticas({ stats }) {
+function Estadisticas({ stats, deltas = null }) {
   const filas = [
-    ['ATT', stats.ataque],
-    ['DEF', stats.defensa],
-    ['SPE', stats.velocidad],
-    ['HP', stats.hp],
+    ['ataque', stats.ataque],
+    ['defensa', stats.defensa],
+    ['velocidad', stats.velocidad],
+    ['hp', stats.hp],
   ];
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-      {filas.map(([etiqueta, valor]) => (
-        <div key={etiqueta} className="flex items-baseline justify-between gap-1.5">
-          <span className="text-[10px] text-pergamino-200/60">{etiqueta}</span>
-          <span className="text-[11px] font-display text-pergamino-100">{valor}</span>
-        </div>
-      ))}
+      {filas.map(([stat, valor]) => {
+        const delta = deltas?.[stat];
+        return (
+          <div key={stat} className="flex items-baseline justify-between gap-1">
+            <span className="text-[10px] text-pergamino-200/60">{nombreStat(stat)}</span>
+            <span className="flex items-baseline gap-1 min-w-0">
+              {/* Los dos deltas van en colores DISTINTOS porque son cosas distintas, y
+                  confundirlas engaña: el dorado es tuyo para siempre y el verde se gasta
+                  en unos combates. Un solo color diría que el personaje vale eso, y
+                  dentro de tres peleas ya no. */}
+              {delta?.permanente > 0 && (
+                <span className="text-[9px] text-oro" title="Permanent upgrade">
+                  +{delta.permanente}
+                </span>
+              )}
+              {delta?.temporal > 0 && (
+                <span className="text-[9px] text-exito" title="Temporary buff">
+                  +{delta.temporal}
+                </span>
+              )}
+              <span className="text-[11px] font-display text-pergamino-100">{valor}</span>
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -172,9 +201,54 @@ function Estadisticas({ stats }) {
  * ficha tienen equipo detrás (reclutar y selección de personaje muestran a
  * alguien que todavía no es tuyo, y ahí no hay objeto que enseñar).
  */
-export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId = null, className = '' }) {
+export function FichaPersonaje({
+  id, nivel, hpActual, hpMaximo, objetoEquipadoId = null, className = '',
+  bonificaciones = null, multiplicadoresBuffs = null,
+}) {
   const base = useMemo(() => encontrarBase(id), [id]);
-  const luchador = useMemo(() => (base ? crearLuchador(base, nivel ?? 1) : null), [base, nivel]);
+
+  // ⚠️ **Tres luchadores y no uno**, porque los deltas hay que MEDIRLOS y no se pueden
+  // copiar de los datos:
+  //
+  // - La mejora permanente de un evento se suma a `statsBase` **antes** de escalar por
+  //   nivel (`calcularStatsPorNivel`), así que un `+2` guardado en la instancia vale +2
+  //   a nivel 1 y bastante más a nivel 20. Pintar el número crudo mentiría cada vez más
+  //   según avanza la run.
+  // - El buff temporal es un MULTIPLICADOR, no una suma: cuánto vale en puntos depende
+  //   del nivel, del modo activo y de la mejora permanente que ya lleve encima.
+  //
+  // Restar dos luchadores construidos por el mismo camino que usa el combate es la única
+  // forma de que el número de la ficha sea el que de verdad pelea.
+  const { luchador, deltas } = useMemo(() => {
+    if (!base) return { luchador: null, deltas: null };
+
+    const conPermanente = bonificaciones
+      ? {
+        ...base,
+        statsBase: {
+          hp: base.statsBase.hp + (bonificaciones.hp ?? 0),
+          ataque: base.statsBase.ataque + (bonificaciones.ataque ?? 0),
+          defensa: base.statsBase.defensa + (bonificaciones.defensa ?? 0),
+          velocidad: base.statsBase.velocidad + (bonificaciones.velocidad ?? 0),
+        },
+      }
+      : base;
+
+    const pelado = crearLuchador(base, nivel ?? 1);
+    const conMejora = bonificaciones ? crearLuchador(conPermanente, nivel ?? 1) : pelado;
+    const efectivo = multiplicadoresBuffs
+      ? crearLuchador(conPermanente, nivel ?? 1, null, multiplicadoresBuffs)
+      : conMejora;
+
+    const porStat = {};
+    for (const stat of ['ataque', 'defensa', 'velocidad', 'hp']) {
+      porStat[stat] = {
+        permanente: conMejora.statsBase[stat] - pelado.statsBase[stat],
+        temporal: efectivo.statsBase[stat] - conMejora.statsBase[stat],
+      };
+    }
+    return { luchador: efectivo, deltas: porStat };
+  }, [base, nivel, bonificaciones, multiplicadoresBuffs]);
 
   if (!base || !luchador) return null;
 
@@ -215,8 +289,8 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
             la tarjeta no cambia de alto según a quién estés mirando. */}
         <NombreQueCabe id={id} className="font-display font-bold text-sm leading-tight" />
         <div className="flex items-center justify-between gap-2 mt-1.5">
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${clasePastillaDeTipo(id)}`}>
-            {emojiDeTipo(id)} {nombreDeTipo(id)}
+          <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border ${clasePastillaDeTipo(id)}`}>
+            <IconoChakraDeLuchador id={id} /> {nombreDeTipo(id)}
           </span>
           <div className="flex items-baseline gap-2 shrink-0">
             {/* Solo estrellas y color, sin la palabra: "★★★ Legendary" repetía
@@ -246,7 +320,7 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
           de panel ("TEAM", "ITEMS") van en crema por lo contrario. */}
       <div className="border-t border-marco pt-2.5 flex flex-col gap-1.5">
         <TituloBloque tono="seccion">Base stats</TituloBloque>
-        <Estadisticas stats={luchador.statsBase} />
+        <Estadisticas stats={luchador.statsBase} deltas={deltas} />
       </div>
 
       {/* Solo el jutsu y su ritmo. Fuera quedaron, a propósito:
@@ -293,12 +367,24 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
   );
 }
 
+/**
+ * La ficha de arriba, colgada de un hover.
+ *
+ * ⚠️ **Reenvía TODAS las props de la ficha, y esto ya ha fallado una vez.** Al añadir
+ * `bonificaciones` y `multiplicadoresBuffs` se enchufaron en el mapa y se probaron
+ * contra `FichaPersonaje`… y este envoltorio no las declaraba, así que las tiraba por el
+ * camino: en el juego no se veía nada. Los tests pasaban porque montaban la ficha
+ * directamente, o sea que **probaban las dos piezas y no la unión**. Si mañana la ficha
+ * gana otra prop, hay que añadirla aquí también.
+ */
 export default function PersonajeHoverCard({
   id,
   nivel,
   hpActual,
   hpMaximo,
   objetoEquipadoId = null,
+  bonificaciones = null,
+  multiplicadoresBuffs = null,
   posicion = 'derecha',
   className = 'inline-block',
   children,
@@ -316,6 +402,8 @@ export default function PersonajeHoverCard({
           hpActual={hpActual}
           hpMaximo={hpMaximo}
           objetoEquipadoId={objetoEquipadoId}
+          bonificaciones={bonificaciones}
+          multiplicadoresBuffs={multiplicadoresBuffs}
           className="w-64 shadow-xl p-3"
         />
       )}

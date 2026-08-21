@@ -27,6 +27,11 @@ import sys
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ORIGEN = os.path.join(RAIZ, 'src', 'assets', 'originales', 'game-background-light-theme.png')
+# ⚠️ Un solo destino. Llegó a escribir también el icono "Home" del menú, con el
+# argumento de que "volver a la aldea" y "volver al inicio" son la misma idea. Se
+# descartó por dos motivos: **a 32 px un remolino es una mancha**, y el mismo dibujo
+# acababa significando dos cosas distintas en la misma pantalla. El Home tiene ahora su
+# propio sprite (`scripts/generar-icono-home.py`).
 DESTINO = os.path.join(RAIZ, 'public', 'favicon.png')
 
 # La placa de la torre de agua, medida sobre el original de 1672×941.

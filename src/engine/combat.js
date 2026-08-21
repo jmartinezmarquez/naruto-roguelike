@@ -308,7 +308,9 @@ export function resolverTurno(luchador1, luchador2, azar = Math.random) {
     if (repite) {
       eventos.push(ejecutarAtaque(atacante, defensor, true));
     }
-    return eventos;
+    // ⚠️ **Quién ataca se marca por POSICIÓN, no por id.** Ver la nota de `ganadorEsPrimero`.
+    const esPrimero = atacante === luchador1;
+    return eventos.map((evento) => ({ ...evento, atacanteEsPrimero: esPrimero }));
   }
 
   const [primero, segundo] = determinarOrden(luchador1, luchador2);
@@ -323,11 +325,19 @@ export function resolverTurno(luchador1, luchador2, azar = Math.random) {
 
   const luchador1Derrotado = luchador1.hpActual <= 0;
   const luchador2Derrotado = luchador2.hpActual <= 0;
+  const ganadorEsPrimero = luchador1Derrotado ? false : luchador2Derrotado ? true : null;
 
   return {
     eventos,
     combateTerminado: luchador1Derrotado || luchador2Derrotado,
-    ganadorId: luchador1Derrotado ? luchador2.id : luchador2Derrotado ? luchador1.id : null,
+    ganadorEsPrimero,
+    // ⚠️ `ganadorId` se conserva para el registro, pero **NO sirve para saber de qué
+    // lado está el ganador**: los dos luchadores pueden tener el MISMO id. Pasa de
+    // verdad y no es un caso raro — los jefes se desbloquean como reclutables por logro,
+    // así que reclutas a Kabuto y luego te toca el mini-jefe Kabuto. Con `===` contra el
+    // id, el jugador **ganaba esa ronda siempre, incluso muerto con 0 HP**. Quien
+    // necesite saber el bando usa `ganadorEsPrimero`.
+    ganadorId: ganadorEsPrimero === null ? null : (ganadorEsPrimero ? luchador1.id : luchador2.id),
   };
 }
 
@@ -354,12 +364,19 @@ export function resolverCombateCompleto(luchador1, luchador2, azar = Math.random
   }
 
   // Si se agota el límite de turnos sin caído, gana quien conserve más % de HP.
-  let ganadorId = resultado.ganadorId;
-  if (!ganadorId) {
+  let ganadorEsPrimero = resultado.ganadorEsPrimero;
+  if (ganadorEsPrimero === null) {
     const ratio1 = luchador1.hpActual / luchador1.hpMaximo;
     const ratio2 = luchador2.hpActual / luchador2.hpMaximo;
-    ganadorId = ratio1 >= ratio2 ? luchador1.id : luchador2.id;
+    ganadorEsPrimero = ratio1 >= ratio2;
   }
 
-  return { historial, ganadorId, turnosUsados: turno };
+  // `ganadorId` es informativo. Para saber el BANDO, `ganadorEsPrimero` — ver la nota
+  // en `resolverTurno`.
+  return {
+    historial,
+    ganadorEsPrimero,
+    ganadorId: ganadorEsPrimero ? luchador1.id : luchador2.id,
+    turnosUsados: turno,
+  };
 }

@@ -43,5 +43,6 @@
 - [35 - Diseño de los eventos](./35-diseño-de-eventos.md)
 - [36 - Música de fondo](./36-musica.md)
 - [37 - Publicación web](./37-publicacion-web.md)
+- [38 - Home y campañas](./38-home-y-campanas.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

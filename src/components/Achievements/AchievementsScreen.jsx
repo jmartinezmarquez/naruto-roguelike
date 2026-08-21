@@ -75,7 +75,12 @@ function textoRecompensa(recompensa) {
   // juego de runs cortas no quiere meta-progresión que cambie números. Lo que se
   // devuelve NO es cadena vacía: un hueco no dice "esto es una marca de honor",
   // dice "aquí falta algo".
-  if (recompensa.tipo === 'ninguna') return 'A mark of honour. No reward beyond the telling.';
+  //
+  // Tres palabras y no ocho: esta línea sale en 13 de las 23 filas, y desde que
+  // existe el **rango S** al lado, "no reward beyond the telling" repetía por escrito
+  // lo que el icono ya dice. Una frase que se repite trece veces en una pantalla se
+  // paga trece veces.
+  if (recompensa.tipo === 'ninguna') return 'A mark of honour.';
   return '';
 }
 

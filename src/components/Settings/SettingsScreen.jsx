@@ -111,23 +111,22 @@ export default function SettingsScreen() {
     else if (hayPantallaCompleta()) document.exitFullscreen();
   }
 
-  function reiniciarMetaProgreso() {
-    if (window.confirm(
-      'Reset all meta-progress? You will lose every unlocked achievement and your whole Bingo Book. '
-      + 'This cannot be undone and does not affect the run in progress.',
-    )) {
-      reiniciarLogros();
-    }
-  }
+  // ⚠️ Con ventana del juego y no con `window.confirm`. Era el último diálogo del
+  // navegador que quedaba, y estaba en **la acción más destructiva de todas**: la
+  // única que borra algo que no se puede volver a conseguir jugando una run.
+  const [confirmandoReinicio, setConfirmandoReinicio] = useState(false);
 
   return (
+    <>
     <VentanaModal titulo="Settings" onCerrar={volverAlMapa} ancho="max-w-md">
       <section className="flex flex-col gap-1">
         <TituloBloque>Display</TituloBloque>
-        <FilaAjuste
-          etiqueta="Theme"
-          pista="Light mode uses the parchment palette instead of the ink one."
-        >
+        {/* Sin `pista`: DARK / LIGHT se explican solos. La descripción solo se pone
+            donde el control NO se entiende por su nombre — hoy, saltar la pantalla de
+            transformación (que hay que saber qué te pierdes) y reiniciar la
+            meta-progresión (que hay que saber qué borra). En lo demás era ruido
+            debajo de cada línea. */}
+        <FilaAjuste etiqueta="Theme">
           <SelectorOpciones
             etiqueta="Theme"
             valor={tema}
@@ -152,10 +151,7 @@ export default function SettingsScreen() {
         {/* Solo música: el juego no tiene efectos de sonido a propósito, así que no
             hay un segundo control que no controle nada. Misma regla que dejó esta
             sección entera fuera hasta que hubo sistema. */}
-        <FilaAjuste
-          etiqueta="Music"
-          pista="One looping track per arc. Silent if the track file is missing."
-        >
+        <FilaAjuste etiqueta="Music">
           <SelectorOpciones
             etiqueta="Music volume"
             valor={PASOS_VOLUMEN.find((p) => p.valor === volumenMusica)?.id ?? 'medio'}
@@ -170,10 +166,7 @@ export default function SettingsScreen() {
 
       <section className="flex flex-col gap-1 mt-3">
         <TituloBloque>Combat</TituloBloque>
-        <FilaAjuste
-          etiqueta="Animation speed"
-          pista="Instant resolves the whole round at once, with no replay."
-        >
+        <FilaAjuste etiqueta="Animation speed">
           <SelectorOpciones
             etiqueta="Animation speed"
             valor={velocidadCombate}
@@ -201,13 +194,38 @@ export default function SettingsScreen() {
         <TituloBloque>Progress</TituloBloque>
         <FilaAjuste
           etiqueta="Reset meta-progress"
-          pista="Achievements and Bingo Book. Does not touch the run in progress."
+          pista="Achievements and Bingo Book."
         >
-          <BotonSecundario onClick={reiniciarMetaProgreso} className="border-sello-600/60 text-sello-500">
+          <BotonSecundario onClick={() => setConfirmandoReinicio(true)} className="border-sello-600/60 text-sello-500">
             RESET
           </BotonSecundario>
         </FilaAjuste>
       </section>
     </VentanaModal>
+
+    {confirmandoReinicio && (
+      <VentanaModal titulo="Reset meta-progress" onCerrar={() => setConfirmandoReinicio(false)} ancho="max-w-sm">
+        <div className="flex flex-col gap-4">
+          <p className="text-[10px] text-pergamino-200 leading-relaxed">
+            You will lose every unlocked mission and your whole Bingo Book, and start from zero
+            the next time you play.
+          </p>
+          <p className="text-[9px] text-sello-500 leading-relaxed border-t border-marco pt-3">
+            This cannot be undone. The run in progress is not affected.
+          </p>
+          <div className="flex justify-end gap-2">
+            <BotonSecundario onClick={() => setConfirmandoReinicio(false)}>Cancel</BotonSecundario>
+            <button
+              type="button"
+              onClick={() => { setConfirmandoReinicio(false); reiniciarLogros(); }}
+              className="font-display text-[9px] px-3 py-2 rounded-sm bg-sello-600 text-sobre-sello hover:bg-sello-500 transition-colors"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </VentanaModal>
+    )}
+    </>
   );
 }

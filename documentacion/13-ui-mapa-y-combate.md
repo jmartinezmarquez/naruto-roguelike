@@ -614,3 +614,142 @@ personaje inicial y `onConfirmar` llama a `iniciarRun`. Con `mapa` ya creado, al
 `pantalla`, más `LogroToast` montado aparte. Antes de todo esto, un efecto llama a
 `cargarLogros()` una vez al montar — el roster de `CharacterSelectScreen` depende de qué logros
 ya estén desbloqueados. Ver [19 - Selección de personaje](./19-seleccion-de-personaje.md).
+
+## El menú vertical, ya sin la maqueta de una pieza (punto 16)
+
+Durante meses el menú de la derecha fue **una sola imagen** (`assets/menu/columna-menu.png`) con cuatro
+botones transparentes colocados por porcentaje encima. Salía idéntico a la maqueta del artista y no
+requería recortar nada, y por eso se hizo así — pero se pagaba en tres sitios:
+
+1. ⚠️ **Clavaba el menú a EXACTAMENTE cuatro entradas**, porque los huecos estaban *pintados*. Añadir
+   una quinta obligaba a redibujar la hoja. Dejó de ser teórico en cuanto se abrió el punto 18 (Home),
+   que es justo una entrada más.
+2. **El hover realzaba el hueco, no el icono** — el icono era parte del fondo y no se podía tocar por
+   separado, así que se leía como que se ilumina el agujero.
+3. La confirmación de reiniciar era un `window.confirm`.
+
+Lo desbloqueó el arte: con los cuatro iconos ya sueltos, el marco pasa a ser un panel normal de CSS y
+cada icono su propio `<img>`. La lista `ENTRADAS` se puede tocar sin tocar el dibujo.
+
+**Y con eso desaparecen los dos `window.confirm` que quedaban** (reiniciar run y reiniciar
+meta-progresión). Eran lo último de interfaz del navegador en toda la partida —tipografía del sistema,
+botones del sistema— y estaban justo en **las dos acciones más destructivas del juego**, que es donde
+peor sienta que deje de parecer un juego.
+
+## Los iconos de chakra, y por qué el `<foreignObject>` sobraba
+
+Las cinco naturalezas se pintaban con emoji (🔥💨⚡🪨💧): lo único de la interfaz sin dibujar, y siempre
+al lado de sprites que sí lo estaban. Ahora son PNG (`assets/chakra/`), con `<IconoChakra>` /
+`<IconoChakraDeLuchador>` en `components/common/IconoChakra.jsx`.
+
+⚠️ **Un sprite no cabe dentro de una cadena de texto**, y eso obligó a tocar cinco sitios que
+concatenaban el emoji al nombre (`${emoji} ${nombre}`). Donde antes había una plantilla ahora hay JSX;
+la enciclopedia es el caso más visible, porque su ciclo de chakra se construía con `join(' → ')`.
+
+Y un arreglo que salió gratis: **la rueda del mapa usa `<image>` del SVG** en vez del `<foreignObject>`
+con el emoji dentro. Aquello era HTML de verdad metido en el SVG, así que el navegador lo trataba como
+un párrafo —cursor de escritura al pasar por encima, y se podía seleccionar arrastrando— y hacía falta
+desactivarle los eventos a mano para tapar el problema. Con un sprite el problema **no existe**: una
+imagen no es texto. El apaño desapareció con su causa.
+
+### ⚠️ `image-rendering: pixelated` es para AMPLIAR, y hace daño al reducir
+
+Salió del primer vistazo a los iconos nuevos: se veían **rotos y sucios**, y no era el recorte.
+`index.css` aplica `image-rendering: pixelated` a **todas** las imágenes, que es lo correcto para el
+pixel art cuando se agranda —mantiene los bordes duros—, pero al **reducir** por debajo de la rejilla
+lógica del dibujo lo que hace es tirar píxeles enteros. Y los tira de forma **desigual** (una columna
+sí, otra no), así que las líneas finas desaparecen a trozos y la silueta se rompe. Es el mismo
+fenómeno que obligó a pintar todos los sprites en un lienzo común y a escalas enteras.
+
+**Los nueve iconos van con `.imagen-suave`** (`image-rendering: auto`), porque en los nueve casos se
+está **reduciendo**: los de chakra se pintan a 8-14 px y los del menú a 32, los dos muy por debajo de la
+resolución a la que están dibujados. Ahí no hay tamaño "limpio" que salve — lo que se quiere es el
+remuestreo normal, que promedia en vez de descartar.
+
+⚠️ **Se intentó lo contrario y salió peor, que es lo que merece la pena recordar.** La primera versión
+llevó los iconos del menú a una rejilla lógica de 32×32 para que fueran **uno a uno** con sus 32 px de
+pantalla, que con `pixelated` es lo ideal. El problema es que **están dibujados con mucho más detalle
+del que cabe en 32 celdas** (el torii mide 51×62), así que para conseguir ese 1:1 había que tirar la
+mitad del dibujo: el icono acababa **más tosco que la hoja de la que sale**, y eso es la señal de que el
+recorte está mal hecho, no un compromiso aceptable.
+
+La regla que queda: **primero se conserva el dibujo, y luego se elige cómo reducirlo.** Perseguir el 1:1
+solo tiene sentido cuando la resolución del arte ya cabe en el tamaño de pantalla.
+
+Y un detalle de maquetación del mismo lote: el icono dentro de una pastilla de tipo va con
+**`align-middle`, no `align-text-bottom`**. Con el segundo, el icono cuelga de la base de la línea, la
+estira hacia abajo y **la pastilla crece de alto** — se veía como que el tooltip del jefe estaba
+descuadrado.
+
+### 🐛 El texto que se salía de la pastilla (y por qué el icono no tenía la culpa)
+
+En el hover de un jefe, "Suiton" **cruzaba el borde de su pastilla de color**. Parecía cosa del icono
+de chakra recién añadido, y no lo era: el icono solo ensanchó el contenido lo justo para que se notara
+algo que ya estaba mal.
+
+⚠️ **La causa es de dónde saca su ancho una caja `absolute`.** `HoverTooltip` coloca el contenido en
+`absolute`, y el ancho de un elemento posicionado así se calcula contra su **contenedor posicionado**,
+que aquí es el nodo del mapa — **44 px**. Con tan poco disponible, la fila interior (`flex`) encogía sus
+elementos por debajo de su propio contenido, y como el texto lleva `whitespace-nowrap` no podía partirse:
+se salía por el lado.
+
+Dos arreglos, y el primero vale para todos los tooltips a la vez:
+
+- **`w-max` en `EtiquetaFlotante`**: la caja mide lo que pida su contenido, dé igual contra qué se esté
+  posicionando. Es lo que quería decir el diseño desde el principio.
+- **`shrink-0` en las pastillas de tipo**, que son elementos de un `flex`: que no se encojan nunca por
+  debajo de su texto.
+
+La lección general: **un tooltip absoluto hereda el ancho de la cosa a la que se pega**, y en este juego
+esa cosa suele ser diminuta — un nodo, un icono, una casilla. Cualquier contenido nuevo que se le meta
+tiene que declarar su ancho, no confiar en el sitio.
+
+## Ritmo: menos peaje y espacio para adelantar (2026-08-21)
+
+Salió de jugar: *"la gente tiene los receptores de dopamina atrofiados"*. El diagnóstico era el
+correcto, pero el sospechoso no.
+
+### El número lento no era el que parecía
+
+La queja apuntaba al hueco **entre dos enemigos de una cadena**, y ese ya era el más corto de los
+tres (700 ms). ⚠️ **Las esperas del final de un combate se SUMAN**: el encadenado espera a que
+termine el cartel de subida de nivel, así que tras un combate que sube de nivel había
+`1500 + 700 = 2,2 s` de nada. La regla que deja: **cuando algo va lento, mide la cadena entera antes
+de recortar el eslabón que tienes delante.**
+
+Quedaron en `900` (relevo de tu personaje caído), `1000` (cartel de nivel) y `550` (eslabón).
+
+### Qué botón se gana su sitio
+
+El criterio: **un botón vale la pena cuando la pantalla lleva una decisión, o un dato que se pierde
+si desaparece.** Con eso, del final de combate se fueron dos que eran peaje puro —"Claim reward" y
+"Recruit them"—, porque **ninguno decidía nada**: la decisión estaba en la pantalla siguiente (coger
+o saltar el objeto, reclutar o no al rival). Un botón que solo sirve para llegar al botón de verdad
+es un clic cobrado por nada.
+
+⚠️ Y la línea del auto-avance **no es "si hay algo detrás" sino qué hay detrás**. Se va solo cuando
+lleva a una pantalla de decisión, porque ahí el jugador se para igualmente. NO se va solo al terminar
+un arco ni al terminar la run: eso no lleva a una decisión, lleva a un **momento**, y un momento que
+se va solo no es un momento.
+
+⚠️ **El auto-avance tiene suelo (`MS_MINIMO_AUTO`, 450 ms) y no es una precaución.** Con velocidad
+"instantánea" el factor de animación es **0**, así que sin él el cartel de Victory y el panel de
+recompensas se saltarían enteros: verías el mapa otra vez sin llegar a leer qué te llevabas. Ese
+ajuste acelera la **animación**; saltarse el **resultado** es perder información. Mismo suelo en el
+resultado de un evento.
+
+### Espacio = date prisa
+
+`useAvanzarConTeclado` ata **espacio y Enter** a la acción de avance, como el botón A de un Pokémon.
+Un solo modelo mental: mientras la pelea corre adelanta la animación, y cuando ha terminado sale. No
+son dos atajos, es el mismo.
+
+- **Solo donde hay UNA acción.** Si la pantalla ofrece dos salidas, una tecla que dispare "la
+  principal" convierte una decisión en un accidente. Por eso no está en la tienda (tres compras y una
+  salida) ni en la recompensa del mini-jefe (coger o saltar).
+- ⚠️ **La trampa: si un `<button>` tiene el foco, el navegador YA convierte el espacio en un clic.**
+  Un manejador global encima ejecutaría la acción **dos veces**, que aquí significa cruzar una
+  pantalla entera sin verla. El hook cede el paso cuando el foco está en algo interactivo — y de paso
+  respeta la accesibilidad de serie. Es un fallo que no se ve programando: depende de si el jugador
+  tocó el botón con el ratón antes de usar la tecla.
+- Se ignora `repeat`, o dejar el dedo puesto cruzaría tres pantallas seguidas.

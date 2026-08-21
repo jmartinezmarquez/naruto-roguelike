@@ -347,7 +347,14 @@ export function EtiquetaFlotante({ children }) {
     // naturaleza de chakra (ver `NodoMapa`), esto tiene que poder llevar varias
     // líneas — y un `<p>` no puede contener bloques. Los usos de una sola línea, que
     // son casi todos, se ven exactamente igual.
-    <div className="bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap font-display text-[11px] leading-none">
+    // ⚠️ `w-max` (ancho = el que pida el contenido). Sin él, la caja la coloca
+    // `HoverTooltip` en `absolute`, y el ancho de un elemento absoluto se calcula
+    // contra su contenedor posicionado — que aquí es **el nodo del mapa, de 44 px**.
+    // El resultado era que la fila interior se encogía por debajo de su contenido y
+    // el texto **se salía de la pastilla**, cruzando el borde de color. No lo provocó
+    // el icono de chakra: el icono solo ensanchó el contenido lo justo para que se
+    // notara algo que ya estaba mal.
+    <div className="w-max bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap font-display text-[11px] leading-none">
       {children}
     </div>
   );
@@ -367,6 +374,45 @@ export function EtiquetaFlotante({ children }) {
  * que en esta paleta el rojo **ya significa algo**: es el color del mini-jefe y de
  * la derrota. Un título de panel no es una alarma.
  */
+/**
+ * Una pastilla de efecto: un dato del juego que gana o cuesta algo, en una sola
+ * unidad que se puede leer de un vistazo.
+ *
+ * ⚠️ **Existe para no escribir consecuencias en prosa.** La pantalla de evento las
+ * contaba como una frase corrida ("55% You gain 30 gold. · 45% The team loses 18% of
+ * its HP.") y en una fila de dos elecciones había que LEERLAS para compararlas, que es
+ * justo lo que una decisión rápida no puede pedir. En pastillas, la comparación es de
+ * color y de tamaño antes que de texto.
+ *
+ * Es presentacional a propósito —recibe texto y tono, no efectos de juego—: quien
+ * traduce un efecto a esto es `resumirEfecto` en `efectos.js`, que sí sabe del dominio.
+ *
+ * `tono`: 'ganancia' (verde) · 'coste' (rojo) · 'neutro' (crema).
+ */
+const TONO_CHIP = {
+  ganancia: 'border-exito/50 bg-exito/12 text-exito',
+  coste: 'border-sello-500/50 bg-sello-500/12 text-sello-500',
+  neutro: 'border-marco bg-pergamino-100/8 text-pergamino-200',
+};
+
+export function ChipEfecto({ texto, tono = 'neutro', sufijo = null, className = '' }) {
+  return (
+    <span
+      className={[
+        // `w-max` y `shrink-0` por la misma razón que en EtiquetaFlotante: dentro de
+        // una fila flexible, una pastilla que encoge parte su texto por el borde.
+        'inline-flex items-baseline gap-1 w-max shrink-0 font-display text-[10px] leading-none',
+        'px-2 py-1 rounded-sm border',
+        TONO_CHIP[tono] ?? TONO_CHIP.neutro,
+        className,
+      ].join(' ')}
+    >
+      {texto}
+      {sufijo && <span className="text-[8px] opacity-60">{sufijo}</span>}
+    </span>
+  );
+}
+
 export function TituloBloque({ children, tono = 'panel', className = '' }) {
   const color = tono === 'seccion' ? 'text-sello-500' : 'text-pergamino-200/80';
   return (
@@ -386,15 +432,32 @@ export function CampoDato({ etiqueta, children, className = '' }) {
   );
 }
 
-/** El botón de acción de una pantalla: rojo de sello, ancho y redondeado. */
-export function BotonPrincipal({ onClick, children, className = '' }) {
+/**
+ * El botón de acción de una pantalla: rojo de sello, ancho y redondeado.
+ *
+ * `variante="contorno"` es **el mismo botón vaciado**, para cuando una pantalla ofrece
+ * DOS salidas que son hermanas. ⚠️ Y existe por un fallo concreto: el game over ponía
+ * un `BotonPrincipal` al lado de un `BotonSecundario`, y esos dos no son variantes de
+ * lo mismo —cambian de forma (`rounded-full` contra `rounded-sm`), de tamaño de letra
+ * (11 contra 9) y de relleno—, así que parecían **dos especies distintas** puestas una
+ * al lado de la otra en vez de dos opciones del mismo peso.
+ *
+ * La regla: `BotonSecundario` es para **irse** (volver, cerrar, saltar), y por eso es
+ * pequeño y discreto; cuando las dos cosas que ofreces son decisiones de igual rango,
+ * las dos van en este botón y lo que las separa es el relleno, no la geometría.
+ */
+export function BotonPrincipal({ onClick, children, className = '', variante = 'solido' }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={[
-        'px-6 py-2 bg-sello-600 hover:bg-sello-500 border border-sello-500/50',
-        'rounded-full font-display text-[11px] text-sobre-sello transition-colors',
+        // La geometría es la MISMA en las dos variantes a propósito: es lo que las
+        // hace legibles como pareja.
+        'px-6 py-2 rounded-full font-display text-[11px] border transition-colors',
+        variante === 'contorno'
+          ? 'bg-tinta-900/80 border-pergamino-200/35 text-pergamino-100 hover:bg-tinta-800 hover:border-pergamino-200/70'
+          : 'bg-sello-600 hover:bg-sello-500 border-sello-500/50 text-sobre-sello',
         className,
       ].join(' ')}
     >

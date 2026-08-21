@@ -1,4 +1,14 @@
 @import "tailwindcss";
+
+/* ⚠️ Los tests NO son fuente de clases. Tailwind v4 detecta el contenido solo y se
+   lee el proyecto entero, así que los `*.test.jsx` también: un selector como
+   `closest('div.flex-1')` o una clase citada en un comentario acaban generando reglas
+   **en el CSS de producción**. Medido: 277 bytes de más el día que se añadieron los
+   primeros tests de componente. Es poco, pero es de la peor clase de poco — crece
+   con cada test, nadie lo mira, y ensucia el bundle con estilos que ningún jugador
+   puede llegar a ver. */
+@source not "**/*.test.{js,jsx}";
+@source not "./test-dom.js";
 @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 
 @font-face {
@@ -207,6 +217,19 @@ body {
 /* Pixel art crisp — sprites y backgrounds sin interpolación */
 img {
   image-rendering: pixelated;
+}
+
+/* ⚠️ `pixelated` es para AMPLIAR, y hace daño al reducir.
+   Al agrandar, mantiene los bordes duros — que es justo lo que se quiere del pixel
+   art. Al REDUCIR por debajo de la rejilla lógica del dibujo, lo que hace es tirar
+   píxeles enteros, y como los tira de forma desigual (una columna sí, otra no) las
+   líneas finas desaparecen a trozos y la silueta se rompe. Es exactamente el mismo
+   fenómeno que ya nos obligó a pintar todos los sprites en un lienzo común y a
+   escalas enteras.
+   Esta clase devuelve el remuestreo normal para los iconos que se pintan MUY por
+   debajo de su tamaño de fichero (los de chakra: 96 px de PNG a 12 de pastilla). */
+.imagen-suave {
+  image-rendering: auto;
 }
 
 /*
@@ -433,6 +456,19 @@ img {
 }
 
 .caida-ko { animation: caida-ko calc(500ms * var(--factor-animacion, 1)) ease-in forwards; }
+
+/* ⚠️ **La pose de estar caído, separada de la animación de caerse.** Son dos cosas y
+   estaban fundidas en una sola clase, con este efecto: `forwards` mantiene el estado
+   final SOLO mientras la clase siga puesta, y la clase se quitaba en cuanto el caído
+   dejaba de ser el que pelea (al entrar el relevo o el siguiente eslabón de la cadena).
+   Resultado: **el enemigo derrotado se ponía de pie otra vez**, tumbado un segundo y
+   erguido después, con la opacidad baja como único rastro de que estaba KO.
+
+   El arreglo no es reaplicar la animación —eso fue el bug ANTERIOR, la caída se
+   repetía en bucle cada vez que cambiaba la ronda— sino tener un estado estático al que
+   la animación aterriza. Los valores son los mismos que el `to` de `caida-ko`, y tienen
+   que seguir siéndolo: si se tocan ahí, se tocan aquí. */
+.caido-ko { transform: rotate(-75deg) translateY(14px); opacity: 0.35; }
 
 /* --- Relevo en la cadena de rondas ------------------------------------------
    Cuando cae tu personaje activo entra el siguiente, y ese es el momento más

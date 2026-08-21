@@ -419,3 +419,78 @@ Lo que **no** se tocó, a propósito:
 Nada del kit. Lo siguiente en interfaz es el **punto 6 (eventos)**, que necesita su documento de diseño
 antes de tocar código, y el **5 (logros)**, cuya pantalla ya está en estilo pero le falta el contenido
 (5a) y la decisión sobre los modificadores permanentes (5b).
+
+## La regla del texto de apoyo (auditoría del 2026-08-19)
+
+Salió de Ajustes —tres descripciones que no hacían falta— y se pasó luego por **todas** las pantallas.
+La regla, que vale para cualquier texto pequeño debajo de otra cosa:
+
+> **Una línea de apoyo existe para decir una consecuencia, un alcance o un aviso.** Si reformula la
+> etiqueta, repite lo que pone el botón de al lado o adelanta lo que va a decir la pantalla siguiente,
+> es ruido — y el ruido en interfaz no se paga una vez, se paga cada vez que se mira.
+
+Lo que se quitó y por qué, que es más útil que la regla:
+
+| Dónde | Decía | Por qué sobraba |
+|---|---|---|
+| Ajustes · Theme / Music / Animation speed | "Light mode uses the parchment palette…", etc. | Los **propios botones** lo dicen: `DARK`/`LIGHT`, `OFF`…`HIGH`, `×1`/`×2`/`INSTANT` |
+| Ajustes · Reset meta-progress | "…Does not touch the run in progress." | Lo dice la **confirmación**, que es donde hace falta leerlo. Se queda el alcance ("Achievements and Bingo Book"), que define qué es "meta-progress" |
+| Combate · mini-jefe | "You defeated the mini-boss! A reward awaits you." | El cartel ya dice **Victory** y el botón ya dice **Claim reward**: era las dos cosas otra vez, en medio |
+| Combate · fin de arco | "…A new arc begins." | Lo dice el botón: *Continue to next arc* |
+| Combate · fin de run | "…Konoha is safe." | Lo dice la pantalla de resultados **tres segundos después** |
+| Logros · sin recompensa | "A mark of honour. **No reward beyond the telling.**" | Desde que hay **rango S** al lado, la segunda frase repetía el icono. Y salía en **13 de 23 filas**: una frase repetida trece veces en una pantalla se paga trece veces |
+
+Y lo que se **mantuvo**, que es la otra mitad del criterio:
+
+- **"Drag to reorder, or drop an item on a ninja"** (panel de equipo): enseña dos gestos **invisibles**.
+  Sin la línea, nadie descubre que se puede arrastrar.
+- **"Skip transformation screen"** y **"Reset meta-progress"** en Ajustes: una dice qué te pierdes, la
+  otra qué borra. Consecuencias, no reformulaciones.
+- **"The rest of your team is built by recruiting during the adventure"** (selección de personaje):
+  explica por qué eliges **uno** y no tres, que es la pregunta que se hace todo el mundo ahí.
+- **Las frases de la enciclopedia** ("Face them in battle to unlock this entry"): son la única forma de
+  saber cómo se abre una entrada, y salen **de una en una**, no repetidas por la rejilla.
+- **"You have earned their respect"** (desafío legendario): no lo dice nada más, y es el remate del
+  único combate opcional del juego.
+
+## `sobreFondo`: un botón encima de un dibujo no es el mismo botón
+
+`BotonSecundario` tiene dos caras, y elegir mal la cara es el fallo que más se repite con esta pieza:
+
+- **Dentro de un panel o una ventana** (lo normal): fondo transparente y texto al 60%. Correcto ahí,
+  porque la superficie de detrás ya es opaca y un segundo relleno sería una caja dentro de otra caja.
+- **`sobreFondo`**: relleno opaco (`bg-tinta-900`) y texto entero. Para lo que se pinta **directamente
+  encima del dibujo de fondo** — la tienda, reclutar y los tres atajos del Home.
+
+⚠️ Sin `sobreFondo`, el botón se lee bien en las capturas de diseño y se vuelve **ilegible sobre la
+aldea de noche**, que es donde va a estar de verdad. Pasó con los atajos del Home. Es la misma familia
+de problema que `.escena-oscura` y se resuelve con la misma idea: **lo que se pinta sobre un dibujo
+necesita traerse su propia superficie**, porque no puede contar con la de debajo.
+
+## Dos salidas del mismo rango van en el mismo botón (2026-08-21)
+
+El game over ofrecía "New Run" y "Home" con un `BotonPrincipal` y un `BotonSecundario`, y **esos dos
+no son variantes de lo mismo**: cambian de forma (`rounded-full` contra `rounded-sm`), de tamaño de
+letra (11 contra 9) y de relleno. Puestos uno al lado del otro parecían **dos especies distintas**,
+no dos opciones entre las que elegir.
+
+La regla que sale de ahí:
+
+- **`BotonSecundario` es para IRSE** —volver, cerrar, saltar— y por eso es pequeño y discreto. Su
+  sitio natural es una esquina, no el centro al lado de la acción principal.
+- **Cuando las dos cosas que ofreces son decisiones del mismo rango**, las dos van en
+  `BotonPrincipal` y lo que las separa es el **relleno** (`variante="contorno"`), nunca la geometría.
+  La forma dice "somos hermanas"; el relleno dice cuál se espera que pulses.
+
+## Un solo título por pantalla (2026-08-21)
+
+El game over decía "End of the road" **encima** de "Game Over": la misma frase dos veces, que es el
+mismo ruido que ya se había quitado de la pantalla de evento (tres rótulos) y de la tienda ("TRADING
+POST" sobre "SHOP"). `CabeceraPantalla` sigue aceptando `antetitulo`, así que esto puede volver — hay
+un test que cuenta los rótulos del game over.
+
+⚠️ **Y al quedarse uno, no tiene por qué ser el mismo en los dos casos.** Ganar pasa una vez cada
+muchas runs y merece la palabra llana ("Victory", sin coquetear); perder pasa constantemente, y ahí
+"GAME OVER" a la cara es lenguaje de máquina recreativa. **"End of the Road"** dice lo mismo desde
+dentro de la ficción y además rima con el nombre de la campaña, *The Ninja Road*: lo que se acaba es
+el camino que elegiste al empezar.

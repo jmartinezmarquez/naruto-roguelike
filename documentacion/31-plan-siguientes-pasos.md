@@ -675,8 +675,8 @@ iconos actuales (el marco a CSS no depende de ellos).
 
 | Sesión | Qué | Por qué ahí |
 |---|---|---|
-| **1 (la siguiente)** | **17 — publicar** + el proyectil de los genin si sobra rato | Convierte el proyecto en algo que se puede enseñar. Desactiva el riesgo del despliegue cuando todavía da igual |
-| **2** | **19 — README** | Segundo entregable. Con el enlace ya existiendo, se escribe una vez |
+| ~~**1**~~ | ~~**17 — publicar**~~ **HECHO el 2026-08-19** — ver [37](./37-publicacion-web.md) | Salió más barato de lo previsto y encontró un error de verdad por el camino: 3 MB de música que se descargaban antes de poder sonar. El proyectil de los genin **no se hizo**: se va con la tanda de arte |
+| ~~**2**~~ | ~~**19 — README**~~ **HECHO el 2026-08-19**, a falta de pegar las capturas | Segundo entregable. Se escribió el mismo día que el 17, aprovechando que el enlace ya existía |
 | **3** | **16 — menú vertical** | Requisito del 18 y mata el último `window.confirm` del juego |
 | **4** | **18 — Home + `campaigns.json`** | La primera pantalla que ve un visitante. Es lo que hace que parezca un producto y no una demo |
 | **5-7** | **15 — arte que llegue** + **7 — playtest** | En paralelo: el dibujo es suyo, la integración es de script |

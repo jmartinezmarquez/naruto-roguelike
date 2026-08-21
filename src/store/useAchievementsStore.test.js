@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO } from './useAchievementsStore';
+import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } from './useAchievementsStore';
 import achievementsData from '../data/achievements.json';
 import { TIPOS_DE_CONDICION, TIPOS_DE_RECOMPENSA } from '../engine/achievements';
 import charactersData from '../data/characters.json';
@@ -10,7 +10,7 @@ beforeEach(() => {
   localStorage.clear();
   useAchievementsStore.setState({
     logrosDesbloqueados: [], notificacionesPendientes: [], vistos: VISTOS_VACIO,
-    contadores: CONTADORES_VACIO,
+    contadores: CONTADORES_VACIO, marca: MARCA_VACIA,
   });
 });
 
@@ -107,6 +107,14 @@ describe('reiniciarLogros (botón temporal de desarrollo)', () => {
 
     expect(useAchievementsStore.getState().contadores).toEqual(CONTADORES_VACIO);
     expect(localStorage.getItem('naruto-roguelike-contadores')).toBeNull();
+  });
+
+  it('borra también la marca de hasta dónde se llegó', () => {
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'examen_chunin', orden: 1, piso: 6 });
+    useAchievementsStore.getState().reiniciarLogros();
+
+    expect(useAchievementsStore.getState().marca).toEqual(MARCA_VACIA);
+    expect(localStorage.getItem('naruto-roguelike-marca')).toBeNull();
   });
 });
 
@@ -289,5 +297,41 @@ describe('invariantes de achievements.json', () => {
       return false;
     });
     expect(rotos.map((l) => l.id)).toEqual([]);
+  });
+});
+
+describe('registrarMarca (hasta dónde se llegó)', () => {
+  const marca = () => useAchievementsStore.getState().marca;
+
+  it('guarda el primer punto alcanzado y lo persiste', () => {
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'pais_de_las_olas', orden: 0, piso: 3 });
+    expect(marca()).toEqual({ arcoId: 'pais_de_las_olas', orden: 0, piso: 3 });
+    expect(JSON.parse(localStorage.getItem('naruto-roguelike-marca')).piso).toBe(3);
+  });
+
+  it('⚠️ es un MÁXIMO, no una suma: un punto peor no la baja', () => {
+    // Es la diferencia con los contadores, y el motivo de que viva aparte de ellos.
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'examen_chunin', orden: 1, piso: 6 });
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'pais_de_las_olas', orden: 0, piso: 2 });
+    expect(marca()).toEqual({ arcoId: 'examen_chunin', orden: 1, piso: 6 });
+  });
+
+  it('el arco pesa más que el piso: el piso 1 del arco 3 supera al piso 8 del arco 2', () => {
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'examen_chunin', orden: 1, piso: 8 });
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'invasion_de_pain', orden: 2, piso: 1 });
+    expect(marca().arcoId).toBe('invasion_de_pain');
+  });
+
+  it('no escribe si no mejora, que es lo que permite llamarlo en cada nodo', () => {
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'examen_chunin', orden: 1, piso: 6 });
+    localStorage.removeItem('naruto-roguelike-marca');
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'examen_chunin', orden: 1, piso: 6 });
+    expect(localStorage.getItem('naruto-roguelike-marca')).toBeNull();
+  });
+
+  it('cargarLogros la recupera de una sesión anterior', () => {
+    localStorage.setItem('naruto-roguelike-marca', JSON.stringify({ arcoId: 'invasion_de_pain', orden: 2, piso: 4 }));
+    useAchievementsStore.getState().cargarLogros();
+    expect(marca().piso).toBe(4);
   });
 });

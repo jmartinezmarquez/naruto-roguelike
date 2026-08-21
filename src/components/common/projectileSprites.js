@@ -6,8 +6,13 @@
 // los jutsus tienen proyectil propio.
 //
 // Quien no aparezca aquí lanza el kunai también en su jutsu, y es correcto:
-// Rock Lee es cuerpo a cuerpo a propósito, y Neji, Shikamaru, Kiba, Sai, Yamato
-// y los genin rivales no están dibujados en la hoja del artista.
+// Rock Lee es cuerpo a cuerpo a propósito, y Neji, Shikamaru, Kiba, Sai y Yamato
+// no están dibujados en la hoja del artista.
+//
+// Los cinco genin rivales sí lo están, pero en la OTRA hoja
+// (`map-sprites-idle-all-characters.png`, al final de su tira de ataque), así que
+// su archivo lo genera el mismo script leyendo las dos. Son los proyectiles que
+// más se ven del juego: los genin son la mayoría de los combates.
 
 import kunai from '../../assets/projectiles/kunai.png';
 import naruto from '../../assets/projectiles/naruto.png';
@@ -27,6 +32,11 @@ import painCaminoDeva from '../../assets/projectiles/pain_camino_deva.png';
 import zaku from '../../assets/projectiles/zaku.png';
 import dosu from '../../assets/projectiles/dosu.png';
 import kin from '../../assets/projectiles/kin.png';
+import geninKaton from '../../assets/projectiles/genin_rival_katon.png';
+import geninFuuton from '../../assets/projectiles/genin_rival_fuuton.png';
+import geninRaiton from '../../assets/projectiles/genin_rival_raiton.png';
+import geninDoton from '../../assets/projectiles/genin_rival_doton.png';
+import geninSuiton from '../../assets/projectiles/genin_rival_suiton.png';
 
 export const SPRITE_KUNAI = kunai;
 
@@ -48,6 +58,11 @@ const SPRITE_JUTSU = {
   zaku,
   dosu,
   kin,
+  genin_rival_katon: geninKaton,
+  genin_rival_fuuton: geninFuuton,
+  genin_rival_raiton: geninRaiton,
+  genin_rival_doton: geninDoton,
+  genin_rival_suiton: geninSuiton,
 };
 
 /** El proyectil de un golpe: el jutsu propio si lo tiene, y si no el kunai de siempre. */

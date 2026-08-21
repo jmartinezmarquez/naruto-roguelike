@@ -112,7 +112,18 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — 274 tests en `engine/*.test.js` y `store/*.test.js`. Correr `npm test` antes de dar por bueno cualquier cambio en esas dos carpetas. Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- [x] Testing con Vitest — **471 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+  componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
+  Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
+- **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
+  ⚠️ **El entorno global sigue siendo `node`**: cada test de UI declara `// @vitest-environment jsdom`
+  en su PRIMERA línea, para que la regla de que el motor no necesita navegador se siga comprobando
+  sola. Se importa de **`src/test-dom.js`** y no de `@testing-library/react`: ahí están los matchers,
+  el `cleanup` (que hay que registrar a mano, sin `globals` no se pone solo) y los huecos de jsdom que
+  el juego pisa — `HTMLMediaElement.play`, `ResizeObserver` y `scrollIntoView`. ⚠️ `jsdom` está pinado
+  a `^26` porque el 30 exige Node ≥22.12, y ⚠️ **los `*.test.jsx` están excluidos de Tailwind**
+  (`@source not` en `index.css`): si no, las clases citadas en un test acaban en el CSS de producción.
+  `MapScreen` no tiene test y de `CombatScreen` solo se prueba **a dónde lleva el final de un combate**: jsdom no maqueta, así que lo visual ahí probaría el lienzo falso.
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -214,6 +225,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   otras no, y con lienzos distintos las proporciones entre personajes salían mal. Lo que sigue faltando por falta de dibujo está junto en
   `documentacion/05-roadmap.md`, sección "Pendiente de arte" — no repartido por los puntos ya
   cerrados.
+- **`generar-sprites-proyectiles.py` lee DOS hojas**: la suya y la de personajes, de donde saca el jutsu
+  de los cinco genin rivales (último fotograma de su tira de ataque). Manda la **carpeta de destino**, no
+  la hoja de origen. ⚠️ Y ahí los fotogramas **no se parten por huecos** como en el resto del proyecto: en
+  katon y raiton el fuego sale del puño y no hay ni un píxel de papel entre los dos dibujos, así que se
+  separan por **densidad de columna** — una cintura fina no es un hueco, pero se mide igual de bien.
 - [x] **Pantalla de transformación** (`components/Combat/TransformationScreen.jsx`, punto 4 del
   roadmap): carga de chakra con parpadeo de silueta, estallido y luego quietud con el nombre del
   modo y sus pasivas. El store detecta el desbloqueo comparando `obtenerModoActivo` antes y después
@@ -290,6 +306,20 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   el fondo, ya en JPEG con el PNG guardado en `src/assets/originales/`, y la música con `preload="none"`
   — con `auto` se bajaban 3 MB **antes de que el navegador pudiera reproducirlos**, porque el autoplay
   está bloqueado hasta el primer gesto.
+- [x] **Los 9 iconos que faltaban** (5 naturalezas de chakra + 4 del menú) y **el menú vertical de CSS**
+  (puntos 15-tanda 1 y 16). ⚠️ Las hojas llegaron en **JPEG**, que le hace daño al pixel art dos veces —sin
+  alfa (el damero venía pintado) y con los colores planos emborronados—, así que
+  `scripts/generar-sprites-iconos.py` **vuelve a muestrear sobre la rejilla lógica**: toma un píxel del
+  centro de cada celda, que reconstruye el color plano. El fondo se borra por **inundación desde el borde**
+  y no por color global (fuego y agua tienen el centro casi blanco). ⚠️ El menú **ya no está clavado a
+  cuatro entradas** —eran huecos pintados en una imagen— y **no queda ningún `window.confirm`** en el
+  juego. Ver `documentacion/13-ui-mapa-y-combate.md`.
+- [x] **Home con selector de campañas** (punto 18) — `components/Home/HomeScreen.jsx`, `pantalla: 'home'`,
+  `src/data/campaigns.json`. ⚠️ Lo que importa del punto **no es la pantalla, es que la campaña sea un
+  DATO**: estaba a medias entre la constante `ORDEN_ARCOS` del store y una llamada de `App.jsx` que
+  arrancaba en el arco 1 a pelo. ⚠️ **Sin run, `volverAlMapa` lleva al Home** — Missions/Bingo Book/Ajustes
+  se cierran con esa acción y desde el Home dejaban la pantalla en blanco. Y **reiniciar no lleva al
+  Home** (quien pierde quiere reintentar, no reelegir campaña). Ver `documentacion/38-home-y-campanas.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [x] **Pantalla de ajustes** (punto 14): `components/Settings/SettingsScreen.jsx` + `useSettingsStore`
   (store propio, clave propia de `localStorage`). Tema **claro/oscuro**, pantalla completa (mudada desde el
@@ -357,6 +387,57 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   con el `id` del arco como nombre.
 
 ## Bugs ya resueltos (para no repetirlos)
+
+- ⚠️ **Distinguir bandos por `id` en un combate donde los dos pueden ser el MISMO personaje.** Los
+  jefes se desbloquean como reclutables por logro, así que reclutas a Kabuto y tres pisos después te
+  toca el mini-jefe Kabuto. Con eso: (a) el replay atribuía al jugador los golpes del rival y su
+  personaje **se curaba en cada golpe** (era el HP del enemigo aplicado al sitio equivocado), y (b)
+  mucho peor, `ganadorId === luchadorJugador.id` daba `true` SIEMPRE — **ganabas la ronda muerto, con
+  0 de HP**. Comprobado con una sonda antes de tocar nada. Ahora el bando va por **posición**
+  (`atacanteEsPrimero`, `ganadorEsPrimero`); `ganadorId` se conserva solo para el registro y hay un
+  test que prohíbe volver a usarlo para eso. **Un id identifica al personaje, no al bando.**
+- **Un aviso puesto donde OCURRE la cosa y no donde el jugador la ve**: la curación de fin de arco
+  ponía su toast en cuanto el jefe moría en el motor —o sea antes de que empezara la animación—, así
+  que el cartel salía **encima de la pelea del jefe final** y te chivaba que habías ganado mientras la
+  veías. El aviso lo pone ahora `avanzarSiguienteArco`, y además `AvisoToast` no se monta durante el
+  combate. Los avisos del mapa se entregan **cuando el jugador llega al mapa**, no cuando el estado
+  cambia.
+
+- **`animation-fill-mode: forwards` NO es un estado, es una animación parada.** El sprite de un
+  luchador KO llevaba `.caida-ko` (desplome con `forwards`), y `forwards` mantiene el fotograma final
+  **solo mientras la clase siga puesta**. La clase se quitaba en cuanto el caído dejaba de ser el que
+  pelea, así que **el enemigo derrotado se ponía de pie otra vez** al entrar el siguiente eslabón de
+  la cadena. ⚠️ Y es un bug de **ida y vuelta**: el arreglo anterior había sido justo el contrario
+  —aplicar la animación a todo el que estuviera caído la repetía en cada relevo, porque las tarjetas
+  se remontan al cambiar de ronda—. La salida es tener **dos clases**: la animación (`caida-ko`, solo
+  para quien cae peleando) y la **pose** estática a la que aterriza (`caido-ko`, para quien ya cayó).
+  Si una animación define cómo queda algo, ese "cómo queda" necesita existir por su cuenta.
+
+- **Props nuevas que el envoltorio no reenvía** (`PersonajeHoverCard` → `FichaPersonaje`): se
+  añadieron `bonificaciones` y `multiplicadoresBuffs`, se enchufaron en el mapa y se probaron contra
+  `FichaPersonaje`… y el envoltorio no las declaraba, así que las tiraba por el camino. En pantalla no
+  se veía nada y **los tests estaban todos en verde**. ⚠️ La lección no es sobre props: es que
+  **probar las dos piezas por separado no prueba la unión**, y con un componente envoltorio la unión
+  es justo donde vive el fallo. Si un componente se usa SIEMPRE a través de otro, el test tiene que
+  montar el de fuera.
+
+- **Un efecto que el motor aplica y la UI no enseña** (buffs temporales de evento): "ATK +20% durante
+  3 combates" se aplicaba de verdad en `crearLuchador` y **no salía en ninguna pantalla**. El juego
+  cambiaba los números sin decirlo, así que el jugador no podía saber si seguía bufado ni decidir en
+  consecuencia. ⚠️ Y al arreglarlo apareció la trampa de siempre: en combate hay que leerlos del
+  **resumen** (`buffsAlEmpezar`) y no del store, porque `_consumirUsoBuffsTemporales` corre ANTES de
+  armar el resumen — en vivo se vería `×2` durante la pelea que gastó el `×3`, o nada si era el último
+  uso. Es la tercera vez que muerde lo mismo (`equipoAlEmpezar`, `recompensas`, y ahora esto):
+  **cuando la animación de combate empieza, el store ya tiene el estado FINAL.**
+
+- **Un consumible que se gasta y no hace nada**: `usarConsumible` no comprueba si el personaje ya
+  está al máximo de HP. Cura de 45 a 45, **devuelve `true`**, borra el objeto del inventario y la
+  mochila se cierra sola — el jugador pierde un objeto sin llegar a enterarse. ⚠️ Lo revelador no es
+  el fallo sino **dónde estaba puesto el aviso**: esa misma pantalla SÍ para y confirma antes de
+  reemplazar un objeto equipado, que es **reversible** (vuelve a la bolsa). O sea que la pantalla
+  protegía la acción menos grave de las dos. **Un aviso vale por lo irreversible que sea lo que
+  detiene, no por lo aparatoso que parezca.** Arreglado en la UI y no en el store: el store hace lo
+  que le piden, quien no debía dejar pedirlo era la pantalla.
 
 - **Función de normalización no idempotente** (`normalizarPasivas`): el store normalizaba las pasivas
   del objeto equipado y `crearLuchador` las volvía a normalizar al juntarlas con las del modo. La

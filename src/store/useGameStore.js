@@ -12,6 +12,7 @@ import itemsData from '../data/items.json';
 import enemiesData from '../data/enemies.json';
 import commonEnemiesData from '../data/common-enemies.json';
 import achievementsData from '../data/achievements.json';
+import campaignsData from '../data/campaigns.json';
 import arcoPaisDeLasOlas from '../data/arcs/pais-de-las-olas.json';
 import arcoExamenChunin from '../data/arcs/examen-chunin.json';
 import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
@@ -25,11 +26,31 @@ import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
 
-// Orden fijo de los 3 arcos del MVP: al derrotar al jefe final de uno, la
-// run continúa automáticamente con el siguiente en vez de terminar ahí. El
-// último (Pain) lleva `recompensa.finDeLaRun: true` en enemies.json — esa es
-// la señal real de "esto ya es el final", no "ser el último de esta lista".
-const ORDEN_ARCOS = [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain];
+// Los arcos que existen, por id. La lista ORDENADA de una partida ya no vive aquí:
+// la declara su **campaña** (`campaigns.json`), y esto solo resuelve id → JSON.
+//
+// Antes era una constante `ORDEN_ARCOS` con los tres arcos del MVP en su orden, o
+// sea que la campaña estaba escrita a medias en el store y a medias en `App.jsx`
+// (que arrancaba la run en el arco 1 a pelo). Sacarla a datos es lo que convierte una
+// segunda campaña en **contenido** en vez de en código — ver
+// documentacion/38-home-y-campanas.md.
+const ARCOS_POR_ID = Object.fromEntries(
+  [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain].map((arco) => [arco.id, arco]),
+);
+
+/** Los arcos de una campaña, en su orden, ya resueltos a los JSON. */
+function arcosDeCampana(campanaId) {
+  const campana = campaignsData.campanas.find((c) => c.id === campanaId);
+  if (!campana) return [];
+  return campana.arcoIds.map((id) => {
+    const arco = ARCOS_POR_ID[id];
+    if (!arco) throw new Error(`La campaña ${campanaId} declara un arco que no existe: ${id}`);
+    return arco;
+  });
+}
+
+/** La campaña por defecto: la primera del fichero. Con una sola, es esa. */
+const CAMPANA_POR_DEFECTO = campaignsData.campanas[0].id;
 
 /**
  * Busca los datos base (fijos) de un personaje por su id: primero en
@@ -148,8 +169,14 @@ function aplicarXpYActualizarHp(instancia, cantidadXp, hpDePartida = instancia.h
   return { ...actualizado, hpActual: Math.min(hpMaxDespues, hpDePartida + delta) };
 }
 
-/** Combina los multiplicadores de todos los buffs temporales activos en un único objeto. */
-function combinarMultiplicadoresTemporales(buffsTemporales) {
+/**
+ * Combina los multiplicadores de todos los buffs temporales activos en un único objeto.
+ *
+ * Se **exporta** para que la tarjeta de personaje enseñe exactamente los mismos números
+ * que pelean: si la UI se hiciera su propia versión de esto, tarde o temprano diría una
+ * cosa distinta de la que aplica el combate, y esa clase de desacuerdo no falla, miente.
+ */
+export function combinarMultiplicadoresTemporales(buffsTemporales) {
   const combinado = { ataque: 1, defensa: 1, velocidad: 1, hp: 1 };
   for (const buff of buffsTemporales) {
     for (const stat of Object.keys(buff.multiplicadores)) {
@@ -324,7 +351,10 @@ export const useGameStore = create((set, get) => ({
   arcoActualDatos: null, // el JSON del arco en curso, guardado para no reimportarlo por id
   mapa: null, // { arcoId, pisos, nodos, nodosIniciales } — generado por engine/mapGenerator
   nodoActualId: null,
-  pantalla: 'mapa', // 'mapa' | 'combate' | 'evento' | 'tienda' | 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros' | 'mochila' | 'enciclopedia' | 'ajustes'
+  // 'home' | 'seleccionPersonaje' | 'mapa' | 'combate' | 'evento' | 'tienda' |
+  // 'reclutar' | 'recompensaMiniJefe' | 'gameover' | 'logros' | 'mochila' |
+  // 'enciclopedia' | 'ajustes'. Arranca en 'home', que es la puerta del juego.
+  pantalla: 'home',
   mochilaItemId: null, // objeto preseleccionado al abrir la mochila (ver abrirMochila)
   ultimoResultadoCombate: null, // resumen enriquecido del último combate — ver jugarCombate
   eventoActual: null, // { id, titulo, descripcion, elecciones } — evento en curso
@@ -341,11 +371,20 @@ export const useGameStore = create((set, get) => ({
   runTerminada: false,
   runGanada: false,
   huboDerrotaEnEsteArco: false, // para el logro "completarArcoSinDerrotas" — se resetea en iniciarRun, se marca en _aplicarDerrota
+  // La campaña elegida en el Home. Decide QUÉ arcos se juegan y en qué orden, así que
+  // `avanzarSiguienteArco` la lee para saber cuál viene después.
+  campanaActualId: CAMPANA_POR_DEFECTO,
 
   // ---------- ACCIONES ----------
 
-  /** Arranca una run nueva con hasta 3 personajes iniciales (config.equipo.tamanoMaximo). */
-  iniciarRun(personajesInicialesIds, arco = ORDEN_ARCOS[0]) {
+  /**
+   * Arranca una run nueva con hasta 3 personajes iniciales (config.equipo.tamanoMaximo).
+   *
+   * El arco por defecto es **el primero de la campaña en curso**, no una constante:
+   * es lo que hace que elegir campaña en el Home signifique algo. Se puede pasar uno
+   * concreto, que es lo que hacen los tests.
+   */
+  iniciarRun(personajesInicialesIds, arco = arcosDeCampana(get().campanaActualId)[0]) {
     const tamanoMaximo = configGlobal.equipo.tamanoMaximo;
     const equipoInicial = personajesInicialesIds
       .slice(0, tamanoMaximo)
@@ -406,6 +445,24 @@ export const useGameStore = create((set, get) => ({
       nodos: { ...mapa.nodos, [nodoId]: { ...nodo, visitado: true } },
     };
     set({ mapa: mapaActualizado, nodoActualId: nodoId, avisoUltimoNodo: null });
+
+    // Hasta dónde se ha llegado nunca, para el Home. Se apunta **en cada nodo** y no
+    // al terminar la run, y eso no es pereza: una run se puede acabar de tres formas
+    // —morir, ganar y abandonar—, y solo la primera pasa por un sitio común. Aquí se
+    // capturan las tres, incluida la de cerrar la pestaña.
+    //
+    // Sale gratis porque `registrarMarca` solo escribe cuando MEJORA el récord: en una
+    // run normal son unas pocas escrituras, y ninguna a partir de la segunda partida
+    // hasta que se pasa del punto anterior.
+    const ordenDelArco = arcosDeCampana(get().campanaActualId)
+      .findIndex((a) => a.id === arcoActualDatos?.id);
+    if (ordenDelArco !== -1) {
+      useAchievementsStore.getState().registrarMarca({
+        arcoId: arcoActualDatos.id,
+        orden: ordenDelArco,
+        piso: nodo.piso,
+      });
+    }
 
     const infoEnemigo = resolverEnemigoDeNodo(nodo, arcoActualDatos);
     if (infoEnemigo) {
@@ -641,6 +698,16 @@ export const useGameStore = create((set, get) => ({
       objetoEquipadoId: p.objetoEquipadoId, // la pantalla enseña sus pasivas
     }));
 
+    // Los buffs temporales VIGENTES en este combate, por la misma razón y con la misma
+    // trampa: `_consumirUsoBuffsTemporales` corre antes de armar el resumen, así que
+    // para cuando la pantalla se monta el store ya los ha gastado. Leerlos en vivo desde
+    // la UI enseñaría "ATK +20% ×2" mientras se ve la pelea que consumió el ×3 — o nada
+    // en absoluto, si a este combate le quedaba el último uso.
+    const buffsAlEmpezar = get().buffsTemporales.map((b) => ({
+      multiplicadores: { ...b.multiplicadores },
+      combatesRestantes: b.combatesRestantes,
+    }));
+
     // Como máximo tantas rondas como personajes en el equipo — no puede
     // haber más, cada ronda consume a un personaje (gana o cae).
     while (true) {
@@ -671,7 +738,13 @@ export const useGameStore = create((set, get) => ({
       const cargaInicialEnemigo = luchadorEnemigo.cargaJutsu;
 
       const resultado = resolverCombateCompleto(luchadorJugador, luchadorEnemigo);
-      const jugadorGanoRonda = resultado.ganadorId === luchadorJugador.id;
+      // ⚠️ **Por posición y no por id.** El jugador entra como `luchador1`, así que
+      // `ganadorEsPrimero` es su victoria. Comparar `ganadorId === luchadorJugador.id`
+      // daba `true` SIEMPRE cuando los dos luchadores compartían id — y eso pasa de
+      // verdad: los jefes se desbloquean como reclutables por logro, así que puedes
+      // reclutar a Kabuto y luego pelear contra el mini-jefe Kabuto. Se ganaba esa ronda
+      // muerto, con 0 de HP. Ver `resolverTurno` en engine/combat.js.
+      const jugadorGanoRonda = resultado.ganadorEsPrimero;
 
       rondas.push({
         historial: resultado.historial,
@@ -718,7 +791,12 @@ export const useGameStore = create((set, get) => ({
           // antes de pasar al siguiente arco — no hace falta ir a buscar un
           // nodo de descanso justo después de la pelea más dura del arco.
           get()._curarEquipoCompleto();
-          set({ avisoUltimoNodo: 'Team fully healed after completing the arc.' });
+          // ⚠️ **El aviso NO se pone aquí**, aunque la curación sí ocurra aquí. Esto corre
+          // en cuanto el jefe muere en el motor, o sea **antes de que empiece la
+          // animación del combate**: el toast salía por encima de la pelea del jefe final
+          // y te chivaba que habías ganado mientras aún la estabas viendo. Lo pone
+          // `avanzarSiguienteArco`, que es cuando el jugador ya ha visto el desenlace y
+          // llega al mapa nuevo — que además es donde el aviso significa algo.
         }
         const runGanadaAqui = arcoCompletado && enemigoBase.recompensa?.finDeLaRun;
         if (runGanadaAqui) {
@@ -797,7 +875,7 @@ export const useGameStore = create((set, get) => ({
 
     const resumen = {
       rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado, equipoAlEmpezar,
-      transformacionesDesbloqueadas, subidasDeNivel, recompensas,
+      transformacionesDesbloqueadas, subidasDeNivel, recompensas, buffsAlEmpezar,
     };
     set({ ultimoResultadoCombate: resumen });
     return resumen;
@@ -805,6 +883,14 @@ export const useGameStore = create((set, get) => ({
 
   /** Vuelve al mapa desde cualquier pantalla secundaria (combate, evento, tienda, reclutar, recompensa). */
   volverAlMapa() {
+    // ⚠️ **Si no hay run, "volver" es volver al Home.** Missions, el Bingo Book y los
+    // Ajustes se cierran con esta acción, y desde que se pueden abrir antes de empezar
+    // a jugar, cerrarlos llevaba a un mapa que no existe: pantalla en blanco. "Volver"
+    // significa *a donde estabas*, y sin partida eso es el Home.
+    if (!get().mapa) {
+      set({ pantalla: 'home' });
+      return;
+    }
     set({
       pantalla: 'mapa',
       ultimoResultadoCombate: null,
@@ -837,13 +923,14 @@ export const useGameStore = create((set, get) => ({
    * Tras derrotar al jefe final de un arco que NO era el último de la run,
    * genera el mapa del siguiente arco y continúa — el equipo, oro,
    * inventario y buffs se mantienen tal cual, solo cambia el arco. Si por
-   * lo que sea no hay un siguiente arco conocido (arco fuera de
-   * `ORDEN_ARCOS`, p. ej. en tests), no hace nada y devuelve false.
+   * lo que sea no hay un siguiente arco conocido (un arco que no está en la campaña
+   * en curso, p. ej. en tests), no hace nada y devuelve false.
    */
   avanzarSiguienteArco() {
-    const { arcoActualId } = get();
-    const indiceActual = ORDEN_ARCOS.findIndex((a) => a.id === arcoActualId);
-    const siguienteArco = indiceActual === -1 ? null : ORDEN_ARCOS[indiceActual + 1];
+    const { arcoActualId, campanaActualId } = get();
+    const arcos = arcosDeCampana(campanaActualId);
+    const indiceActual = arcos.findIndex((a) => a.id === arcoActualId);
+    const siguienteArco = indiceActual === -1 ? null : arcos[indiceActual + 1];
     if (!siguienteArco) return false;
 
     const mapaSiguiente = generarMapa(siguienteArco, {
@@ -863,7 +950,9 @@ export const useGameStore = create((set, get) => ({
       desafioRecluta: null,
       recompensaMiniJefe: null,
       cadenaEnemigos: null,
-      avisoUltimoNodo: null,
+      // El aviso de la curación se entrega AQUÍ y no al morir el jefe: ver la nota en
+      // `jugarCombate`. Llega con el jugador al mapa del arco nuevo.
+      avisoUltimoNodo: 'Team fully healed after completing the arc.',
       huboDerrotaEnEsteArco: false,
     });
     return true;
@@ -872,6 +961,35 @@ export const useGameStore = create((set, get) => ({
   /** Tras ver el resultado del combate final de la run, pasa a la pantalla de Game Over. */
   irAGameOver() {
     set({ pantalla: 'gameover' });
+  },
+
+  /**
+   * Vuelve al Home (el selector de campañas). ⚠️ **Abandona la run en curso**, porque
+   * no hay guardado — quien llama tiene que haber preguntado antes (ver el menú
+   * vertical del mapa).
+   */
+  irAlHome() {
+    set({
+      mapa: null,
+      pantalla: 'home',
+      ultimoResultadoCombate: null,
+      eventoActual: null,
+      resultadoEvento: null,
+      tiendaActual: null,
+      reclutarActual: null,
+      desafioRecluta: null,
+      recompensaMiniJefe: null,
+      cadenaEnemigos: null,
+    });
+  },
+
+  /**
+   * Elige campaña y pasa a escoger personaje. La campaña decide qué arcos se juegan y
+   * en qué orden (`campaigns.json`), así que se guarda antes de que `iniciarRun` lea
+   * el primero.
+   */
+  elegirCampana(campanaId) {
+    set({ campanaActualId: campanaId, pantalla: 'seleccionPersonaje' });
   },
 
   /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */
@@ -1052,7 +1170,7 @@ export const useGameStore = create((set, get) => ({
   reiniciarRun() {
     set({
       mapa: null,
-      pantalla: 'mapa',
+      pantalla: 'seleccionPersonaje',
       ultimoResultadoCombate: null,
       eventoActual: null,
       resultadoEvento: null,
