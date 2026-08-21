@@ -2,9 +2,10 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import HoverTooltip from './HoverTooltip';
 import {
-  emojiDeTipo, nombreDeTipo, nombreObjeto, rarezaDeLuchador, nombrePersonaje, nombreCorto,
+  nombreDeTipo, nombreObjeto, rarezaDeLuchador, nombrePersonaje, nombreCorto,
   clasePastillaDeTipo,
 } from './nombres';
+import { IconoChakraDeLuchador } from './IconoChakra';
 import { spriteDeCombate, encontrarBaseDeLuchador } from './datosDeLuchador';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import { PanelMarco, TituloBloque } from './PiezasUI';
@@ -215,8 +216,8 @@ export function FichaPersonaje({ id, nivel, hpActual, hpMaximo, objetoEquipadoId
             la tarjeta no cambia de alto según a quién estés mirando. */}
         <NombreQueCabe id={id} className="font-display font-bold text-sm leading-tight" />
         <div className="flex items-center justify-between gap-2 mt-1.5">
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${clasePastillaDeTipo(id)}`}>
-            {emojiDeTipo(id)} {nombreDeTipo(id)}
+          <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border ${clasePastillaDeTipo(id)}`}>
+            <IconoChakraDeLuchador id={id} /> {nombreDeTipo(id)}
           </span>
           <div className="flex items-baseline gap-2 shrink-0">
             {/* Solo estrellas y color, sin la palabra: "★★★ Legendary" repetía

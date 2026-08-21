@@ -4,8 +4,10 @@ import { spriteDeCombate, nombreDeModo } from '../common/datosDeLuchador';
 import typesData from '../../data/types.json';
 import {
   nombreObjeto, nombreCorto, nombrePersonaje, tipoDeLuchador, nombreDeTipo,
-  emojiDeTipo, clasePastillaDeTipo,
+  clasePastillaDeTipo,
 } from '../common/nombres';
+import { IconoChakraDeLuchador } from '../common/IconoChakra';
+import { SPRITE_CHAKRA } from '../common/chakraSprites';
 import PersonajeHoverCard from '../common/PersonajeHoverCard';
 import ItemHoverCard from '../common/ItemHoverCard';
 import HoverTooltip from '../common/HoverTooltip';
@@ -19,7 +21,10 @@ import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
 import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
 import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
-import COLUMNA_MENU from '../../assets/menu/columna-menu.png';
+import iconoLogros from '../../assets/menu/logros.png';
+import iconoEnciclopedia from '../../assets/menu/enciclopedia.png';
+import iconoAjustes from '../../assets/menu/ajustes.png';
+import iconoReiniciar from '../../assets/menu/reiniciar.png';
 import itemsData from '../../data/items.json';
 import {
   PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante, VentanaModal, BotonSecundario,
@@ -203,8 +208,11 @@ function EtiquetaFichaDeJefe({ id, nivel }) {
       <div className="flex items-center gap-2 mt-1.5 text-[9px]">
         <span className="text-oro">Lv.{nivel}</span>
         {tipo && (
-          <span className={`px-1.5 py-0.5 rounded-sm border ${clasePastillaDeTipo(id)}`}>
-            {emojiDeTipo(id)} {nombreDeTipo(id)}
+          <span className={`shrink-0 px-1.5 py-0.5 rounded-sm border ${clasePastillaDeTipo(id)}`}>
+            {/* 8 px, por debajo del texto de 9 que lo acompaña. Un icono a la altura
+                de la letra o por encima no se lee como una marca sino como un dibujo
+                metido en medio de la frase, y encima estira la pastilla. */}
+            <IconoChakraDeLuchador id={id} tamano="w-2 h-2" /> {nombreDeTipo(id)}
           </span>
         )}
       </div>
@@ -723,10 +731,8 @@ const ORDEN_CICLO_CHAKRA = typesData.elementos; // ['katon', 'fuuton', 'raiton',
 const CENTRO_RUEDA = 55;
 const RADIO_RUEDA = 40;
 const RADIO_NODO_CHAKRA = 13;
-
-const EMOJI_CHAKRA = {
-  katon: '🔥', fuuton: '🌪️', raiton: '⚡', doton: '🪨', suiton: '💧',
-};
+// El icono, algo más pequeño que el círculo que lo contiene, para que se vea el aro de color.
+const LADO_ICONO_CHAKRA = 17;
 
 /** Posición del punto i-ésimo de un pentágono, empezando arriba y en sentido horario. */
 function puntoRuedaChakra(indice, total) {
@@ -805,27 +811,20 @@ function RuedaChakra() {
               stroke={`var(--color-${tipo})`}
               strokeWidth="2"
             />
-            <foreignObject
-              x={puntos[i].x - RADIO_NODO_CHAKRA}
-              y={puntos[i].y - RADIO_NODO_CHAKRA}
-              width={RADIO_NODO_CHAKRA * 2}
-              height={RADIO_NODO_CHAKRA * 2}
-            >
-              {/* `pointerEvents: none` y `userSelect: none` porque esto es un
-                  dibujo, no texto: el emoji vive en un `foreignObject`, o sea en
-                  HTML de verdad dentro del SVG, así que el navegador lo trataba
-                  como un párrafo — cursor de escritura al pasar por encima y se
-                  podía seleccionar arrastrando. Con los eventos desactivados el
-                  puntero ve el círculo de debajo y no el texto. */}
-              <div style={{
-                width: '100%', height: '100%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '11px', lineHeight: 1,
-                pointerEvents: 'none', userSelect: 'none',
-              }}>
-                {EMOJI_CHAKRA[tipo]}
-              </div>
-            </foreignObject>
+            {/* Un `<image>` del SVG, no el `<foreignObject>` con un emoji dentro que
+                había antes. Aquel era HTML de verdad metido en el SVG, así que el
+                navegador lo trataba como un párrafo: cursor de escritura al pasar por
+                encima y se podía seleccionar arrastrando, y hacía falta desactivarle
+                los eventos a mano para tapar el problema. Con un sprite el problema no
+                existe — **una imagen no es texto**. */}
+            <image
+              href={SPRITE_CHAKRA[tipo]}
+              x={puntos[i].x - LADO_ICONO_CHAKRA / 2}
+              y={puntos[i].y - LADO_ICONO_CHAKRA / 2}
+              width={LADO_ICONO_CHAKRA}
+              height={LADO_ICONO_CHAKRA}
+              style={{ pointerEvents: 'none' }}
+            />
           </g>
         ))}
       </svg>
@@ -834,87 +833,138 @@ function RuedaChakra() {
 }
 
 /**
- * Menú vertical junto al mapa, como el de Pokelike: Missions, Bingo Book,
- * Pantalla completa (Fullscreen API) y Reiniciar Run (con confirmación nativa,
- * porque borra el progreso de la run sin posibilidad de deshacerlo).
+ * Menú vertical junto al mapa, como el de Pokelike: Missions, Bingo Book, Settings
+ * y Reiniciar run.
  *
- * **La columna es UNA imagen** (`assets/menu/columna-menu.png`, la maqueta del
- * artista) con cuatro botones transparentes encima, uno por cuarto de alto. La
- * primera versión intentaba recortar los cuatro iconos a PNG sueltos como el resto
- * de los sprites, y era pelearse con el dibujo: la hoja no es una hoja de sprites
- * con separaciones limpias, es un **menú ya terminado** —marco, huecos e iconos
- * dibujados juntos—, así que cualquier recorte se llevaba trozos del marco o
- * agujereaba el sombreado del icono. Usarla entera sale idéntica a la maqueta y sin
- * detección frágil que mantener.
+ * **Marco de CSS e iconos sueltos** (punto 16 del roadmap). Antes era **una sola
+ * imagen** —`assets/menu/columna-menu.png`, la maqueta del artista con marco, huecos
+ * e iconos dibujados juntos— y cuatro botones transparentes colocados por porcentaje
+ * encima. Salía idéntica a la maqueta y sin recortes frágiles, y por eso se hizo así;
+ * pero se pagaba en tres sitios a la vez:
  *
- * ⚠️ El precio de eso: los cuatro huecos están **pintados** en la imagen. Añadir o
- * quitar una entrada del menú exige redibujar la columna (o entonces sí recortar
- * los iconos). Los botones se reparten por índice sobre `ENTRADAS.length`, así que
- * el código no se rompería — pero los iconos dejarían de coincidir con los huecos,
- * y eso se ve.
+ * 1. ⚠️ **Clavaba el menú a EXACTAMENTE cuatro entradas.** Los huecos estaban
+ *    pintados: añadir una quinta obligaba a redibujar la hoja. Dejó de ser teórico en
+ *    cuanto apareció el punto 18 (Home), que es justo una entrada más.
+ * 2. **El hover realzaba el hueco y no el icono**, porque el icono era parte del
+ *    fondo y no se podía tocar por separado. Se leía como que se ilumina el agujero.
+ * 3. La confirmación de reiniciar era un `window.confirm`.
  *
- * El icono del engranaje abre **Ajustes** —lo que la maqueta dibujó— y el torii
- * **reinicia la run**: la maqueta traía torii de "salir", y un torii es una puerta por
- * la que se sale, que es lo que se hace al abandonar una run.
+ * Lo que lo desbloqueó fue el arte: los cuatro iconos ya existen sueltos
+ * (`assets/menu/*.png`, recortados por `scripts/generar-sprites-iconos.py`), así que
+ * el marco pasa a ser un panel normal y cada icono, su propio `<img>`.
  */
 function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarRun }) {
-  function manejarReiniciar() {
-    if (window.confirm('Are you sure you want to restart the run? You will lose all current progress.')) {
-      reiniciarRun();
-    }
-  }
+  const [confirmandoReinicio, setConfirmandoReinicio] = useState(false);
 
-  // En el mismo orden en que están dibujados los huecos, de arriba abajo. El
-  // engranaje abre **Ajustes**, que es lo que la maqueta dibujó: antes hacía de
+  // El engranaje abre **Ajustes**, que es lo que la maqueta dibujó: antes hacía de
   // pantalla completa, que era un apaño mientras no había pantalla de ajustes —
   // ahora pantalla completa vive dentro de ella.
+  //
+  // ⚠️ Esto **ya no está clavado a cuatro entradas.** Hasta el punto 16, el menú era
+  // una sola imagen con el marco, los huecos y los iconos dibujados juntos, y cuatro
+  // botones transparentes colocados por porcentaje encima: añadir o quitar una
+  // entrada obligaba a redibujar la hoja. Ahora el marco es CSS y cada icono es su
+  // propio PNG, así que esta lista se puede tocar sin tocar el arte — que es
+  // exactamente lo que hace falta para el Home del punto 18.
   const ENTRADAS = [
-    { etiqueta: 'Missions', onClick: abrirLogros },
-    { etiqueta: 'Bingo Book', onClick: abrirEnciclopedia },
-    { etiqueta: 'Settings', onClick: abrirAjustes },
-    { etiqueta: 'Restart run', onClick: manejarReiniciar },
+    { etiqueta: 'Missions', icono: iconoLogros, onClick: abrirLogros },
+    { etiqueta: 'Bingo Book', icono: iconoEnciclopedia, onClick: abrirEnciclopedia },
+    { etiqueta: 'Settings', icono: iconoAjustes, onClick: abrirAjustes },
+    { etiqueta: 'Restart run', icono: iconoReiniciar, onClick: () => setConfirmandoReinicio(true) },
   ];
 
   return (
-    <nav
-      // `escena-oscura` por lo mismo que el lienzo del mapa: la columna es un dibujo
-      // terminado y el realce del hover se pinta ENCIMA, así que tiene que seguir
-      // siendo un aclarado también en modo claro (ver `index.css`).
-      className="escena-oscura absolute top-4 right-4 w-14 select-none"
-      style={{ aspectRatio: '133 / 655' }}
-      aria-label="Game menu"
-    >
-      <img
-        src={COLUMNA_MENU}
-        alt=""
-        aria-hidden="true"
-        draggable="false"
-        className="absolute inset-0 w-full h-full"
-      />
-      {ENTRADAS.map((entrada, indice) => (
-        // La etiqueta flotante va a la IZQUIERDA: el menú vive pegado al borde
-        // derecho de la pantalla y a la derecha se saldría. Sustituye al `title` del
-        // navegador, que tardaba un segundo en salir y no se parecía al juego.
-        <HoverTooltip
-          key={entrada.etiqueta}
-          posicion="izquierda"
-          className="absolute left-0 w-full"
-          style={{ top: `${(indice * 100) / ENTRADAS.length}%`, height: `${100 / ENTRADAS.length}%` }}
-          contenido={<EtiquetaFlotante>{entrada.etiqueta}</EtiquetaFlotante>}
-        >
+    <>
+      <nav
+        // `escena-oscura` por lo mismo que el lienzo del mapa: esto se pinta encima
+        // del fondo dibujado, así que el realce del hover tiene que seguir siendo un
+        // aclarado también en modo claro (ver `index.css`).
+        className="escena-oscura absolute top-4 right-4 flex flex-col gap-0.5 p-1 bg-tinta-900/85 border-2 border-marco shadow-xl shadow-black/50 select-none"
+        aria-label="Game menu"
+      >
+        {ENTRADAS.map((entrada) => (
+          // La etiqueta flotante va a la IZQUIERDA: el menú vive pegado al borde
+          // derecho de la pantalla y a la derecha se saldría.
+          <HoverTooltip
+            key={entrada.etiqueta}
+            posicion="izquierda"
+            contenido={<EtiquetaFlotante>{entrada.etiqueta}</EtiquetaFlotante>}
+          >
+            <button
+              type="button"
+              onClick={entrada.onClick}
+              aria-label={entrada.etiqueta}
+              // Lo que se realza al pasar por encima es **el icono**, no el hueco.
+              // Con la maqueta de una pieza no se podía: el icono era parte del
+              // fondo, así que se iluminaba el agujero y se leía como tal.
+              className="group w-9 h-9 flex items-center justify-center rounded-sm transition-colors hover:bg-pergamino-100/10 active:bg-pergamino-100/20"
+            >
+              {/* ⚠️ `imagen-suave`, igual que los iconos de chakra y por el mismo
+                  motivo: estos están dibujados con **más detalle del que cabe a 32 px**
+                  (el torii son 51×62 celdas), así que aquí siempre se está REDUCIENDO,
+                  y ahí el `image-rendering: pixelated` global tira píxeles a trozos y
+                  deja el dibujo tosco. Se intentó lo contrario —bajar el sprite a una
+                  rejilla de 32 para que fuera 1:1 con la pantalla— y salió peor: el
+                  icono acababa con menos detalle que la hoja de la que sale, que es la
+                  señal de que el recorte está mal hecho. Ver `index.css`. */}
+              <img
+                src={entrada.icono}
+                alt=""
+                aria-hidden="true"
+                draggable="false"
+                className="w-8 h-8 object-contain imagen-suave transition-transform duration-150 group-hover:scale-110"
+              />
+            </button>
+          </HoverTooltip>
+        ))}
+      </nav>
+
+      {confirmandoReinicio && (
+        <PanelConfirmarReinicio
+          onCancelar={() => setConfirmandoReinicio(false)}
+          onConfirmar={() => {
+            setConfirmandoReinicio(false);
+            reiniciarRun();
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * "¿Seguro que quieres reiniciar la run?" con la ventana del juego.
+ *
+ * ⚠️ Antes esto era un `window.confirm`, o sea **el diálogo del navegador**:
+ * tipografía del sistema, botones del sistema y cero relación con lo que hay
+ * detrás. Era lo último que quedaba de interfaz de navegador en toda la partida, y
+ * estaba justo en la acción más destructiva — donde peor sienta que el juego deje
+ * de parecer un juego. Misma forma que `PanelReemplazoObjeto`: rojo de sello solo
+ * en el botón que destruye.
+ */
+function PanelConfirmarReinicio({ onCancelar, onConfirmar }) {
+  return (
+    <VentanaModal titulo="Restart run" onCerrar={onCancelar} ancho="max-w-sm">
+      <div className="flex flex-col gap-4">
+        <p className="text-[10px] text-pergamino-200 leading-relaxed">
+          You will lose this team, your gold and everything in the bag, and start again from
+          the first floor.
+        </p>
+        <p className="text-[9px] text-pergamino-200/60 leading-relaxed border-t border-marco pt-3">
+          Missions and the Bingo Book are kept: they belong to you, not to this run.
+        </p>
+        <div className="flex justify-end gap-2">
+          <BotonSecundario onClick={onCancelar}>Cancel</BotonSecundario>
           <button
             type="button"
-            onClick={entrada.onClick}
-            aria-label={entrada.etiqueta}
-            // Lo que se realza al pasar por encima es el HUECO, no el icono: el
-            // icono está dentro de la imagen de fondo de la columna y no se puede
-            // tocar por separado. Cuando existan los sprites propios (ver "Pendiente
-            // de arte" del roadmap) el realce podrá ir en el icono.
-            className="w-full h-full rounded-full transition-colors hover:bg-pergamino-100/15 active:bg-pergamino-100/25"
-          />
-        </HoverTooltip>
-      ))}
-    </nav>
+            onClick={onConfirmar}
+            className="font-display text-[9px] px-3 py-2 rounded-sm bg-sello-600 text-sobre-sello hover:bg-sello-500 transition-colors"
+          >
+            Restart
+          </button>
+        </div>
+      </div>
+    </VentanaModal>
   );
 }
 

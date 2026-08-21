@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { crearLuchador } from '../../engine/combat';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
-import { nombrePersonaje, emojiDeTipo, nombreObjeto } from '../common/nombres';
+import { nombrePersonaje, nombreObjeto } from '../common/nombres';
+import { IconoChakraDeLuchador } from '../common/IconoChakra';
 import { nombrePasiva, duenoDePasiva, describirPasiva } from '../../engine/passives';
 import { spriteDeCombate, pasivasDeLuchador, nombreDeModo } from '../common/datosDeLuchador';
 import HoverTooltip from '../common/HoverTooltip';
@@ -452,7 +453,7 @@ function TarjetaLuchador({
             su marca — el sprite y las pasivas siguen calculándose con el viejo, a
             propósito, para no destripar la transformación que viene detrás. */}
         <p className="font-display text-sm text-center text-pergamino-100 truncate">
-          {emojiDeTipo(id)} {nombre}{' '}
+          <IconoChakraDeLuchador id={id} tamano="w-3.5 h-3.5" /> {nombre}{' '}
           {subioANivel ? (
             <span className="text-oro">Lv.{subioANivel} ▲</span>
           ) : (
@@ -1114,7 +1115,7 @@ export default function CombatScreen() {
               <div>
                 <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
                   {runGanada
-                    ? 'You completed the entire run! Konoha is safe.'
+                    ? 'You completed the entire run.'
                     : 'Your entire team has fallen. The run is over.'}
                 </p>
                 <BotonPrincipal onClick={irAGameOver} className="elevar-hover">
@@ -1124,21 +1125,19 @@ export default function CombatScreen() {
             ) : resultado.arcoCompletado ? (
               <div>
                 <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
-                  You have beaten {arcoActualDatos?.nombre}. A new arc begins.
+                  You have beaten {arcoActualDatos?.nombre}.
                 </p>
                 <BotonPrincipal onClick={avanzarSiguienteArco} className="elevar-hover">
                   Continue to next arc
                 </BotonPrincipal>
               </div>
             ) : recompensaMiniJefe ? (
-              <div>
-                <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
-                  You defeated the mini-boss! A reward awaits you.
-                </p>
-                <BotonPrincipal onClick={irARecompensaMiniJefe} className="elevar-hover">
-                  Claim reward
-                </BotonPrincipal>
-              </div>
+              // Sin frase encima: el cartel ya dice Victory y el botón ya dice "Claim
+              // reward". "You defeated the mini-boss! A reward awaits you." era las dos
+              // cosas otra vez, en medio.
+              <BotonPrincipal onClick={irARecompensaMiniJefe} className="elevar-hover">
+                Claim reward
+              </BotonPrincipal>
             ) : desafioRecluta && resultado.jugadorGanoFinal ? (
               // El desafío del pergamino dorado: se ha ganado, así que la vuelta
               // no es al mapa sino al pergamino, ya en modo "recluta a tu rival".

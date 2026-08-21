@@ -209,6 +209,19 @@ img {
   image-rendering: pixelated;
 }
 
+/* ⚠️ `pixelated` es para AMPLIAR, y hace daño al reducir.
+   Al agrandar, mantiene los bordes duros — que es justo lo que se quiere del pixel
+   art. Al REDUCIR por debajo de la rejilla lógica del dibujo, lo que hace es tirar
+   píxeles enteros, y como los tira de forma desigual (una columna sí, otra no) las
+   líneas finas desaparecen a trozos y la silueta se rompe. Es exactamente el mismo
+   fenómeno que ya nos obligó a pintar todos los sprites en un lienzo común y a
+   escalas enteras.
+   Esta clase devuelve el remuestreo normal para los iconos que se pintan MUY por
+   debajo de su tamaño de fichero (los de chakra: 96 px de PNG a 12 de pastilla). */
+.imagen-suave {
+  image-rendering: auto;
+}
+
 /*
  * Alza la pieza unos píxeles al pasar por encima, como en Pokelike: el hover no
  * solo cambia de color, la tarjeta o el botón se despega del fondo. Se combina

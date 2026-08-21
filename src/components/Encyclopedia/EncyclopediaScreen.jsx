@@ -14,8 +14,9 @@ import { spriteDeModo } from '../common/transformationSprites';
 import { encontrarBaseDeLuchador } from '../common/datosDeLuchador';
 import { SPRITE_OBJETO, COLOR_RAREZA, ETIQUETA_RAREZA, lineasDeEfecto } from '../Inventory/itemSprites';
 import {
-  nombreCorto, nombreObjeto, tipoDeLuchador, clasePastillaDeNaturaleza, emojiDeNaturaleza, emojiDeTipo,
+  nombreCorto, nombreObjeto, tipoDeLuchador, clasePastillaDeNaturaleza,
 } from '../common/nombres';
+import { IconoChakra, IconoChakraDeLuchador } from '../common/IconoChakra';
 import {
   PanelMarco, VentanaModal, FilaPestanas, IconoEnmarcado, TituloBloque, CampoDato,
   BotonSecundario,
@@ -109,9 +110,7 @@ function claseMarcoDeEntrada(seccionId, entrada, bloqueada) {
  * distinguían por el color del sprite. Va delante para que sobreviva al truncado.
  */
 function nombreDeCasilla(seccionId, id) {
-  if (seccionId === 'objetos') return nombreObjeto(id);
-  if (seccionId === 'enemigos') return `${emojiDeTipo(id)} ${nombreCorto(id)}`.trim();
-  return nombreCorto(id);
+  return seccionId === 'objetos' ? nombreObjeto(id) : nombreCorto(id);
 }
 
 /** Una casilla de la rejilla. Bloqueada: silueta y "???" en vez del nombre. */
@@ -138,7 +137,17 @@ function Casilla({ seccionId, entrada, bloqueada, onElegir }) {
           bloqueada ? 'text-pergamino-200/30' : 'text-pergamino-100',
         ].join(' ')}
       >
-        {bloqueada ? '???' : nombre}
+        {bloqueada ? '???' : (
+          <>
+            {/* El icono de naturaleza va aparte y ya no dentro del nombre: antes se
+                concatenaba al texto porque era un emoji, y un sprite no cabe en una
+                cadena. Sigue delante, que es lo que hace que sobreviva al truncado —
+                sin él, la sección de enemigos son cinco casillas idénticas que solo
+                se distinguen por el color del sprite. */}
+            {seccionId === 'enemigos' && <IconoChakraDeLuchador id={entrada.id} tamano="w-2.5 h-2.5" />}
+            {nombre}
+          </>
+        )}
       </span>
     </button>
   );
@@ -313,7 +322,7 @@ function TablaChakra() {
               {elementos.map((tipo) => (
                 <th key={tipo} className="p-1">
                   <span className={`inline-block px-1.5 py-0.5 rounded-sm border ${clasePastillaDeNaturaleza(tipo)}`}>
-                    {emojiDeNaturaleza(tipo)}
+                    <IconoChakra tipo={tipo} tamano="w-3 h-3" />
                   </span>
                 </th>
               ))}
@@ -324,7 +333,7 @@ function TablaChakra() {
               <tr key={atacante}>
                 <th className="p-1 text-right">
                   <span className={`inline-block px-1.5 py-0.5 rounded-sm border ${clasePastillaDeNaturaleza(atacante)}`}>
-                    {emojiDeNaturaleza(atacante)}
+                    <IconoChakra tipo={atacante} tamano="w-3 h-3" />
                   </span>
                 </th>
                 {elementos.map((defensor) => {
@@ -348,7 +357,12 @@ function TablaChakra() {
         </table>
       </div>
       <p className="text-[8px] text-pergamino-200/40 text-center">
-        Cycle: {elementos.map((t) => emojiDeNaturaleza(t)).join(' → ')} → {emojiDeNaturaleza(elementos[0])}
+        {/* Con sprites el ciclo se compone en JSX en vez de con `join(' → ')`: una
+            imagen no se puede meter en una cadena. */}
+        Cycle: {elementos.map((t) => (
+          <span key={t}><IconoChakra tipo={t} tamano="w-3 h-3" /> → </span>
+        ))}
+        <IconoChakra tipo={elementos[0]} tamano="w-3 h-3" />
       </p>
     </PanelMarco>
   );
@@ -396,7 +410,7 @@ export default function EncyclopediaScreen() {
   const pestanasTipo = [
     { id: 'todos', etiqueta: 'ALL' },
     ...typesData.elementos.map((tipo) => ({
-      id: tipo, etiqueta: tipo.toUpperCase(), icono: emojiDeNaturaleza(tipo),
+      id: tipo, etiqueta: tipo.toUpperCase(), icono: <IconoChakra tipo={tipo} tamano="w-3 h-3" />,
     })),
   ];
 

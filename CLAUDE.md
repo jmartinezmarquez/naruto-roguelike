@@ -290,6 +290,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   el fondo, ya en JPEG con el PNG guardado en `src/assets/originales/`, y la música con `preload="none"`
   — con `auto` se bajaban 3 MB **antes de que el navegador pudiera reproducirlos**, porque el autoplay
   está bloqueado hasta el primer gesto.
+- [x] **Los 9 iconos que faltaban** (5 naturalezas de chakra + 4 del menú) y **el menú vertical de CSS**
+  (puntos 15-tanda 1 y 16). ⚠️ Las hojas llegaron en **JPEG**, que le hace daño al pixel art dos veces —sin
+  alfa (el damero venía pintado) y con los colores planos emborronados—, así que
+  `scripts/generar-sprites-iconos.py` **vuelve a muestrear sobre la rejilla lógica**: toma un píxel del
+  centro de cada celda, que reconstruye el color plano. El fondo se borra por **inundación desde el borde**
+  y no por color global (fuego y agua tienen el centro casi blanco). ⚠️ El menú **ya no está clavado a
+  cuatro entradas** —eran huecos pintados en una imagen— y **no queda ningún `window.confirm`** en el
+  juego. Ver `documentacion/13-ui-mapa-y-combate.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [x] **Pantalla de ajustes** (punto 14): `components/Settings/SettingsScreen.jsx` + `useSettingsStore`
   (store propio, clave propia de `localStorage`). Tema **claro/oscuro**, pantalla completa (mudada desde el

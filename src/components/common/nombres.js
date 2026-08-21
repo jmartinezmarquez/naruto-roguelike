@@ -88,21 +88,10 @@ export function tipoDeLuchador(id) {
   );
 }
 
-// El icono de cada naturaleza de chakra. Vive aquí, junto a `tipoDeLuchador`,
-// porque lo usan dos pantallas (la tarjeta de hover y la de combate) y tenerlo
-// duplicado era garantía de que un día dejaran de coincidir.
-const EMOJI_TIPO = {
-  katon: '🔥',
-  fuuton: '🌪️',
-  raiton: '⚡',
-  doton: '🪨',
-  suiton: '💧',
-};
-
-/** Icono de la naturaleza de chakra de un luchador, o '' si no se encuentra. */
-export function emojiDeTipo(id) {
-  return EMOJI_TIPO[tipoDeLuchador(id)] ?? '';
-}
+// Aquí vivían los emojis de las cinco naturalezas (🔥💨⚡🪨💧). Ya no: son sprites
+// dibujados, y un sprite no cabe en una cadena de texto — se pinta con
+// `<IconoChakra>` / `<IconoChakraDeLuchador>` (ver `IconoChakra.jsx`). Eran lo único
+// de la interfaz sin dibujar, y se veían siempre al lado de sprites que sí lo están.
 
 /** El nombre de la naturaleza como etiqueta ("Katon"), o '' si no se encuentra. */
 export function nombreDeTipo(id) {
@@ -136,11 +125,6 @@ export function clasePastillaDeTipo(id) {
  */
 export function clasePastillaDeNaturaleza(tipo) {
   return CLASE_TIPO[tipo] ?? CLASE_TIPO_NEUTRA;
-}
-
-/** El emoji de una naturaleza directamente, sin pasar por un luchador. */
-export function emojiDeNaturaleza(tipo) {
-  return EMOJI_TIPO[tipo] ?? '';
 }
 
 export function nombreObjeto(id) {

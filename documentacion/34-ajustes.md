@@ -182,6 +182,24 @@ Lo que se salta es la **celebración**, no el modo: el desbloqueo cuenta igual. 
 con el ajuste activo se dan por vistas todas de golpe, o las tarjetas se quedarían pintadas con el nivel
 viejo.
 
+## La descripción solo va donde el nombre no basta
+
+Las cinco filas nacieron con `pista` debajo, y en tres sobraba: **Theme**, **Music** y **Animation
+speed** se entienden por su etiqueta y por sus propios botones —`DARK`/`LIGHT`, `OFF`/`LOW`/`MID`/`HIGH`,
+`×1`/`×2`/`INSTANT`—, así que la línea de abajo repetía en pequeño lo que el control ya decía en grande.
+Quitadas.
+
+Se quedan las dos donde el nombre **no** basta, y por el mismo criterio:
+
+- **Skip transformation screen** — hay que saber *qué te pierdes*: es el único sitio donde el juego te
+  cuenta que existe una forma nueva (ver [30](./30-sistema-de-pasivas.md)).
+- **Reset meta-progress** — hay que saber *qué borra* antes de pulsarlo, y sobre todo qué **no** borra
+  (la run en curso).
+
+La regla que queda: **una descripción es para lo que el control no puede decir por sí mismo** — una
+consecuencia, un alcance, un aviso. Si solo reformula la etiqueta, es ruido debajo de cada línea, y en
+una pantalla de ajustes se acumula rápido.
+
 ## Tests
 
 `src/store/useSettingsStore.test.js`: valores por defecto (incluido que **no** salta la transformación),

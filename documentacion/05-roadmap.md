@@ -1110,6 +1110,65 @@ meter azar de verdad.
   esa carpeta. Es lo único que falta y **no es código**: las hace el usuario, porque la regla del proyecto
   prohíbe los navegadores headless.
 
+**Iconos de chakra y menú vertical (puntos 15-tanda 1 y 16) — ver [13](./13-ui-mapa-y-combate.md)**
+
+- [x] **Los 5 iconos de naturaleza de chakra y los 4 del menú, dibujados.** Eran lo único de la interfaz
+  que seguía siendo **emoji**, y se veían siempre al lado de sprites que sí estaban dibujados. Se hicieron
+  en una sola tanda a propósito: por separado habrían salido de dos estilos distintos y se ven a la vez en
+  la misma pantalla.
+- [x] ⚠️ **Las hojas llegaron en JPEG, y eso le hace daño al pixel art dos veces**: no hay canal alfa —el
+  damero de la transparencia venía *pintado* en los píxeles— y la compresión emborrona los bloques de
+  color plano, que es lo que hace que el pixel art se vea nítido. Medido: en una franja de fondo **no
+  había dos píxeles contiguos iguales**, y tres manchas sueltas se colaban como si fueran iconos.
+- [x] **La reconstrucción no es un filtro, es volver a muestrear** (`scripts/generar-sprites-iconos.py`):
+  la hoja venía ampliada ~8,7× —escala **no entera**, de ahí que unos bloques midan 9 px y otros 10—, así
+  que el script estima el paso real y **toma un píxel del centro de cada celda**. Si el bloque original era
+  de un color y el JPEG lo dejó en veinte tonos parecidos, el del centro es el bueno. El fondo se borra
+  **por inundación desde el borde** y no por color global, porque el fuego y el agua tienen el centro casi
+  blanco y un reemplazo global se los comería.
+- [x] 🐛 **La rejilla se ajusta al lienzo y no al revés**: los del menú están dibujados con mucho más
+  detalle (el torii salía a 51×62 celdas) y sin tope **se recortaban** — un icono cortado parece un fallo
+  de programa, no de arte. Se reduce manteniendo la proporción, que evita el otro estropicio: un torii
+  aplastado.
+- [x] **La rueda de chakra del mapa usa `<image>` del SVG** en vez del `<foreignObject>` con un emoji
+  dentro. Aquel era HTML de verdad metido en el SVG, así que el navegador lo trataba como un párrafo
+  —cursor de escritura y se podía seleccionar arrastrando— y hacía falta desactivarle los eventos a mano
+  para taparlo. Con un sprite el problema **no existe**: una imagen no es texto.
+- [x] **Punto 16: el menú vertical deja de ser una imagen.** Marco en CSS e iconos sueltos. Con eso caen
+  las tres consecuencias del apaño de una sola pieza: ⚠️ **ya no está clavado a exactamente cuatro
+  entradas** (los huecos estaban pintados; añadir una quinta obligaba a redibujar la hoja, y el punto 18
+  es justo una entrada más), el **hover realza el icono y no el hueco**, y la confirmación de reiniciar es
+  una ventana del juego.
+- [x] 🐛 **Fuera los dos `window.confirm` que quedaban** — reiniciar la run y reiniciar la
+  meta-progresión. Eran lo último de interfaz de navegador en toda la partida y estaban justo en **las dos
+  acciones más destructivas**, que es donde peor sienta que el juego deje de parecer un juego.
+- [x] Se borra `assets/menu/columna-menu.png`, que ya no la usa nadie; la maqueta original sigue en
+  `documentacion/LayoutMenuVertical.png`.
+- [x] 🐛 ⚠️ **Los iconos se veían rotos, y la causa era el CSS y no el recorte**: `index.css` aplica
+  `image-rendering: pixelated` a **todas** las imágenes, que es lo correcto al ampliar pixel art y lo
+  contrario de lo que hace falta al **reducir** — descarta píxeles enteros y de forma desigual, así que
+  las líneas finas desaparecen a trozos. Los nueve pasan a `.imagen-suave`, que les devuelve el
+  remuestreo normal, y el menú queda además algo más pequeño (32 px), como en la referencia.
+  ⚠️ **Se intentó antes el camino contrario y salió peor**: bajar los del menú a una rejilla de 32×32
+  para que fueran uno a uno con la pantalla. Están dibujados con mucho más detalle del que cabe ahí (el
+  torii son 51×62 celdas), así que el 1:1 se pagaba tirando medio dibujo y el icono acababa **más tosco
+  que la hoja de la que sale** — que es la señal de que el recorte está mal, no un compromiso. La regla:
+  **primero se conserva el dibujo y luego se elige cómo reducirlo.**
+- [x] 🐛 **Y los cuatro del menú se igualan de tamaño**: el artista los dibuja a escalas distintas (el
+  engranaje mide 32×33 celdas y el torii 51×62), y respetarlo dejaba el engranaje a media altura de sus
+  vecinos en una columna donde los cuatro son hermanos. Se amplía cada uno hasta el lienzo, y ampliar no
+  cuesta nada aquí porque el muestreo sale de la hoja original: pedir más celdas no inventa detalle, lo
+  saca de donde ya estaba.
+- [x] 🐛 **El tooltip del jefe salía descuadrado**: el icono dentro de la pastilla iba con
+  `align-text-bottom`, así que colgaba de la base de la línea y **estiraba la pastilla de alto**. Con
+  `align-middle` se centra con el texto.
+- [x] 🐛 ⚠️ **Y el texto se salía de la pastilla**, que parecía cosa del icono nuevo y no lo era: el
+  icono solo ensanchó el contenido lo justo para que se notara. `HoverTooltip` coloca su contenido en
+  `absolute`, y el ancho de una caja absoluta se calcula **contra su contenedor posicionado** — aquí, un
+  nodo del mapa de 44 px. Con tan poco disponible la fila encogía por debajo de su contenido y, con
+  `whitespace-nowrap`, el texto salía por el lado. Arreglado con **`w-max` en `EtiquetaFlotante`** (vale
+  para todos los tooltips) y `shrink-0` en las pastillas.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -1185,9 +1244,8 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
     repite aquí a propósito**: lo que aporta el punto es dejar de ser una lista pasiva y pasar a ser
     trabajo con orden. Hoy son 8 entradas que van en **cuatro tandas**, y el orden importa porque dos de
     ellas comparten estilo:
-    - **Tanda 1 — los 9 iconos** (5 naturalezas de chakra + 4 del menú vertical). ⚠️ **Van juntos o
-      salen de dos estilos distintos**, y se ven a la vez en la misma pantalla. Es además la que
-      desbloquea el punto 16.
+    - ~~**Tanda 1 — los 9 iconos**~~ (5 naturalezas de chakra + 4 del menú vertical) — **HECHA el
+      2026-08-19**, y desbloqueó el punto 16 como estaba previsto. Se hizo junta, que era la condición.
     - **Tanda 2 — los nodos de entrenador, mini-jefe y jefe**, que hoy comparten el sprite de combate y
       se distinguen por borde y badge. El material existe (`map-sprites-idle-all-characters.png`), pero
       en paneles de tamaño irregular: hay que recortarlos uno a uno antes de mapearlos por `enemigoId`.
@@ -1200,23 +1258,6 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
     ⚠️ **Todo sprite nuevo entra por su script `generar-sprites-*.py` y en el lienzo común de 96×96.**
     No se editan a mano los PNG generados: se pisan al regenerar. Y el pixel art a escalas no enteras
     duplica unas columnas de píxeles y otras no, que es la razón del lienzo común.
-
-16. **Arreglar el menú vertical de la derecha** — el de Missions / Bingo Book / Settings / Restart run.
-    Funciona, pero está montado sobre un apaño con tres consecuencias, y las tres se arreglan a la vez:
-    - **Es una sola imagen** (`assets/menu/columna-menu.png`: marco, huecos e iconos dibujados juntos),
-      con cuatro botones transparentes encima colocados por porcentaje. ⚠️ **Eso lo deja clavado a
-      EXACTAMENTE cuatro entradas**: añadir o quitar una obliga a redibujar la hoja. Es un problema de
-      ahora mismo y no teórico — cualquier entrada nueva (salir al título, abandonar la run) choca con
-      esto.
-    - **El hover realza el HUECO, no el icono**, porque el icono es parte del fondo y no se puede tocar
-      por separado. Se lee como que se ilumina el agujero.
-    - **"Restart run" pregunta con un `window.confirm`**, que es un diálogo del navegador: tipografía
-      del sistema, botones del sistema y cero relación con el juego. Es lo único que queda de la
-      interfaz del navegador en toda la partida, y encima está en la acción más destructiva.
-    **El arreglo**: el marco pasa a CSS (`PanelMarco` ya lo hace en el resto del juego), los iconos
-    pasan a ser cuatro PNG sueltos —**tanda 1 del punto 15**, de ahí el orden— y la confirmación pasa a
-    `VentanaModal`, que ya existe. Con eso el menú se vuelve una lista normal a la que se le pueden
-    añadir entradas.
 
 18. **Home: la pantalla principal con el selector de campañas** — una pantalla que lista las campañas
     del juego y desde la que se empieza una. **Hoy hay una sola** (los tres arcos del MVP: País de las
@@ -1260,9 +1301,9 @@ conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactament
   pero en una hoja con paneles de tamaño irregular: hace falta recortarlos uno a uno antes de poder
   mapearlos por `enemigoId`. *(Lo que sí está hecho es el **hover**, que ya dice con qué jefe vienes a
   pelear — nombre, nivel, tipo y transformación.)*
-- **Los 5 tipos de chakra y los 4 iconos del menú van JUNTOS.** Son dos entradas de esta lista (la de
-  aquí abajo y la de la rueda de chakra), pero es una sola tanda de trabajo: hacerlos por separado es la
-  forma segura de que salgan de dos estilos distintos, y se ven a la vez en la misma pantalla.
+- ~~**Los 5 tipos de chakra y los 4 iconos del menú**~~ — **HECHOS el 2026-08-19**, en una sola tanda
+  como decía esta entrada. Están en `assets/chakra/` y `assets/menu/`, recortados por
+  `scripts/generar-sprites-iconos.py`.
 - **El menú vertical no tiene sprites propios de icono.** Usa la maqueta entera
   (`assets/menu/columna-menu.png`) con cuatro botones transparentes encima, porque esa hoja es un menú
   ya dibujado —marco, huecos e iconos juntos— y recortarla se lleva el marco o agujerea el sombreado.

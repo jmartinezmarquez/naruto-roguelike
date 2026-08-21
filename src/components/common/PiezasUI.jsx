@@ -347,7 +347,14 @@ export function EtiquetaFlotante({ children }) {
     // naturaleza de chakra (ver `NodoMapa`), esto tiene que poder llevar varias
     // líneas — y un `<p>` no puede contener bloques. Los usos de una sola línea, que
     // son casi todos, se ven exactamente igual.
-    <div className="bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap font-display text-[11px] leading-none">
+    // ⚠️ `w-max` (ancho = el que pida el contenido). Sin él, la caja la coloca
+    // `HoverTooltip` en `absolute`, y el ancho de un elemento absoluto se calcula
+    // contra su contenedor posicionado — que aquí es **el nodo del mapa, de 44 px**.
+    // El resultado era que la fila interior se encogía por debajo de su contenido y
+    // el texto **se salía de la pastilla**, cruzando el borde de color. No lo provocó
+    // el icono de chakra: el icono solo ensanchó el contenido lo justo para que se
+    // notara algo que ya estaba mal.
+    <div className="w-max bg-tinta-900 text-pergamino-100 rounded-sm border-2 border-pergamino-200/80 shadow-xl px-3 py-1.5 whitespace-nowrap font-display text-[11px] leading-none">
       {children}
     </div>
   );

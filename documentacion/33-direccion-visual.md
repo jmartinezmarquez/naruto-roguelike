@@ -419,3 +419,36 @@ Lo que **no** se tocó, a propósito:
 Nada del kit. Lo siguiente en interfaz es el **punto 6 (eventos)**, que necesita su documento de diseño
 antes de tocar código, y el **5 (logros)**, cuya pantalla ya está en estilo pero le falta el contenido
 (5a) y la decisión sobre los modificadores permanentes (5b).
+
+## La regla del texto de apoyo (auditoría del 2026-08-19)
+
+Salió de Ajustes —tres descripciones que no hacían falta— y se pasó luego por **todas** las pantallas.
+La regla, que vale para cualquier texto pequeño debajo de otra cosa:
+
+> **Una línea de apoyo existe para decir una consecuencia, un alcance o un aviso.** Si reformula la
+> etiqueta, repite lo que pone el botón de al lado o adelanta lo que va a decir la pantalla siguiente,
+> es ruido — y el ruido en interfaz no se paga una vez, se paga cada vez que se mira.
+
+Lo que se quitó y por qué, que es más útil que la regla:
+
+| Dónde | Decía | Por qué sobraba |
+|---|---|---|
+| Ajustes · Theme / Music / Animation speed | "Light mode uses the parchment palette…", etc. | Los **propios botones** lo dicen: `DARK`/`LIGHT`, `OFF`…`HIGH`, `×1`/`×2`/`INSTANT` |
+| Ajustes · Reset meta-progress | "…Does not touch the run in progress." | Lo dice la **confirmación**, que es donde hace falta leerlo. Se queda el alcance ("Achievements and Bingo Book"), que define qué es "meta-progress" |
+| Combate · mini-jefe | "You defeated the mini-boss! A reward awaits you." | El cartel ya dice **Victory** y el botón ya dice **Claim reward**: era las dos cosas otra vez, en medio |
+| Combate · fin de arco | "…A new arc begins." | Lo dice el botón: *Continue to next arc* |
+| Combate · fin de run | "…Konoha is safe." | Lo dice la pantalla de resultados **tres segundos después** |
+| Logros · sin recompensa | "A mark of honour. **No reward beyond the telling.**" | Desde que hay **rango S** al lado, la segunda frase repetía el icono. Y salía en **13 de 23 filas**: una frase repetida trece veces en una pantalla se paga trece veces |
+
+Y lo que se **mantuvo**, que es la otra mitad del criterio:
+
+- **"Drag to reorder, or drop an item on a ninja"** (panel de equipo): enseña dos gestos **invisibles**.
+  Sin la línea, nadie descubre que se puede arrastrar.
+- **"Skip transformation screen"** y **"Reset meta-progress"** en Ajustes: una dice qué te pierdes, la
+  otra qué borra. Consecuencias, no reformulaciones.
+- **"The rest of your team is built by recruiting during the adventure"** (selección de personaje):
+  explica por qué eliges **uno** y no tres, que es la pregunta que se hace todo el mundo ahí.
+- **Las frases de la enciclopedia** ("Face them in battle to unlock this entry"): son la única forma de
+  saber cómo se abre una entrada, y salen **de una en una**, no repetidas por la rejilla.
+- **"You have earned their respect"** (desafío legendario): no lo dice nada más, y es el remate del
+  único combate opcional del juego.
