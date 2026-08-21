@@ -28,7 +28,7 @@ Dos razones, y ninguna es el rendimiento: el motor **no debe necesitar un navega
 proyecto, `engine/` no importa React ni el DOM— y con `jsdom` global esa regla dejaría de comprobarse
 sola. Que los 290 tests de lógica no paguen el arranque de jsdom es un extra.
 
-## Cobertura actual (403 tests: 290 de lógica + 113 de componente)
+## Cobertura actual (459 tests: 294 de lógica + 165 de componente)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el
@@ -245,7 +245,18 @@ Qué protege cada archivo:
 
 ### Lo que sigue sin tener test, y a propósito
 
-`CombatScreen` y `MapScreen`. Son las dos pantallas con relojes (el replay golpe a golpe) y con
-medidas de maquetación (el lienzo que se escala con `ResizeObserver`), y jsdom **no maqueta**: todas
-las medidas salen 0. Un test ahí probaría el reloj falso, no el juego. Lo que sí se puede probar de
-ellas es lógica, y esa ya vive en `engine/` y en el store.
+`MapScreen`, y de `CombatScreen` **todo lo que se ve**. Son las dos pantallas con medidas de
+maquetación (el lienzo que se escala con `ResizeObserver`) y con relojes, y jsdom **no maqueta**:
+todas las medidas salen 0. Un test de aspecto ahí probaría el lienzo falso, no el juego.
+
+📌 **Matiz añadido el 2026-08-21**: `CombatScreen.test.jsx` sí existe, y no contradice lo anterior
+porque no prueba nada de lo que se ve — prueba **a dónde te lleva el final de un combate y cuándo**,
+que es lógica de navegación. La tanda de ritmo le quitó dos botones y le puso un auto-avance, y las
+dos cosas se estropean en silencio: un botón que vuelve, o un auto-avance que se dispara donde había
+algo que leer y te roba la recompensa sin que nada falle.
+
+⚠️ Y una trampa práctica que costó una vuelta: **con la velocidad normal la animación no termina
+dentro de un test**, porque encadena un `setTimeout` por golpe desde un efecto y adelantar el reloj a
+saco no la completa. Esos tests usan la velocidad **instantánea**, donde `rondaCompleta` sale `true`
+en el primer render sin relojes. El suelo del auto-avance (`MS_MINIMO_AUTO`) se sigue aplicando, que
+es lo que impide que la prueba se vuelva trampa.

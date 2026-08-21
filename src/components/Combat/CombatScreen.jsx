@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { crearLuchador } from '../../engine/combat';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
@@ -12,6 +12,7 @@ import TransformationScreen from './TransformationScreen';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import { PanelMarco, TituloBloque, IconoEnmarcado, BotonPrincipal, ChipEfecto } from '../common/PiezasUI';
 import { resumirBuffsActivos } from '../common/efectos';
+import { useAvanzarConTeclado } from '../common/useAvanzarConTeclado';
 import { useFactorAnimacion, useSettingsStore } from '../../store/useSettingsStore';
 
 // El replay avanza de GOLPE en golpe, no de turno en turno. Un turno trae 2-4
@@ -39,17 +40,35 @@ function msEntreGolpes(golpeQueAcaba, golpeSiguiente) {
   if (esJutsu(golpeQueAcaba)) return MS_TRAS_JUTSU;
   return MS_ENTRE_BASICOS;
 }
-const PAUSA_ENTRE_RONDAS_MS = 1400;
+// ⚠️ **Las tres esperas del final de un combate se SUMAN**, y eso es lo que se sentía
+// lento — no la que parecía. Medido en el playtest del 2026-08-21: tras un combate que
+// sube de nivel había 1500 (cartel) + 700 (eslabón) = **2,2 s** de nada, porque el
+// encadenado espera a que el cartel termine. El sospechoso era el eslabón, que ya era el
+// más corto de los tres. **Cuando algo va lento, mide la cadena entera antes de recortar
+// el eslabón que tienes delante.**
+const PAUSA_ENTRE_RONDAS_MS = 900;
 // Lo que se deja ver la subida de nivel antes de tapar la pantalla con la
 // transformación. Sin esta espera, el overlay salía encima del cartel y el
 // jugador no llegaba a ver que había subido — que es lo que la explica.
-const MS_CELEBRAR_NIVEL = 1500;
+const MS_CELEBRAR_NIVEL = 1000;
 // El respiro entre dos enemigos de una cadena de entrenador. Corto a propósito: la
 // cadena es UN combate con relevos, no tres combates, y lo que se quiere es que se
 // note el cambio de rival sin cortar el ritmo. Va multiplicado por el factor de
 // velocidad como todo lo demás — antes era un 1600 fijo, así que era lo único de la
 // pantalla que no obedecía al ajuste de animación.
-const MS_ENTRE_ESLABONES = 700;
+const MS_ENTRE_ESLABONES = 550;
+// Lo que tarda en irse solo el final de un combate corriente. **No es una espera**: el
+// clic y el espacio lo adelantan en cualquier momento (ver `useAvanzarConTeclado`). Un
+// auto-avance sin salida cambia un clic por una espera, que para el ritmo es peor que el
+// botón que venía a quitar. Solo se aplica al caso llano — con recompensa, arco
+// terminado o run acabada hay algo que leer y manda el botón.
+const MS_AUTO_CONTINUAR = 1100;
+// ⚠️ **Suelo del auto-avance, y no es una precaución: con velocidad "instantánea" el
+// factor de animación es 0**, así que sin esto el cartel de Victory y el panel de
+// recompensas se saltarían enteros — verías el mapa otra vez sin llegar a leer qué te
+// has llevado. Saltarse la ANIMACIÓN es lo que pide ese ajuste; saltarse el RESULTADO
+// es perder información. Se aplica igual en el resultado de un evento.
+const MS_MINIMO_AUTO = 450;
 
 // Verde / oro / rojo son SEMÁNTICOS aquí: dicen cuánta vida queda, no de qué
 // naturaleza es el luchador. Ojo, `colorDelDano` de más abajo es lo contrario —
@@ -154,7 +173,7 @@ function pasivasDelUltimoGolpe(ronda, golpe) {
   const porLado = { jugador: [], enemigo: [] };
   if (!golpe) return porLado;
 
-  const ladoAtacante = golpe.atacanteId === ronda.jugador.id ? 'jugador' : 'enemigo';
+  const ladoAtacante = golpe.atacanteEsPrimero ? 'jugador' : 'enemigo';
   const ladoDefensor = ladoAtacante === 'jugador' ? 'enemigo' : 'jugador';
   // Devuelve **ids**, no nombres. Devolvía nombres y quien los recibe
   // (`EtiquetasPasivas`) comparaba contra `pasiva.id`, así que no coincidía nunca
@@ -512,11 +531,16 @@ function TarjetaLuchador({
               className={[
                 'relative w-24 h-24 object-contain',
                 activo ? '' : 'saturate-75',
-                // Solo se desploma el que cae PELEANDO, no todo el que esté
-                // caído: al cambiar de ronda se remontan las tres tarjetas, y
-                // con `estado === 'caido'` los que ya habían caído repetían su
-                // animación cada vez que entraba el relevo.
+                // ⚠️ **Dos clases y no una**, y el porqué es un bug de ida y vuelta:
+                // - `caida-ko` es la ANIMACIÓN de desplomarse, y solo la corre quien cae
+                //   PELEANDO. Aplicarla a todo el que esté caído la repetía cada vez que
+                //   entraba un relevo — las tarjetas se remontan al cambiar de ronda.
+                // - `caido-ko` es la POSE de estar caído, para el que ya cayó antes. Sin
+                //   ella, el arreglo de arriba dejaba otro peor: `forwards` mantiene el
+                //   estado final **solo mientras la clase siga puesta**, así que al
+                //   entrar el siguiente eslabón el derrotado **se ponía de pie otra vez**.
                 cayendoAhora ? 'caida-ko' : '',
+                estado === 'caido' && !cayendoAhora ? 'caido-ko' : '',
                 // Solo avisa quien PUEDE lanzarlo ya: en el banquillo la barra ni
                 // se carga, y en un caído sería absurdo.
                 activo && jutsuListo ? 'telegrafia-jutsu' : '',
@@ -735,6 +759,13 @@ export default function CombatScreen() {
   // Reproduce los golpes ya impactados para saber cómo estaban HP y barra de
   // jutsu en ese momento.
   //
+  // ⚠️ **De qué lado viene un golpe se sabe por `atacanteEsPrimero`, NUNCA comparando
+  // ids.** Los dos luchadores pueden tener el MISMO id —reclutas a Kabuto por logro y
+  // luego te toca el mini-jefe Kabuto—, y entonces `evento.atacanteId === ronda.jugador.id`
+  // era `true` también cuando atacaba el enemigo: el replay le aplicaba al jugador el HP
+  // del rival y salía **curándose en cada golpe**. Lo que se vio en pantalla fue eso; la
+  // consecuencia grave estaba en el store, que daba la ronda por ganada.
+  //
   // Nada se reconstruye con aritmética: el HP de los dos y la carga de los dos
   // vienen ya resueltos en cada evento. Con la carga es obligatorio (lanzar el
   // jutsu la pone a cero, no se puede sumar incrementos) y con el HP también en
@@ -762,7 +793,7 @@ export default function CombatScreen() {
         if (esElUltimo && recuperado > 0) curacion = { lado, cantidad: recuperado };
       };
 
-      const jugadorAtaca = evento.atacanteId === ronda.jugador.id;
+      const jugadorAtaca = evento.atacanteEsPrimero;
       const [hpAtacanteAntes, hpDefensorAntes] = jugadorAtaca
         ? [hpJugador, hpEnemigo]
         : [hpEnemigo, hpJugador];
@@ -880,6 +911,56 @@ export default function CombatScreen() {
     return () => clearTimeout(t);
   }, [seguiraLaCadena, quedanTransformaciones, nivelYaCelebrado, continuarCadena, factorAnimacion]);
 
+  /**
+   * A dónde lleva "continuar" desde el final de un combate. Un solo sitio, porque antes
+   * la respuesta estaba repartida en cuatro botones distintos del JSX y ahora hace falta
+   * también para el teclado y para el auto-avance: tres consumidores de la misma
+   * decisión son tres oportunidades de que se separen.
+   */
+  const avanzar = useCallback(() => {
+    if (runTerminada) return irAGameOver();
+    if (resultado?.arcoCompletado) return avanzarSiguienteArco();
+    if (recompensaMiniJefe) return irARecompensaMiniJefe();
+    if (desafioRecluta && resultado?.jugadorGanoFinal) return irAReclutaDesafio();
+    return volverAlMapa();
+  }, [
+    runTerminada, resultado, recompensaMiniJefe, desafioRecluta,
+    irAGameOver, avanzarSiguienteArco, irARecompensaMiniJefe, irAReclutaDesafio, volverAlMapa,
+  ]);
+
+  // ¿Está el combate cerrado y con la salida ya en pantalla? Es la condición que
+  // comparten el teclado y el auto-avance.
+  const salidaVisible = combateTotalTerminado && !seguiraLaCadena && !quedanTransformaciones;
+
+  /**
+   * ¿Se va solo? Sí, **salvo en los dos hitos**: run terminada y arco completado.
+   *
+   * ⚠️ La línea no es "si hay algo detrás" sino **qué hay detrás**. La recompensa del
+   * mini-jefe y el pergamino dorado ganado llevan a pantallas de DECISIÓN —coger o
+   * saltar el objeto, reclutar o no al rival—, o sea sitios donde el jugador se para
+   * igualmente: pedirle un clic para llegar hasta ahí es cobrarle el viaje dos veces.
+   * Terminar un arco o una run, en cambio, no lleva a ninguna decisión: lleva a un
+   * momento, y un momento que se va solo no es un momento.
+   */
+  const seVaSolo = salidaVisible && !runTerminada && !resultado?.arcoCompletado;
+
+  useEffect(() => {
+    if (!seVaSolo) return undefined;
+    const t = setTimeout(avanzar, Math.max(MS_MINIMO_AUTO, MS_AUTO_CONTINUAR * factorAnimacion));
+    return () => clearTimeout(t);
+  }, [seVaSolo, avanzar, factorAnimacion]);
+
+  const saltarAnimacion = useCallback(() => {
+    setGolpesEmpezados(golpes.length);
+    setImpactado(true);
+  }, [golpes.length]);
+
+  // ⚠️ **Espacio hace UNA cosa según el momento**: mientras la pelea corre, adelantarla;
+  // cuando ha terminado, salir. No son dos atajos, es el mismo — "date prisa" — y por eso
+  // no se puede pulsar sin querer nada que no estuviera ya en pantalla como único botón.
+  useAvanzarConTeclado(saltarAnimacion, !rondaCompleta);
+  useAvanzarConTeclado(avanzar, salidaVisible);
+
   if (!resultado || !ronda || !estadoEnTurnoActual) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tinta-950 text-pergamino-100 font-body">
@@ -900,7 +981,7 @@ export default function CombatScreen() {
   // Solo se sacude quien acaba de recibir daño de verdad: un golpe bloqueado a 0
   // por una pasiva no debe verse igual que uno que ha dolido.
   const sacudeA = ultimoImpacto && ultimoImpacto.dano > 0
-    ? (ultimoImpacto.atacanteId === ronda.jugador.id ? 'enemigo' : 'jugador')
+    ? (ultimoImpacto.atacanteEsPrimero ? 'enemigo' : 'jugador')
     : null;
 
   return (
@@ -926,7 +1007,7 @@ export default function CombatScreen() {
               eficacia={ultimoImpacto.eficacia}
               esJutsu={ultimoImpacto.tipoAtaque === 'jutsu'}
               refContenedor={refContenedor}
-              refObjetivo={ultimoImpacto.atacanteId === ronda.jugador.id ? refTarjetaEnemigo : refTarjetaJugador}
+              refObjetivo={ultimoImpacto.atacanteEsPrimero ? refTarjetaEnemigo : refTarjetaJugador}
             />
           )}
           {estadoEnTurnoActual.curacion && (
@@ -941,11 +1022,11 @@ export default function CombatScreen() {
             <Proyectil
               key={golpesVistos}
               atacanteId={golpeEnVuelo.atacanteId}
-              hacia={golpeEnVuelo.atacanteId === ronda.jugador.id ? 'derecha' : 'izquierda'}
+              hacia={golpeEnVuelo.atacanteEsPrimero ? 'derecha' : 'izquierda'}
               esJutsu={golpeEnVuelo.tipoAtaque === 'jutsu'}
               refContenedor={refContenedor}
-              refOrigen={golpeEnVuelo.atacanteId === ronda.jugador.id ? refTarjetaJugador : refTarjetaEnemigo}
-              refDestino={golpeEnVuelo.atacanteId === ronda.jugador.id ? refTarjetaEnemigo : refTarjetaJugador}
+              refOrigen={golpeEnVuelo.atacanteEsPrimero ? refTarjetaJugador : refTarjetaEnemigo}
+              refDestino={golpeEnVuelo.atacanteEsPrimero ? refTarjetaEnemigo : refTarjetaJugador}
             />
           )}
 
@@ -1052,7 +1133,7 @@ export default function CombatScreen() {
             </summary>
             <div className="px-3 pb-3 max-h-40 overflow-y-auto flex flex-col gap-1.5">
               {eventosVisibles.map((evento, i) => {
-                const esJugador = evento.atacanteId === ronda.jugador.id;
+                const esJugador = evento.atacanteEsPrimero;
                 const nombreAtacante = nombrePersonaje(esJugador ? ronda.jugador.id : ronda.enemigo.id);
                 const esJutsu = evento.tipoAtaque === 'jutsu';
                 return (
@@ -1084,7 +1165,7 @@ export default function CombatScreen() {
         {!rondaCompleta && (
           <button
             type="button"
-            onClick={() => { setGolpesEmpezados(golpes.length); setImpactado(true); }}
+            onClick={saltarAnimacion}
             className="text-xs text-pergamino-200/60 underline hover:text-pergamino-100"
           >
             Skip animation
@@ -1149,26 +1230,14 @@ export default function CombatScreen() {
                   Continue to next arc
                 </BotonPrincipal>
               </div>
-            ) : recompensaMiniJefe ? (
-              // Sin frase encima: el cartel ya dice Victory y el botón ya dice "Claim
-              // reward". "You defeated the mini-boss! A reward awaits you." era las dos
-              // cosas otra vez, en medio.
-              <BotonPrincipal onClick={irARecompensaMiniJefe} className="elevar-hover">
-                Claim reward
-              </BotonPrincipal>
-            ) : desafioRecluta && resultado.jugadorGanoFinal ? (
-              // El desafío del pergamino dorado: se ha ganado, así que la vuelta
-              // no es al mapa sino al pergamino, ya en modo "recluta a tu rival".
-              <div>
-                <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
-                  You have earned their respect.
-                </p>
-                <BotonPrincipal onClick={irAReclutaDesafio} className="elevar-hover">
-                  Recruit them
-                </BotonPrincipal>
-              </div>
             ) : (
-              <BotonPrincipal onClick={volverAlMapa} className="elevar-hover">
+              // ⚠️ **Aquí había dos botones más y eran peaje**: "Claim reward" (mini-jefe)
+              // y "Recruit them" (pergamino dorado ganado). Ninguno de los dos decidía
+              // nada — **la decisión estaba en la pantalla siguiente**, coger o saltar el
+              // objeto y reclutar o no al rival. Un botón que solo sirve para llegar al
+              // botón de verdad es un clic cobrado por nada. Ahora se va solo a donde
+              // toca, y lo que queda aquí es el "Continue" del combate corriente.
+              <BotonPrincipal onClick={avanzar} className="elevar-hover">
                 Continue
               </BotonPrincipal>
             ))}

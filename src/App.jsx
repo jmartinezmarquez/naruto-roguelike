@@ -123,7 +123,14 @@ export default function App() {
         <>
           {pantallaActual(pantalla)}
           <LogroToast />
-          <AvisoToast />
+          {/* ⚠️ **Los avisos del mapa no se asoman al combate.** `AvisoToast` cuenta cosas
+              del recorrido ("equipo curado en el descanso"), y colgado de aquí sin más se
+              pintaba TAMBIÉN encima de la pelea. Con el jefe final eso era un spoiler: el
+              aviso de la curación de fin de arco aparecía mientras aún estabas viendo el
+              combate y te chivaba que habías ganado. La causa concreta se movió a
+              `avanzarSiguienteArco`, pero esto es la red: cualquier aviso que se añada
+              mañana tampoco podrá cruzarse por delante de un combate. */}
+          {pantalla !== 'combate' && <AvisoToast />}
         </>
       )}
     </div>

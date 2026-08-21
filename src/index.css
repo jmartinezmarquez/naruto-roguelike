@@ -457,6 +457,19 @@ img {
 
 .caida-ko { animation: caida-ko calc(500ms * var(--factor-animacion, 1)) ease-in forwards; }
 
+/* ⚠️ **La pose de estar caído, separada de la animación de caerse.** Son dos cosas y
+   estaban fundidas en una sola clase, con este efecto: `forwards` mantiene el estado
+   final SOLO mientras la clase siga puesta, y la clase se quitaba en cuanto el caído
+   dejaba de ser el que pelea (al entrar el relevo o el siguiente eslabón de la cadena).
+   Resultado: **el enemigo derrotado se ponía de pie otra vez**, tumbado un segundo y
+   erguido después, con la opacidad baja como único rastro de que estaba KO.
+
+   El arreglo no es reaplicar la animación —eso fue el bug ANTERIOR, la caída se
+   repetía en bucle cada vez que cambiaba la ronda— sino tener un estado estático al que
+   la animación aterriza. Los valores son los mismos que el `to` de `caida-ko`, y tienen
+   que seguir siéndolo: si se tocan ahí, se tocan aquí. */
+.caido-ko { transform: rotate(-75deg) translateY(14px); opacity: 0.35; }
+
 /* --- Relevo en la cadena de rondas ------------------------------------------
    Cuando cae tu personaje activo entra el siguiente, y ese es el momento más
    dramático del combate: se contaba con una línea de texto. Ahora su tarjeta

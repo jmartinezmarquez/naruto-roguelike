@@ -138,6 +138,36 @@ describe('los buffs temporales se ven en alguna parte', () => {
   });
 });
 
+describe('🐛 los avisos del mapa no se cruzan por delante de un combate', () => {
+  // ⚠️ **Era un spoiler del jefe final.** `_curarEquipoCompleto` corre en cuanto el jefe
+  // muere en el motor, o sea **antes de que empiece la animación**, y ponía ahí mismo el
+  // aviso "Team fully healed after completing the arc." — que se pintaba encima de la
+  // pelea y te decía que habías ganado mientras todavía la estabas viendo.
+  //
+  // Se arregló en dos capas y las dos importan: el aviso lo pone ahora
+  // `avanzarSiguienteArco` (cuando ya has visto el desenlace), y `AvisoToast` no se
+  // monta durante el combate — la red para cualquier aviso que se añada mañana.
+  it('un aviso pendiente no se pinta durante el combate', () => {
+    useGameStore.getState().jugarCombate(enemigoDebil, 1, true);
+    useGameStore.setState({ pantalla: 'combate', avisoUltimoNodo: 'Team fully healed after completing the arc.' });
+    render(<App />);
+    expect(screen.queryByText(/fully healed/i)).toBeNull();
+  });
+
+  it('pero sí en el mapa, que es donde significa algo', () => {
+    useGameStore.setState({ pantalla: 'mapa', avisoUltimoNodo: 'Team fully healed at the rest node.' });
+    render(<App />);
+    expect(screen.getByText(/fully healed/i)).toBeInTheDocument();
+  });
+
+  it('y el de fin de arco llega al empezar el siguiente, no al morir el jefe', () => {
+    useGameStore.setState({ avisoUltimoNodo: null });
+    const avanzo = useGameStore.getState().avanzarSiguienteArco();
+    expect(avanzo).toBe(true);
+    expect(useGameStore.getState().avisoUltimoNodo).toMatch(/fully healed/i);
+  });
+});
+
 describe('sin run empezada', () => {
   beforeEach(() => {
     // `mapa: null` es lo que App usa para saber que no hay partida en curso.

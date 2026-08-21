@@ -300,3 +300,81 @@ describe('ataque básico unificado (invariante de datos)', () => {
     }
   });
 });
+
+describe('🐛 combate en ESPEJO: los dos luchadores con el mismo id', () => {
+  // ⚠️ **No es un caso raro: es una partida normal.** Los jefes se desbloquean como
+  // reclutables por logro, así que puedes reclutar a Kabuto y tres pisos después pelear
+  // contra el mini-jefe Kabuto. Y ahí todo lo que distinguía los bandos **por id** deja
+  // de distinguir nada.
+  //
+  // Lo que se veía en pantalla era lo de menos (el tuyo se curaba en cada golpe, porque
+  // el replay le aplicaba el HP del rival). Lo grave estaba debajo:
+  // `ganadorId === luchadorJugador.id` daba `true` SIEMPRE, así que **ganabas la ronda
+  // muerto, con 0 de HP**.
+  //
+  // La salida es identificar el bando por POSICIÓN. `ganadorId` sigue existiendo para el
+  // registro, pero ya no responde a "¿de qué lado?".
+  const mismoBase = {
+    id: 'gemelo_test',
+    nombre: 'Gemelo de Prueba',
+    tipo: 'doton',
+    statsBase: { hp: 40, ataque: 10, defensa: 5, velocidad: 5 },
+    jutsu: { nombre: 'Golpe', danoBase: 1, efectoEstado: null },
+    modos: [],
+  };
+
+  it('si cae el PRIMERO, no gana el primero', () => {
+    const primero = crearLuchador(mismoBase, 1);
+    const segundo = crearLuchador(mismoBase, 40); // abismalmente superior
+    primero.hpActual = 1;
+
+    const { ganadorEsPrimero } = resolverCombateCompleto(primero, segundo);
+
+    expect(primero.hpActual).toBe(0);
+    expect(ganadorEsPrimero).toBe(false);
+  });
+
+  it('si cae el SEGUNDO, gana el primero', () => {
+    const primero = crearLuchador(mismoBase, 40);
+    const segundo = crearLuchador(mismoBase, 1);
+    segundo.hpActual = 1;
+
+    const { ganadorEsPrimero } = resolverCombateCompleto(primero, segundo);
+
+    expect(segundo.hpActual).toBe(0);
+    expect(ganadorEsPrimero).toBe(true);
+  });
+
+  it('⚠️ y `ganadorId` NO puede usarse para saberlo: es el mismo en los dos casos', () => {
+    // Este test existe para que nadie "simplifique" volviendo a comparar ids. No es un
+    // detalle de implementación: es la razón de que `ganadorEsPrimero` exista.
+    const perdiendo = crearLuchador(mismoBase, 1);
+    perdiendo.hpActual = 1;
+    const ganando = crearLuchador(mismoBase, 40);
+
+    const a = resolverCombateCompleto(perdiendo, ganando);
+    const b = resolverCombateCompleto(crearLuchador(mismoBase, 40), (() => {
+      const debil = crearLuchador(mismoBase, 1);
+      debil.hpActual = 1;
+      return debil;
+    })());
+
+    expect(a.ganadorId).toBe(b.ganadorId); // indistinguibles
+    expect(a.ganadorEsPrimero).not.toBe(b.ganadorEsPrimero); // distinguibles
+  });
+
+  it('cada golpe dice de qué lado viene, y no todos del mismo', () => {
+    // Es lo que arregla la curación fantasma: el replay atribuía al jugador los golpes
+    // del rival, así que le aplicaba el HP del rival y salía subiendo.
+    const primero = crearLuchador(mismoBase, 5);
+    const segundo = crearLuchador(mismoBase, 5);
+
+    const { historial } = resolverCombateCompleto(primero, segundo);
+    const eventos = historial.flatMap((t) => t.eventos);
+
+    for (const evento of eventos) {
+      expect(typeof evento.atacanteEsPrimero).toBe('boolean');
+    }
+    expect(new Set(eventos.map((e) => e.atacanteEsPrimero)).size).toBe(2);
+  });
+});

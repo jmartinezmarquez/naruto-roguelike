@@ -15,8 +15,8 @@
 // contaba al jugador que no pasaba nada mientras el store le quitaba 20 de oro. Los
 // tests de abajo siguen vigilando lo mismo, con las palabras nuevas.
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, userEvent } from '../../test-dom';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, userEvent, act } from '../../test-dom';
 import EventScreen from './EventScreen';
 import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } from '../../store/useAchievementsStore';
@@ -40,6 +40,10 @@ function hojasDe(efecto) {
 
 const TODOS_LOS_EFECTOS = eventosData.eventos.flatMap((e) =>
   e.elecciones.flatMap((el) => efectosDe(el.efecto)));
+
+const eventoConTirada = eventosData.eventos.find((e) => e.elecciones.some((el) => el.efecto.tipo === 'azar'));
+const indiceDeLaTirada = eventoConTirada.elecciones.findIndex((el) => el.efecto.tipo === 'azar');
+const eventoSinTirada = eventosData.eventos.find((e) => e.elecciones.every((el) => el.efecto.tipo !== 'azar'));
 
 beforeEach(() => {
   localStorage.clear();
@@ -141,7 +145,8 @@ describe('la crónica, que es lo que se lee DESPUÉS', () => {
     useGameStore.getState().resolverEventoEleccion(0);
     render(<EventScreen />);
 
-    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
+    expect(screen.getByText(/Nothing comes of it|patches itself up|hand over|pocket|beating|earns|walk away|stronger|is up for/i))
+      .toBeInTheDocument();
     expect(useGameStore.getState().pantalla).toBe('evento');
   });
 
@@ -167,8 +172,8 @@ describe('la crónica, que es lo que se lee DESPUÉS', () => {
   });
 
   it('"Continue" cierra el evento y devuelve al mapa', async () => {
-    useGameStore.setState({ eventoActual: eventosData.eventos[0] });
-    useGameStore.getState().resolverEventoEleccion(0);
+    useGameStore.setState({ eventoActual: eventoConTirada });
+    useGameStore.getState().resolverEventoEleccion(indiceDeLaTirada);
 
     render(<EventScreen />);
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
@@ -177,6 +182,96 @@ describe('la crónica, que es lo que se lee DESPUÉS', () => {
     expect(pantalla).toBe('mapa');
     expect(eventoActual).toBeNull();
     expect(resultadoEvento).toBeNull();
+  });
+});
+
+describe('el ritmo: cuándo hay pantalla de resultado y cuándo no', () => {
+  // ⚠️ **La regla costó dos intentos y el segundo lo tiró el jugador.**
+  //
+  // El primero fue "sin tirada, se cierra sola": la pantalla aparecía y desaparecía en
+  // poco más de un segundo, o sea **lo peor de las dos opciones** — ni daba tiempo a
+  // leer, ni parecía que no hubiera nada. Palabras suyas: *"da la sensación de que estás
+  // perdiéndote algo"*.
+  //
+  // La línea buena no es si hubo azar, es si el desenlace **añade información**. Cuando
+  // eliges, la pista ya te ha enseñado `+45% HP` y `−20 g`: con un efecto fijo, el
+  // resultado es la promesa otra vez, y una pantalla para repetirte lo que acabas de leer
+  // y elegir es un trámite. Ahora: o hay algo que leer y se queda con su botón, o no lo
+  // hay y vuelves al mapa directo. **Nunca una pantalla que parpadea.**
+  const clicEnLaEleccion = async (evento, indice) => {
+    useGameStore.setState({ eventoActual: evento, resultadoEvento: null, pantalla: 'evento' });
+    render(<EventScreen />);
+    await userEvent.click(screen.getAllByRole('button')[indice]);
+  };
+
+  it('un efecto FIJO no abre pantalla: vuelve al mapa en el mismo gesto', async () => {
+    // `tsunade_y_jiraiya[0]` es curar + pagar, las dos cantidades ya escritas en la pista.
+    await clicEnLaEleccion(eventoSinTirada, 0);
+    expect(useGameStore.getState().pantalla).toBe('mapa');
+    expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull();
+  });
+
+  it('una TIRADA sí, porque no sabes qué rama te ha tocado', async () => {
+    await clicEnLaEleccion(eventoConTirada, indiceDeLaTirada);
+    expect(useGameStore.getState().pantalla).toBe('evento');
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
+  });
+
+  it('⚠️ y un objeto aleatorio TAMBIÉN, aunque no haya tirada: la pista decía "Random item", no cuál', async () => {
+    // Es el caso que tumbó la primera regla. Sin tirada, pero el desenlace revela un
+    // dato que la promesa no tenía.
+    const evento = eventosData.eventos.find((e) => e.id === 'mercader_ambulante');
+    const indice = evento.elecciones.findIndex((el) => el.efecto.tipo === 'comprarObjetoAleatorio');
+    useGameStore.setState({ oro: 9999 });
+
+    await clicEnLaEleccion(evento, indice);
+    expect(useGameStore.getState().pantalla).toBe('evento');
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
+  });
+
+  it('y si no te llega el oro, también: no ha pasado lo que prometía', async () => {
+    const evento = eventosData.eventos.find((e) => e.id === 'mercader_ambulante');
+    const indice = evento.elecciones.findIndex((el) => el.efecto.tipo === 'comprarObjetoAleatorio');
+    useGameStore.setState({ oro: 0 });
+
+    await clicEnLaEleccion(evento, indice);
+    expect(useGameStore.getState().pantalla).toBe('evento');
+    expect(screen.getByText(/cannot afford/i)).toBeInTheDocument();
+  });
+
+  it('la pantalla que SÍ sale no se va sola: espera al jugador', () => {
+    vi.useFakeTimers();
+    try {
+      useGameStore.setState({ eventoActual: eventoConTirada });
+      useGameStore.getState().resolverEventoEleccion(indiceDeLaTirada);
+      render(<EventScreen />);
+
+      act(() => { vi.advanceTimersByTime(30000); });
+      expect(useGameStore.getState().pantalla).toBe('evento');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('el espacio la adelanta', async () => {
+    useGameStore.setState({ eventoActual: eventoConTirada, resultadoEvento: null });
+    useGameStore.getState().resolverEventoEleccion(indiceDeLaTirada);
+    render(<EventScreen />);
+
+    await userEvent.keyboard(' ');
+    expect(useGameStore.getState().pantalla).toBe('mapa');
+  });
+
+  it('⚠️ pero NO mientras todavía hay que elegir', () => {
+    // Un espacio que dispare "la opción principal" convertiría una decisión en un
+    // accidente: hay dos elecciones y ninguna es la de por defecto.
+    useGameStore.setState({ eventoActual: eventoConTirada, resultadoEvento: null });
+    render(<EventScreen />);
+
+    return userEvent.keyboard(' ').then(() => {
+      expect(useGameStore.getState().resultadoEvento).toBeNull();
+      expect(useGameStore.getState().pantalla).toBe('evento');
+    });
   });
 });
 

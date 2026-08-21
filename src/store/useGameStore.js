@@ -738,7 +738,13 @@ export const useGameStore = create((set, get) => ({
       const cargaInicialEnemigo = luchadorEnemigo.cargaJutsu;
 
       const resultado = resolverCombateCompleto(luchadorJugador, luchadorEnemigo);
-      const jugadorGanoRonda = resultado.ganadorId === luchadorJugador.id;
+      // ⚠️ **Por posición y no por id.** El jugador entra como `luchador1`, así que
+      // `ganadorEsPrimero` es su victoria. Comparar `ganadorId === luchadorJugador.id`
+      // daba `true` SIEMPRE cuando los dos luchadores compartían id — y eso pasa de
+      // verdad: los jefes se desbloquean como reclutables por logro, así que puedes
+      // reclutar a Kabuto y luego pelear contra el mini-jefe Kabuto. Se ganaba esa ronda
+      // muerto, con 0 de HP. Ver `resolverTurno` en engine/combat.js.
+      const jugadorGanoRonda = resultado.ganadorEsPrimero;
 
       rondas.push({
         historial: resultado.historial,
@@ -785,7 +791,12 @@ export const useGameStore = create((set, get) => ({
           // antes de pasar al siguiente arco — no hace falta ir a buscar un
           // nodo de descanso justo después de la pelea más dura del arco.
           get()._curarEquipoCompleto();
-          set({ avisoUltimoNodo: 'Team fully healed after completing the arc.' });
+          // ⚠️ **El aviso NO se pone aquí**, aunque la curación sí ocurra aquí. Esto corre
+          // en cuanto el jefe muere en el motor, o sea **antes de que empiece la
+          // animación del combate**: el toast salía por encima de la pelea del jefe final
+          // y te chivaba que habías ganado mientras aún la estabas viendo. Lo pone
+          // `avanzarSiguienteArco`, que es cuando el jugador ya ha visto el desenlace y
+          // llega al mapa nuevo — que además es donde el aviso significa algo.
         }
         const runGanadaAqui = arcoCompletado && enemigoBase.recompensa?.finDeLaRun;
         if (runGanadaAqui) {
@@ -939,7 +950,9 @@ export const useGameStore = create((set, get) => ({
       desafioRecluta: null,
       recompensaMiniJefe: null,
       cadenaEnemigos: null,
-      avisoUltimoNodo: null,
+      // El aviso de la curación se entrega AQUÍ y no al morir el jefe: ver la nota en
+      // `jugarCombate`. Llega con el jugador al mapa del arco nuevo.
+      avisoUltimoNodo: 'Team fully healed after completing the arc.',
       huboDerrotaEnEsteArco: false,
     });
     return true;

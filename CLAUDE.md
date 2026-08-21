@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **438 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+- [x] Testing con Vitest — **471 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
   componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -123,8 +123,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   el juego pisa — `HTMLMediaElement.play`, `ResizeObserver` y `scrollIntoView`. ⚠️ `jsdom` está pinado
   a `^26` porque el 30 exige Node ≥22.12, y ⚠️ **los `*.test.jsx` están excluidos de Tailwind**
   (`@source not` en `index.css`): si no, las clases citadas en un test acaban en el CSS de producción.
-  `CombatScreen` y `MapScreen` no tienen test a propósito: jsdom no maqueta y ahí se probaría el reloj
-  falso, no el juego.
+  `MapScreen` no tiene test y de `CombatScreen` solo se prueba **a dónde lleva el final de un combate**: jsdom no maqueta, así que lo visual ahí probaría el lienzo falso.
 - [x] Balance revisado varias veces con simulaciones reales (ver `documentacion/11-progresion-y-arcos.md`) — sigue pendiente de más ajuste tras playtest (ver nota sobre rondas encadenadas + banquillo).
 - [x] Pantalla de Game Over dedicada (`components/GameOver/GameOverScreen.jsx`) — ver `documentacion/17-game-over.md`.
 - [x] Sistema de logros completo, incluida la recompensa `desbloquearPersonajeInicial` (`engine/achievements.js`, `store/useAchievementsStore.js`, `src/data/achievements.json`, `components/Achievements/`) — ver `documentacion/18-sistema-de-logros.md`.
@@ -388,6 +387,31 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   con el `id` del arco como nombre.
 
 ## Bugs ya resueltos (para no repetirlos)
+
+- ⚠️ **Distinguir bandos por `id` en un combate donde los dos pueden ser el MISMO personaje.** Los
+  jefes se desbloquean como reclutables por logro, así que reclutas a Kabuto y tres pisos después te
+  toca el mini-jefe Kabuto. Con eso: (a) el replay atribuía al jugador los golpes del rival y su
+  personaje **se curaba en cada golpe** (era el HP del enemigo aplicado al sitio equivocado), y (b)
+  mucho peor, `ganadorId === luchadorJugador.id` daba `true` SIEMPRE — **ganabas la ronda muerto, con
+  0 de HP**. Comprobado con una sonda antes de tocar nada. Ahora el bando va por **posición**
+  (`atacanteEsPrimero`, `ganadorEsPrimero`); `ganadorId` se conserva solo para el registro y hay un
+  test que prohíbe volver a usarlo para eso. **Un id identifica al personaje, no al bando.**
+- **Un aviso puesto donde OCURRE la cosa y no donde el jugador la ve**: la curación de fin de arco
+  ponía su toast en cuanto el jefe moría en el motor —o sea antes de que empezara la animación—, así
+  que el cartel salía **encima de la pelea del jefe final** y te chivaba que habías ganado mientras la
+  veías. El aviso lo pone ahora `avanzarSiguienteArco`, y además `AvisoToast` no se monta durante el
+  combate. Los avisos del mapa se entregan **cuando el jugador llega al mapa**, no cuando el estado
+  cambia.
+
+- **`animation-fill-mode: forwards` NO es un estado, es una animación parada.** El sprite de un
+  luchador KO llevaba `.caida-ko` (desplome con `forwards`), y `forwards` mantiene el fotograma final
+  **solo mientras la clase siga puesta**. La clase se quitaba en cuanto el caído dejaba de ser el que
+  pelea, así que **el enemigo derrotado se ponía de pie otra vez** al entrar el siguiente eslabón de
+  la cadena. ⚠️ Y es un bug de **ida y vuelta**: el arreglo anterior había sido justo el contrario
+  —aplicar la animación a todo el que estuviera caído la repetía en cada relevo, porque las tarjetas
+  se remontan al cambiar de ronda—. La salida es tener **dos clases**: la animación (`caida-ko`, solo
+  para quien cae peleando) y la **pose** estática a la que aterriza (`caido-ko`, para quien ya cayó).
+  Si una animación define cómo queda algo, ese "cómo queda" necesita existir por su cuenta.
 
 - **Props nuevas que el envoltorio no reenvía** (`PersonajeHoverCard` → `FichaPersonaje`): se
   añadieron `bonificaciones` y `multiplicadoresBuffs`, se enchufaron en el mapa y se probaron contra

@@ -217,3 +217,42 @@ que ningún daño pasa del 25%.
 - **Tres opciones en algún evento.** Se dejó en dos a propósito: con precio y azar, dos opciones ya son
   una decisión. Una tercera se añade cuando sea un camino de verdad, no para rellenar.
 - **Eventos que encadenan combate.** Hay ya suficientes combates por piso.
+
+## Cuándo hay pantalla de resultado (2026-08-21)
+
+La tanda de ritmo quitó botones de "Continue" por todo el juego, y aquí hubo que trazar una línea
+**dentro** de la misma pantalla. Costó dos intentos y el segundo lo tiró el playtest.
+
+**Primer intento — "sin tirada, se cierra sola".** El razonamiento era que la pantalla existe por el
+azar (punto 6: resolver en silencio "le escondía al jugador justo lo que había apostado"), así que sin
+azar sobraba. En la práctica salió **lo peor de las dos opciones**: la pantalla aparecía y
+desaparecía en poco más de un segundo, ni daba tiempo a leerla ni parecía que no hubiera nada.
+Palabras del jugador: *"da la sensación de que estás perdiéndote algo"*.
+
+⚠️ **La línea buena no es si hubo azar, es si el desenlace AÑADE INFORMACIÓN.** Cuando eliges, la
+pista ya te ha enseñado `+45% HP` y `−20 g`: con un efecto fijo, el resultado es **la promesa otra
+vez**, y una pantalla para repetirte lo que acabas de leer y elegir no es un desenlace, es un trámite.
+
+Pero hay desenlaces **sin tirada** que sí aportan, y son los que tumbaron la primera regla:
+
+| Caso | Qué añade |
+|---|---|
+| `comprarObjetoAleatorio` | La pista decía "Random item". El resultado dice **cuál**. |
+| `mejoraPermanenteAleatoria` | **A quién** y **qué** estadística, para siempre. |
+| `sinOro` | No te llegaba: **no ha pasado lo que prometía**. |
+| `perderOro` por menos de lo pedido | Has pagado menos porque no tenías tanto. |
+| `ninguno` cuando la promesa no era `ninguno` | Algo se ha quedado sin hacer. |
+
+Con eso: **o hay algo que leer y la pantalla se queda con su botón, o no lo hay y vuelves al mapa
+directo. Nunca una pantalla que parpadea.** De los 30 caminos del juego, 16 van directos y 14 abren
+resultado.
+
+⚠️ **Y el cierre inmediato va en el manejador del clic, no en un `useEffect`.** Las dos llamadas al
+store son síncronas, así que React pinta una sola vez y la pantalla de resultado **no se llega a
+ver**. Cerrarla desde un efecto habría dejado un fotograma asomando — que es exactamente la sensación
+que esto viene a quitar.
+
+📌 También se probó y se quitó un cartel de **"SPACE TO CONTINUE"** bajo el resultado: la referencia
+no lo lleva, y un rótulo de instrucciones es ruido. Lo que enseña que se puede adelantar es
+adelantarlo una vez.
+

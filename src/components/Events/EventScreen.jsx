@@ -1,7 +1,9 @@
+import { useCallback } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { nombrePersonaje, nombreObjeto } from '../common/nombres';
 import { resumirEfecto, nombreStat } from '../common/efectos';
 import { PanelMarco, CabeceraPantalla, BotonPrincipal, ChipEfecto } from '../common/PiezasUI';
+import { useAvanzarConTeclado } from '../common/useAvanzarConTeclado';
 
 /**
  * Nodo de evento: un texto y dos elecciones, sin combate.
@@ -137,11 +139,76 @@ function chipsDelResultado(resultado) {
   }
 }
 
+/**
+ * ¿El resultado dice algo que la promesa no dijera ya?
+ *
+ * ⚠️ **Esta es la regla que decide si hay pantalla de resultado, y costó dos intentos.**
+ *
+ * El primero fue "sin tirada, se va solo", y estaba mal planteado: dejaba la pantalla
+ * apareciendo y desapareciendo en poco más de un segundo, o sea **lo peor de las dos
+ * opciones** — no daba tiempo a leer y encima daba la sensación de estarte perdiendo
+ * algo. Lo dijo el jugador tal cual.
+ *
+ * La línea buena no es si hubo azar, es si hay **información nueva**. Cuando la eliges,
+ * la pista ya te ha enseñado `+45% HP` y `−20 g`: si el efecto es fijo, el resultado es
+ * **la promesa otra vez**, y una pantalla para repetirte lo que acabas de leer y elegir
+ * no es un desenlace, es un trámite. Pero hay desenlaces sin tirada que SÍ aportan:
+ *
+ * - `comprarObjetoAleatorio` → la pista decía "Random item"; el resultado dice **cuál**.
+ * - `mejoraPermanenteAleatoria` → dice **a quién** y **qué** estadística, para siempre.
+ * - `sinOro` → no te llegaba, o sea que **no ha pasado lo que prometía**.
+ * - `perderOro` por menos de lo pedido → has pagado menos porque no tenías tanto.
+ * - `ninguno` cuando la promesa no era `ninguno` → algo se ha quedado sin hacer.
+ *
+ * Así no hay pantalla que parpadee: o hay algo que leer y se queda con su botón, o no lo
+ * hay y vuelves al mapa directo.
+ */
+function resultadoSorprende(resultado, prometido) {
+  if (!resultado) return false;
+  if (resultado.tirada) return true;
+
+  switch (resultado.tipo) {
+    case 'varios': {
+      // Las partes salen en el mismo orden que los efectos declarados, así que se
+      // pueden emparejar una a una con lo que se prometió.
+      const partes = resultado.partes ?? [];
+      const promesas = prometido?.efectos ?? [];
+      return partes.some((parte, i) => resultadoSorprende(parte, promesas[i]));
+    }
+    case 'comprarObjetoAleatorio':
+    case 'mejoraPermanenteAleatoria':
+    case 'sinOro':
+      return true;
+    case 'perderOro':
+      return resultado.cantidad !== (prometido?.cantidad ?? resultado.cantidad);
+    case 'ninguno':
+      return Boolean(prometido) && prometido.tipo !== 'ninguno';
+    default:
+      return false;
+  }
+}
+
 export default function EventScreen() {
   const evento = useGameStore((s) => s.eventoActual);
   const resultado = useGameStore((s) => s.resultadoEvento);
   const resolverEventoEleccion = useGameStore((s) => s.resolverEventoEleccion);
   const cerrarEvento = useGameStore((s) => s.cerrarEvento);
+  const cerrar = useCallback(() => cerrarEvento(), [cerrarEvento]);
+  useAvanzarConTeclado(cerrar, Boolean(resultado));
+
+  /**
+   * Resolver y, si el desenlace no aporta nada, volver al mapa **en el mismo gesto**.
+   *
+   * ⚠️ Las dos llamadas al store son síncronas, así que React pinta una sola vez y no
+   * hay parpadeo: no se llega a ver la pantalla de resultado. Un `useEffect` que cerrara
+   * después habría dejado un fotograma de pantalla asomando, que es exactamente la
+   * sensación de "me estoy perdiendo algo" que esto viene a quitar.
+   */
+  function elegir(indice) {
+    resolverEventoEleccion(indice);
+    const recien = useGameStore.getState().resultadoEvento;
+    if (!resultadoSorprende(recien, evento.elecciones[indice]?.efecto)) cerrarEvento();
+  }
 
   if (!evento) {
     return (
@@ -202,7 +269,11 @@ export default function EventScreen() {
             <p className="text-[10px] text-pergamino-200/80 leading-relaxed text-center italic">
               {describirResultado(resultado)}
             </p>
-            <BotonPrincipal onClick={cerrarEvento} className="self-center elevar-hover">
+            {/* Si esta pantalla se ha pintado es porque hay algo que leer, así que
+                **siempre** lleva botón y no se va sola. La versión anterior la enseñaba
+                un segundo y se la llevaba: ni daba tiempo a leer ni parecía que no
+                hubiera nada, o sea lo peor de las dos opciones. El espacio la adelanta. */}
+            <BotonPrincipal onClick={cerrar} className="self-center elevar-hover">
               Continue
             </BotonPrincipal>
           </div>
@@ -212,7 +283,7 @@ export default function EventScreen() {
               <button
                 key={i}
                 type="button"
-                onClick={() => resolverEventoEleccion(i)}
+                onClick={() => elegir(i)}
                 // ⚠️ Lo que arregla este bloque es que **no se veía que fueran
                 // elecciones**: la caja de una opción era idéntica a la del texto de
                 // arriba —mismo fondo, mismo borde, la misma letra de 10 px— y nada

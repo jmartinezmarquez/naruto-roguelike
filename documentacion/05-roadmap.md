@@ -1375,6 +1375,75 @@ meter azar de verdad.
   mismo dato con dos nombres en la misma partida. Ahora las cuatro salen de `nombreStat`.
 - [x] 435 tests (eran 403).
 
+**Ritmo del juego (playtest 2026-08-21) — ver [13](./13-ui-mapa-y-combate.md) y [35](./35-diseño-de-eventos.md)**
+
+- [x] ⚠️ **El número lento no era el que parecía.** La queja apuntaba al hueco entre dos enemigos de
+  una cadena, que ya era el más corto de los tres (700 ms). Las esperas del final de combate **se
+  suman**: el encadenado espera al cartel de subida de nivel, así que tras un combate que sube de
+  nivel había `1500 + 700 = 2,2 s` de nada. **Cuando algo va lento, mide la cadena entera antes de
+  recortar el eslabón que tienes delante.** Quedan en 900 / 1000 / 550.
+- [x] **Fuera dos botones que eran peaje**: "Claim reward" (mini-jefe) y "Recruit them" (pergamino
+  dorado ganado). **Ninguno decidía nada** — la decisión estaba en la pantalla siguiente. Un botón que
+  solo sirve para llegar al botón de verdad es un clic cobrado por nada.
+- [x] ⚠️ **La línea del auto-avance no es "si hay algo detrás" sino QUÉ hay detrás.** Se va solo
+  cuando lleva a una pantalla de decisión, porque ahí el jugador se para igualmente. NO al terminar un
+  arco ni la run: eso no lleva a una decisión, lleva a un **momento**, y un momento que se va solo no
+  es un momento.
+- [x] 🐛 ⚠️ **Suelo de 450 ms en el auto-avance, y lo destapó ir a testearlo**: con velocidad
+  "instantánea" el factor de animación es **0**, así que `1100 × 0 = 0` y el cartel de Victory con su
+  panel de recompensas **se saltaba entero**. Ese ajuste acelera la ANIMACIÓN; saltarse el RESULTADO
+  es perder información.
+- [x] ⚠️ **En el evento, la línea está en si hubo TIRADA**, no en si el evento fue importante. Esa
+  pantalla existe *precisamente* porque una elección puede llevar azar (punto 6): quitarle el botón
+  habría desandado una decisión ya tomada para ganar medio segundo. Con tirada, botón; sin tirada, se
+  cierra solo — **y lo dice**, porque sin botón *y* en silencio el jugador espera a ver si pasa algo,
+  que es más lento que el clic que veníamos a quitar.
+- [x] **Espacio y Enter para adelantar** (`useAvanzarConTeclado`), como el botón A de un Pokémon. Un
+  solo modelo mental: mientras la pelea corre adelanta la animación, cuando ha terminado sale.
+  **Solo donde hay UNA acción** — si hay dos salidas, una tecla que dispare "la principal" convierte
+  una decisión en un accidente.
+- [x] 🐛 ⚠️ **Y la trampa del atajo: con un `<button>` enfocado, el navegador YA convierte el espacio
+  en un clic.** Un manejador global encima ejecutaría la acción **dos veces** — cruzar una pantalla
+  entera sin verla. El hook cede el paso cuando el foco está en algo interactivo. No se ve
+  programando: depende de si tocaste el botón con el ratón antes de usar la tecla.
+- [x] 🐛 ⚠️ **El enemigo derrotado se ponía de pie al entrar el siguiente de la cadena**, y es un bug
+  de **ida y vuelta**: `.caida-ko` lleva `animation-fill-mode: forwards`, que mantiene el fotograma
+  final **solo mientras la clase siga puesta** — y la clase se quitaba en cuanto el caído dejaba de
+  ser el que pelea. El arreglo ANTERIOR había sido el contrario (aplicarla a todo caído la repetía en
+  cada relevo, porque las tarjetas se remontan al cambiar de ronda). La salida son **dos clases**: la
+  animación y la **pose** estática a la que aterriza. **Si una animación define cómo queda algo, ese
+  "cómo queda" tiene que existir por su cuenta.** Afectaba a los dos bandos — un compañero caído hacía
+  lo mismo. Los tres tests nuevos se comprobaron rompiendo el código **en las dos direcciones**.
+- [x] 🐛 ⚠️ **El combate en ESPEJO estaba roto, y no es un caso raro: es una partida normal.** Los
+  jefes se desbloquean como reclutables por logro, así que reclutas a Kabuto y luego peleas contra el
+  mini-jefe Kabuto — y todo lo que separaba los bandos **por `id`** dejaba de separar nada. Se vio
+  como "mi personaje se cura en cada golpe" (el replay le aplicaba el HP del rival), pero lo grave
+  estaba debajo: `ganadorId === luchadorJugador.id` era `true` SIEMPRE, o sea que **ganabas esa ronda
+  muerto, con 0 de HP**. Confirmado con una sonda antes de tocar nada. El bando pasa a identificarse
+  por **posición** (`atacanteEsPrimero` / `ganadorEsPrimero`), y hay un test que prohíbe volver a usar
+  `ganadorId` para eso. **Un id identifica al personaje, no al bando.**
+- [x] 🐛 **El "Team fully healed" hacía spoiler del jefe final.** El aviso se ponía en cuanto el jefe
+  moría en el motor —antes de que empezara la animación—, así que aparecía **encima de la pelea** y te
+  decía que habías ganado mientras la estabas viendo. Arreglado en dos capas: lo pone
+  `avanzarSiguienteArco` (cuando ya has visto el desenlace) y `AvisoToast` **no se monta durante el
+  combate**, que es la red para cualquier aviso futuro. **Un aviso se entrega donde el jugador lo ve,
+  no donde el estado cambia.**
+- [x] **Fuera el cartel "SPACE TO CONTINUE"**: la referencia no lo lleva y es ruido. Lo que enseña que
+  se puede adelantar es adelantarlo una vez.
+- [x] 🐛 ⚠️ **Y la regla del resultado de evento estaba mal planteada, la tiró el playtest.** "Sin
+  tirada, se cierra sola" dejaba la pantalla apareciendo y desapareciendo en un segundo: **lo peor de
+  las dos opciones** — ni daba tiempo a leer ni parecía que no hubiera nada (*"da la sensación de que
+  estás perdiéndote algo"*). **La línea no es si hubo azar, es si el desenlace AÑADE INFORMACIÓN**: con
+  un efecto fijo el resultado es la promesa otra vez, pero `comprarObjetoAleatorio` dice **cuál**
+  objeto, `mejoraPermanenteAleatoria` **a quién**, y `sinOro` que no ha pasado lo que prometía. Ahora o
+  hay algo que leer y se queda con su botón, o vuelves al mapa directo: **nunca una pantalla que
+  parpadea**. 16 caminos van directos y 14 abren resultado.
+- [x] ⚠️ **El cierre inmediato va en el manejador del clic, no en un `useEffect`**: las dos llamadas al
+  store son síncronas, así que React pinta una vez y la pantalla no se llega a ver. Desde un efecto
+  habría quedado un fotograma asomando, que es justo la sensación que se venía a quitar.
+- [x] 471 tests (eran 438), con `CombatScreen.test.jsx` nuevo — que **no** contradice la exclusión de
+  esa pantalla: no prueba nada de lo que se ve, prueba a dónde te lleva el final y cuándo.
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes

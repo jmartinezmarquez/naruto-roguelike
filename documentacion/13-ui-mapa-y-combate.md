@@ -703,3 +703,53 @@ Dos arreglos, y el primero vale para todos los tooltips a la vez:
 La lección general: **un tooltip absoluto hereda el ancho de la cosa a la que se pega**, y en este juego
 esa cosa suele ser diminuta — un nodo, un icono, una casilla. Cualquier contenido nuevo que se le meta
 tiene que declarar su ancho, no confiar en el sitio.
+
+## Ritmo: menos peaje y espacio para adelantar (2026-08-21)
+
+Salió de jugar: *"la gente tiene los receptores de dopamina atrofiados"*. El diagnóstico era el
+correcto, pero el sospechoso no.
+
+### El número lento no era el que parecía
+
+La queja apuntaba al hueco **entre dos enemigos de una cadena**, y ese ya era el más corto de los
+tres (700 ms). ⚠️ **Las esperas del final de un combate se SUMAN**: el encadenado espera a que
+termine el cartel de subida de nivel, así que tras un combate que sube de nivel había
+`1500 + 700 = 2,2 s` de nada. La regla que deja: **cuando algo va lento, mide la cadena entera antes
+de recortar el eslabón que tienes delante.**
+
+Quedaron en `900` (relevo de tu personaje caído), `1000` (cartel de nivel) y `550` (eslabón).
+
+### Qué botón se gana su sitio
+
+El criterio: **un botón vale la pena cuando la pantalla lleva una decisión, o un dato que se pierde
+si desaparece.** Con eso, del final de combate se fueron dos que eran peaje puro —"Claim reward" y
+"Recruit them"—, porque **ninguno decidía nada**: la decisión estaba en la pantalla siguiente (coger
+o saltar el objeto, reclutar o no al rival). Un botón que solo sirve para llegar al botón de verdad
+es un clic cobrado por nada.
+
+⚠️ Y la línea del auto-avance **no es "si hay algo detrás" sino qué hay detrás**. Se va solo cuando
+lleva a una pantalla de decisión, porque ahí el jugador se para igualmente. NO se va solo al terminar
+un arco ni al terminar la run: eso no lleva a una decisión, lleva a un **momento**, y un momento que
+se va solo no es un momento.
+
+⚠️ **El auto-avance tiene suelo (`MS_MINIMO_AUTO`, 450 ms) y no es una precaución.** Con velocidad
+"instantánea" el factor de animación es **0**, así que sin él el cartel de Victory y el panel de
+recompensas se saltarían enteros: verías el mapa otra vez sin llegar a leer qué te llevabas. Ese
+ajuste acelera la **animación**; saltarse el **resultado** es perder información. Mismo suelo en el
+resultado de un evento.
+
+### Espacio = date prisa
+
+`useAvanzarConTeclado` ata **espacio y Enter** a la acción de avance, como el botón A de un Pokémon.
+Un solo modelo mental: mientras la pelea corre adelanta la animación, y cuando ha terminado sale. No
+son dos atajos, es el mismo.
+
+- **Solo donde hay UNA acción.** Si la pantalla ofrece dos salidas, una tecla que dispare "la
+  principal" convierte una decisión en un accidente. Por eso no está en la tienda (tres compras y una
+  salida) ni en la recompensa del mini-jefe (coger o saltar).
+- ⚠️ **La trampa: si un `<button>` tiene el foco, el navegador YA convierte el espacio en un clic.**
+  Un manejador global encima ejecutaría la acción **dos veces**, que aquí significa cruzar una
+  pantalla entera sin verla. El hook cede el paso cuando el foco está en algo interactivo — y de paso
+  respeta la accesibilidad de serie. Es un fallo que no se ve programando: depende de si el jugador
+  tocó el botón con el ratón antes de usar la tecla.
+- Se ignora `repeat`, o dejar el dedo puesto cruzaría tres pantallas seguidas.
