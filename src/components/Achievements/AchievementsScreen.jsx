@@ -10,6 +10,7 @@ import { nombrePersonaje as nombrePersonajeOJefe, nombreObjeto } from '../common
 import { spriteDeLuchador } from '../common/characterSprites';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import { PanelMarco, VentanaModal, FilaPestanas, IconoEnmarcado } from '../common/PiezasUI';
+import { InsigniaRango, PanelRangoNinja } from '../common/InsigniaRango';
 
 /**
  * Pantalla de Logros, siguiendo la maqueta de
@@ -102,34 +103,15 @@ function iconoDeLogro(logro) {
     return SPRITE_OBJETO[recompensa.objetoId] ?? null;
   }
   // Los que no dan nada no tienen de dónde sacar sprite. No se quedan con el marco
-  // vacío: llevan el **rango S** de las misiones ninja (ver `RANGO_S`), que dice
-  // algo — "esto no da objeto, da rango" — en vez de parecer un icono que falta.
+  // vacío: llevan su **rango de misión**, que dice algo — "esto no da objeto, da
+  // rango" — en vez de parecer un icono que falta.
+  //
+  // ⚠️ Hasta el punto 19 aquí salía una **S para todos**, que era el vocabulario
+  // correcto con el dato inventado: `caidas_7` (perder 7 runs) lucía la misma
+  // letra que ganarse la partida entera. El rango ahora es un campo de verdad de
+  // `achievements.json` y la letra dice lo que pone.
   return null;
 }
-
-/**
- * El rango de una misión sin recompensa material, a la manera del escalafón ninja
- * (D-C-B-A-S). Es tipografía y no un sprite: no hay arte para esto y **no hace
- * falta**, porque una letra es exactamente lo que una hoja de misión llevaría.
- *
- * `font-naruto` ya trae el contorno (ver documentacion/33-direccion-visual.md), y
- * `contorno-fijo` porque el relleno es oro y no sigue al tema — el contorno tiene
- * que ser el negativo del RELLENO, no del fondo.
- *
- * ⚠️ **El `translate-y` no es un retoque a ojo, es la corrección medida.** Centrar
- * con flex centra la CAJA DE LÍNEA, no la letra, y las dos solo coinciden si la
- * tipografía es de proporciones normales. `njnaruto.ttf` no lo es: su "S" ocupa
- * de 8 a 1852 de 2048 unidades, o sea casi la em entera, así que su centro óptico
- * cae a 0,393em del alto de línea en vez de a 0,5 y la letra se ve **alta**.
- * 0,5 − 0,393 = **0,107em** hacia abajo (unos 2,6 px a `text-2xl`), calculado con
- * el ascenso/descenso de la `hhea` del propio fichero. Y `block` porque las
- * transformaciones **no se aplican a un elemento inline**.
- */
-const RANGO_S = (
-  <span className="block font-naruto contorno-fijo text-oro text-2xl leading-none translate-y-[0.107em]">
-    S
-  </span>
-);
 
 /**
  * "12 / 30" con su barra, para los logros que se miden acumulando.
@@ -159,7 +141,7 @@ function FilaLogro({ logro, desbloqueado, progreso }) {
       <div className="flex items-start gap-3">
         <IconoEnmarcado
           src={iconoDeLogro(logro)}
-          glifo={logro.recompensa.tipo === 'ninguna' ? RANGO_S : null}
+          glifo={<InsigniaRango rango={logro.rango} />}
           bloqueado={!desbloqueado}
           colorMarco={desbloqueado ? 'border-oro/50' : 'border-marco'}
           tamano="w-14 h-14"
@@ -176,14 +158,19 @@ function FilaLogro({ logro, desbloqueado, progreso }) {
           <p className="text-[9px] text-oro/70 leading-relaxed italic">{textoRecompensa(logro.recompensa)}</p>
         </div>
 
-        <span
-          className={[
-            'font-display text-[8px] uppercase tracking-wider shrink-0 self-start',
-            desbloqueado ? 'text-exito' : 'text-pergamino-200/35',
-          ].join(' ')}
-        >
-          {desbloqueado ? 'Unlocked' : 'Locked'}
-        </span>
+        <div className="shrink-0 self-start flex flex-col items-end gap-1">
+          <span className="font-display text-[8px] uppercase tracking-wider text-pergamino-200/50">
+            Rank {logro.rango}
+          </span>
+          <span
+            className={[
+              'font-display text-[8px] uppercase tracking-wider',
+              desbloqueado ? 'text-exito' : 'text-pergamino-200/35',
+            ].join(' ')}
+          >
+            {desbloqueado ? 'Unlocked' : 'Locked'}
+          </span>
+        </div>
       </div>
     </PanelMarco>
   );
@@ -229,7 +216,13 @@ export default function AchievementsScreen() {
       onCerrar={volverAlMapa}
       ancho="max-w-xl"
       cabeceraFija={
-        <FilaPestanas pestanas={pestanas} activaId={pestanaId} onElegir={setPestanaId} />
+        <>
+          {/* El rango ninja va ARRIBA y no al final de la lista: es el número que
+              resume la pantalla entera, y enterrado tras 23 filas no lo vería
+              nadie. */}
+          <PanelRangoNinja className="px-1 pb-2" />
+          <FilaPestanas pestanas={pestanas} activaId={pestanaId} onElegir={setPestanaId} />
+        </>
       }
     >
       {/* Aquí había un botón `[DEV] Reset progress` con un "quitar antes de

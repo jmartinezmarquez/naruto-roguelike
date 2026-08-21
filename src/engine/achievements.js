@@ -103,3 +103,106 @@ export function obtenerPersonajesInicialesDesbloqueados(logros, idsDesbloqueados
     .filter((l) => idsDesbloqueados.includes(l.id) && l.recompensa.tipo === 'desbloquearPersonajeInicial')
     .map((l) => l.recompensa.personajeId);
 }
+
+// ---------------------------------------------------------------------------
+// Rangos — punto 19 del roadmap. Ver documentacion/18-sistema-de-logros.md.
+//
+// Naruto tiene DOS escaleras y el juego las usa las dos, que es lo que evita
+// tener que inventarse un vocabulario:
+//
+//   - **Rango de misión (D-S)**: lo difícil que es una tarea. Lo lleva cada
+//     logro, y también se le pone a la run recién jugada.
+//   - **Rango ninja (Genin-Kage)**: lo que eres tú, acumulado entre runs. Es lo
+//     único del juego que sube PARA SIEMPRE.
+// ---------------------------------------------------------------------------
+
+/**
+ * ⚠️ **El rango mide DIFICULTAD, no recompensa.** 13 de los 23 logros dan
+ * `recompensa: 'ninguna'` a propósito ("a mark of honour") y varios de esos son
+ * de los más duros del juego: si el rango siguiera al premio, los más difíciles
+ * saldrían como los más baratos y la escalera mediría lo contrario de lo que
+ * dice medir.
+ */
+export const RANGOS_DE_MISION = ['D', 'C', 'B', 'A', 'S'];
+
+/**
+ * ⚠️ **La curva es convexa a propósito**: una S vale más que seis D. Si el
+ * reparto fuera lineal, la forma óptima de subir de rango ninja sería no
+ * intentar nunca lo difícil, y la cima dejaría de significar nada.
+ */
+export const PUNTOS_POR_RANGO = { D: 1, C: 2, B: 4, A: 7, S: 12 };
+
+/**
+ * ⚠️ **Umbrales ABSOLUTOS, no un porcentaje del total disponible.** Con
+ * porcentajes, añadir un logro nuevo **degradaría** a quien ya jugó —sus puntos
+ * siguen, el total sube— y bajarle el rango a alguien por una actualización no
+ * es aceptable. El riesgo del absoluto es el contrario, la inflación, y ese sí
+ * se tapa con los dos tests de invariante de `useAchievementsStore.test.js`:
+ * Kage tiene que ser alcanzable y tiene que exigir la mayor parte de lo que hay.
+ */
+export const RANGOS_NINJA = [
+  { id: 'genin', nombre: 'Genin', umbral: 0 },
+  { id: 'chunin', nombre: 'Chunin', umbral: 8 },
+  { id: 'jonin', nombre: 'Jonin', umbral: 22 },
+  { id: 'anbu', nombre: 'ANBU', umbral: 45 },
+  { id: 'kage', nombre: 'Kage', umbral: 75 },
+];
+
+/** Lo que vale un logro. Un rango que no esté en la tabla vale 0 — pero eso no llega a pasar: hay un invariante que lo prohíbe en el JSON. */
+export function puntosDeLogro(logro) {
+  return PUNTOS_POR_RANGO[logro?.rango] ?? 0;
+}
+
+/** Los puntos que suman los logros YA conseguidos. */
+export function puntosAcumulados(logros, idsDesbloqueados) {
+  return logros
+    .filter((l) => idsDesbloqueados.includes(l.id))
+    .reduce((total, l) => total + puntosDeLogro(l), 0);
+}
+
+/** Los puntos que habría con TODO desbloqueado. Lo usan la pantalla y los invariantes. */
+export function puntosMaximos(logros) {
+  return logros.reduce((total, l) => total + puntosDeLogro(l), 0);
+}
+
+/**
+ * En qué rango ninja estás y cuánto te falta para el siguiente.
+ *
+ * ⚠️ **No se persiste: se DERIVA** de los logros ya guardados. Un dato derivado
+ * que además se guarda es un dato que se puede desincronizar — y aquí se
+ * desincronizaría justo al reiniciar la meta-progresión, que es cuando más se
+ * nota.
+ */
+export function rangoNinja(puntos) {
+  let actual = RANGOS_NINJA[0];
+  for (const rango of RANGOS_NINJA) {
+    if (puntos >= rango.umbral) actual = rango;
+  }
+  const siguiente = RANGOS_NINJA[RANGOS_NINJA.indexOf(actual) + 1] ?? null;
+  const faltan = siguiente ? siguiente.umbral - puntos : 0;
+  const recorrido = siguiente ? siguiente.umbral - actual.umbral : 0;
+  return {
+    actual,
+    siguiente,
+    puntos,
+    faltan,
+    // 0..1 dentro del tramo actual. Sin siguiente (Kage) está lleno por definición.
+    progreso: siguiente ? (puntos - actual.umbral) / recorrido : 1,
+  };
+}
+
+/**
+ * La nota de una run terminada, en la misma escala D-S que las misiones.
+ *
+ * Se mide por **arcos completados** y no por pisos porque un arco es la unidad
+ * que el jugador reconoce (y la que le cura el equipo). La `S` pide ganar la run
+ * **sin una sola baja**: si la diera cualquier victoria, el 100% de las runs
+ * ganadas serían S y la escala tendría cuatro peldaños en vez de cinco.
+ */
+export function rangoDeMision({ arcosCompletados = 0, runGanada = false, huboBajas = true } = {}) {
+  if (runGanada && !huboBajas) return 'S';
+  if (runGanada) return 'A';
+  if (arcosCompletados >= 2) return 'B';
+  if (arcosCompletados >= 1) return 'C';
+  return 'D';
+}

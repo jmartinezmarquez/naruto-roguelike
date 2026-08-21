@@ -1444,6 +1444,65 @@ meter azar de verdad.
 - [x] 471 tests (eran 438), con `CombatScreen.test.jsx` nuevo — que **no** contradice la exclusión de
   esa pantalla: no prueba nada de lo que se ve, prueba a dónde te lleva el final y cuándo.
 
+**Rangos, ficha compartible y próximos desbloqueos (puntos 19, 20 y 21) — 2026-08-22**
+
+Primera tanda de mecánica desde el punto 6, y sale de una lluvia de ideas comparando el juego con sus
+referencias (Pokelike, Slay the Spire, Hades, los diarios tipo Wordle, incrementales). El diagnóstico
+en una frase: **el juego estaba completo y publicado, y aun así una run terminada no dejaba nada** — ni
+algo que compartir, ni un número que suba, ni una razón visible para volver a empezar. El plan entero,
+con las decisiones y las trampas, está en [31](./31-plan-siguientes-pasos.md).
+
+- [x] **Punto 19 — los dos rangos.** Naruto tiene DOS escaleras y el juego usa las dos, así que no hubo
+  que inventar vocabulario: **rango de misión D-C-B-A-S** (lo difícil que es una tarea) y **rango ninja
+  Genin → Chunin → Jonin → ANBU → Kage** (lo que eres tú, acumulado entre runs). La misma escala D-S
+  califica cada logro **y la run recién jugada**. La idea del rango en los logros la propuso el usuario
+  y **reordenó la tanda**: pasó de adorno a ser el vocabulario del que cuelgan los otros dos puntos.
+  ⚠️ **El rango mide DIFICULTAD, no recompensa.** 13 de los 23 logros dan `recompensa: 'ninguna'` a
+  propósito y varios son de los más duros: si el rango siguiera al premio, la escalera mediría lo
+  contrario de lo que dice medir.
+  ⚠️ **Y la pantalla ya hablaba este idioma, pero con el dato inventado**: había un `RANGO_S` que
+  pintaba una **S para TODOS** los logros sin premio material, así que "pierde 7 runs" lucía la misma
+  letra que ganarse la partida entera. El vocabulario estaba bien elegido desde el principio; lo que
+  faltaba era que el dato existiera.
+  ⚠️ **Umbrales absolutos y no un porcentaje del total**: con porcentajes, añadir un logro nuevo
+  **degrada** a quien ya jugó (sus puntos siguen, el total sube). El riesgo del absoluto es el
+  contrario —la inflación— y ese sí se tapa con una **pinza de dos invariantes**: Kage tiene que ser
+  alcanzable (`puntosMaximos > umbral`) y tiene que exigir la mayor parte de lo que hay
+  (`puntosMaximos * 0,6 < umbral`). Si un día se añaden logros a puñados, el segundo salta y **obliga a
+  revisar los umbrales a conciencia** en vez de dejar que la cima se regale sola.
+  ⚠️ **El rango ninja no se guarda: se DERIVA** de los logros ya persistidos. Un dato derivado que
+  además se guarda se puede desincronizar, y aquí lo haría justo al reiniciar la meta-progresión.
+
+- [x] **Punto 20 — la Ficha del Bingo Book**, el resultado compartible, en `components/common/fichaDeRun.js`
+  y con su botón en `GameOverScreen`. Un texto con el rastro de la run en emoji, una línea por arco.
+  ⚠️ **Es texto y no una imagen porque no hay backend**: GitHub Pages es estático, así que no hay
+  leaderboard ni cuentas y **el único canal que sale del navegador es el portapapeles**. No es la
+  limitación a esquivar: es la restricción que Wordle convirtió en motor.
+  ⚠️ **El rastro hay que ir apuntándolo** (`rastroDeLaRun` en el store): `avanzarSiguienteArco` hace
+  `mapa: mapaSiguiente` y el mapa del arco anterior se pierde entero, así que al final no hay nada que
+  reconstruir. Es lo único que costó de verdad del punto, y tiene test propio.
+  ⚠️ **La ficha no puede spoilear**: el emoji dice de qué TIPO era cada nodo, nunca qué había dentro.
+  Hay un test que lo comprueba buscando nombres de jefe en la salida.
+  ⚠️ **El botón confirma y tiene salida de emergencia**: el portapapeles no hace ruido, así que sin un
+  "Copied!" el jugador lo pulsa tres veces; y `navigator.clipboard` no existe fuera de contexto seguro,
+  así que al fallar se enseña el texto en un cuadro seleccionable en vez de callarse.
+
+- [x] **Punto 21 — el próximo desbloqueo, visible.** Los tres logros más cercanos con su barra, en la
+  pantalla de derrota. ⚠️ **El punto más barato de la tanda porque el trabajo ya estaba hecho**:
+  `progresoDeLogro` existe desde el 5a y los contadores llevan meses acumulando entre runs. Lo que
+  faltaba no era calcularlo, era **enseñarlo donde se decide si vuelves a jugar** — y eso no es la
+  pantalla de Missions, a la que solo entra quien ya ha decidido que le interesan.
+  ⚠️ Lo mismo con la **marca**: se pintaba solo en el Home, o sea en el único sitio donde no importa.
+  Ahora sale al morir. Y ahí hay una trampa que ya es la cuarta de la misma familia: **`registrarMarca`
+  se llama al pisar cada nodo, no al terminar**, así que al llegar a la pantalla de derrota el récord
+  **ya incluye esta run** — anunciar "tu mejor marca es el piso 8" justo después de morir en el piso 8
+  no dice nada. Cuando coinciden se dice lo que de verdad ha pasado.
+
+- **Y una regla que sale de los tres juntos**: media tanda estaba construida y sin enseñar. El rango
+  ninja se deriva de logros que ya se guardaban, el progreso de cada logro ya se calculaba, la marca ya
+  se registraba y el vocabulario D-S ya se usaba (mal). **Antes de construir un sistema para motivar al
+  jugador, mirar qué se está calculando ya y no se pinta en ninguna parte.**
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -1453,12 +1512,15 @@ meter azar de verdad.
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas por
 > comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar. Los
 > huecos (1-6 y 8-14) son puntos hechos que se han movido a "Hecho" **conservando su número en el
-> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 18) y nunca
+> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 24) y nunca
 > uno de los huecos.
 >
-> **Abiertos: el 7, el 15, el 16 y el 17.** Los tres últimos son de 2026-08-15 y ninguno es de mecánica:
-> el juego está completo y lo que le falta es **presentarse** — el dibujo que aún es placeholder, el
-> único menú que sigue siendo una imagen pegada, y no existir todavía fuera de `npm run dev`.
+> **Abiertos: el 7, el 15 (tandas 2-4), el 22 y el 23.** Los puntos **19, 20 y 21 se cerraron el
+> 2026-08-22** y están en "Hecho" con su número. El 16 y el 17 se cerraron el 2026-08-19
+> (menú vertical y publicación en GitHub Pages). Los cinco nuevos son del 2026-08-21 y **vuelven a ser
+> de mecánica** después de una racha entera de presentación: el juego ya está montado y publicado, y lo
+> que le falta ahora es que una run **deje rastro** — algo que compartir, algo que suba entre runs y
+> algo que le pique al jugador para volver a empezar.
 
 ### Por dónde seguir
 
@@ -1473,19 +1535,40 @@ meter azar de verdad.
 > estaba en ninguna lista. Las razones de cada veredicto están anotadas en su sitio, para no volver a
 > proponerlas.
 
-**1.º — el playtest, que ya no es un punto sino una costumbre.** Con la lista vacía pasa de tercero a
-único. Las cinco últimas tandas de mejoras han salido enteras de partidas reales, y ninguna de la lista:
-los eventos que no eran decisiones, el equipo que se reordenaba solo, el pergamino dorado obligatorio,
-los ataques básicos que no se sentían, los menús lejos de la columna. Los hallazgos van al roadmap con la
-plantilla del [31](./31-plan-siguientes-pasos.md).
+> **Estado (2026-08-21).** La tanda de presentación terminó: el juego está publicado y jugable en un
+> enlace. Con eso, la pregunta deja de ser "¿está completo?" y pasa a ser **"¿por qué volverías a
+> jugarlo, y por qué se lo enseñarías a alguien?"** — y ahí el juego estaba mudo. Una run terminada no
+> producía nada, la meta-progresión que ya existía no se veía fuera de su propia pantalla, y el
+> vocabulario de la serie (misiones D–S, rangos ninja) estaba sin usar teniendo la pantalla de logros
+> llamada literalmente *Missions*. De ahí salen los **puntos 19-23**, que son la primera tanda de
+> mecánica desde el punto 6.
+>
+> ⚠️ **La restricción que ordena los cinco: no hay backend.** GitHub Pages es estático, así que no hay
+> leaderboard, ni cuentas, ni ranking global — el único canal hacia fuera es el portapapeles y el único
+> almacén es `localStorage`. No es un problema a resolver más adelante: es la forma que tiene que tener
+> lo que se diseñe.
 
-**2.º — lo que no es código:** la pista de música y los 9 iconos (5 de chakra + 4 del menú vertical), que
-van en una sola tanda. Ver "Pendiente de arte".
+**1.º — el playtest, que ya no es un punto sino una costumbre.** Sigue siendo lo primero por la misma
+razón de siempre: **las seis últimas tandas de mejoras han salido de partidas reales y ninguna de una
+lista.** Los eventos que no eran decisiones, el equipo que se reordenaba solo, el pergamino dorado
+obligatorio, los básicos que no se sentían, los menús lejos de la columna, el caído que se ponía de
+pie. Los hallazgos van al roadmap con la plantilla del [31](./31-plan-siguientes-pasos.md).
 
-**3.º — y si se quiere seguir construyendo**, lo honesto es abrir un punto nuevo con su número libre en
+**2.º — lo que queda de la tanda: los puntos 22 (células ninja) y 23 (voces).** Son independientes de
+los tres ya hechos y **todo datos**, así que son el relleno natural de una sesión corta o de un hueco.
+⚠️ El **22 toca el balance** —una pasiva de célula se suma a las del modo y el objeto—, así que pide
+pasar `scripts/simular-combates.mjs` antes y después; el **23** no toca nada.
+
+**3.º — el arte que queda** (punto 15, tandas 2-4). La tanda 3 y media 4 siguen bloqueadas por dibujo;
+la 2 no, pero pide recortar paneles irregulares **y** subir la elección del enemigo de entrenador al
+generador de mapa. Ver "Pendiente de arte".
+
+**4.º — y si se quiere seguir construyendo**, lo honesto es abrir un punto nuevo con su número libre en
 vez de estirar uno cerrado. Los candidatos con razonamiento ya escrito son el **nodo `?`** de Slay the
-Spire (aparcado, ver [10](./10-generador-de-mapa.md)) y el **5b** (recompensas numéricas permanentes),
-que sigue **descartado para el MVP** por mover la curva de niveles de la run entera.
+Spire (aparcado, ver [10](./10-generador-de-mapa.md)), el **5b** (recompensas numéricas permanentes),
+que sigue **descartado para el MVP** por mover la curva de niveles de la run entera, y las tres ideas
+de la lluvia del 2026-08-21 que **no** entraron en la tanda —seed diaria, Nindō y ascensión—, que están
+en el Backlog con el motivo de cada una.
 
 ---
 
@@ -1534,6 +1617,23 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
     ⚠️ **Todo sprite nuevo entra por su script `generar-sprites-*.py` y en el lienzo común de 96×96.**
     No se editan a mano los PNG generados: se pisan al regenerar. Y el pixel art a escalas no enteras
     duplica unas columnas de píxeles y otras no, que es la razón del lienzo común.
+
+22. **Células ninja canónicas.** Si el trío coincide con un equipo de la serie —Equipo 7,
+    Ino-Shika-Chō, Equipo Gai— el equipo gana una pasiva **con nombre**. Reutiliza el catálogo de
+    `engine/passives.js` entero, así que es **datos y un lookup**.
+    Es la mejor relación identidad/esfuerzo de toda la lista por dos motivos: hace de la composición
+    del equipo una **decisión con tensión** (¿cambio a Sakura por Kakashi y pierdo el vínculo del
+    Equipo 7?) y es lo que un fan de Naruto captura de pantalla. Hoy el motor es agnóstico y el
+    Equipo 7 no significa **nada** mecánicamente.
+    ⚠️ Ojo al balance: una pasiva de célula se suma a las del modo y las del objeto, y ahí rige la
+    regla de **una pasiva por id** con `normalizarPasivas` idempotente — ver [30](./30-sistema-de-pasivas.md).
+
+23. **Voces de personaje.** Una frase al entrar a combate, al caer y al transformarse. **Solo texto
+    en los JSON**, ningún sistema. Un "¡Dattebayo!" en el momento justo hace más por la identidad que
+    diez sprites, y es medio día.
+    ⚠️ Van en `characters.json`/`enemies.json` junto al personaje, no en un fichero de frases: el
+    criterio del proyecto es que **el contenido vive con su dueño** y que añadir un personaje sea
+    tocar los ficheros de ese personaje.
 
 ### Pendiente de arte
 
@@ -1657,8 +1757,35 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
   `coleccionMinima` añadir uno no toca `engine/`. Lo que sí sería sistema es un tipo de condición nuevo
   (ver `_pendienteDeImplementar` en `achievements.json`).
 - Sistema de campañas para incluir más niveles, enemigos y objetos
-- Sistema de cuentas / guardado remoto.
+- Sistema de cuentas / guardado remoto. ⚠️ **Y con él, cualquier ranking global**: el juego se sirve
+  desde GitHub Pages, que es estático. Sin esto no hay leaderboard posible, y por eso el punto 20 se
+  diseña alrededor del portapapeles y no de un servidor.
 - ~~Tests de componentes React (hoy solo motor + store).~~ **HECHOS el 2026-08-21** — bloque propio
   en "Hecho". Quedan fuera `CombatScreen` y `MapScreen`, y está razonado allí por qué.
-- **Modificadores de dificultad entre runs** ("ascensión"): ligado a la condición de logro ya
-  propuesta pero sin implementar `completarRunEnDificultad` en `achievements.json`.
+- **Modificadores de dificultad entre runs** ("ascensión", estilo Ascension de Slay the Spire o el
+  Pacto de Hades): ganar una campaña desbloquea +1 de dificultad, con lo que **la victoria deja de ser
+  el final y pasa a ser el principio**. La condición de logro `completarRunEnDificultad` ya está
+  propuesta y sin implementar en `_pendienteDeImplementar` de `achievements.json`, y con el **punto
+  19** ya tendría dónde enseñarse (una run en dificultad alta vale más rango). ⚠️ **Fuera de la tanda
+  del 2026-08-21 por una razón concreta: solo le paga a quien YA ha ganado**, y hoy no está claro
+  cuánta gente termina una run. Mirarlo después del playtest, no antes.
+
+- **Seed diaria** (2026-08-21): un mapa igual para todo el mundo cada día, que es lo que convierte la
+  ficha compartible del punto 20 en **comparación** en vez de fanfarronada — el modelo de Wordle y de
+  los juegos diarios de fútbol. ⚠️ **Fuera de la tanda porque no es barato**: hay **12 puntos de
+  `Math.random`** entre `engine/mapGenerator.js` y `useGameStore.js`, ninguno con semilla, y habría que
+  pasar un RNG sembrado por todos. El único RNG con semilla del proyecto vive en
+  `scripts/simular-combates.mjs` y no es reutilizable tal cual. **Es la continuación natural del punto
+  20 si la ficha funciona**, no un punto en paralelo.
+
+- **Nindō — modificador de run elegido al empezar** (2026-08-21): eliges 1 de 3 "caminos ninja" que
+  cambian una regla durante toda la run ("Camino del Ermitaño: empiezas a Nv.5 pero no puedes
+  reclutar"). Reutiliza el motor de pasivas, así que el coste es diseño y no fontanería. Fuera de la
+  tanda por prioridad, no por dificultad.
+
+- **Recompensa post-combate a elegir** (3 cartas, coges 1), que es el núcleo de Slay the Spire y hoy
+  el mayor hueco de profundidad del juego: cada combate termina en un **premio**, no en una decisión.
+  ⚠️ **Propuesto y no tomado el 2026-08-21**, y el motivo es de calendario y no de diseño: toca el
+  balance recién calibrado con el simulador (ver [11](./11-progresion-y-arcos.md) sección "v4"), y a
+  dos semanas del cierre es exactamente así como se rompe una run que ya funciona. Es el primer
+  candidato serio para después del 6 de septiembre.

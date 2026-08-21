@@ -121,7 +121,14 @@ function TarjetaCampana({ campana, marcador, logros, onElegir }) {
           </div>
 
           {/* 3) Las misiones, en su propia celda como en la referencia: no es una cifra
-                más del marcador, es la meta-progresión del juego entero. */}
+                más del marcador, es la meta-progresión del juego entero.
+                ⚠️ **El rango ninja se probó aquí y se quitó (2026-08-22).** Es
+                meta-progresión de la CUENTA, no de esta campaña: vive dentro de una
+                tarjeta que es por campaña, y el día que haya dos, el mismo rango
+                saldría repetido en cada una como si fueran cosas distintas. Su sitio
+                es la cabecera de Missions, que es donde se gana. Este panel ya
+                arrastra el mismo problema con los contadores —ver el aviso de más
+                arriba—; no había por qué añadirle uno más. */}
           <div className="sm:w-32 shrink-0 p-4 flex flex-col items-center justify-center gap-1 border-t sm:border-t-0 sm:border-l border-marco">
             <TituloBloque className="text-center">Missions</TituloBloque>
             <p className="font-display text-[13px] text-oro">{logros}</p>

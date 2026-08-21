@@ -5,6 +5,7 @@
       "id": "derrotar_haku",
       "nombre": "The Broken Mirror",
       "descripcion": "Defeat Haku in any run.",
+      "rango": "D",
       "condicion": {
         "tipo": "derrotarJefe",
         "jefeId": "haku"
@@ -18,6 +19,7 @@
       "id": "derrotar_zabuza",
       "nombre": "Demon of the Mist",
       "descripcion": "Defeat Zabuza in any run.",
+      "rango": "C",
       "condicion": {
         "tipo": "derrotarJefe",
         "jefeId": "zabuza"
@@ -31,6 +33,7 @@
       "id": "derrotar_kabuto",
       "nombre": "The Sound Spy",
       "descripcion": "Defeat Kabuto in any run.",
+      "rango": "B",
       "condicion": {
         "tipo": "derrotarJefe",
         "jefeId": "kabuto"
@@ -44,6 +47,7 @@
       "id": "derrotar_gaara",
       "nombre": "The Sand Jinchuriki",
       "descripcion": "Defeat Gaara in any run.",
+      "rango": "B",
       "condicion": {
         "tipo": "derrotarJefe",
         "jefeId": "gaara"
@@ -57,6 +61,7 @@
       "id": "derrotar_camino_animal",
       "nombre": "The Animal Path",
       "descripcion": "Defeat Pain's Animal Path in any run.",
+      "rango": "A",
       "condicion": {
         "tipo": "derrotarJefe",
         "jefeId": "camino_animal_pain"
@@ -70,6 +75,7 @@
       "id": "completar_run",
       "nombre": "End of the Ninja Road",
       "descripcion": "Defeat Pain and complete the run.",
+      "rango": "S",
       "condicion": {
         "tipo": "derrotarJefe",
         "jefeId": "pain_camino_deva"
@@ -83,6 +89,7 @@
       "id": "run_sin_bajas",
       "nombre": "Untouched Squad",
       "descripcion": "Complete the Land of Waves without any character falling in battle.",
+      "rango": "B",
       "condicion": {
         "tipo": "completarArcoSinDerrotas",
         "arcoId": "pais_de_las_olas"
@@ -96,6 +103,7 @@
       "id": "arco2_sin_bajas",
       "nombre": "Flawless Exam",
       "descripcion": "Complete the Chunin Exams without any character falling in battle.",
+      "rango": "A",
       "condicion": {
         "tipo": "completarArcoSinDerrotas",
         "arcoId": "examen_chunin"
@@ -109,6 +117,7 @@
       "id": "arco3_sin_bajas",
       "nombre": "Not a Scratch on the Village",
       "descripcion": "Complete Pain's Invasion without any character falling in battle.",
+      "rango": "S",
       "condicion": {
         "tipo": "completarArcoSinDerrotas",
         "arcoId": "invasion_de_pain"
@@ -122,6 +131,7 @@
       "id": "combates_10",
       "nombre": "D-Rank No More",
       "descripcion": "Win 10 battles.",
+      "rango": "D",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "combatesGanados",
@@ -135,6 +145,7 @@
       "id": "combates_50",
       "nombre": "Seasoned Shinobi",
       "descripcion": "Win 50 battles.",
+      "rango": "C",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "combatesGanados",
@@ -148,6 +159,7 @@
       "id": "combates_150",
       "nombre": "Village Veteran",
       "descripcion": "Win 150 battles.",
+      "rango": "A",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "combatesGanados",
@@ -161,6 +173,7 @@
       "id": "reclutas_5",
       "nombre": "Squad Leader",
       "descripcion": "Recruit 5 ninja across all your runs.",
+      "rango": "D",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "reclutas",
@@ -174,6 +187,7 @@
       "id": "oro_1000",
       "nombre": "Full Purse",
       "descripcion": "Earn 1000 gold in total.",
+      "rango": "D",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "oroGanado",
@@ -187,6 +201,7 @@
       "id": "oro_5000",
       "nombre": "War Chest",
       "descripcion": "Earn 5000 gold in total.",
+      "rango": "B",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "oroGanado",
@@ -200,6 +215,7 @@
       "id": "compras_10",
       "nombre": "Regular Customer",
       "descripcion": "Buy 10 items at trading posts.",
+      "rango": "C",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "objetosComprados",
@@ -213,6 +229,7 @@
       "id": "eventos_20",
       "nombre": "Off the Beaten Path",
       "descripcion": "Resolve 20 events on the road.",
+      "rango": "C",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "eventosResueltos",
@@ -226,6 +243,7 @@
       "id": "runs_3",
       "nombre": "Three Times a Hero",
       "descripcion": "Complete 3 full runs.",
+      "rango": "S",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "runsCompletadas",
@@ -240,6 +258,7 @@
       "id": "caidas_7",
       "nombre": "Stand Up Eight",
       "descripcion": "Lose 7 runs. Falling down is part of the road.",
+      "rango": "C",
       "condicion": {
         "tipo": "contadorMinimo",
         "contador": "runsPerdidas",
@@ -253,6 +272,7 @@
       "id": "vistos_personajes_8",
       "nombre": "Bonds of Konoha",
       "descripcion": "Have 8 different ninja in your squad.",
+      "rango": "C",
       "condicion": {
         "tipo": "coleccionMinima",
         "categoria": "personajes",
@@ -266,6 +286,7 @@
       "id": "vistos_enemigos_10",
       "nombre": "Bingo Book Regular",
       "descripcion": "Face 10 different enemies.",
+      "rango": "C",
       "condicion": {
         "tipo": "coleccionMinima",
         "categoria": "enemigos",
@@ -279,6 +300,7 @@
       "id": "vistos_modos_10",
       "nombre": "Beyond the Limit",
       "descripcion": "Witness 10 different transformations.",
+      "rango": "B",
       "condicion": {
         "tipo": "coleccionMinima",
         "categoria": "modos",
@@ -292,6 +314,7 @@
       "id": "vistos_objetos_8",
       "nombre": "Well Equipped",
       "descripcion": "Get hold of 8 different items.",
+      "rango": "C",
       "condicion": {
         "tipo": "coleccionMinima",
         "categoria": "objetos",
@@ -309,7 +332,7 @@
       "completarRunEnDificultad (dificultad) — si se añade selector de dificultad más adelante"
     ],
     "tiposDeRecompensa": [
-      "cosmetico (aún sin definir — título, color de UI, etc.)"
+      "cosmetico (color de UI, marco, etc.) — el TÍTULO ya no está pendiente: es el rango ninja del punto 19, que sale solo de lo que vale cada logro y no hay que declararlo aquí"
     ]
   }
 }

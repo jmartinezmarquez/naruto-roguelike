@@ -1598,3 +1598,80 @@ describe('salidas del game over', () => {
     expect(useGameStore.getState().runTerminada).toBe(true); // lo limpia iniciarRun, no salir
   });
 });
+
+// --- El rastro y el rango de la run (puntos 19 y 20) ------------------------
+
+describe('rastroDeLaRun', () => {
+  const nodosDelMapa = () => Object.values(useGameStore.getState().mapa.nodos);
+
+  it('apunta cada nodo que se pisa', () => {
+    const alcanzable = nodosDelMapa().find((n) => n.piso === 2);
+    useGameStore.getState().avanzarANodo(alcanzable.id);
+    const rastro = useGameStore.getState().rastroDeLaRun;
+    expect(rastro).toHaveLength(1);
+    expect(rastro[0]).toMatchObject({ arcoId: arcoDePrueba.id, piso: 2, tipo: alcanzable.tipo });
+  });
+
+  it('⚠️ menos el de inicio: la casilla de salida no la elige nadie', () => {
+    const inicio = nodosDelMapa().find((n) => n.tipo === 'inicio');
+    useGameStore.getState().avanzarANodo(inicio.id);
+    expect(useGameStore.getState().rastroDeLaRun).toEqual([]);
+  });
+
+  it('⚠️ y SOBREVIVE al cambio de arco, que es el motivo de que exista', () => {
+    // `avanzarSiguienteArco` hace `mapa: mapaSiguiente` y el mapa del arco anterior
+    // se pierde entero: si el rastro no se fuera acumulando, la ficha compartible
+    // solo podría enseñar el último arco.
+    const alcanzable = nodosDelMapa().find((n) => n.piso === 2);
+    useGameStore.getState().avanzarANodo(alcanzable.id);
+    const antes = useGameStore.getState().rastroDeLaRun.length;
+
+    useGameStore.getState().avanzarSiguienteArco();
+
+    expect(useGameStore.getState().arcoActualId).not.toBe(arcoDePrueba.id);
+    expect(useGameStore.getState().rastroDeLaRun.length).toBe(antes);
+    expect(useGameStore.getState().rastroDeLaRun[0].arcoId).toBe(arcoDePrueba.id);
+  });
+
+  it('empezar una run lo vacía', () => {
+    const alcanzable = nodosDelMapa().find((n) => n.piso === 2);
+    useGameStore.getState().avanzarANodo(alcanzable.id);
+    useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+    expect(useGameStore.getState().rastroDeLaRun).toEqual([]);
+  });
+});
+
+describe('resumenDeLaRun', () => {
+  it('sin completar ningún arco, la nota es D', () => {
+    expect(useGameStore.getState().resumenDeLaRun().rango).toBe('D');
+  });
+
+  it('un arco completado sube a C', () => {
+    useGameStore.getState().avanzarSiguienteArco();
+    const resumen = useGameStore.getState().resumenDeLaRun();
+    expect(resumen.arcosCompletados).toBe(1);
+    expect(resumen.rango).toBe('C');
+  });
+
+  it('⚠️ al ganar cuentan TODOS los arcos, no el índice del último', () => {
+    // Cuando cae el jefe final del último arco no hay "arco siguiente" al que
+    // avanzar, así que el índice se queda clavado y contaría uno de menos.
+    useGameStore.setState({ runTerminada: true, runGanada: true });
+    const resumen = useGameStore.getState().resumenDeLaRun();
+    expect(resumen.arcosCompletados).toBe(resumen.totalArcos);
+    expect(resumen.rango).toBe('S'); // sin bajas todavía
+  });
+
+  it('⚠️ y una baja en el arco 1 se recuerda hasta el final de la run', () => {
+    // `huboDerrotaEnEsteArco` se resetea al cambiar de arco (es del logro de arco);
+    // el de la run NO, o la S se la llevaría cualquiera que llegue limpio al arco 3
+    // habiendo perdido medio equipo en el 1.
+    useGameStore.setState({ huboDerrotaEnLaRun: true });
+    useGameStore.getState().avanzarSiguienteArco();
+    expect(useGameStore.getState().huboDerrotaEnEsteArco).toBe(false);
+    expect(useGameStore.getState().huboDerrotaEnLaRun).toBe(true);
+
+    useGameStore.setState({ runTerminada: true, runGanada: true });
+    expect(useGameStore.getState().resumenDeLaRun().rango).toBe('A');
+  });
+});

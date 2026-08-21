@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } from './useAchievementsStore';
 import achievementsData from '../data/achievements.json';
-import { TIPOS_DE_CONDICION, TIPOS_DE_RECOMPENSA } from '../engine/achievements';
+import {
+  TIPOS_DE_CONDICION, TIPOS_DE_RECOMPENSA,
+  RANGOS_DE_MISION, RANGOS_NINJA, puntosMaximos,
+} from '../engine/achievements';
 import charactersData from '../data/characters.json';
 import enemiesData from '../data/enemies.json';
 import itemsData from '../data/items.json';
@@ -297,6 +300,37 @@ describe('invariantes de achievements.json', () => {
       return false;
     });
     expect(rotos.map((l) => l.id)).toEqual([]);
+  });
+
+  // --- Rangos (punto 19) ---------------------------------------------------
+  //
+  // El rango es "solo datos", y en este proyecto lo que es solo datos se
+  // protege con invariantes: es lo que permite añadir un logro sin tocar
+  // `engine/` y sin que nadie se acuerde de revisar la escalera.
+
+  it('todo logro declara un rango de misión válido', () => {
+    const rotos = logros.filter((l) => !RANGOS_DE_MISION.includes(l.rango));
+    expect(rotos.map((l) => l.id)).toEqual([]);
+  });
+
+  it('hay al menos un logro de cada rango: si no hay ninguna S, la cima no existe', () => {
+    const vacios = RANGOS_DE_MISION.filter((r) => !logros.some((l) => l.rango === r));
+    expect(vacios).toEqual([]);
+  });
+
+  it('⚠️ Kage es ALCANZABLE con los logros que existen', () => {
+    // Los umbrales son absolutos (para no degradar a nadie al añadir logros), y
+    // el precio de eso es que hay que comprobar a mano que la cima sigue en pie.
+    const kage = RANGOS_NINJA[RANGOS_NINJA.length - 1];
+    expect(puntosMaximos(logros)).toBeGreaterThan(kage.umbral);
+  });
+
+  it('⚠️ pero no trivial: Kage exige la mayor parte de lo que hay', () => {
+    // La otra mitad de la pinza. Si un día se añaden logros a puñados, este test
+    // salta y **obliga a revisar los umbrales a conciencia** en vez de dejar que
+    // la escalera se infle sola hasta que Kage se regale.
+    const kage = RANGOS_NINJA[RANGOS_NINJA.length - 1];
+    expect(puntosMaximos(logros) * 0.6).toBeLessThan(kage.umbral);
   });
 });
 

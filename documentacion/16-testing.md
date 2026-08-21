@@ -26,9 +26,9 @@ componente" al final.
 suyo en la primera línea del archivo (`// @vitest-environment jsdom`) en vez de cambiarlo para todos.
 Dos razones, y ninguna es el rendimiento: el motor **no debe necesitar un navegador** —es la regla del
 proyecto, `engine/` no importa React ni el DOM— y con `jsdom` global esa regla dejaría de comprobarse
-sola. Que los 290 tests de lógica no paguen el arranque de jsdom es un extra.
+sola. Que los 325 tests de lógica no paguen el arranque de jsdom es un extra.
 
-## Cobertura actual (459 tests: 294 de lógica + 165 de componente)
+## Cobertura actual (516 tests: 325 de lógica + 191 en `components/`)
 
 - **`engine/leveling.test.js`** — curva de XP, subida de nivel (incluye subir varios niveles de
   golpe, no mutar el objeto de entrada), `obtenerModoActivo` (elige el de mayor nivel, no el

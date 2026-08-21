@@ -5,6 +5,12 @@ import {
   obtenerObjetosInicialesDesbloqueados,
   obtenerPersonajesInicialesDesbloqueados,
   progresoDeLogro,
+  puntosDeLogro,
+  puntosAcumulados,
+  puntosMaximos,
+  rangoNinja,
+  rangoDeMision,
+  RANGOS_NINJA,
 } from './achievements';
 
 const logrosDePrueba = [
@@ -162,5 +168,104 @@ describe('progresoDeLogro', () => {
 
   it('devuelve null para una condición de suceso: no tiene medias tintas', () => {
     expect(progresoDeLogro(logrosDePrueba[0], {})).toBeNull();
+  });
+});
+
+// --- Rangos (punto 19) -----------------------------------------------------
+
+const conRango = (id, rango) => ({ id, rango, condicion: { tipo: 'derrotarJefe' }, recompensa: { tipo: 'ninguna' } });
+
+describe('puntos de misión', () => {
+  it('cada rango vale lo suyo', () => {
+    expect(puntosDeLogro(conRango('x', 'D'))).toBe(1);
+    expect(puntosDeLogro(conRango('x', 'S'))).toBe(12);
+  });
+
+  it('⚠️ una S vale más que seis D, o nadie intentaría lo difícil', () => {
+    // La curva es convexa a propósito. Si fuera lineal, la forma óptima de subir
+    // de rango ninja sería no intentar nunca nada duro.
+    expect(puntosDeLogro(conRango('x', 'S'))).toBeGreaterThan(6 * puntosDeLogro(conRango('y', 'D')));
+  });
+
+  it('solo suman los logros conseguidos', () => {
+    const logros = [conRango('a', 'D'), conRango('b', 'S'), conRango('c', 'B')];
+    expect(puntosAcumulados(logros, ['a', 'c'])).toBe(1 + 4);
+    expect(puntosAcumulados(logros, [])).toBe(0);
+    expect(puntosMaximos(logros)).toBe(1 + 12 + 4);
+  });
+
+  it('un logro sin rango no rompe nada, vale 0', () => {
+    // No llega a pasar —hay un invariante sobre el JSON— pero un `undefined`
+    // propagándose a la aritmética convertiría los puntos en NaN y el rango
+    // ninja entero en basura silenciosa.
+    expect(puntosDeLogro({ id: 'x' })).toBe(0);
+    expect(puntosAcumulados([{ id: 'x' }], ['x'])).toBe(0);
+  });
+});
+
+describe('rango ninja', () => {
+  it('empieza en Genin con cero puntos', () => {
+    expect(rangoNinja(0).actual.id).toBe('genin');
+  });
+
+  it('sube al alcanzar el umbral exacto', () => {
+    const chunin = RANGOS_NINJA.find((r) => r.id === 'chunin');
+    expect(rangoNinja(chunin.umbral - 1).actual.id).toBe('genin');
+    expect(rangoNinja(chunin.umbral).actual.id).toBe('chunin');
+  });
+
+  it('en la cima no hay siguiente ni cuenta atrás', () => {
+    const kage = RANGOS_NINJA[RANGOS_NINJA.length - 1];
+    const cima = rangoNinja(kage.umbral + 50);
+    expect(cima.actual.id).toBe('kage');
+    expect(cima.siguiente).toBeNull();
+    expect(cima.faltan).toBe(0);
+    expect(cima.progreso).toBe(1);
+  });
+
+  it('dice cuánto falta para el siguiente, que es lo que pica', () => {
+    const jonin = RANGOS_NINJA.find((r) => r.id === 'jonin');
+    const r = rangoNinja(jonin.umbral - 3);
+    expect(r.siguiente.id).toBe('jonin');
+    expect(r.faltan).toBe(3);
+    expect(r.progreso).toBeGreaterThan(0);
+    expect(r.progreso).toBeLessThan(1);
+  });
+
+  it('⚠️ el progreso es del TRAMO, no del total', () => {
+    // Una barra que midiera sobre el total se quedaría casi vacía toda la
+    // partida y no comunicaría nada. Recién ascendido: barra a cero.
+    const jonin = RANGOS_NINJA.find((r) => r.id === 'jonin');
+    expect(rangoNinja(jonin.umbral).progreso).toBe(0);
+  });
+
+  it('los umbrales están ordenados', () => {
+    const umbrales = RANGOS_NINJA.map((r) => r.umbral);
+    expect([...umbrales].sort((a, b) => a - b)).toEqual(umbrales);
+  });
+});
+
+describe('rango de la run', () => {
+  it('sin completar ni un arco es D', () => {
+    expect(rangoDeMision({ arcosCompletados: 0 })).toBe('D');
+  });
+
+  it('un arco C, dos B', () => {
+    expect(rangoDeMision({ arcosCompletados: 1 })).toBe('C');
+    expect(rangoDeMision({ arcosCompletados: 2 })).toBe('B');
+  });
+
+  it('ganar la run es A', () => {
+    expect(rangoDeMision({ arcosCompletados: 3, runGanada: true, huboBajas: true })).toBe('A');
+  });
+
+  it('⚠️ y la S pide ganarla SIN una sola baja', () => {
+    // Si la S la diera cualquier victoria, el 100% de las runs ganadas serían S
+    // y la escala tendría cuatro peldaños en vez de cinco.
+    expect(rangoDeMision({ arcosCompletados: 3, runGanada: true, huboBajas: false })).toBe('S');
+  });
+
+  it('sin argumentos no revienta: da la nota más baja', () => {
+    expect(rangoDeMision()).toBe('D');
   });
 });

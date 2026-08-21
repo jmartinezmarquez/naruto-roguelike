@@ -20,7 +20,7 @@ import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp, obtenerModoActivo } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
-import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
+import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados, rangoDeMision } from '../engine/achievements';
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
 import { useAchievementsStore } from './useAchievementsStore';
 
@@ -371,6 +371,20 @@ export const useGameStore = create((set, get) => ({
   runTerminada: false,
   runGanada: false,
   huboDerrotaEnEsteArco: false, // para el logro "completarArcoSinDerrotas" — se resetea en iniciarRun, se marca en _aplicarDerrota
+  // Lo mismo pero de la RUN entera, para el rango de misión del punto 19. ⚠️ La
+  // diferencia con el de arriba es **dónde NO se resetea**: este sobrevive a
+  // `avanzarSiguienteArco`. Una `S` pide la run entera sin una sola baja, así que
+  // reiniciarlo al cambiar de arco la regalaría a cualquiera que llegue limpio al
+  // arco 3 habiendo perdido medio equipo en el 1.
+  huboDerrotaEnLaRun: false,
+
+  // El rastro de nodos pisados, para la ficha compartible del punto 20.
+  //
+  // ⚠️ **Hay que ir apuntándolo, no se puede reconstruir al final**:
+  // `avanzarSiguienteArco` hace `mapa: mapaSiguiente` y el mapa del arco anterior
+  // se pierde entero. Por eso esto NO se resetea al cambiar de arco — solo en
+  // `iniciarRun`.
+  rastroDeLaRun: [],
   // La campaña elegida en el Home. Decide QUÉ arcos se juegan y en qué orden, así que
   // `avanzarSiguienteArco` la lee para saber cuál viene después.
   campanaActualId: CAMPANA_POR_DEFECTO,
@@ -421,7 +435,9 @@ export const useGameStore = create((set, get) => ({
       avisoUltimoNodo: null,
       runTerminada: false,
       runGanada: false,
+      huboDerrotaEnLaRun: false,
       huboDerrotaEnEsteArco: false,
+      rastroDeLaRun: [],
     });
 
     // La enciclopedia arranca con lo que traes puesto: el personaje elegido y los
@@ -444,7 +460,19 @@ export const useGameStore = create((set, get) => ({
       ...mapa,
       nodos: { ...mapa.nodos, [nodoId]: { ...nodo, visitado: true } },
     };
-    set({ mapa: mapaActualizado, nodoActualId: nodoId, avisoUltimoNodo: null });
+    // El nodo, al rastro de la run. `inicio` no entra: la casilla de salida no la
+    // elige nadie, así que no cuenta como camino recorrido.
+    const rastro = nodo.tipo === 'inicio'
+      ? get().rastroDeLaRun
+      : [...get().rastroDeLaRun, {
+        arcoId: arcoActualDatos?.id ?? null,
+        piso: nodo.piso,
+        tipo: nodo.tipo,
+        subtipo: nodo.subtipo ?? null,
+        rareza: nodo.rareza ?? null,
+      }];
+
+    set({ mapa: mapaActualizado, nodoActualId: nodoId, avisoUltimoNodo: null, rastroDeLaRun: rastro });
 
     // Hasta dónde se ha llegado nunca, para el Home. Se apunta **en cada nodo** y no
     // al terminar la run, y eso no es pereza: una run se puede acabar de tres formas
@@ -1402,6 +1430,7 @@ export const useGameStore = create((set, get) => ({
       runTerminada: todosDerrotados,
       runGanada: false,
       huboDerrotaEnEsteArco: true,
+      huboDerrotaEnLaRun: true,
     });
   },
 
@@ -1597,6 +1626,36 @@ export const useGameStore = create((set, get) => ({
     const instancia = get().equipo.find((p) => p.id === idPersonaje);
     if (!instancia) return null;
     return calcularHpMaximo(instancia);
+  },
+
+  /**
+   * Cómo ha ido la run, para la pantalla de final y para la ficha compartible
+   * (puntos 19 y 20 del roadmap).
+   *
+   * Vive en el store y no en la pantalla porque lo van a leer dos sitios y
+   * porque `arcosDeCampana` es privado de este módulo. Devuelve **datos**, no
+   * texto: quien pinta decide cómo se dice.
+   *
+   * ⚠️ **Los arcos completados se cuentan por la POSICIÓN del arco en curso**, y
+   * al ganar se suman todos: cuando cae el jefe final del último arco no hay un
+   * "arco siguiente" al que avanzar, así que el índice se queda en el último y
+   * contaría uno de menos.
+   */
+  resumenDeLaRun() {
+    const { campanaActualId, arcoActualDatos, runGanada, huboDerrotaEnLaRun, equipo, oro } = get();
+    const arcos = arcosDeCampana(campanaActualId);
+    const indice = arcos.findIndex((a) => a.id === arcoActualDatos?.id);
+    const arcosCompletados = runGanada ? arcos.length : Math.max(0, indice);
+    return {
+      arcos, // los JSON en su orden, que la ficha compartible necesita para nombre y emoji
+      arcosCompletados,
+      totalArcos: arcos.length,
+      runGanada,
+      huboBajas: huboDerrotaEnLaRun,
+      rango: rangoDeMision({ arcosCompletados, runGanada, huboBajas: huboDerrotaEnLaRun }),
+      nivelMaximoDelEquipo: equipo.reduce((max, p) => Math.max(max, p.nivel), 0),
+      oro,
+    };
   },
 
   // ---------- PERSISTENCIA ----------

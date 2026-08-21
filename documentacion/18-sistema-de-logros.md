@@ -204,6 +204,85 @@ Por eso `evaluarLogros` (motor de desbloqueo) y `notificar` (encolar el toast) e
   la animación (incluida la cadena de rondas si el activo cayó) y se muestra el banner de
   Victoria/Derrota.
 
+## Rangos: de misión (D-S) y ninja (Genin-Kage) — punto 19, 2026-08-22
+
+Naruto tiene **dos escaleras** y el juego usa las dos, que es lo que evitó tener que inventarse un
+vocabulario:
+
+| | Qué mide | Dónde vive |
+|---|---|---|
+| **Rango de misión** `D C B A S` | Lo difícil que es una tarea | Campo `rango` en cada logro de `achievements.json`, y calculado para la run recién jugada (`rangoDeMision`) |
+| **Rango ninja** Genin → Chunin → Jonin → ANBU → Kage | Lo que eres tú, acumulado | Derivado (`rangoNinja`), nunca guardado |
+
+La escala D-S es la que la propia serie usa para las misiones, y la pantalla **ya se llamaba
+"Missions"** de cara al jugador: el vocabulario estaba elegido desde hacía meses y sin explotar.
+
+### Las cuatro decisiones que no son obvias
+
+**1. El rango mide DIFICULTAD, no recompensa.** 13 de los 23 logros dan `recompensa: 'ninguna'` a
+propósito (ver "no dar nada", más arriba) y varios de esos son de los más duros del juego — ganar la
+run tres veces, terminar el arco 3 sin una sola baja. Si el rango siguiera al premio, los más
+difíciles saldrían como los más baratos.
+
+**2. La curva de puntos es convexa**: `D`=1, `C`=2, `B`=4, `A`=7, `S`=12. Una S vale más que seis D.
+Con un reparto lineal, la forma óptima de subir de rango ninja sería **no intentar nunca nada duro**, y
+la cima dejaría de significar algo.
+
+**3. Los umbrales del rango ninja son ABSOLUTOS, no un porcentaje del total disponible.** Con
+porcentajes, añadir un logro nuevo **degradaría** a quien ya jugó: sus puntos siguen ahí y el total
+sube. Bajarle el rango a alguien por una actualización no es aceptable. El riesgo del absoluto es el
+contrario —la inflación— y se tapa con una **pinza de dos invariantes** en
+`useAchievementsStore.test.js`:
+
+- `puntosMaximos > umbral(Kage)` — la cima es alcanzable;
+- `puntosMaximos * 0,6 < umbral(Kage)` — y no se regala.
+
+El segundo es el interesante: si un día se añaden logros a puñados, salta y **obliga a revisar los
+umbrales a conciencia** en vez de dejar que la escalera se infle sola.
+
+**4. El rango ninja NO se persiste, se deriva** de los logros ya guardados. Un dato derivado que
+además se guarda es un dato que se puede desincronizar, y aquí lo haría justo al reiniciar la
+meta-progresión — que es cuando más se nota. Por eso no hay una quinta clave de `localStorage`.
+
+### ⚠️ La pantalla ya hablaba este idioma, pero con el dato inventado
+
+Antes del punto 19, `AchievementsScreen` tenía un `RANGO_S`: una **S dibujada para TODOS** los logros
+sin recompensa material, porque el marco del icono no podía quedarse vacío. O sea que "pierde 7 runs"
+lucía la misma letra que ganarse la partida entera.
+
+La lección no es sobre esa S: **el vocabulario estaba bien elegido desde el principio y lo que faltaba
+era que el dato existiera.** Cuando una interfaz finge un dato para no dejar un hueco, normalmente está
+señalando el campo que hay que añadir.
+
+### Dónde se pinta cada rango (y dónde NO)
+
+- **Rango de misión**: insignia por fila en Missions, y la nota grande de la run en la pantalla de
+  derrota. ⚠️ **La insignia lleva DOS elementos anidados**, no uno: la corrección óptica centra la
+  letra dentro de su caja de línea, pero esa caja hay que centrarla a su vez en el hueco que le da
+  quien la usa — y las cinco letras no miden lo mismo de ancho. Sin la caja exterior cada rango se
+  colocaba en un sitio distinto de su fila, y se leía como "la letra está descentrada": no lo estaba
+  dentro de sí misma, lo estaba **respecto a la fila**.
+- **Rango ninja**: cabecera de Missions, y nada más.
+  ⚠️ **Se probó en la tarjeta de campaña del Home y se quitó el mismo día (2026-08-22)**, a petición
+  del usuario y con razón: es meta-progresión de la **cuenta**, no de esa campaña. Metido en una
+  tarjeta que es *por campaña*, el día que haya dos el mismo rango saldría repetido en cada una como si
+  fueran cosas distintas — y esa tarjeta ya arrastra el mismo problema con los contadores globales, que
+  está avisado en el código. **Un dato global dentro de una tarjeta por instancia miente en cuanto hay
+  dos instancias.**
+
+### ⚠️ El nombre de un logro es un guiño, no una instrucción
+
+En la pantalla de derrota, "Full Purse — 175 to go" no dice 175 **de qué**. La condición ya estaba
+escrita en `descripcion` desde el punto 5a, y ahí no cabía: por eso cada fila lleva un hover con el
+nombre, la condición entera y el "actual / objetivo" exacto. Es la misma decisión que la ficha de
+personaje — lo que no cabe no se recorta, se mueve al hover.
+
+### El rango como recompensa
+
+`_pendienteDeImplementar` de `achievements.json` llevaba desde el principio un tipo de recompensa
+`cosmetico (aún sin definir — título, color de UI, etc.)`. Ya está definido: **el título es el rango
+ninja**, y no hace falta declararlo logro a logro porque sale solo de lo que cada uno vale.
+
 ## Testing
 
 - `engine/achievements.test.js` — las 3 funciones puras, con datos de prueba locales.

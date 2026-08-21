@@ -4,7 +4,7 @@ Preparado el 2026-08-12 para arrancar la sesión siguiente sin tener que redescu
 No es un documento de diseño: es el **orden de trabajo** de lo que queda del
 [05-roadmap.md](./05-roadmap.md) y el desglose de cada punto en fases con su verificación.
 
-Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeración (1-4, 8, 11, 12,
+Lo que queda abierto son los puntos **7, 15 y 19-23**. Los huecos de numeración (1-4, 8, 11, 12,
 13) son puntos hechos que se movieron a "Hecho" conservando su número — no faltan.
 
 ---
@@ -32,6 +32,13 @@ Lo que queda abierto son los puntos **5, 6, 7, 9 y 10**. Los huecos de numeraci�
 > [18](./18-sistema-de-logros.md)—, no como trabajo pendiente. Y ojo, que la sección "5 — Logros" de más
 > abajo se escribió antes de que existiera la pantalla: **5c ya está hecho y el campo `categoria` se
 > decidió NO añadirlo** — lo dice también ahí, corregido en su sitio.
+>
+> **Actualización (2026-08-21).** Cerrados también el **16** (menú vertical) y el **17** (publicación en
+> GitHub Pages), y con ellos la tanda de presentación entera. De una lluvia de ideas sobre qué haría el
+> juego más atractivo salieron los **puntos 19-23**, la primera tanda de mecánica desde el 6: rangos de
+> misión y ninja, ficha de run compartible, próximo desbloqueo visible, células ninja y voces. **Su plan
+> está al final de este documento**, y ahí vive también la restricción que los ordena a los cinco: no
+> hay backend, así que el portapapeles es el único canal hacia fuera.
 
 ## Orden recomendado
 
@@ -692,3 +699,153 @@ Con el enlace publicado, el playtest deja de ser una tarea de sesión y pasa a s
 objetivo se mira **una cosa concreta**: **los diez primeros minutos**. Un visitante ve el arco 1 y poco
 más; que Pain esté equilibrado al 85% no lo va a comprobar nadie. Zabuza sí — es el jefe con menos
 margen y el único que casi todo el mundo va a pelear.
+
+---
+
+# Plan de los puntos 19-23 — la tanda de "que la run deje rastro" (2026-08-21)
+
+> ✅ **Hechas las fases 1, 2 y 3 el 2026-08-22: los puntos 19, 20 y 21 están cerrados** y su desarrollo
+> está en [05-roadmap.md](./05-roadmap.md), sección "Hecho". Queda **la fase 4** (puntos 22 y 23:
+> células ninja y voces), que es independiente de las tres anteriores y todo datos.
+>
+> **De las 5 decisiones de abajo, las 4 primeras están contestadas** dentro del propio código y en
+> [18](./18-sistema-de-logros.md): puntos `D`=1 `C`=2 `B`=4 `A`=7 `S`=12, umbrales absolutos
+> 0/8/22/45/75, los 23 rangos repartidos 4·D 8·C 5·B 3·A 3·S (97 puntos máximos), y la nota de la run
+> por arcos completados con la `S` reservada a ganar sin una sola baja. **La quinta —qué células ninja
+> existen— sigue abierta**, y es lo primero que hay que contestar para la fase 4.
+>
+> ⚠️ **Un hallazgo de la tanda que conviene recordar antes de la fase 4**: media tanda estaba
+> construida y sin enseñar. El progreso de cada logro ya se calculaba, la marca ya se registraba, el
+> vocabulario D-S ya se usaba (con el dato inventado) y el rango ninja se derivaba de cosas ya
+> guardadas. **Antes de construir un sistema para motivar al jugador, mirar qué se está calculando ya
+> y no se pinta en ninguna parte.**
+
+Sale de una lluvia de ideas sobre qué haría el juego más atractivo comparándolo con sus referencias
+(Pokelike, Slay the Spire, Hades, los diarios tipo Wordle/fútbol, incrementales). El diagnóstico en una
+frase: **el juego está completo y publicado, y aun así una run terminada no deja nada** — ni algo que
+compartir, ni un número que suba, ni una razón visible para volver a empezar.
+
+El rango de las misiones lo propuso el usuario, y **reordenó la tanda**: pasó de ser un adorno de la
+pantalla de logros a ser el vocabulario del que cuelgan los otros cuatro puntos.
+
+## La restricción que ordena los cinco
+
+⚠️ **No hay backend.** El juego se sirve desde GitHub Pages, que es estático (ver
+[37](./37-publicacion-web.md)). No hay leaderboard, ni cuentas, ni ranking global, ni forma de
+comparar dos partidas a través de un servidor. El único canal hacia fuera es **el portapapeles**, y el
+único almacén es `localStorage`.
+
+No es una limitación a esquivar más adelante: es **la forma que tiene que tener lo que se diseñe**, y
+es exactamente la restricción que Wordle y los juegos diarios convirtieron en su motor. Si una idea de
+esta tanda necesita servidor, la idea está mal planteada, no el hosting.
+
+## Lo que ya existe (verificado uno a uno, no supuesto)
+
+Media tanda está construida y sin enseñar. Esto es lo que se comprobó antes de escribir el plan:
+
+- **`achievements.json` — 23 logros**, con las claves `id`/`nombre`/`descripcion`/`condicion`/
+  `recompensa`. Condiciones: `contadorMinimo` (10), `derrotarJefe` (6), `coleccionMinima` (4),
+  `completarArcoSinDerrotas` (3). **13 de los 23 dan `recompensa.tipo: 'ninguna'`.**
+- **`engine/achievements.js` ya exporta `progresoDeLogro(logro, contexto)`** — o sea que "cuánto te
+  falta" es una función que existe y se usa hoy solo dentro de la pantalla de Missions.
+- **`AchievementsScreen.jsx` ya pinta `BarraProgreso`** y agrupa por arco en pestañas. No hay ningún
+  eje de dificultad: los 23 logros son visualmente iguales.
+- **`useAchievementsStore` guarda en CUATRO claves** de `localStorage` (logros, vistos, contadores,
+  marca) y `reiniciarLogros()` las borra todas — cualquier cosa nueva que se persista **tiene que
+  entrar en esa función**, o un reinicio dejaría el rango viejo con los logros a cero.
+- **`CONTADORES_VACIO`** tiene 7 campos (`combatesGanados`, `oroGanado`, `reclutas`,
+  `eventosResueltos`, `objetosComprados`, `runsCompletadas`, `runsPerdidas`).
+- **`MARCA_VACIA = { arcoId, orden, piso }`**, el punto más lejano alcanzado nunca. Lo consume **solo**
+  `HomeScreen.jsx:143`.
+- **`GameOverScreen.jsx`** (112 líneas) enseña arco, piso y equipo. **No toca `marca`** y no ofrece
+  nada que copiar.
+- **`crearLuchador(base, nivel, hp, multiplicadores, cargaExtra, pasivasExtra)`** ya acepta pasivas
+  inyectadas, y el store le pasa `pasivasDeObjetoEquipado(activo)` en `useGameStore.js:728`. **Ese es
+  el enganche del punto 22**, no hay que abrir nada.
+- **`avanzarSiguienteArco`** hace `mapa: mapaSiguiente` (`useGameStore.js:942`): **el mapa del arco
+  anterior se pierde.** Es el único coste real del punto 20.
+
+## Decisiones antes de tocar código (contestar en la sesión, no ahora)
+
+1. **Los puntos por rango.** Propuesta: `D`=1, `C`=2, `B`=4, `A`=7, `S`=12. Lo que importa no son los
+   números sino que **la curva sea convexa**: si una S vale lo mismo que dos D, nadie intenta la S.
+2. **Los umbrales de rango ninja.** ⚠️ **Absolutos, no un porcentaje del total disponible.** Con
+   porcentajes, añadir un logro nuevo **degrada** a quien ya jugó (sus puntos siguen, el total sube), y
+   degradar a un jugador por una actualización es inaceptable. Con absolutos el riesgo es el contrario
+   —inflación— y se cubre con un test de invariante (ver abajo).
+3. **Qué rango D–S se le da a cada uno de los 23 logros.** Es la parte de criterio, y no la hace un
+   script: hay que leerlos uno a uno.
+4. **Cómo se calcula el rango de misión de una RUN.** Propuesta de partida: pisos superados + arcos
+   completados, penalizado por personajes caídos. Tiene que salir `S` **solo** ganando la run entera.
+5. **Qué células ninja existen** y qué pasiva da cada una (punto 22).
+
+## Fases
+
+**Fase 1 — el vocabulario (punto 19), que desbloquea el resto.**
+- Campo `rango` en los 23 logros de `achievements.json`. **Solo datos.**
+- En `engine/achievements.js`, funciones puras nuevas: `puntosDeLogro(logro)`,
+  `puntosAcumulados(logros, idsDesbloqueados)`, `rangoNinja(puntos)` y `rangoDeMision(resultadoRun)`.
+  Van en `engine/` y no en el store porque son cálculo, y así se prueban sin navegador.
+- `RANGOS_DE_MISION` y `RANGOS_NINJA` exportados como tablas, al lado de `TIPOS_DE_CONDICION`.
+- El rango ninja **no se persiste**: se **deriva** de los logros ya guardados. Un dato derivado que se
+  guarda es un dato que se puede desincronizar.
+
+**Fase 2 — enseñarlo (puntos 19 y 21 juntos, que tocan las mismas dos pantallas).**
+- `AchievementsScreen`: distintivo de rango en cada `FilaLogro` y cabecera con el rango ninja actual y
+  cuánto falta para el siguiente.
+- `HomeScreen`: rango ninja junto a la `marca` que ya pinta.
+- `GameOverScreen`: los 2-3 logros más cercanos (ordenar por progreso descendente, excluir los ya
+  desbloqueados) y **la `marca`**, que es donde significa algo.
+
+**Fase 3 — la ficha compartible (punto 20).**
+- `rastroDeLaRun: []` en `useGameStore`, vaciado en `iniciarRun` y con una entrada
+  `{ arcoId, piso, tipo }` **al resolver cada nodo**. ⚠️ Tiene que sobrevivir a `avanzarSiguienteArco`,
+  que es justo donde el mapa se pisa.
+- `engine/` o `components/common/`: función pura `fichaDeLaRun(rastro, resultado, rango)` → string. Es
+  texto, así que se prueba con `toMatchInlineSnapshot` y no montando nada.
+- Botón de copiar en `GameOverScreen` (`navigator.clipboard.writeText`) con confirmación visible: sin
+  respuesta, el jugador no sabe si ha funcionado y lo pulsa tres veces.
+
+**Fase 4 — identidad (puntos 22 y 23), independiente de las tres anteriores.**
+- `src/data/squads.json` con `{ id, nombre, miembros: [ids], pasiva }`, y `pasivasDeCelula(equipo)` en
+  el store, concatenada a `pasivasDeObjetoEquipado(activo)` en la llamada a `crearLuchador`.
+- Frases en `characters.json`/`enemies.json`, junto a su dueño. El criterio del proyecto es que **el
+  contenido vive con el personaje**, para que añadir uno sea tocar sus ficheros y no seis.
+
+## Trampas concretas de esta tanda
+
+- ⚠️ **El rango mide dificultad, no recompensa.** 13 logros dan `recompensa: 'ninguna'` a propósito
+  ("a mark of honour", ver [18](./18-sistema-de-logros.md)) y varios son de los más duros. Si el rango
+  siguiera al premio, la escalera mediría lo contrario de lo que dice medir.
+- ⚠️ **El rango ninja es un MÁXIMO, no una suma.** Su sitio conceptual es el cajón de `marca`, no el de
+  `contadores` — el propio `useAchievementsStore.js:55-60` ya explica por qué mezclarlos es cómo se
+  acaba sumando un récord. (Aunque al derivarse de los logros, en la práctica no se persiste nada.)
+- ⚠️ **Cualquier clave nueva de `localStorage` va también en `reiniciarLogros()`.** Ya mordió una vez:
+  con los contadores intactos, los logros se redesbloqueaban en el acto.
+- ⚠️ **Una pasiva por id** (punto 22): la de la célula se suma a las del modo y las del objeto, y
+  `normalizarPasivas` es **idempotente** por una razón que ya costó un bug entero — ver
+  [30](./30-sistema-de-pasivas.md). Si dos fuentes dan la misma pasiva, se aplica UNA (la mayor).
+- ⚠️ **Las células cambian el balance.** Si el Equipo 7 da una ventaja real, la run "canónica" deja de
+  medir lo que midió el simulador. Pasar `scripts/simular-combates.mjs` antes y después, que además
+  construye los luchadores por el mismo camino que el juego **solo si las pasivas se normalizan una
+  vez** (ese fue el bug del simulador midiendo unos números y el juego corriendo con otros).
+- ⚠️ **La ficha compartible no puede spoilear.** El emoji dice *qué tipo* de nodo, no qué había dentro.
+  Una ficha que revele el mapa es una ficha que nadie comparte.
+- ⚠️ **`navigator.clipboard` no existe en jsdom** ni fuera de contexto seguro. El test de la ficha
+  prueba **el string**, que es lo que importa; el botón se prueba con un doble.
+
+## Verificación
+
+Además de la de siempre (`npm test`, `npx eslint src`, `npm run build`):
+
+1. **Tests de invariante nuevos**, que es como se protege lo que es "solo datos" en este proyecto:
+   - **todo logro declara `rango`** y es uno de los cinco válidos;
+   - **el máximo de puntos alcanzable supera con holgura el umbral de Kage** — es lo que impide que
+     añadir logros infle la escalera hasta volverla trivial, y lo que hace seguros los umbrales
+     absolutos de la decisión 2;
+   - **hay al menos un logro de cada rango** (si no hay ninguna S, la cima no existe);
+   - **toda célula de `squads.json` apunta a personajes que existen** y su pasiva está en el catálogo
+     (esta última la valida sola `crearLuchador`, que **revienta** con un id desconocido).
+2. **`node scripts/simular-combates.mjs`** antes y después de la fase 4, por el balance de las células.
+3. **Prueba manual**: perder una run y **copiar la ficha**, pegarla en otro sitio y mirarla como la
+   miraría alguien que no ha jugado — ¿se entiende qué pasó sin saber nada, y no revela el mapa?

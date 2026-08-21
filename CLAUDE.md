@@ -112,8 +112,8 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **471 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
-  componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
+- [x] Testing con Vitest — **516 tests**: 325 de lógica (`engine/*.test.js`, `store/*.test.js`) y 191 en
+  `components/` (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
   ⚠️ **El entorno global sigue siendo `node`**: cada test de UI declara `// @vitest-environment jsdom`
@@ -352,6 +352,37 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   columna del menú vertical, pantalla de transformación—, que se queda oscuro en los dos temas porque el
   PNG de debajo no cambia. Se hace redefiniendo los tokens en ese subárbol, no cambiando clases a colores
   fijos.
+
+- [x] **Rangos, ficha compartible y próximos desbloqueos** (puntos 19, 20 y 21) — primera tanda de
+  mecánica desde los eventos. Naruto tiene **dos escaleras** y ahora el juego usa las dos, así que no
+  hubo que inventar vocabulario: **rango de misión D-C-B-A-S** en cada logro y en la run recién jugada,
+  y **rango ninja Genin→Chunin→Jonin→ANBU→Kage** acumulado entre runs. Ver
+  `documentacion/18-sistema-de-logros.md`.
+  ⚠️ **El rango mide DIFICULTAD, no recompensa**: 13 de los 23 logros dan `recompensa: 'ninguna'` a
+  propósito y varios son los más duros del juego. ⚠️ **Umbrales absolutos y no porcentuales** —con
+  porcentajes, añadir un logro **degrada** a quien ya jugó—, con una **pinza de dos invariantes**: Kage
+  alcanzable (`puntosMaximos > umbral`) y no regalado (`puntosMaximos * 0,6 < umbral`), que salta si un
+  día se añaden logros a puñados. ⚠️ **El rango ninja no se guarda, se DERIVA** de los logros ya
+  persistidos: no hay quinta clave de `localStorage`.
+  ⚠️ **La pantalla ya hablaba ese idioma con el dato inventado**: un `RANGO_S` pintaba una **S para
+  TODOS** los logros sin premio, así que "pierde 7 runs" lucía la misma letra que ganar la partida.
+  Cuando una interfaz finge un dato para no dejar un hueco, señala el campo que falta.
+- [x] **La ficha compartible** (`components/common/fichaDeRun.js` + botón en `GameOverScreen`): el
+  rastro de la run en emoji, una línea por arco, con el rango de titular. ⚠️ **Es texto y no imagen
+  porque no hay backend** — GitHub Pages es estático, así que no hay leaderboard ni cuentas y **el
+  único canal que sale del navegador es el portapapeles**; es la restricción que Wordle convirtió en
+  motor. ⚠️ **El rastro hay que ir apuntándolo** (`rastroDeLaRun`): `avanzarSiguienteArco` hace
+  `mapa: mapaSiguiente` y el mapa anterior se pierde, así que al final no hay nada que reconstruir.
+  ⚠️ **No puede spoilear**: el emoji dice de qué TIPO era el nodo, nunca qué había dentro, con test.
+- **Y la regla que sale de los tres puntos juntos**: media tanda estaba **construida y sin enseñar** —
+  `progresoDeLogro` existía desde el punto 5a, la `marca` se registraba y solo se pintaba en el Home
+  (el único sitio donde no importa), el rango ninja se deriva de logros ya guardados. **Antes de
+  construir un sistema para motivar al jugador, mirar qué se está calculando ya y no se pinta en
+  ninguna parte.**
+- **Cuarta vez de la misma trampa**, y ya conviene buscarla sola: `registrarMarca` se llama al pisar
+  cada nodo, así que en la pantalla de derrota **el récord ya incluye la run que acabas de perder**.
+  Es la familia de `equipoAlEmpezar`, `recompensas` y `buffsAlEmpezar`: **cuando la pantalla final se
+  pinta, el estado ya está actualizado.**
 
 - [x] **Primer playtest real (2026-08-14)** — cuatro bugs, y los tres primeros son el mismo tipo de
   fallo: una decisión razonable en su sitio que produce un efecto absurdo a distancia.

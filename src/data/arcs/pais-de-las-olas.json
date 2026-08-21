@@ -2,6 +2,7 @@
   "_comentario": "Primer arco de la run. Nivel de enemigos FIJO por piso (no relativo al jugador — la dificultad de un roguelike debe ser fija para que subir de nivel siga significando algo, ver documentacion/11-progresion-y-arcos.md). Recalibrado con el número REAL de combates de un único camino (no la suma de todos los nodos del piso). nivelMiniJefe/nivelJefeFinal son niveles fijos explícitos, calculados para ser superables incluso por el 'camino mínimo' que se salta todo lo opcional.",
   "id": "pais_de_las_olas",
   "nombre": "Land of Waves",
+  "emoji": "🌊",
   "temaVisual": "bosque_konoha",
   "numeroPisos": 8,
   "nodosPorPiso": {

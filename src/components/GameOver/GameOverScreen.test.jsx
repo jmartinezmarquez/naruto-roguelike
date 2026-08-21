@@ -14,6 +14,7 @@ import GameOverScreen from './GameOverScreen';
 import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } from '../../store/useAchievementsStore';
 import arcoDePrueba from '../../data/arcs/pais-de-las-olas.json';
+import achievementsData from '../../data/achievements.json';
 
 beforeEach(() => {
   localStorage.clear();
@@ -109,5 +110,95 @@ describe('la foto final de la run', () => {
     expect(screen.getAllByText(/Naruto|Sasuke|Sakura/).length).toBeGreaterThanOrEqual(3);
     expect(screen.getAllByText('Defeated')).toHaveLength(1);
     expect(screen.getAllByText('Standing')).toHaveLength(2);
+  });
+});
+
+// --- Rangos y ficha compartible (puntos 19, 20 y 21) ------------------------
+//
+// ⚠️ Estos tests montan **la pantalla entera** y no las piezas por separado a
+// propósito. La lección de `PersonajeHoverCard` sigue vigente: probar las dos
+// piezas no prueba la unión, y con `InsigniaRango`, `fichaDeLaRun` y
+// `resumenDeLaRun` viniendo de tres sitios distintos, la unión es justo donde
+// vive el fallo.
+
+describe('la nota de la run', () => {
+  it('una derrota temprana saca una D y dice cómo sacar una C', () => {
+    render(<GameOverScreen />);
+    expect(screen.getByText('Mission rank')).toBeInTheDocument();
+    expect(screen.getByText(/Clear a full arc to earn a C/i)).toBeInTheDocument();
+  });
+
+  it('⚠️ ganar sin bajas saca la S, y ganar con ellas no', () => {
+    useGameStore.setState({ runTerminada: true, runGanada: true, huboDerrotaEnLaRun: false });
+    const { unmount } = render(<GameOverScreen />);
+    expect(screen.getByText(/nothing above this/i)).toBeInTheDocument();
+    unmount();
+
+    useGameStore.setState({ huboDerrotaEnLaRun: true });
+    render(<GameOverScreen />);
+    expect(screen.getByText(/without losing a single ninja to earn an S/i)).toBeInTheDocument();
+  });
+});
+
+describe('la ficha compartible', () => {
+  it('ofrece copiarla', () => {
+    render(<GameOverScreen />);
+    expect(screen.getByRole('button', { name: /copy mission report/i })).toBeInTheDocument();
+  });
+
+  it('⚠️ y si el portapapeles no existe, enseña el texto en vez de callarse', async () => {
+    // `navigator.clipboard` no existe fuera de contexto seguro — ni en jsdom. Un
+    // botón que falla en silencio es peor que no tenerlo: el jugador cree que ha
+    // copiado y pega lo que tuviera antes.
+    render(<GameOverScreen />);
+    await userEvent.click(screen.getByRole('button', { name: /copy mission report/i }));
+
+    const cuadro = document.querySelector('textarea');
+    expect(cuadro, 'no hay salida de emergencia para copiar a mano').toBeTruthy();
+    expect(cuadro.value).toContain('Mission rank');
+    expect(cuadro.value).toContain('https://');
+  });
+});
+
+describe('lo que te falta para el próximo logro', () => {
+  it('sale al morir, que es donde se decide si vuelves a jugar', () => {
+    useAchievementsStore.setState({
+      contadores: { ...CONTADORES_VACIO, combatesGanados: 9, reclutas: 4 },
+    });
+    render(<GameOverScreen />);
+    expect(screen.getByText('So close')).toBeInTheDocument();
+    // "gana 10 combates" con 9 ganados: falta 1.
+    expect(screen.getAllByText(/1 to go/).length).toBeGreaterThan(0);
+  });
+
+  it('⚠️ y el hover dice qué hay que hacer, que el nombre no lo dice', () => {
+    // "Full Purse — 175 to go" no dice 175 de QUÉ. La condición ya estaba escrita
+    // en `descripcion` desde el punto 5a y no se enseñaba en ningún sitio salvo la
+    // pantalla de Missions.
+    //
+    // El tooltip es CSS puro (`hover-envoltorio:hover`), así que jsdom no lo
+    // "abre" — pero el contenido está en el DOM y es lo que hay que comprobar: que
+    // el texto viaja hasta ahí.
+    useAchievementsStore.setState({
+      contadores: { ...CONTADORES_VACIO, combatesGanados: 9 },
+      vistos: VISTOS_VACIO,
+    });
+    render(<GameOverScreen />);
+    const logro = achievementsData.logros.find((l) => l.id === 'combates_10');
+    expect(screen.getByText(logro.descripcion)).toBeInTheDocument();
+  });
+
+  it('⚠️ pero solo lo EMPEZADO: sin nada en marcha, el panel se calla', () => {
+    // Sin este filtro, una primera muerte enseñaba "Win 150 battles — 150 to go"
+    // bajo un cartel que dice "So close". No es que no motive: es que el cartel
+    // miente.
+    //
+    // ⚠️ Y hay que vaciar también los **vistos**, no solo los contadores: al
+    // empezar una run el juego registra a tu propio equipo en la enciclopedia, así
+    // que el logro de "conoce a 8 ninjas" arranca en 3 de verdad. El panel tenía
+    // razón; el que se equivocaba era este test.
+    useAchievementsStore.setState({ contadores: CONTADORES_VACIO, vistos: VISTOS_VACIO });
+    render(<GameOverScreen />);
+    expect(screen.queryByText('So close')).toBeNull();
   });
 });
