@@ -298,6 +298,12 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   y no por color global (fuego y agua tienen el centro casi blanco). ⚠️ El menú **ya no está clavado a
   cuatro entradas** —eran huecos pintados en una imagen— y **no queda ningún `window.confirm`** en el
   juego. Ver `documentacion/13-ui-mapa-y-combate.md`.
+- [x] **Home con selector de campañas** (punto 18) — `components/Home/HomeScreen.jsx`, `pantalla: 'home'`,
+  `src/data/campaigns.json`. ⚠️ Lo que importa del punto **no es la pantalla, es que la campaña sea un
+  DATO**: estaba a medias entre la constante `ORDEN_ARCOS` del store y una llamada de `App.jsx` que
+  arrancaba en el arco 1 a pelo. ⚠️ **Sin run, `volverAlMapa` lleva al Home** — Missions/Bingo Book/Ajustes
+  se cierran con esa acción y desde el Home dejaban la pantalla en blanco. Y **reiniciar no lleva al
+  Home** (quien pierde quiere reintentar, no reelegir campaña). Ver `documentacion/38-home-y-campanas.md`.
 - [ ] `guardarRun`/`cargarRun` no están conectados a ningún hook automático todavía (decidido: no hace falta, runs cortas).
 - [x] **Pantalla de ajustes** (punto 14): `components/Settings/SettingsScreen.jsx` + `useSettingsStore`
   (store propio, clave propia de `localStorage`). Tema **claro/oscuro**, pantalla completa (mudada desde el

@@ -15,8 +15,8 @@ import InventoryScreen from './components/Inventory/InventoryScreen';
 import LogroToast from './components/Achievements/LogroToast';
 import AvisoToast from './components/Map/AvisoToast';
 import CharacterSelectScreen from './components/CharacterSelect/CharacterSelectScreen';
+import HomeScreen from './components/Home/HomeScreen';
 import MusicaDeFondo from './components/common/MusicaDeFondo';
-import arcoPaisDeLasOlas from './data/arcs/pais-de-las-olas.json';
 import gameBgDark from './assets/game-background-dark-theme.jpg';
 import gameBgLight from './assets/game-background-light-theme.jpg';
 import { useSettingsStore, FACTOR_ANIMACION } from './store/useSettingsStore';
@@ -103,9 +103,22 @@ export default function App() {
       <MusicaDeFondo arcoId={mapa ? arcoActualId : null} />
 
       {!mapa ? (
-        <CharacterSelectScreen
-          onConfirmar={(idsElegidos) => iniciarRun(idsElegidos, arcoPaisDeLasOlas)}
-        />
+        // Sin run hay DOS pantallas, no una: el Home (la puerta, con el selector de
+        // campañas) y la selección de personaje. Antes solo existía la segunda y se
+        // entraba en ella directamente, así que el juego empezaba a mitad de camino.
+        //
+        // ⚠️ Y las tres pantallas de consulta se dibujan **también aquí**, encima del
+        // Home: son meta-progresión, o sea justo lo que se mira ENTRE partidas.
+        // Colgarlas solo del mapa las dejaba accesibles nada más que jugando.
+        <>
+          {pantalla === 'seleccionPersonaje'
+            ? <CharacterSelectScreen onConfirmar={(idsElegidos) => iniciarRun(idsElegidos)} />
+            : <HomeScreen />}
+          {pantalla === 'logros' && <AchievementsScreen />}
+          {pantalla === 'enciclopedia' && <EncyclopediaScreen />}
+          {pantalla === 'ajustes' && <SettingsScreen />}
+          <LogroToast />
+        </>
       ) : (
         <>
           {pantallaActual(pantalla)}

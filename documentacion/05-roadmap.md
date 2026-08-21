@@ -1169,6 +1169,68 @@ meter azar de verdad.
   `whitespace-nowrap`, el texto salía por el lado. Arreglado con **`w-max` en `EtiquetaFlotante`** (vale
   para todos los tooltips) y `shrink-0` en las pastillas.
 
+**Home y selector de campañas (punto 18) — ver [38](./38-home-y-campanas.md)**
+
+- [x] **La puerta del juego.** `HomeScreen` con la campaña, sus tres arcos por nombre y el botón de
+  empezar. Antes el juego arrancaba **a mitad de camino**: directo a elegir personaje.
+- [x] ⚠️ **Lo que hace falta del punto no es la pantalla, es que la campaña sea un DATO.** Estaba escrita
+  a medias en dos sitios —una constante `ORDEN_ARCOS` del store y una llamada de `App.jsx` que empezaba en
+  el arco 1 a pelo—, así que una segunda campaña era tocar código en dos ficheros. Ahora el store solo
+  resuelve `id → JSON` y el orden lo declara `campaigns.json`. **Se hace con una campaña porque es cuando
+  sale barato**; con dos ya habría que desmontar algo.
+- [x] 🐛 **Missions, el Bingo Book y los Ajustes solo se abrían DENTRO de una partida**, que es cuando no
+  interesan: las tres son meta-progresión y se miran entre partidas. Se podía ganar un logro, morir, y no
+  tener forma de ir a verlo sin empezar otra run. Ahora cuelgan también del Home.
+- [x] ⚠️ **Regla nueva del store: sin run, `volverAlMapa` lleva al Home.** Esas tres pantallas se cierran
+  con esa acción, y desde el Home cerrarlas llevaba a un mapa que no existe — pantalla en blanco.
+  "Volver" es *a donde estabas*, y sin partida eso es el Home.
+- [x] **Reiniciar NO lleva al Home**, y la diferencia importa: quien acaba de perder quiere volver a
+  intentarlo, no volver a escoger campaña. Va a elegir personaje con la misma campaña.
+- [x] ⚠️ **Las dos salidas voluntarias preguntan antes**, porque no hay guardado: salir de una run es
+  perderla. Comparten ventana y cambian solo el texto.
+- [x] **La quinta entrada del menú vertical es la prueba del punto 16**: no habría cabido con la maqueta
+  de una pieza y sus cuatro huecos pintados. Por eso el 16 iba antes que el 18, y así se ordenó.
+- [x] **Su icono es una casa dibujada por script** (`scripts/generar-icono-home.py`), el segundo sprite
+  del juego que no sale de una hoja. ⚠️ El primer intento reutilizaba el símbolo de Konoha del favicon y
+  no valía: **a 32 px un remolino es una mancha**, y el mismo dibujo acababa significando dos cosas en la
+  misma sesión. Se exporta a **32×32 exactos** para que a tamaño natural no haya reescalado que lo
+  estropee.
+- [x] **El Home, en formato Pokelike**: una fila por campaña partida en tres celdas —ilustración con el
+  nombre encima, marcador, y las misiones aparte—, con el panel que explica el modo arriba y el "más
+  campañas en camino" abajo. El marcador **no inventa datos**: runs ganadas/perdidas y combates salen de
+  los contadores de logros, y "Ninja met 8/15" / "Enemies faced 6/14" del registro del Bingo Book, que es
+  el equivalente exacto del "Pokédex 119/151" de la referencia.
+- [x] ⚠️ **Se valoró un selector en rueda y se descartó**, con la referencia a favor: Pokelike tiene
+  **cuatro** regiones y un "más en camino" y aun así usa lista vertical. Un carrusel es acceso
+  secuencial y **no deja comparar**, que es justo para lo que está el marcador; y con una sola campaña
+  es una rueda que no puede girar. Donde sí ganaría es en la **selección de personaje**, que es la
+  pantalla que hoy más parece una rejilla de web.
+- [x] La ilustración de cada campaña va en `assets/campaigns/<id>.jpg`, y ⚠️ **la carpeta puede estar
+  vacía**: `import.meta.glob`, como la música, así que la tarjeta cae a un fondo liso con el nombre en
+  vez de romper el build.
+- [x] **"Furthest": hasta dónde llegaste**, la primera fila del marcador. Salió de comparar con la
+  referencia: allí "Classic wins" basta porque **su campaña se termina**, y en un roguelike casi nadie
+  gana — con seis runs perdidas, "0 / 6" no enseña ningún progreso aunque hayas llegado a Pain.
+  ⚠️ **Vive aparte de los contadores porque es un MÁXIMO y ellos SUMAN**; y lleva el `orden` del arco
+  dentro de su campaña, sin el cual no se puede comparar "arco 3, piso 1" con "arco 2, piso 8".
+  Se apunta **en cada nodo** y no al acabar la run, porque una run se acaba de tres formas y solo una
+  pasa por un sitio común. Con esto, `reiniciarLogros` borra ya **cuatro** claves.
+- [x] 🐛 **Se recuperaron los nombres de los arcos en la tarjeta**, que la segunda versión perdió al
+  copiar la forma de la referencia. ⚠️ Ahí hay una trampa al imitar: "KANTO · GEN 1" le dice todo a su
+  público y **"The Ninja Road" no dice nada** — el nombre de la región es su contenido, y el nuestro son
+  los tres arcos.
+- [x] **El game over tiene dos salidas**: "New Run" y **Home**. Sin la segunda, quien acababa de
+  desbloquear un logro **no tenía forma de ir a verlo** — las tres pantallas de consulta cuelgan del mapa
+  y del Home, y "New Run" lleva directo a elegir personaje. Era el momento en que más apetece mirarlas.
+  ⚠️ Y **ahí el Home no pregunta**, al revés que el del menú del mapa: allí salir cuesta la run, y aquí
+  ya no hay run que perder. Una confirmación sin nada que confirmar es ruido, y enseña a decir que sí sin
+  leer.
+- [x] 🐛 **La selección de personaje se quedó sin salida** al meterle el Home delante: elegías campaña,
+  cambiabas de idea y la única forma de volver era elegir ninja igualmente y abandonar la run desde el
+  mapa. Antes no se notaba porque era la primera pantalla y no había de dónde venir. ⚠️ La lección:
+  **meter una pantalla delante convierte a la siguiente en un paso, y todo paso necesita marcha atrás.**
+- [x] 290 tests (eran 275).
+
 ## Próximos pasos (en orden sugerido)
 
 > 📋 **El plan de trabajo de estos puntos —fases, verificación y las decisiones que hacen falta antes
@@ -1258,33 +1320,6 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
     ⚠️ **Todo sprite nuevo entra por su script `generar-sprites-*.py` y en el lienzo común de 96×96.**
     No se editan a mano los PNG generados: se pisan al regenerar. Y el pixel art a escalas no enteras
     duplica unas columnas de píxeles y otras no, que es la razón del lienzo común.
-
-18. **Home: la pantalla principal con el selector de campañas** — una pantalla que lista las campañas
-    del juego y desde la que se empieza una. **Hoy hay una sola** (los tres arcos del MVP: País de las
-    Olas → Examen Chunin → Invasión de Pain), y aun así el punto tiene sentido, por un motivo que no es
-    de interfaz: **hoy la campaña no existe como dato**. Está repartida entre una constante del store
-    (`ORDEN_ARCOS`) y una llamada de `App.jsx` que arranca en el arco 1 a pelo. Sacarla a
-    `src/data/campaigns.json` es lo que convierte la segunda campaña en **contenido** en vez de en
-    código, que es la regla del proyecto — y esa es la razón de hacerlo con una sola: es cuando sale
-    barato.
-    - **Cómo se llega**: una **quinta entrada** del menú vertical. ⚠️ Y ahí está el dato que más cambia
-      la planificación: **el menú está clavado a exactamente cuatro huecos, porque son un dibujo**
-      (punto 16). O sea que **el 16 deja de ser cosmético y pasa a ser requisito del 18** — hacerlos en
-      el orden contrario obliga a redibujar la hoja del menú para tirarla después.
-    - ⚠️ **Salir al Home a mitad de una run la pierde**, porque guardar la run está descartado (ver
-      "Descartado"). Así que la entrada **tiene que confirmar antes**, igual que "Restart run" — y con
-      la ventana del kit, no con el `window.confirm` del navegador, que es justo lo otro que arregla el
-      punto 16. No es un detalle de pulido: es la diferencia entre un botón y una trampa.
-    - **Alcance mínimo**: `campaigns.json` con una entrada (id, nombre, descripción, sus arcos en
-      orden), `pantalla: 'home'`, una tarjeta por campaña con el kit que ya existe, y `ORDEN_ARCOS`
-      pasando a leerse de la campaña elegida en vez de ser una constante del store.
-    - **Fuera de alcance, a propósito**: escribir una segunda campaña (eso es el "Sistema de campañas"
-      del backlog, que es contenido nuevo: arcos, enemigos y objetos), los desbloqueos entre campañas y
-      cualquier forma de guardado.
-    - 📋 **Decisión pendiente del usuario**: si Home es además **la pantalla de arranque** del juego (hoy
-      se arranca directamente en la selección de personaje). Si lo es, sale gratis una cosa que hoy no
-      existe: poder abrir Missions, el Bingo Book y los Ajustes **entre partidas** y no solo dentro de
-      una. La recomendación es que sí, pero no está decidido y por eso no entra en el alcance de arriba.
 
 ### Pendiente de arte
 

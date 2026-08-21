@@ -1,0 +1,20 @@
+{
+  "_comentario": "Las campañas del juego: una lista ordenada de arcos con nombre propio. Hoy hay UNA (la del MVP), y el fichero existe igualmente por la regla del proyecto — el motor y el store no saben de contenido. Hasta ahora la campaña estaba repartida entre una constante del store (ORDEN_ARCOS) y una llamada de App.jsx que arrancaba en el arco 1 a pelo, así que añadir una segunda habría sido tocar código. Ahora es añadir una entrada aquí. Ver documentacion/38-home-y-campanas.md.",
+  "campanas": [
+    {
+      "id": "camino_ninja",
+      "nombre": "The Ninja Road",
+      "descripcion": "From the bridge builder's escort to the fall of Konoha. Three arcs, one run, no second chances.",
+      "arcoIds": [
+        "pais_de_las_olas",
+        "examen_chunin",
+        "invasion_de_pain"
+      ]
+    }
+  ],
+  "_pendienteDeImplementar": {
+    "campos": [
+      "requisito (una campaña que se desbloquea al terminar otra) — no hace falta con una sola, y pintar un candado que nunca se abre es peor que no tenerlo"
+    ]
+  }
+}

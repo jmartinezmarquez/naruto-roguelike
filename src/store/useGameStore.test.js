@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
-import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO } from './useAchievementsStore';
+import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
 import configGlobal from '../data/config.json';
 import eventosData from '../data/events.json';
@@ -58,6 +58,7 @@ beforeEach(() => {
     logrosDesbloqueados: [],
     vistos: VISTOS_VACIO,
     contadores: CONTADORES_VACIO,
+    marca: MARCA_VACIA,
     notificacionesPendientes: [],
   });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
@@ -754,7 +755,10 @@ describe('irAGameOver', () => {
 
     useGameStore.getState().reiniciarRun();
     expect(useGameStore.getState().mapa).toBeNull();
-    expect(useGameStore.getState().pantalla).toBe('mapa');
+    // A elegir personaje, **no al Home**: quien acaba de perder quiere volver a
+    // intentarlo, no volver a escoger campaña. El Home tiene su propia salida
+    // (`irAlHome`), que es la que pregunta antes porque abandona la run.
+    expect(useGameStore.getState().pantalla).toBe('seleccionPersonaje');
   });
 });
 
@@ -1464,5 +1468,86 @@ describe('contadores de logros — enganches', () => {
 
     const notificados = useAchievementsStore.getState().notificacionesPendientes.map((l) => l.id);
     expect(notificados).toContain('eventos_20');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Home y campañas (punto 18). Lo que se prueba es que la campaña DECIDE los arcos:
+// hasta ahora esa lista era una constante del store, y ese es justo el cambio.
+// ---------------------------------------------------------------------------
+
+describe('campañas', () => {
+  it('arranca en el Home, que es la puerta del juego', () => {
+    useGameStore.setState({ mapa: null, pantalla: 'home' });
+    expect(useGameStore.getState().pantalla).toBe('home');
+  });
+
+  it('elegirCampana la guarda y pasa a escoger personaje', () => {
+    useGameStore.getState().elegirCampana('camino_ninja');
+    expect(useGameStore.getState().campanaActualId).toBe('camino_ninja');
+    expect(useGameStore.getState().pantalla).toBe('seleccionPersonaje');
+  });
+
+  it('iniciarRun sin arco explícito empieza por el PRIMER arco de la campaña elegida', () => {
+    useGameStore.getState().elegirCampana('camino_ninja');
+    useGameStore.getState().iniciarRun(['naruto']);
+    expect(useGameStore.getState().arcoActualId).toBe('pais_de_las_olas');
+  });
+
+  it('avanzarSiguienteArco sigue el orden que declara la campaña', () => {
+    useGameStore.getState().elegirCampana('camino_ninja');
+    useGameStore.getState().iniciarRun(['naruto']);
+    expect(useGameStore.getState().avanzarSiguienteArco()).toBe(true);
+    expect(useGameStore.getState().arcoActualId).toBe('examen_chunin');
+  });
+
+  it('irAlHome abandona la run: sin mapa y de vuelta al Home', () => {
+    useGameStore.getState().irAlHome();
+    expect(useGameStore.getState().mapa).toBeNull();
+    expect(useGameStore.getState().pantalla).toBe('home');
+  });
+
+  it('sin run, volverAlMapa lleva al Home y no a un mapa que no existe', () => {
+    // Missions, Bingo Book y Ajustes se cierran con `volverAlMapa`, y desde el Home
+    // se pueden abrir sin haber empezado ninguna partida: cerrarlos dejaba la
+    // pantalla en blanco.
+    useGameStore.getState().irAlHome();
+    useGameStore.getState().abrirLogros();
+    useGameStore.getState().volverAlMapa();
+    expect(useGameStore.getState().pantalla).toBe('home');
+  });
+});
+
+describe('marca de hasta dónde se llegó — enganche', () => {
+  it('avanzar a un nodo apunta el arco y el piso', () => {
+    const { mapa } = useGameStore.getState();
+    // Un nodo cualquiera del piso 2, que es el primero jugable.
+    const nodoDelPiso2 = Object.values(mapa.nodos).find((n) => n.piso === 2);
+    useGameStore.getState().avanzarANodo(nodoDelPiso2.id);
+
+    const { marca } = useAchievementsStore.getState();
+    expect(marca.arcoId).toBe('pais_de_las_olas');
+    expect(marca.orden).toBe(0); // primer arco de la campaña
+    expect(marca.piso).toBe(2);
+  });
+
+  it('empezar una run nueva NO borra la marca: es meta-progresión', () => {
+    useAchievementsStore.getState().registrarMarca({ arcoId: 'invasion_de_pain', orden: 2, piso: 5 });
+    useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+    expect(useAchievementsStore.getState().marca.arcoId).toBe('invasion_de_pain');
+  });
+});
+
+describe('salidas del game over', () => {
+  it('irAlHome desde el game over deja el juego listo para elegir campaña', () => {
+    // La otra salida de esa pantalla, además de "New Run". Sin ella, quien acababa de
+    // desbloquear un logro no tenía forma de ir a verlo.
+    useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 1);
+    useGameStore.getState().irAGameOver();
+
+    useGameStore.getState().irAlHome();
+    expect(useGameStore.getState().pantalla).toBe('home');
+    expect(useGameStore.getState().mapa).toBeNull();
+    expect(useGameStore.getState().runTerminada).toBe(true); // lo limpia iniciarRun, no salir
   });
 });

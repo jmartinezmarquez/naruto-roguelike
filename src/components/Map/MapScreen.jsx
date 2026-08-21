@@ -25,6 +25,7 @@ import iconoLogros from '../../assets/menu/logros.png';
 import iconoEnciclopedia from '../../assets/menu/enciclopedia.png';
 import iconoAjustes from '../../assets/menu/ajustes.png';
 import iconoReiniciar from '../../assets/menu/reiniciar.png';
+import iconoHome from '../../assets/menu/home.png';
 import itemsData from '../../data/items.json';
 import {
   PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante, VentanaModal, BotonSecundario,
@@ -853,8 +854,9 @@ function RuedaChakra() {
  * (`assets/menu/*.png`, recortados por `scripts/generar-sprites-iconos.py`), así que
  * el marco pasa a ser un panel normal y cada icono, su propio `<img>`.
  */
-function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarRun }) {
-  const [confirmandoReinicio, setConfirmandoReinicio] = useState(false);
+function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarRun, irAlHome }) {
+  // Una sola pieza para las dos salidas destructivas: cambia el texto, no la mecánica.
+  const [confirmando, setConfirmando] = useState(null); // 'reiniciar' | 'home' | null
 
   // El engranaje abre **Ajustes**, que es lo que la maqueta dibujó: antes hacía de
   // pantalla completa, que era un apaño mientras no había pantalla de ajustes —
@@ -870,7 +872,10 @@ function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarR
     { etiqueta: 'Missions', icono: iconoLogros, onClick: abrirLogros },
     { etiqueta: 'Bingo Book', icono: iconoEnciclopedia, onClick: abrirEnciclopedia },
     { etiqueta: 'Settings', icono: iconoAjustes, onClick: abrirAjustes },
-    { etiqueta: 'Restart run', icono: iconoReiniciar, onClick: () => setConfirmandoReinicio(true) },
+    { etiqueta: 'Restart run', icono: iconoReiniciar, onClick: () => setConfirmando('reiniciar') },
+    // La quinta entrada, y **la que demostró que arreglar el menú hacía falta**: con
+    // la maqueta de una sola pieza no cabía sin redibujar la hoja (ver arriba).
+    { etiqueta: 'Home', icono: iconoHome, onClick: () => setConfirmando('home') },
   ];
 
   return (
@@ -919,12 +924,14 @@ function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarR
         ))}
       </nav>
 
-      {confirmandoReinicio && (
-        <PanelConfirmarReinicio
-          onCancelar={() => setConfirmandoReinicio(false)}
+      {confirmando && (
+        <PanelAbandonarRun
+          destino={confirmando}
+          onCancelar={() => setConfirmando(null)}
           onConfirmar={() => {
-            setConfirmandoReinicio(false);
-            reiniciarRun();
+            setConfirmando(null);
+            if (confirmando === 'home') irAlHome();
+            else reiniciarRun();
           }}
         />
       )}
@@ -942,13 +949,14 @@ function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarR
  * de parecer un juego. Misma forma que `PanelReemplazoObjeto`: rojo de sello solo
  * en el botón que destruye.
  */
-function PanelConfirmarReinicio({ onCancelar, onConfirmar }) {
+function PanelAbandonarRun({ destino, onCancelar, onConfirmar }) {
+  const aHome = destino === 'home';
   return (
-    <VentanaModal titulo="Restart run" onCerrar={onCancelar} ancho="max-w-sm">
+    <VentanaModal titulo={aHome ? 'Leave run' : 'Restart run'} onCerrar={onCancelar} ancho="max-w-sm">
       <div className="flex flex-col gap-4">
         <p className="text-[10px] text-pergamino-200 leading-relaxed">
-          You will lose this team, your gold and everything in the bag, and start again from
-          the first floor.
+          You will lose this team, your gold and everything in the bag
+          {aHome ? ', and go back to the campaign list.' : ', and start again from the first floor.'}
         </p>
         <p className="text-[9px] text-pergamino-200/60 leading-relaxed border-t border-marco pt-3">
           Missions and the Bingo Book are kept: they belong to you, not to this run.
@@ -960,7 +968,7 @@ function PanelConfirmarReinicio({ onCancelar, onConfirmar }) {
             onClick={onConfirmar}
             className="font-display text-[9px] px-3 py-2 rounded-sm bg-sello-600 text-sobre-sello hover:bg-sello-500 transition-colors"
           >
-            Restart
+            {aHome ? 'Leave' : 'Restart'}
           </button>
         </div>
       </div>
@@ -987,6 +995,7 @@ export default function MapScreen() {
   const abrirEnciclopedia = useGameStore((s) => s.abrirEnciclopedia);
   const abrirAjustes = useGameStore((s) => s.abrirAjustes);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
+  const irAlHome = useGameStore((s) => s.irAlHome);
 
   const fondoColumna = FONDO_COLUMNA[arcoActualDatos?.id];
 
@@ -1067,6 +1076,7 @@ export default function MapScreen() {
         abrirEnciclopedia={abrirEnciclopedia}
         abrirAjustes={abrirAjustes}
         reiniciarRun={reiniciarRun}
+        irAlHome={irAlHome}
       />
 
       <header className="text-center mb-1 shrink-0">

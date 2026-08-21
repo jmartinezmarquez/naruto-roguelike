@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import personajesData from '../../data/characters.json';
 import achievementsData from '../../data/achievements.json';
 import configGlobal from '../../data/config.json';
 import { obtenerPersonajesInicialesDesbloqueados } from '../../engine/achievements';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
-import { CabeceraPantalla } from '../common/PiezasUI';
+import { CabeceraPantalla, BotonSecundario } from '../common/PiezasUI';
 
 function TarjetaCandidato({ personaje, seleccionado, onClick }) {
   return (
@@ -43,6 +44,7 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
  * entonces confirmar, sin tener que rediseñar la pantalla.
  */
 export default function CharacterSelectScreen({ onConfirmar }) {
+  const irAlHome = useGameStore((s) => s.irAlHome);
   const logrosDesbloqueados = useAchievementsStore((s) => s.logrosDesbloqueados);
   const [seleccionados, setSeleccionados] = useState([]);
 
@@ -72,6 +74,14 @@ export default function CharacterSelectScreen({ onConfirmar }) {
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center justify-center">
+      {/* ⚠️ La salida, arriba a la izquierda como en la referencia. Sin ella esta
+          pantalla era un **callejón sin salida**: elegías campaña, cambiabas de idea y
+          la única forma de volver era elegir un ninja igualmente y abandonar la run
+          desde el mapa. No pregunta nada porque todavía no hay run que perder. */}
+      <BotonSecundario onClick={irAlHome} sobreFondo className="absolute top-4 left-4 elevar-hover">
+        ← Back
+      </BotonSecundario>
+
       {/* A pantalla completa y sin marco de ventana: es el arranque de la run, el
           único momento en que todavía no hay mapa detrás que enseñar. */}
       <div className="max-w-3xl w-full text-center flex flex-col gap-6">

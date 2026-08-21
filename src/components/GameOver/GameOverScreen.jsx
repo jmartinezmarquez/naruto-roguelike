@@ -1,7 +1,7 @@
 import { useGameStore } from '../../store/useGameStore';
 import { nombrePersonaje } from '../common/nombres';
 import { spriteDeCombate } from '../common/datosDeLuchador';
-import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
+import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal, BotonSecundario } from '../common/PiezasUI';
 
 export default function GameOverScreen() {
   const equipo = useGameStore((s) => s.equipo);
@@ -12,6 +12,7 @@ export default function GameOverScreen() {
   const nodoActualId = useGameStore((s) => s.nodoActualId);
   const obtenerHpMaximo = useGameStore((s) => s.obtenerHpMaximo);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
+  const irAlHome = useGameStore((s) => s.irAlHome);
 
   const pisoAlcanzado = nodoActualId !== null ? mapa?.nodos[nodoActualId]?.piso : null;
 
@@ -78,8 +79,20 @@ export default function GameOverScreen() {
           <p className="text-[9px] text-oro/80 mt-1">Gold accumulated: {oro}</p>
         </PanelMarco>
 
-        <div>
+        {/* Dos salidas, y hasta ahora solo había una. Sin la del Home, quien acababa
+            de desbloquear un logro **no tenía forma de ir a verlo**: Missions, el Bingo
+            Book y los Ajustes cuelgan del mapa y del Home, y "New Run" lleva directo a
+            elegir personaje. Era justo el momento en que más apetece mirarlos.
+
+            ⚠️ **Aquí el Home NO pregunta**, al contrario que el del menú del mapa: allí
+            salir cuesta la partida en curso, y aquí ya no hay partida que perder. Una
+            confirmación sin nada que confirmar es ruido, y de paso enseña al jugador a
+            decir que sí sin leer. */}
+        <div className="flex items-center justify-center gap-3">
           <BotonPrincipal onClick={reiniciarRun}>New Run</BotonPrincipal>
+          <BotonSecundario onClick={irAlHome} sobreFondo className="elevar-hover px-6">
+            Home
+          </BotonSecundario>
         </div>
       </div>
     </div>

@@ -452,3 +452,17 @@ Y lo que se **mantuvo**, que es la otra mitad del criterio:
   saber cómo se abre una entrada, y salen **de una en una**, no repetidas por la rejilla.
 - **"You have earned their respect"** (desafío legendario): no lo dice nada más, y es el remate del
   único combate opcional del juego.
+
+## `sobreFondo`: un botón encima de un dibujo no es el mismo botón
+
+`BotonSecundario` tiene dos caras, y elegir mal la cara es el fallo que más se repite con esta pieza:
+
+- **Dentro de un panel o una ventana** (lo normal): fondo transparente y texto al 60%. Correcto ahí,
+  porque la superficie de detrás ya es opaca y un segundo relleno sería una caja dentro de otra caja.
+- **`sobreFondo`**: relleno opaco (`bg-tinta-900`) y texto entero. Para lo que se pinta **directamente
+  encima del dibujo de fondo** — la tienda, reclutar y los tres atajos del Home.
+
+⚠️ Sin `sobreFondo`, el botón se lee bien en las capturas de diseño y se vuelve **ilegible sobre la
+aldea de noche**, que es donde va a estar de verdad. Pasó con los atajos del Home. Es la misma familia
+de problema que `.escena-oscura` y se resuelve con la misma idea: **lo que se pinta sobre un dibujo
+necesita traerse su propia superficie**, porque no puede contar con la de debajo.
