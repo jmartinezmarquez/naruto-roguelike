@@ -13,7 +13,7 @@
 // deshacerse solo.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, userEvent, within } from '../../test-dom';
+import { render, screen, userEvent, within, fireEvent } from '../../test-dom';
 import SettingsScreen from './SettingsScreen';
 import { useGameStore } from '../../store/useGameStore';
 import { useSettingsStore, AJUSTES_POR_DEFECTO } from '../../store/useSettingsStore';
@@ -55,11 +55,18 @@ describe('cada control mueve SU ajuste', () => {
     render(<SettingsScreen />);
     const velocidadAntes = useSettingsStore.getState().velocidadCombate;
 
-    const botones = grupo('Music volume').getAllByRole('button');
-    await userEvent.click(botones[0]); // el primer paso, sea cual sea su nombre
+    fireEvent.change(screen.getByRole('slider', { name: 'Music volume' }), { target: { value: '20' } });
 
     expect(useSettingsStore.getState().velocidadCombate).toBe(velocidadAntes);
-    expect(useSettingsStore.getState().volumenMusica).not.toBe(AJUSTES_POR_DEFECTO.volumenMusica);
+    expect(useSettingsStore.getState().volumenMusica).toBe(0.2);
+  });
+
+  it('el volumen de los efectos, sin tocar el de la música', () => {
+    render(<SettingsScreen />);
+    fireEvent.change(screen.getByRole('slider', { name: 'Effects volume' }), { target: { value: '70' } });
+
+    expect(useSettingsStore.getState().volumenEfectos).toBe(0.7);
+    expect(useSettingsStore.getState().volumenMusica).toBe(AJUSTES_POR_DEFECTO.volumenMusica);
   });
 
   it('y el elegido se ve elegido', async () => {

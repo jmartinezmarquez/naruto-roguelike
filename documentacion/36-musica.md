@@ -1,7 +1,7 @@
 # Música de fondo (`components/common/MusicaDeFondo.jsx`)
 
-**Una pista por arco, en bucle, y nada más.** Sin efectos de sonido, sin mezcla, sin enganches por
-golpe o por evento.
+**Una pista por arco, en bucle.** Y desde 2026-10-12, **efectos de sonido sintetizados** aparte — ver
+"Efectos de sonido" al final: la decisión de no tenerlos se revirtió a petición del usuario.
 
 ## Por qué es mucho más pequeño de lo que parecía
 
@@ -69,3 +69,54 @@ haya que ir a encender. Y la sección de sonido **solo tiene música**, porque n
 ⚠️ El store **no toca el DOM**: quien tiene el `<audio>` es el componente. Es la misma separación que el
 tema y el factor de animación (ver [34](./34-ajustes.md)), y la que permite que los tests corran en
 `environment: 'node'`.
+
+## Efectos de sonido (2026-10-12)
+
+⚠️ **Esto revierte una decisión escrita.** Hasta aquí el documento decía "sin efectos de sonido", porque
+la referencia no los tiene. El usuario los pidió expresamente tras ver la tanda de juiciness del combate,
+así que la decisión cambió. Lo que sigue en pie de aquel razonamiento es **qué** se hace: nada de ficheros
+de audio ni de un sistema de mezcla con buses — una sola salida con compresor.
+
+**Sintetizados en el navegador con la Web Audio API, sin ni un fichero** (`components/common/efectosDeSonido.js`):
+
+- ⚠️ **La primera versión sonaba a consola, no a ninja**: los golpes estaban hechos con ondas cuadradas
+  y barridos de tono, que el oído lee como "pitido de videojuego". Lo que hace que algo suene al mundo
+  de Naruto es el **material**, así que el combate se rehízo con cuatro primitivas y ninguna onda
+  cuadrada: `metal` (parciales inarmónicos de una barra golpeada: kunai, choques, campana),
+  `taiko` (tambor: seno que cae de tono + bofetada de piel), `sellos` (chasquidos de madera, uno por
+  sello de manos, **antes de cada jutsu**) y `cuerda` (koto por **Karplus-Strong**, con las fanfarrias
+  en pentatónica mayor y la derrota en escala *in*). El fuego y el rayo son ruido y chasquidos
+  (`crepitar`), no tonos. La interfaz (clics, monedas) sigue en cuadrada a propósito: ahí sí es un
+  menú de juego.
+- Pesan cero bytes: la primera carga ya se vigila (ver [37](./37-publicacion-web.md)).
+- **Cada disparo varía un poco** (±5 % de tono). Un efecto que se oye cuarenta veces por combate cansa a
+  la tercera si es siempre idéntico.
+- Todo pasa por un **compresor** antes del altavoz: un jutsu que estalla a la vez que la caída del rival
+  satura sin él. Los sonidos grandes (jutsus, fanfarrias) llevan además un eco corto y oscuro; un clic de
+  menú con eco suena a cueva.
+- El `AudioContext` se crea **al primer sonido**, no al importar: uno creado antes del primer gesto nace
+  suspendido (la misma regla del autoplay que la música).
+
+**Dónde suena cada cosa:**
+
+| Momento | Dónde se engancha |
+| --- | --- |
+| Clic de cualquier botón | `EfectosDeSonidoGlobales` (un solo oyente en `App`, fase de captura) |
+| Tic al pasar por un nodo elegible | atributo `data-sonido-hover` en el nodo |
+| Elegir nodo / descanso | `data-sonido="elegirNodo"` / `"curar"` en el botón del nodo |
+| Kunai, jutsu por naturaleza, impacto (según eficacia), bloqueo, KO, jutsu cargado, relevo, victoria/derrota, subida de nivel | `Combat/sonidosDeCombate.js` — sigue al **replay**, no al resultado |
+| Carga y estallido de la transformación | `TransformationScreen`, una fase cada uno |
+| Comprar (o no poder), equipar, desequipar, usar consumible | la pantalla, **según lo que devuelve el store** |
+| Tirada de evento buena/mala | `EventScreen` — solo las tiradas; un efecto fijo ya se sabía al elegir |
+| Reclutar, logro desbloqueado | `RecruitScreen`, `LogroToast` (con el toast, cuando se ve) |
+
+**Un botón nuevo suena solo**, sin tocar nada: el oyente global es la alternativa a poner un `onClick` de
+sonido botón a botón, que es la forma segura de que la mitad se queden mudos. Lo que cambia un botón se
+declara en su JSX: `data-sonido="<nombre>"` para otro sonido, `data-sonido="ninguno"` cuando su manejador
+pone el suyo según el resultado (comprar con o sin oro).
+
+**Volumen propio** (`volumenEfectos` en `useSettingsStore`, fila "Effects" en Ajustes), separado de la
+música. Los dos son **deslizadores** de 0 a 100 (eran cuatro pasos OFF/LOW/MID/HIGH; se cambiaron a
+petición del usuario). `normalizarVolumen` los deja siempre entre 0 y 1 — fuera de ahí `audio.volume`
+lanza. Al soltar el de efectos suena un golpe de muestra.
+

@@ -4,7 +4,8 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 /**
  * La música de fondo: **una pista por arco, en bucle**, y nada más.
  *
- * No hay efectos de sonido ni sistema de mezcla a propósito. La referencia
+ * Los efectos de sonido van aparte, sintetizados (`efectosDeSonido.js`), y no
+ * comparten nada con esto. No hay sistema de mezcla a propósito. La referencia
  * (Pokelike) no los tiene: es un juego para jugar con calma, con una pista lo-fi
  * por región y ya está. Eso convierte lo que parecía "un sistema entero" en un
  * `<audio>` con tres reglas, y las tres están abajo.

@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { reproducir } from '../common/efectosDeSonido';
 import { useGameStore } from '../../store/useGameStore';
 import { nombrePersonaje, nombreObjeto } from '../common/nombres';
 import { resumirEfecto, nombreStat } from '../common/efectos';
@@ -207,6 +208,9 @@ export default function EventScreen() {
   function elegir(indice) {
     resolverEventoEleccion(indice);
     const recien = useGameStore.getState().resultadoEvento;
+    // Solo las tiradas suenan a bien o a mal: un efecto fijo ya se sabía al elegirlo,
+    // y celebrarlo sería contar dos veces lo que la pista ya había dicho.
+    if (recien?.tirada) reproducir(recien.tirada.salioBien ? 'exito' : 'fracaso');
     if (!resultadoSorprende(recien, evento.elecciones[indice]?.efecto)) cerrarEvento();
   }
 

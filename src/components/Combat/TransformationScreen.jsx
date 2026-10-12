@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { reproducir } from '../common/efectosDeSonido';
 import { useFactorAnimacion } from '../../store/useSettingsStore';
 import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
@@ -51,6 +52,15 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
     if (fase !== 'carga') return undefined;
     const t = setTimeout(() => setFase('estallido'), MS_CARGA * factorAnimacion);
     return () => clearTimeout(t);
+  }, [fase, factorAnimacion]);
+
+  // El sonido acompaña a las dos fases: el chakra que se acumula dura lo mismo que
+  // la carga en pantalla, y el estallido suena justo cuando el destello se abre.
+  useEffect(() => {
+    if (fase === 'carga' && factorAnimacion > 0) {
+      reproducir('cargaTransformacion', { duracion: (MS_CARGA * factorAnimacion) / 1000 });
+    }
+    if (fase === 'estallido') reproducir('estallidoTransformacion');
   }, [fase, factorAnimacion]);
 
   useEffect(() => {

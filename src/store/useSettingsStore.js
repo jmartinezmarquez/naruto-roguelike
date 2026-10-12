@@ -34,16 +34,27 @@ export const AJUSTES_POR_DEFECTO = {
   // lo-fi por arco y es la mitad del tono que se busca, no un extra. Lo aplica
   // `MusicaDeFondo`, que es quien tiene el `<audio>` — este store no toca el DOM.
   volumenMusica: 0.5,
+  // Volumen de los efectos de sonido (golpes, clics, fanfarrias), aparte del de la
+  // música: hay quien quiere su propia música de fondo y los golpes del juego, y
+  // quien quiere la pista sin los clics. Lo aplica `EfectosDeSonidoGlobales`.
+  volumenEfectos: 0.5,
 };
 
-/** Los cuatro pasos de volumen que ofrece Ajustes. Discretos y no un deslizador:
- *  un slider es de interfaz de móvil y esto quiere parecerse a un menú de GBA. */
-export const PASOS_VOLUMEN = [
-  { id: 'off', etiqueta: 'OFF', valor: 0 },
-  { id: 'bajo', etiqueta: 'LOW', valor: 0.25 },
-  { id: 'medio', etiqueta: 'MID', valor: 0.5 },
-  { id: 'alto', etiqueta: 'HIGH', valor: 0.8 },
-];
+// Los volúmenes eran cuatro pasos discretos (OFF/LOW/MID/HIGH) "para parecerse a un
+// menú de GBA". Se cambiaron a deslizador a petición del usuario (2026-10-12): con dos
+// volúmenes que hay que equilibrar entre sí, cuatro pasos se quedaban cortos.
+const CLAVES_DE_VOLUMEN = ['volumenMusica', 'volumenEfectos'];
+
+/**
+ * Un volumen válido: entre 0 y 1, redondeado a centésimas. Un deslizador entrega
+ * lo que le da el navegador, y una configuración guardada a mano puede traer
+ * cualquier cosa — un 1,5 haría que `audio.volume` lanzara una excepción.
+ */
+export function normalizarVolumen(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero)) return 0;
+  return Math.round(Math.min(1, Math.max(0, numero)) * 100) / 100;
+}
 
 /**
  * Cuánto se multiplica la duración de cada animación de combate. Un solo número
@@ -83,11 +94,13 @@ export const useSettingsStore = create((set, get) => ({
     if (!Object.hasOwn(AJUSTES_POR_DEFECTO, clave)) {
       throw new Error(`Ajuste desconocido: "${clave}". Válidos: ${Object.keys(AJUSTES_POR_DEFECTO).join(', ')}`);
     }
-    set({ [clave]: valor });
-    const { tema, velocidadCombate, saltarTransformacion, volumenMusica } = get();
+    set({ [clave]: CLAVES_DE_VOLUMEN.includes(clave) ? normalizarVolumen(valor) : valor });
+    // Se guardan exactamente las claves de `AJUSTES_POR_DEFECTO`: con la lista escrita
+    // a mano, un ajuste nuevo se aplicaba en la sesión y se perdía al recargar.
+    const estado = get();
     localStorage.setItem(
       CLAVE_STORAGE,
-      JSON.stringify({ tema, velocidadCombate, saltarTransformacion, volumenMusica }),
+      JSON.stringify(Object.fromEntries(Object.keys(AJUSTES_POR_DEFECTO).map((k) => [k, estado[k]]))),
     );
   },
 
