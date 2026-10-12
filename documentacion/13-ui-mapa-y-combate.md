@@ -387,6 +387,16 @@ rojo ya significa derrota en esta paleta y es un color propio de ella.
     tumba— (`intensidadTemblorArena`). Con cada básico dejaría de significar nada.
   - **Respiración** de los que siguen en pie (`.respirar`, a dos fotogramas como un idle de Pokémon).
   - **"Victory"/"Defeat" cae como un sello** (`.sello-resultado`).
+  - **Sprites de efecto** (`assets/effects/`, `EfectoSprite.jsx`, `spritesDeEfecto.js`): tajo en el
+    básico, estrella en el muy eficaz, estrella de metal en el bloqueado, **explosión del color de la
+    naturaleza** en el jutsu, y el **"poof" de humo del shunshin** cuando entra un relevo. Uno por golpe,
+    elegido por lo más importante que ha pasado y en el mismo orden que el sonido (`efectoDelGolpe` /
+    `sonidosDeImpacto`): lo que se ve y lo que se oye cuentan lo mismo. Las chispas cuadradas se quedan
+    solo en jutsu y golpe muy eficaz; en un básico corriente, chispas y tajo a la vez eran ruido.
+    Los **dibuja** `scripts/generar-sprites-efectos.py` (formas geométricas: lo que un script dibuja tan
+    bien como una mano) a ×1, con contorno oscuro de 1 px y desvanecido por **tramado de Bayer** en vez
+    de transparencia, para casar con los personajes. Se reproducen con `steps()` sobre la posición del
+    fondo, y el último salto cae fuera de la tira: se apagan solos.
   Los cuatro primeros van con **Web Animations API**, por la estela (ver arriba), multiplicados por el
   factor de animación de los ajustes, y **se saltan con `prefers-reduced-motion`**: son adorno, no
   información. jsdom no implementa `animate`, y el hook lo comprueba en vez de romper.

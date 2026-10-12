@@ -524,6 +524,26 @@ img {
 
 .onda-impacto-grande { --onda-final: 110px; }
 
+/* --- Sprites de efecto (humo, tajo, estrella, explosión) -----------------------
+   Tiras horizontales de fotogramas (`scripts/generar-sprites-efectos.py`) reproducidas
+   desplazando el fondo a saltos: `steps(N)` enseña los fotogramas 0..N-1 y el salto
+   final cae FUERA de la tira, así que con `forwards` el efecto se queda en blanco solo
+   al terminar. Las medidas las pone `EfectoSprite` en variables. */
+
+@keyframes efecto-tira {
+  from { background-position: 0 0; }
+  to { background-position: calc(-1 * var(--ancho-tira)) 0; }
+}
+
+.efecto-sprite {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation: efecto-tira calc(var(--duracion-efecto, 400ms) * var(--factor-animacion, 1)) steps(var(--fotogramas, 4)) forwards;
+}
+
 /* --- Respiración --------------------------------------------------------------
    Los luchadores en pie respiran: un estirón vertical de 3% desde los pies. A dos
    fotogramas (`steps`), como el idle de un sprite de Pokémon, y no con un vaivén

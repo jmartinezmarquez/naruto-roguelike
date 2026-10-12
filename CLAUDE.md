@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **488 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+- [x] Testing con Vitest — **491 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
   componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -214,7 +214,10 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   a mano. La tanda de juiciness añadió estela de HP, telegrafiado del jutsu, ritmo variable por tipo
   de golpe, desplome al caer, entrada deslizante del relevo, números flotantes de daño (por eficacia)
   y de curación, y cartel de subida de nivel. Una segunda tanda (2026-10-12, `efectosDeGolpe.js`)
-  sumó embestida, destello, chispas por naturaleza, temblor de arena, respiración y sello de victoria.
+  sumó embestida, destello, chispas por naturaleza, temblor de arena, respiración y sello de victoria,
+  y **sprites de efecto** (tajo, estrella, explosión por naturaleza, humo del relevo) que **dibuja**
+  `scripts/generar-sprites-efectos.py` — formas geométricas, no personajes. Necesita Pillow, como el
+  resto de scripts de sprites.
   ⚠️ **Los efectos de golpe van con `elemento.animate()`, no con un `key` que cambia**: la tarjeta se
   remontaba en cada impacto para relanzar la sacudida, y DOM nuevo no hace transiciones — **la estela
   de HP no se veía nunca en quien recibía el golpe**. Ver `documentacion/13-ui-mapa-y-combate.md`.

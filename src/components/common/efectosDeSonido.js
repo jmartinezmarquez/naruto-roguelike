@@ -459,6 +459,15 @@ const SONIDOS = {
     cuerda(t + 0.5, { midi: 55, pico: 0.25, duracion: 1.6 });
     taiko(t + 0.5, { f: 60, pico: 0.55, duracion: 0.6 });
   },
+  // Victoria de un combate corriente: dos golpes de taiko y dos notas. La fanfarria
+  // entera se reserva para jefes y fines de arco — sonando tras cada genin dejaba de
+  // ser una celebración a los cinco combates.
+  victoriaCorta(t) {
+    taiko(t, { f: 72, pico: 0.42, duracion: 0.3, eco: false });
+    cuerda(t + 0.08, { midi: 74, pico: 0.28, duracion: 0.6 });
+    taiko(t + 0.16, { f: 72, pico: 0.3, duracion: 0.3, eco: false });
+    cuerda(t + 0.2, { midi: 79, pico: 0.3, duracion: 1.1 });
+  },
   // Derrota: escala in (miyako-bushi), lenta y hacia abajo — el sonido triste "japonés"
   // por excelencia, con un solo golpe de tambor apagado al final.
   derrota(t) {

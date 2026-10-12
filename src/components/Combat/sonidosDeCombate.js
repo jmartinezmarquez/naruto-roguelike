@@ -41,6 +41,16 @@ export function sonidosDeImpacto(golpe) {
   return sonidos;
 }
 
+/**
+ * El cierre: la fanfarria entera solo cuando el combate importa (jefe, mini-jefe,
+ * desafío legendario, fin de arco o de run); un combate corriente cierra con un
+ * remate corto. La derrota es siempre la misma — ya es rara de por sí.
+ */
+export function sonidoDeCierre(gano, importante) {
+  if (!gano) return 'derrota';
+  return importante ? 'victoria' : 'victoriaCorta';
+}
+
 // Lo que tarda la subida de nivel en sonar tras la fanfarria: si sonaran juntas se
 // pisarían y no se oiría ninguna de las dos.
 const MS_NIVEL_TRAS_FANFARRIA = 750;
@@ -52,6 +62,7 @@ const MS_NIVEL_TRAS_FANFARRIA = 750;
 export function useSonidosDeCombate({
   ronda, indiceRonda, golpes, golpesVistos, golpesAplicados, yaImpactado, instantaneo,
   jugadorConJutsuListo, enemigoConJutsuListo, combateCerrado, gano, subioAlguien, factorAnimacion,
+  combateImportante = false,
 }) {
   // Al SOLTAR: cuando aparece un golpe nuevo en el aire.
   const golpeEnElAire = !instantaneo && !yaImpactado && golpesVistos > 0 ? golpes[golpesVistos - 1] : null;
@@ -96,7 +107,7 @@ export function useSonidosDeCombate({
   // misma regla que `MS_MINIMO_AUTO`).
   useEffect(() => {
     if (!combateCerrado) return undefined;
-    reproducir(gano ? 'victoria' : 'derrota');
+    reproducir(sonidoDeCierre(gano, combateImportante));
     if (!gano || !subioAlguien) return undefined;
     const t = setTimeout(() => reproducir('subirNivel'), MS_NIVEL_TRAS_FANFARRIA * Math.max(0.5, factorAnimacion));
     return () => clearTimeout(t);

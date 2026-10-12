@@ -20,6 +20,8 @@ import {
   animacionTemblorArena, intensidadTemblorArena,
 } from './efectosDeGolpe';
 import ChispasImpacto from './ChispasImpacto';
+import EfectoSprite from './EfectoSprite';
+import { efectoDelGolpe } from './spritesDeEfecto';
 import { useSonidosDeCombate } from './sonidosDeCombate';
 
 // El replay avanza de GOLPE en golpe, no de turno en turno. Un turno trae 2-4
@@ -1013,6 +1015,7 @@ export default function CombatScreen() {
     gano: Boolean(resultado?.jugadorGanoFinal),
     subioAlguien: (resultado?.subidasDeNivel ?? []).length > 0,
     factorAnimacion,
+    combateImportante: Boolean(runTerminada || resultado?.arcoCompletado || recompensaMiniJefe || desafioRecluta),
   });
 
   const saltarAnimacion = useCallback(() => {
@@ -1062,6 +1065,13 @@ export default function CombatScreen() {
     hacia: golpeEnVuelo.atacanteEsPrimero ? 'derecha' : 'izquierda',
     esJutsu: golpeEnVuelo.tipoAtaque === 'jutsu',
   } : null;
+  const tipoAtacanteDelImpacto = ultimoImpacto
+    ? tipoDeLuchador(ultimoImpacto.atacanteEsPrimero ? ronda.jugador.id : ronda.enemigo.id)
+    : null;
+  // Entra OTRO personaje: el que revive con la Spare Ninja Headband pelea dos rondas
+  // seguidas y no se está relevando a sí mismo (la misma regla que `entraDeRelevo`).
+  const hayRelevo = !instantaneo && indiceRonda > 0
+    && resultado.rondas[indiceRonda - 1]?.jugador.id !== ronda.jugador.id;
   const ataqueDe = golpeEnVuelo ? (golpeEnVuelo.atacanteEsPrimero ? 'jugador' : 'enemigo') : null;
 
   return (
@@ -1090,11 +1100,32 @@ export default function CombatScreen() {
               refObjetivo={ultimoImpacto.atacanteEsPrimero ? refTarjetaEnemigo : refTarjetaJugador}
             />
           )}
+          {/* El sprite del golpe (tajo, estrella o explosión) y, solo en los golpes
+              gordos, las chispas encima: en un básico corriente, chispas y tajo a la
+              vez eran ruido. */}
           {ultimoImpacto && (
+            <EfectoSprite
+              key={`e${indiceRonda}-${golpesAplicados}`}
+              nombre={efectoDelGolpe(ultimoImpacto, tipoAtacanteDelImpacto)}
+              refContenedor={refContenedor}
+              refObjetivo={ultimoImpacto.atacanteEsPrimero ? refTarjetaEnemigo : refTarjetaJugador}
+              espejo={!ultimoImpacto.atacanteEsPrimero}
+            />
+          )}
+          {/* El relevo entra con el "poof" del shunshin. */}
+          {hayRelevo && (
+            <EfectoSprite
+              key={`h${indiceRonda}`}
+              nombre="humo"
+              refContenedor={refContenedor}
+              refObjetivo={refTarjetaJugador}
+            />
+          )}
+          {ultimoImpacto && (ultimoImpacto.tipoAtaque === 'jutsu' || ultimoImpacto.eficacia > 1) && (
             <ChispasImpacto
               key={`i${indiceRonda}-${golpesAplicados}`}
               golpe={ultimoImpacto}
-              tipoAtacante={tipoDeLuchador(ultimoImpacto.atacanteEsPrimero ? ronda.jugador.id : ronda.enemigo.id)}
+              tipoAtacante={tipoAtacanteDelImpacto}
               refContenedor={refContenedor}
               refObjetivo={ultimoImpacto.atacanteEsPrimero ? refTarjetaEnemigo : refTarjetaJugador}
             />
