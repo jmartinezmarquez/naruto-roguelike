@@ -327,15 +327,9 @@ img {
   animation: volar-proyectil calc(420ms * var(--factor-animacion, 1)) linear forwards;
 }
 
-@keyframes sacudida {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-5px); }
-  40% { transform: translateX(5px); }
-  60% { transform: translateX(-3px); }
-  80% { transform: translateX(3px); }
-}
-
-.sacudida { animation: sacudida calc(300ms * var(--factor-animacion, 1)) ease-in-out; }
+/* La sacudida de quien recibe un golpe ya no vive aquí: se lanza con
+   `elemento.animate` desde `components/Combat/efectosDeGolpe.js`. Con una clase
+   había que remontar la tarjeta para relanzarla, y eso mataba la estela de HP. */
 
 @keyframes flotar-dano {
   from { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
@@ -488,6 +482,79 @@ img {
 
 .entrada-relevo { animation: entrada-relevo calc(260ms * var(--factor-animacion, 1)) ease-out; }
 
+/* --- Impacto: chispas y onda --------------------------------------------------
+   Lo que salta del rival al recibir (ver `ChispasImpacto.jsx`). Cada chispa sale
+   del punto de impacto en su ángulo (`--angulo`) y recorre `--distancia`; el reparto
+   lo calcula `chispasDelGolpe` y aquí solo se interpola. Cuadradas, sin `border-radius`:
+   esto es pixel art, y una partícula redonda y difuminada sería de otro juego. */
+
+@keyframes chispa-impacto {
+  from { transform: rotate(var(--angulo)) translateX(0) scale(1); opacity: 1; }
+  70%  { opacity: 1; }
+  to   { transform: rotate(var(--angulo)) translateX(var(--distancia)) scale(0.3); opacity: 0; }
+}
+
+.chispa-impacto {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: -2px 0 0 -2px;
+  image-rendering: pixelated;
+  box-shadow: 0 0 4px currentColor;
+  animation: chispa-impacto calc(420ms * var(--factor-animacion, 1)) cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+/* La onda del jutsu (y del golpe muy eficaz): un aro del color de la naturaleza que
+   se abre desde el punto de impacto. Es el mismo recurso que el anillo de chakra de
+   la transformación, al revés — aquel se cierra sobre el personaje, este estalla. */
+@keyframes onda-impacto {
+  from { width: 8px; height: 8px; opacity: 0.95; border-width: 4px; }
+  to   { width: var(--onda-final, 70px); height: var(--onda-final, 70px); opacity: 0; border-width: 1px; }
+}
+
+.onda-impacto {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  border-style: solid;
+  border-radius: 9999px;
+  animation: onda-impacto calc(380ms * var(--factor-animacion, 1)) ease-out forwards;
+}
+
+.onda-impacto-grande { --onda-final: 110px; }
+
+/* --- Respiración --------------------------------------------------------------
+   Los luchadores en pie respiran: un estirón vertical de 3% desde los pies. A dos
+   fotogramas (`steps`), como el idle de un sprite de Pokémon, y no con un vaivén
+   suave — un pixel art que se escala de forma continua se emborrona entre medias.
+   Va en un envoltorio del sprite y no en el `<img>`, que ya tiene sus propias
+   animaciones (jutsu cargado, caída) y una pisaría a la otra. */
+
+@keyframes respirar {
+  from { transform: scaleY(1); }
+  to   { transform: scaleY(1.03); }
+}
+
+.respirar {
+  transform-origin: 50% 100%;
+  animation: respirar calc(1400ms * var(--factor-animacion, 1)) steps(1, end) infinite alternate;
+}
+
+/* --- Victoria / derrota -------------------------------------------------------
+   El rótulo cae como un sello sobre el papel: grande y girado, aplasta, rebota un
+   pelo y se queda. Es el único momento del combate que no tenía animación, y es el
+   que cierra la pelea. */
+
+@keyframes sello-resultado {
+  from { opacity: 0; transform: scale(2.4) rotate(-8deg); }
+  55%  { opacity: 1; transform: scale(0.92) rotate(2deg); }
+  75%  { transform: scale(1.05) rotate(-1deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+.sello-resultado { animation: sello-resultado calc(520ms * var(--factor-animacion, 1)) cubic-bezier(0.3, 0.6, 0.3, 1) both; }
+
 /* --- Barra de scroll dentro de una ventana ----------------------------------
    El scroll de `VentanaModal` es del cuerpo de la ventana, no de la página, así
    que su barra se ve siempre y con el aspecto por defecto del navegador rompe la
@@ -520,4 +587,55 @@ img {
 
 .scroll-pixel::-webkit-scrollbar-thumb:hover {
   background: var(--color-pergamino-200);
+}
+
+/* --- Deslizador de volumen (Ajustes) ------------------------------------------
+   El `<input type="range">` nativo, redibujado: pista hundida con el marco del juego,
+   la parte recorrida en oro y un pulgar CUADRADO — redondo sería de interfaz de móvil.
+   Chrome/Safari no saben pintar la parte recorrida, así que va con un degradado duro
+   hasta `--relleno`, que pone el componente. */
+
+.deslizador {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.deslizador:focus-visible { outline: 2px solid var(--color-oro); outline-offset: 2px; }
+
+.deslizador::-webkit-slider-runnable-track {
+  height: 8px;
+  border: 1px solid var(--color-marco);
+  background: linear-gradient(to right, var(--color-oro) var(--relleno, 50%), var(--color-tinta-950) var(--relleno, 50%));
+}
+
+.deslizador::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 16px;
+  margin-top: -5px;
+  border: 2px solid var(--color-marco);
+  background: var(--color-pergamino-100);
+}
+
+.deslizador::-moz-range-track {
+  height: 8px;
+  border: 1px solid var(--color-marco);
+  background: var(--color-tinta-950);
+}
+
+.deslizador::-moz-range-progress {
+  height: 8px;
+  background: var(--color-oro);
+}
+
+.deslizador::-moz-range-thumb {
+  width: 12px;
+  height: 16px;
+  border: 2px solid var(--color-marco);
+  border-radius: 0;
+  background: var(--color-pergamino-100);
 }

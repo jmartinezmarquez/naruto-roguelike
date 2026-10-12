@@ -1521,9 +1521,10 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
     ellas comparten estilo:
     - ~~**Tanda 1 — los 9 iconos**~~ (5 naturalezas de chakra + 4 del menú vertical) — **HECHA el
       2026-08-19**, y desbloqueó el punto 16 como estaba previsto. Se hizo junta, que era la condición.
-    - **Tanda 2 — los nodos de entrenador, mini-jefe y jefe**, que hoy comparten el sprite de combate y
-      se distinguen por borde y badge. El material existe (`map-sprites-idle-all-characters.png`), pero
-      en paneles de tamaño irregular: hay que recortarlos uno a uno antes de mapearlos por `enemigoId`.
+    - ~~**Tanda 2 — los nodos de entrenador, mini-jefe y jefe**~~ — **HECHA el 2026-10-12**, y al abrirla
+      resultó que **no era de arte**: mini-jefe y jefe ya pintaban su sprite desde hacía tiempo (la entrada
+      se quedó sin actualizar), y al entrenador solo le faltaba un dato — su enemigo se elegía al entrar en
+      el nodo. Ahora lo elige `generarMapa` (`nodo.enemigoId`) y el nodo enseña su sprite y su ficha.
     - **Tanda 3 — los personajes sin sprite propio**: Sai, Yamato y Kakashi (este último lleva hoy un
       recoloreado del genin raiton), más los tier 2 que caen al tier 1.
     - **Tanda 4 — los proyectiles de jutsu** que faltan. Los **genin rivales están HECHOS** el
@@ -1544,12 +1545,8 @@ leerlos buscando trabajo.
 📋 **El trabajo de hacerlas es el punto 15**, que las agrupa en cuatro tandas y explica en qué orden
 conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactamente; el punto dice cómo.
 
-- **Los nodos de entrenador, mini-jefe y jefe no llevan sprite del personaje concreto.** Comparten el
-  sprite de combate y se distinguen por color de borde + badge de rango (`★` / `☠` / `危`) y, en el jefe,
-  tamaño mayor con borde doble. El asset `map-sprites-idle-all-characters.png` tiene los personajes,
-  pero en una hoja con paneles de tamaño irregular: hace falta recortarlos uno a uno antes de poder
-  mapearlos por `enemigoId`. *(Lo que sí está hecho es el **hover**, que ya dice con qué jefe vienes a
-  pelear — nombre, nivel, tipo y transformación.)*
+- ~~**Los nodos de entrenador, mini-jefe y jefe no llevan sprite del personaje concreto.**~~ — **HECHO**
+  (ver tanda 2 del punto 15).
 - ~~**Los 5 tipos de chakra y los 4 iconos del menú**~~ — **HECHOS el 2026-08-19**, en una sola tanda
   como decía esta entrada. Están en `assets/chakra/` y `assets/menu/`, recortados por
   `scripts/generar-sprites-iconos.py`.
@@ -1601,10 +1598,8 @@ conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactament
   segundo modo de Naruto, Sasuke, Sakura y los jefes). `spriteDeModo` cae al tier 1 del mismo
   personaje, que ya lleva aura y se lee como "está transformado". Sai y Yamato no tienen ninguno y
   caen a su sprite normal — que además ya es un placeholder, así que son los dos que peor se ven.
-- **El nodo de entrenador del mapa** sigue con el icono genérico de combate. Este no es falta de
-  arte sino de datos: su enemigo nombrado se sortea al ENTRAR en el nodo (`resolverEnemigoDeNodo`),
-  no al generar el mapa, así que al pintarlo todavía no se sabe quién es. Arreglarlo es subir la
-  elección al generador.
+- ~~**El nodo de entrenador del mapa** sigue con el icono genérico de combate.~~ — **HECHO el
+  2026-10-12**: la elección se subió al generador, que era exactamente lo que decía esta entrada.
 
 ### Descartado
 
@@ -1638,9 +1633,9 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
   aquí meses descrito como "un sistema entero (assets, precarga, mezcla, volumen)" y **no lo era**: la
   referencia no tiene efectos de sonido, así que era una pista en bucle. ⚠️ La entrada se conserva
   tachada porque la lección volverá a hacer falta: **antes de estimar un sistema, comprobar qué hace de
-  verdad la referencia.** Lo que sigue sin existir son los efectos por golpe, y es una decisión de
-  diseño tomada, no una tarea pendiente: los ganchos del combate están ahí (cada evento del historial
-  dice si fue básico o jutsu, si impactó y qué pasivas saltaron) y aun así no se usan.
+  verdad la referencia.** Los efectos por golpe fueron durante un tiempo una decisión de diseño de
+  no tenerlos; **el usuario la revirtió el 2026-10-12** y existen, sintetizados con Web Audio y
+  enganchados a esos mismos ganchos del historial de combate — ver [36](./36-musica.md).
 
 - **Bifurcación de riesgo/recompensa** en algún nodo de evento: elegir entre un camino más difícil
   con mejor recompensa o uno seguro con menos, al estilo "elite fight" de Slay the Spire.

@@ -27,18 +27,22 @@ import iconoAjustes from '../../assets/menu/ajustes.png';
 import iconoReiniciar from '../../assets/menu/reiniciar.png';
 import iconoHome from '../../assets/menu/home.png';
 import itemsData from '../../data/items.json';
+import commonEnemiesData from '../../data/common-enemies.json';
+import { calcularNivelPorPiso } from '../../engine/mapGenerator';
 import {
   PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante, VentanaModal, BotonSecundario,
   ChipEfecto,
 } from '../common/PiezasUI';
 import { resumirBuffsActivos } from '../common/efectos';
+import { reproducir } from '../common/efectosDeSonido';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
 // `assets/nodes/*.png` a media resolución, 100 px para pintarse a 48).
-// El mini-jefe y el jefe final pintan el sprite del PERSONAJE que hay dentro
-// (`spriteDeLuchador`, ver `components/common/characterSprites.js`); el sprite de
-// combate genérico es solo su respaldo. El nodo de entrenador no puede: el
+// El mini-jefe, el jefe final y el entrenador pintan el sprite del PERSONAJE que
+// hay dentro (`spriteDeLuchador`, ver `components/common/characterSprites.js`); el
+// sprite de combate genérico es solo su respaldo. El entrenador puede desde que
+// `generarMapa` lo elige al generar (`nodo.enemigoId`) en vez de al entrar. Antes el
 // enemigo nombrado concreto se sortea al ENTRAR en el nodo (`resolverEnemigoDeNodo`),
 // no al generar el mapa, así que a la hora de pintarlo todavía no se sabe quién es.
 // A los tres los distingue además el badge de rango y el color del borde.
@@ -197,7 +201,7 @@ function calcularPosiciones(mapa) {
  * el mapa no cuente ya: el sprite del nodo se pinta con `spriteDeCombate(id, nivel)`,
  * o sea que a un jefe transformado ya se le ve transformado desde el mapa.
  */
-function EtiquetaFichaDeJefe({ id, nivel }) {
+function EtiquetaFichaDeJefe({ id, nivel, geninAntes = 0 }) {
   const tipo = tipoDeLuchador(id);
   const modo = nombreDeModo(id, nivel);
   return (
@@ -220,6 +224,13 @@ function EtiquetaFichaDeJefe({ id, nivel }) {
         )}
       </div>
       {modo && <p className="text-[9px] text-pergamino-200/70 mt-1.5">{modo}</p>}
+      {/* Solo en el entrenador: no se pelea solo, viene detrás de sus genin. Sin
+          esto el hover prometía un 1 contra 1 y el nodo era una cadena. */}
+      {geninAntes > 0 && (
+        <p className="text-[9px] text-pergamino-200/70 mt-1.5">
+          After {geninAntes} genin
+        </p>
+      )}
     </EtiquetaFlotante>
   );
 }
@@ -237,10 +248,17 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
   // lo vas a encontrar — y desde que sus umbrales se bajaron al nivel de su
   // propio combate, eso significa **transformado**. El mapa no ha tenido que
   // cambiar para enterarse: el sprite es función del nivel.
+  // El entrenador pelea al nivel de su piso, que es el de cualquier combate
+  // corriente — el mismo cálculo que `resolverEnemigoDeNodo`.
+  const entrenador = tipoEfectivo === 'combateEntrenador' && nodo.enemigoId
+    ? commonEnemiesData.enemigosNombrados.find((e) => e.id === nodo.enemigoId) ?? null
+    : null;
+  const nivelDelEntrenador = entrenador && arco ? calcularNivelPorPiso(nodo.piso, arco) : null;
   const spriteDelJefe = nodo.tipo === 'miniJefe'
     ? spriteDeCombate(arco?.miniJefeId, arco?.nivelMiniJefe)
     : nodo.tipo === 'jefe' ? spriteDeCombate(arco?.jefeFinalId, arco?.nivelJefeFinal)
-      : null;
+      : entrenador ? spriteDeCombate(entrenador.id, nivelDelEntrenador)
+        : null;
   const sprite = spriteDelJefe
     ?? (rarezaReclutar ? SPRITE_RECLUTAR[rarezaReclutar] ?? SPRITE_RECLUTAR.comun : null)
     ?? (tipoEfectivo in SPRITE_NODO ? SPRITE_NODO[tipoEfectivo] : SPRITE_NODO.combate);
@@ -293,9 +311,14 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
     : nodo.tipo === 'jefe' ? arco?.jefeFinalId : null;
   const nivelDelJefe = nodo.tipo === 'miniJefe' ? arco?.nivelMiniJefe : arco?.nivelJefeFinal;
 
+  // El entrenador entra en la excepción por la misma razón que los jefes: desde
+  // que el nodo enseña su sprite, el hover tiene que decir quién es — y su
+  // naturaleza decide a quién pones delante, igual que con un jefe.
   const contenidoTooltip = idDelJefe
     ? <EtiquetaFichaDeJefe id={idDelJefe} nivel={nivelDelJefe} />
-    : <EtiquetaFlotante>{etiqueta}</EtiquetaFlotante>;
+    : entrenador
+      ? <EtiquetaFichaDeJefe id={entrenador.id} nivel={nivelDelEntrenador} geninAntes={entrenador.geninAntes ?? 1} />
+      : <EtiquetaFlotante>{etiqueta}</EtiquetaFlotante>;
 
   return (
     <div className="absolute" style={{ left: posicion.x - lado / 2, top: posicion.y - lado / 2 }}>
@@ -304,6 +327,10 @@ function NodoMapa({ nodo, posicion, escala, disponible, visitado, esActual, onCl
           type="button"
           disabled={!disponible}
           onClick={() => onClick(nodo.id)}
+          // El descanso suena a curación al elegirlo: se resuelve en el acto, sin
+          // pantalla propia, y el sonido es lo único que lo celebra junto al aviso.
+          data-sonido={nodo.tipo === 'descanso' ? 'curar' : 'elegirNodo'}
+          data-sonido-hover={disponible ? '' : undefined}
           style={{ width: lado, height: lado }}
           className={[
             'relative block border-2 bg-tinta-900',
@@ -445,8 +472,8 @@ function PanelEquipo({
     // Aparte de ese caso, no se mira de qué tipo es: se intenta equipar y, si el
     // store dice que no, se intenta usar. Los dos validan y devuelven `false` si
     // no les toca, así que quien distingue equipable de consumible sigue siendo él.
-    if (equiparObjeto(itemId, personaje.id)) return;
-    usarConsumible(itemId, personaje.id);
+    if (equiparObjeto(itemId, personaje.id)) { reproducir('equipar'); return; }
+    if (usarConsumible(itemId, personaje.id)) reproducir('curar');
   }
 
   return (
@@ -582,6 +609,7 @@ function PanelEquipo({
                       <button
                         type="button"
                         onClick={() => desequiparObjeto(p.id)}
+                        data-sonido="desequipar"
                         className="shrink-0 w-4 h-4 rounded-full bg-pergamino-100/10 hover:bg-sello-600 hover:text-sobre-sello text-[9px] leading-none flex items-center justify-center transition-colors"
                         title="Unequip (returns to inventory)"
                         aria-label={`Unequip ${nombreObjeto(p.objetoEquipadoId)}`}
@@ -612,7 +640,7 @@ function PanelEquipo({
           personaje={equipo.find((p) => p.id === reemplazoPendiente.idPersonaje)}
           onCancelar={() => setReemplazoPendiente(null)}
           onConfirmar={() => {
-            equiparObjeto(reemplazoPendiente.itemId, reemplazoPendiente.idPersonaje);
+            if (equiparObjeto(reemplazoPendiente.itemId, reemplazoPendiente.idPersonaje)) reproducir('equipar');
             setReemplazoPendiente(null);
           }}
         />

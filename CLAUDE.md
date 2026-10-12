@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **471 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+- [x] Testing con Vitest — **488 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
   componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -167,8 +167,10 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   `useGameStore.js`); `revivirUnaVez` y `curacionPostCombate` ya se disparan de verdad en combate;
   consumibles se usan desde `PanelObjetos` (`usarConsumible`). Ver `documentacion/21-objetos-equipables.md`.
 - [x] Sprites de nodo en el mapa (`assets/nodes/*.png`, recortados de `sprite-nodos-mapa.png`) en
-  vez de glifos kanji. Entrenador/mini-jefe/jefe todavía reutilizan el sprite de combate + badge de
-  rango, a falta de arte por personaje — ver `documentacion/13-ui-mapa-y-combate.md`.
+  vez de glifos kanji. Entrenador, mini-jefe y jefe pintan el sprite **del personaje que hay dentro**;
+  el del entrenador lo elige `generarMapa` (`nodo.enemigoId`) y no al entrar en el nodo, porque lo
+  que el mapa enseña antes de elegir tiene que existir antes de elegir — ver
+  `documentacion/13-ui-mapa-y-combate.md`.
 - [x] Fondo de columna central del mapa por arco (`FONDO_COLUMNA`, `assets/map-columns/*.png`), con
   estructura Pokelike: tierra lisa en el centro y vegetación del arco solo en los laterales. Se
   generan con `scripts/generar-columnas-mapa.py` a partir de `map-columns/originales/*.png` (no
@@ -211,7 +213,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   desarrollo** (`import.meta.env.DEV`): Vite lo elimina del build de producción, no hay que quitarlo
   a mano. La tanda de juiciness añadió estela de HP, telegrafiado del jutsu, ritmo variable por tipo
   de golpe, desplome al caer, entrada deslizante del relevo, números flotantes de daño (por eficacia)
-  y de curación, y cartel de subida de nivel. Ver `documentacion/13-ui-mapa-y-combate.md`.
+  y de curación, y cartel de subida de nivel. Una segunda tanda (2026-10-12, `efectosDeGolpe.js`)
+  sumó embestida, destello, chispas por naturaleza, temblor de arena, respiración y sello de victoria.
+  ⚠️ **Los efectos de golpe van con `elemento.animate()`, no con un `key` que cambia**: la tarjeta se
+  remontaba en cada impacto para relanzar la sacudida, y DOM nuevo no hace transiciones — **la estela
+  de HP no se veía nunca en quien recibía el golpe**. Ver `documentacion/13-ui-mapa-y-combate.md`.
 - **Regla del motor que salió de ahí**: el evento de ataque lleva el **estado resuelto**, no los
   deltas (`hpAtacante`, `hpDefensor`, `cargaAtacante`, `cargaDefensor`). Quien reproduce el historial
   no debe deducirlos con aritmética — la carga se pone a cero al lanzar el jutsu y el HP sube con
@@ -378,8 +384,12 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   falta un tipo por combinación. El store devuelve **datos** y la pantalla escribe el texto.
 
 - [x] **Música de fondo** (`components/common/MusicaDeFondo.jsx`, `documentacion/36-musica.md`): una
-  pista por arco en bucle, **sin efectos de sonido** — la referencia no los tiene y el juego es de jugar
-  con calma. ⚠️ Llevaba meses estimado como "un sistema entero" y no lo era: **antes de estimar un
+  pista por arco en bucle. Los **efectos de sonido** llegaron después (2026-10-12), revirtiendo la
+  decisión de no tenerlos: **sintetizados con Web Audio, sin ficheros** (`common/efectosDeSonido.js`),
+  un oyente global para el clic de todos los botones (`EfectosDeSonidoGlobales`, `data-sonido` para
+  cambiarlo), los del combate siguen al **replay** (`Combat/sonidosDeCombate.js`) y volumen propio en
+  Ajustes (deslizador). ⚠️ **Los golpes no llevan ondas cuadradas**: sonaban a pitido de consola. Lo
+  ninja es el material —metal, taiko, sellos de madera, koto— y eso es lo que modela el catálogo. ⚠️ Llevaba meses estimado como "un sistema entero" y no lo era: **antes de estimar un
   sistema, comprobar qué hace de verdad la referencia.** Tres reglas que no son obvias: cuelga de `App` y
   no de una pantalla (si no, la música reempieza en cada cambio), **reintenta al primer gesto** porque el
   navegador bloquea el autoplay (sin eso no suena en Chrome), y `import.meta.glob` en vez de `import`

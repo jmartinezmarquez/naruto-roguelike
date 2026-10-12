@@ -14,6 +14,13 @@ import { PanelMarco, TituloBloque, IconoEnmarcado, BotonPrincipal, ChipEfecto } 
 import { resumirBuffsActivos } from '../common/efectos';
 import { useAvanzarConTeclado } from '../common/useAvanzarConTeclado';
 import { useFactorAnimacion, useSettingsStore } from '../../store/useSettingsStore';
+import { tipoDeLuchador } from '../common/nombres';
+import {
+  useAnimarAlCambiar, animacionEmbestida, animacionDestello, animacionSacudida,
+  animacionTemblorArena, intensidadTemblorArena,
+} from './efectosDeGolpe';
+import ChispasImpacto from './ChispasImpacto';
+import { useSonidosDeCombate } from './sonidosDeCombate';
 
 // El replay avanza de GOLPE en golpe, no de turno en turno. Un turno trae 2-4
 // eventos (los dos luchadores, más algún ataque extra) y resolverlos todos de
@@ -420,8 +427,20 @@ function EtiquetasPasivas({ pasivas, activadas }) {
 function TarjetaLuchador({
   id, nombre, nivel, hpActual, hpMaximo, carga, cargaMaxima,
   modoActivoNombre, estado, objetoEquipadoId = null, pasivasActivadas = [], subioANivel = null,
-  cayendoAhora = false,
+  cayendoAhora = false, ataque = null, impacto = null,
 }) {
+  // `ataque` e `impacto` son los dos golpes que le tocan a esta tarjeta en este
+  // momento: el que está lanzando (embestida) y el que acaba de recibir (sacudida
+  // y destello). Cada uno trae su `clave` —el número de golpe— para que dos golpes
+  // seguidos relancen la animación aunque todo lo demás sea igual.
+  const factorAnimacion = useFactorAnimacion();
+  const refTarjeta = useRef(null);
+  const refEmbestida = useRef(null);
+  const refDestello = useRef(null);
+  useAnimarAlCambiar(refEmbestida, ataque?.clave, () => animacionEmbestida(ataque.hacia, ataque.esJutsu), factorAnimacion);
+  useAnimarAlCambiar(refTarjeta, impacto?.clave, () => animacionSacudida(impacto.desde, impacto.fuerte), factorAnimacion);
+  useAnimarAlCambiar(refDestello, impacto?.clave, animacionDestello, factorAnimacion);
+
   const porcentaje = hpMaximo > 0 ? Math.max(0, hpActual / hpMaximo) : 0;
   const porcentajeCarga = cargaMaxima ? Math.min(1, Math.max(0, carga / cargaMaxima)) : 0;
 
@@ -446,6 +465,8 @@ function TarjetaLuchador({
   // contenedor, lo anidado se queda con el borde fino. Ver
   // documentacion/33-direccion-visual.md.
   return (
+    // Envoltorio solo para la sacudida: `PanelMarco` no reenvía refs.
+    <div ref={refTarjeta}>
     <PanelMarco
       esquinas={false}
       className={[
@@ -523,7 +544,15 @@ function TarjetaLuchador({
         <div className="relative h-24 flex items-end justify-center">
           <div className="absolute bottom-1 w-20 h-5 rounded-[50%] bg-pergamino-200/25 border border-marco" />
           <div className="absolute bottom-1.5 w-12 h-2 rounded-[50%] bg-tinta-950/55 blur-[2px]" />
+          {/* Tres envoltorios alrededor del sprite, uno por animación, porque cada
+              una mueve `transform` o `filter` y en el mismo elemento se pisarían:
+              embestida (al atacar), destello (al recibir) y respiración (siempre,
+              salvo caído). El `<img>` se queda con las suyas —jutsu cargado y
+              caída—, que son las que miran los tests. */}
           {sprite && (
+            <div ref={refEmbestida} className="relative">
+            <div ref={refDestello}>
+            <div className={estado === 'caido' ? '' : 'respirar'}>
             <img
               src={sprite}
               alt=""
@@ -547,6 +576,9 @@ function TarjetaLuchador({
               ].join(' ')}
               style={{ imageRendering: 'pixelated' }}
             />
+            </div>
+            </div>
+            </div>
           )}
         </div>
 
@@ -565,6 +597,7 @@ function TarjetaLuchador({
 
         <EtiquetasPasivas pasivas={pasivasPropias} activadas={pasivasActivadas} />
     </PanelMarco>
+    </div>
   );
 }
 
@@ -717,6 +750,19 @@ export default function CombatScreen() {
   const rondaCompleta = ronda ? golpesVistos >= golpes.length && yaImpactado : false;
   const hayMasRondas = resultado ? indiceRonda < resultado.rondas.length - 1 : false;
   const transicionRonda = rondaCompleta && ronda && !ronda.jugadorGano && hayMasRondas;
+
+  // La arena entera tiembla con los golpes que cambian algo —jutsu, golpe muy eficaz,
+  // golpe que tumba— y no con cada básico (ver `intensidadTemblorArena`). Va aquí
+  // arriba y no junto al resto de efectos porque es un hook: tiene que estar antes
+  // del `return` temprano de "No combat in progress".
+  const golpeRecienAplicado = golpesAplicados > 0 ? golpes[golpesAplicados - 1] : null;
+  const temblorArena = intensidadTemblorArena(golpeRecienAplicado);
+  useAnimarAlCambiar(
+    refContenedor,
+    temblorArena > 0 ? `${indiceRonda}-${golpesAplicados}` : null,
+    () => animacionTemblorArena(temblorArena),
+    factorAnimacion,
+  );
 
   // Lanza el siguiente golpe, una vez el anterior ha impactado.
   useEffect(() => {
@@ -950,6 +996,25 @@ export default function CombatScreen() {
     return () => clearTimeout(t);
   }, [seVaSolo, avanzar, factorAnimacion]);
 
+  // El sonido sigue al replay, golpe a golpe (ver `sonidosDeCombate.js`). Va aquí,
+  // antes del `return` temprano, porque es un hook.
+  const cargaMaxima = ronda?.cargaMaxima ?? 0;
+  useSonidosDeCombate({
+    ronda,
+    indiceRonda,
+    golpes,
+    golpesVistos,
+    golpesAplicados,
+    yaImpactado,
+    instantaneo,
+    jugadorConJutsuListo: cargaMaxima > 0 && (estadoEnTurnoActual?.cargaJugador ?? 0) >= cargaMaxima,
+    enemigoConJutsuListo: cargaMaxima > 0 && (estadoEnTurnoActual?.cargaEnemigo ?? 0) >= cargaMaxima,
+    combateCerrado: combateTotalTerminado && !seguiraLaCadena,
+    gano: Boolean(resultado?.jugadorGanoFinal),
+    subioAlguien: (resultado?.subidasDeNivel ?? []).length > 0,
+    factorAnimacion,
+  });
+
   const saltarAnimacion = useCallback(() => {
     setGolpesEmpezados(golpes.length);
     setImpactado(true);
@@ -983,6 +1048,21 @@ export default function CombatScreen() {
   const sacudeA = ultimoImpacto && ultimoImpacto.dano > 0
     ? (ultimoImpacto.atacanteEsPrimero ? 'enemigo' : 'jugador')
     : null;
+  // Lo que se le pasa a la tarjeta que recibe. La clave lleva la ronda porque el
+  // número de golpe vuelve a empezar en cada una.
+  const impactoActual = sacudeA ? {
+    clave: `${indiceRonda}-${golpesAplicados}`,
+    desde: ultimoImpacto.atacanteEsPrimero ? 'izquierda' : 'derecha',
+    fuerte: ultimoImpacto.tipoAtaque === 'jutsu' || ultimoImpacto.eficacia > 1,
+  } : null;
+  // Y a la que ataca: la embestida sale al SOLTAR el golpe, a la vez que el
+  // proyectil, no al impactar.
+  const ataqueActual = golpeEnVuelo ? {
+    clave: `${indiceRonda}-${golpesVistos}`,
+    hacia: golpeEnVuelo.atacanteEsPrimero ? 'derecha' : 'izquierda',
+    esJutsu: golpeEnVuelo.tipoAtaque === 'jutsu',
+  } : null;
+  const ataqueDe = golpeEnVuelo ? (golpeEnVuelo.atacanteEsPrimero ? 'jugador' : 'enemigo') : null;
 
   return (
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col">
@@ -1006,6 +1086,15 @@ export default function CombatScreen() {
               dano={ultimoImpacto.dano}
               eficacia={ultimoImpacto.eficacia}
               esJutsu={ultimoImpacto.tipoAtaque === 'jutsu'}
+              refContenedor={refContenedor}
+              refObjetivo={ultimoImpacto.atacanteEsPrimero ? refTarjetaEnemigo : refTarjetaJugador}
+            />
+          )}
+          {ultimoImpacto && (
+            <ChispasImpacto
+              key={`i${indiceRonda}-${golpesAplicados}`}
+              golpe={ultimoImpacto}
+              tipoAtacante={tipoDeLuchador(ultimoImpacto.atacanteEsPrimero ? ronda.jugador.id : ronda.enemigo.id)}
               refContenedor={refContenedor}
               refObjetivo={ultimoImpacto.atacanteEsPrimero ? refTarjetaEnemigo : refTarjetaJugador}
             />
@@ -1039,10 +1128,11 @@ export default function CombatScreen() {
               const entraDeRelevo = esElQuePelea && indiceRonda > 0
                 && resultado.rondas[indiceRonda - 1]?.jugador.id !== miembro.id;
               return (
-                // Dos envoltorios y no uno: el de fuera se remonta al cambiar de
-                // RONDA (y ahí anima el relevo), el de dentro al recibir un golpe
-                // (y ahí sacude). Con uno solo, cada impacto reiniciaba la
-                // animación de entrada del personaje que acababa de salir.
+                // El envoltorio se remonta al cambiar de RONDA (y ahí anima el
+                // relevo). La sacudida de cada golpe ya NO remonta nada: va con
+                // `animate()` dentro de la tarjeta (ver `efectosDeGolpe.js`). Antes
+                // había un segundo envoltorio con el número de golpe en el `key`, y
+                // remontar la tarjeta en cada impacto mataba la estela de HP.
                 //
                 // El `key` solo cambia para el que pelea: con la ronda en el key de
                 // los tres, las tarjetas del banquillo se remontaban en cada relevo
@@ -1052,10 +1142,6 @@ export default function CombatScreen() {
                   key={`${miembro.id}-${esElQuePelea ? indiceRonda : 'espera'}`}
                   ref={esElQuePelea ? refTarjetaJugador : null}
                   className={entraDeRelevo ? 'entrada-relevo' : ''}
-                >
-                <div
-                  key={sacudeA === 'jugador' && esElQuePelea ? golpesAplicados : 'quieto'}
-                  className={sacudeA === 'jugador' && esElQuePelea ? 'sacudida' : ''}
                 >
                   <TarjetaLuchador
                     id={miembro.id}
@@ -1074,8 +1160,9 @@ export default function CombatScreen() {
                     pasivasActivadas={esElQuePelea ? pasivasEnPantalla.jugador : []}
                     subioANivel={nivelAlQueSubio(miembro.id)}
                     cayendoAhora={esElQuePelea && miembro.derrotado}
+                    ataque={esElQuePelea && ataqueDe === 'jugador' ? ataqueActual : null}
+                    impacto={esElQuePelea && sacudeA === 'jugador' ? impactoActual : null}
                   />
-                </div>
                 </div>
               );
             })}
@@ -1086,16 +1173,9 @@ export default function CombatScreen() {
               // `estadoDeLosEnemigos` pone al que pelea justo en ese índice.
               const esElQuePelea = i === (cadenaEnemigos?.indiceActual ?? 0);
               return (
-                // Mismo reparto que en el equipo: el envoltorio de fuera es
-                // estable (identidad y ref) y el de dentro se remonta con cada
-                // impacto para relanzar la sacudida. Con un solo `div`, dos
-                // golpes seguidos al mismo enemigo no la reiniciaban: la clase no
-                // llegaba a quitarse entre uno y otro.
+                // Envoltorio estable (identidad y ref). La sacudida se relanza con
+                // `animate()` desde la propia tarjeta, sin remontar nada.
                 <div key={`${enemigo.id}-${i}`} ref={esElQuePelea ? refTarjetaEnemigo : null}>
-                <div
-                  key={sacudeA === 'enemigo' && esElQuePelea ? golpesAplicados : 'quieto'}
-                  className={sacudeA === 'enemigo' && esElQuePelea ? 'sacudida' : ''}
-                >
                   <TarjetaLuchador
                     id={enemigo.id}
                     nombre={enemigo.nombre}
@@ -1108,8 +1188,9 @@ export default function CombatScreen() {
                     estado={enemigo.estado}
                     pasivasActivadas={esElQuePelea ? pasivasEnPantalla.enemigo : []}
                     cayendoAhora={esElQuePelea && enemigo.estado === 'caido'}
+                    ataque={esElQuePelea && ataqueDe === 'enemigo' ? ataqueActual : null}
+                    impacto={esElQuePelea && sacudeA === 'enemigo' ? impactoActual : null}
                   />
-                </div>
                 </div>
               );
             })}
@@ -1186,7 +1267,7 @@ export default function CombatScreen() {
                 lleva el contorno por defecto y no `contorno-fijo`, que es para los
                 rellenos que no cambian. Defeat sí se queda en rojo de sello: el rojo
                 ya significa derrota en esta paleta, y es un color propio de ella. */}
-            <p className={`font-naruto text-4xl ${resultado.jugadorGanoFinal ? 'text-pergamino-100' : 'text-sello-500 contorno-fijo'}`}>
+            <p className={`font-naruto text-4xl sello-resultado ${resultado.jugadorGanoFinal ? 'text-pergamino-100' : 'text-sello-500 contorno-fijo'}`}>
               {resultado.jugadorGanoFinal ? 'Victory' : 'Defeat'}
             </p>
 
