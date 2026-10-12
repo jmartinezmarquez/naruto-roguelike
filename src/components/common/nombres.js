@@ -50,8 +50,15 @@ function sinParentesis(nombre) {
  * paréntesis o más de dos partes —"Pain (Deva Path)"— también: partirlo por la
  * primera inicial daría "Pain (." La regla solo se aplica donde tiene sentido.
  */
+// Hasta aquí cabe entero en cualquier tarjeta. Por debajo, abreviar solo estropea:
+// "Rock Lee" → "Rock L." o "Rival Genin" → "Rival G." (que no es nombre y apellido)
+// ahorraban dos letras a cambio de no saber a quién miras.
+const LARGO_QUE_CABE = 11;
+
 export function nombreCorto(id) {
-  const partes = nombrePersonaje(id).split(' '); // ya viene sin el paréntesis
+  const completo = nombrePersonaje(id);
+  if (completo.length <= LARGO_QUE_CABE) return completo; // Rock Lee, Rival Genin, Dosu Kinuta
+  const partes = completo.split(' '); // ya viene sin el paréntesis
   if (partes.length === 1) return partes[0]; // Gaara, Haku, Pain
   if (partes.length === 2) return `${partes[0]} ${partes[1][0]}.`; // Naruto U.
   // Tres o más: las dos primeras palabras enteras. Sale de "Pain: Animal Path",

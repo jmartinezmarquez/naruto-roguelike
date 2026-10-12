@@ -49,6 +49,12 @@ describe('nombreCorto', () => {
     expect(nombreCorto('naruto')).toBe('Naruto U.');
   });
 
+  it('no abrevia lo que ya cabe: "Rock L." o "Rival G." no dicen quién es', () => {
+    expect(nombreCorto('rock_lee')).toBe('Rock Lee');
+    expect(nombreCorto('genin_rival_katon')).toBe('Rival Genin');
+    expect(nombreCorto('kakashi')).toBe('Kakashi H.');
+  });
+
   it('deja en paz a los de una sola palabra', () => {
     expect(nombreCorto('gaara')).toBe('Gaara');
   });

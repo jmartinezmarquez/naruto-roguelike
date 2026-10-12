@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useGameStore } from '../../store/useGameStore';
 import { crearLuchador } from '../../engine/combat';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
-import { nombrePersonaje, nombreObjeto } from '../common/nombres';
+import { nombrePersonaje, nombreCorto, nombreObjeto } from '../common/nombres';
 import { IconoChakraDeLuchador } from '../common/IconoChakra';
 import { nombrePasiva, duenoDePasiva, describirPasiva } from '../../engine/passives';
 import { spriteDeCombate, pasivasDeLuchador, nombreDeModo } from '../common/datosDeLuchador';
@@ -138,7 +138,9 @@ function estadoDelEquipo(resultado, indiceRonda, hpJugadorEnVivo) {
 function estadoDeLosEnemigos(cadenaEnemigos, ronda, hpEnemigoEnVivo) {
   const actual = {
     id: ronda.enemigo.id,
-    nombre: nombrePersonaje(ronda.enemigo.id),
+    // Corto: la tarjeta comparte línea con el icono y el nivel y truncaba
+    // "Zabuza Momochi Lv.10" a mitad de apellido.
+    nombre: nombreCorto(ronda.enemigo.id),
     nivel: ronda.enemigo.nivel,
     hpActual: hpEnemigoEnVivo,
     hpMaximo: ronda.enemigo.hpMaximo,
@@ -153,7 +155,7 @@ function estadoDeLosEnemigos(cadenaEnemigos, ronda, hpEnemigoEnVivo) {
     const yaCayo = i < cadenaEnemigos.indiceActual;
     return {
       id: eslabon.enemigoBase.id,
-      nombre: nombrePersonaje(eslabon.enemigoBase.id),
+      nombre: nombreCorto(eslabon.enemigoBase.id),
       nivel: eslabon.nivel,
       hpActual: yaCayo ? 0 : luchador.hpMaximo,
       hpMaximo: luchador.hpMaximo,
@@ -1176,7 +1178,7 @@ export default function CombatScreen() {
                 >
                   <TarjetaLuchador
                     id={miembro.id}
-                    nombre={nombrePersonaje(miembro.id)}
+                    nombre={nombreCorto(miembro.id)}
                     nivel={nivelEnPantalla(miembro)}
                     hpActual={miembro.hpActual}
                     hpMaximo={miembro.hpMaximo}

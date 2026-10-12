@@ -1,5 +1,5 @@
 import { useGameStore } from '../../store/useGameStore';
-import { nombrePersonaje } from '../common/nombres';
+import { nombreCorto } from '../common/nombres';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
 
@@ -69,7 +69,7 @@ export default function GameOverScreen() {
                       />
                     )}
                     <div className="min-w-0">
-                      <p className="text-[11px] font-display truncate">{nombrePersonaje(p.id)}</p>
+                      <p className="text-[11px] font-display truncate">{nombreCorto(p.id)}</p>
                       <p className="text-[9px] text-pergamino-200/50">Lv. {p.nivel}</p>
                     </div>
                   </div>
