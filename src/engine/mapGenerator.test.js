@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generarMapa, calcularNivelPorPiso, resolverEnemigoDeNodo } from './mapGenerator';
+import commonEnemiesData from '../data/common-enemies.json';
 
 const arcoDePrueba = {
   id: 'arco_de_prueba',
@@ -96,6 +97,20 @@ describe('generarMapa', () => {
       const pisoPrevio = mapa.pisos[arcoDePrueba.pisoJefeFinal - 2];
       const tiposDelPiso = pisoPrevio.map((id) => mapa.nodos[id].tipo);
       expect(tiposDelPiso).toContain('descanso');
+    }
+  });
+});
+
+describe('nodos de entrenador', () => {
+  it('todo combate de entrenador sale del generador con su entrenador ya elegido, y solo ellos', () => {
+    const idsNombrados = commonEnemiesData.enemigosNombrados.map((e) => e.id);
+    for (let i = 0; i < 200; i++) {
+      const mapa = generarMapa(arcoDePrueba);
+      Object.values(mapa.nodos).forEach((nodo) => {
+        const esEntrenador = nodo.tipo === 'combate' && nodo.subtipo === 'entrenador';
+        if (esEntrenador) expect(idsNombrados).toContain(nodo.enemigoId);
+        else expect(nodo.enemigoId).toBeUndefined();
+      });
     }
   });
 });
@@ -247,6 +262,17 @@ describe('resolverEnemigoDeNodo', () => {
     const resultado = resolverEnemigoDeNodo(nodoMini, arcoDePrueba);
     expect(resultado.enemigoBase.id).toBe('haku');
     expect(resultado.nivel).toBe(arcoDePrueba.nivelMiniJefe);
+  });
+
+  it('un nodo de entrenador pelea contra el entrenador que el mapa ya eligió', () => {
+    // El mapa pinta el sprite de `nodo.enemigoId`: si aquí se sorteara otra vez,
+    // el que sale a pelear no sería el que se veía en el nodo.
+    for (const { id } of commonEnemiesData.enemigosNombrados) {
+      const nodo = { tipo: 'combate', subtipo: 'entrenador', piso: 3, enemigoId: id };
+      for (let i = 0; i < 10; i++) {
+        expect(resolverEnemigoDeNodo(nodo, arcoDePrueba).enemigoBase.id).toBe(id);
+      }
+    }
   });
 
   it('un nodo de combate normal usa calcularNivelPorPiso, no el nivel fijo de jefe', () => {

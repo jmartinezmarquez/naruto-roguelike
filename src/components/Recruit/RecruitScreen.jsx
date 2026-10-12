@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reproducir } from '../common/efectosDeSonido';
 import { useGameStore } from '../../store/useGameStore';
 import configGlobal from '../../data/config.json';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
@@ -129,12 +130,14 @@ export default function RecruitScreen() {
       setCandidatoId(personajeId);
     } else {
       elegirReclutaDeNodo(personajeId);
+      reproducir('reclutar');
       volverAlMapa();
     }
   }
 
   function confirmarReemplazo(idAReemplazar) {
     elegirReclutaDeNodo(candidatoId, idAReemplazar);
+    reproducir('reclutar');
     setCandidatoId(null);
     volverAlMapa();
   }

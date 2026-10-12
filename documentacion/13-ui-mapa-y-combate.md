@@ -87,11 +87,14 @@ fuera de este enrutado por pantalla, para que aparezcan sin importar cuál esté
     El azul de la hoja (`reclutar-raro.png`) se sigue generando pero **no se usa**: común, inicial y
     raro comparten pergamino, porque lo que separa los dos no es el poder del ninja sino cómo se
     consigue — ver [28](./28-nodo-reclutar.md).
-  - **Mini-jefe y jefe pintan el sprite del personaje que hay dentro** (`spriteDeLuchador`, del
-    `miniJefeId`/`jefeFinalId` del arco), con `image-rendering: pixelated` porque se amplían. El
-    **entrenador no puede**: su enemigo nombrado se sortea al ENTRAR en el nodo
-    (`resolverEnemigoDeNodo`), no al generar el mapa, así que al pintarlo todavía no se sabe quién
-    es — se queda con el sprite de combate genérico. A los tres los distingue además el color del
+  - **Mini-jefe, jefe y entrenador pintan el sprite del personaje que hay dentro** (`spriteDeCombate`,
+    del `miniJefeId`/`jefeFinalId` del arco o del `nodo.enemigoId`), con `image-rendering: pixelated`
+    porque se amplían. El entrenador **no podía** hasta 2026-10-12: su enemigo se sorteaba al ENTRAR en
+    el nodo. Ahora lo elige `generarMapa` al final de la generación (cuando el tipo de cada nodo ya no
+    va a cambiar) y `resolverEnemigoDeNodo` lo respeta — si se sorteara otra vez, el que sale a pelear
+    no sería el que se veía en el mapa. Su hover enseña lo mismo que el de un jefe (nombre, nivel,
+    naturaleza) más **cuántos genin trae delante**, porque el nodo es una cadena y no un 1 contra 1.
+    A los tres los distingue además el color del
     borde y un badge de rango (`BADGE_NODO`: `★` entrenador, `☠` mini-jefe, `危` jefe) en la esquina
     inferior derecha, y el jefe va más grande con borde doble. El recorte circular se aplica a la
     `<img>`, no al `<button>`: si lo llevara el botón con `overflow-hidden`, cortaría el badge.
@@ -363,14 +366,40 @@ rojo ya significa derrota en esta paleta y es un color propio de ella.
 - **El que cae se desploma** (gira y se desvanece) en vez de solo apagarse, y **el relevo de la
   cadena de rondas entra deslizándose**: es el momento más dramático del combate y se contaba con
   una línea de texto.
-  Las tarjetas llevan **dos envoltorios**: el de fuera es estable dentro de una ronda (identidad,
-  ref y animación de relevo) y el de dentro se remonta con cada impacto para relanzar la sacudida.
-  Con uno solo pasaban las dos cosas a la vez: cada impacto reiniciaba la animación de entrada del
-  que acababa de salir, y dos golpes seguidos al mismo objetivo no volvían a sacudirlo porque la
-  clase no llegaba a quitarse entre uno y otro.
+  La tarjeta lleva **un envoltorio** estable dentro de una ronda (identidad, ref y animación de
+  relevo). ⚠️ Hasta 2026-10-12 llevaba un segundo, con el número de golpe en el `key`, que se
+  **remontaba con cada impacto** para relanzar la sacudida — y remontar crea DOM nuevo, que no hace
+  transiciones: **la estela de HP no se veía nunca en quien recibía el golpe**, o sea en el único sitio
+  donde importa. Ahora los efectos de golpe van con `elemento.animate()` (ver más abajo) y no se
+  remonta nada. **Un `key` que cambia para relanzar una animación se lleva por delante todas las
+  transiciones del subárbol.**
   El desplome se anima **solo en quien cae peleando** (`cayendoAhora`), no en todo el que esté
   caído: al cambiar de ronda se remontan las tres tarjetas del equipo, y con `estado === 'caido'` los
   que ya habían caído repetían su desplome cada vez que entraba el relevo.
+- **Tanda de impacto (2026-10-12)** — `components/Combat/efectosDeGolpe.js` y `ChispasImpacto.jsx`:
+  - **Embestida**: quien ataca da un paso hacia el rival al soltar el golpe (el jutsu, con una
+    anticipación hacia atrás). Sin ella el kunai aparecía de la nada entre las dos cajas.
+  - **Destello blanco** del sprite que recibe, a dos golpes secos (`steps`), no fundido.
+  - **Chispas** cuadradas desde el punto de impacto: pocas y claras en el básico (es el mismo kunai
+    para todos, no tiene naturaleza) y muchas, del **color de la naturaleza** del atacante y con onda
+    expansiva, en el jutsu. La eficacia mueve la cantidad. Datos en `chispasDelGolpe`, deterministas.
+  - **Temblor de la arena** solo con los golpes que cambian algo —jutsu, golpe muy eficaz, golpe que
+    tumba— (`intensidadTemblorArena`). Con cada básico dejaría de significar nada.
+  - **Respiración** de los que siguen en pie (`.respirar`, a dos fotogramas como un idle de Pokémon).
+  - **"Victory"/"Defeat" cae como un sello** (`.sello-resultado`).
+  - **Sprites de efecto** (`assets/effects/`, `EfectoSprite.jsx`, `spritesDeEfecto.js`): tajo en el
+    básico, estrella en el muy eficaz, estrella de metal en el bloqueado, **explosión del color de la
+    naturaleza** en el jutsu, y el **"poof" de humo del shunshin** cuando entra un relevo. Uno por golpe,
+    elegido por lo más importante que ha pasado y en el mismo orden que el sonido (`efectoDelGolpe` /
+    `sonidosDeImpacto`): lo que se ve y lo que se oye cuentan lo mismo. Las chispas cuadradas se quedan
+    solo en jutsu y golpe muy eficaz; en un básico corriente, chispas y tajo a la vez eran ruido.
+    Los **dibuja** `scripts/generar-sprites-efectos.py` (formas geométricas: lo que un script dibuja tan
+    bien como una mano) a ×1, con contorno oscuro de 1 px y desvanecido por **tramado de Bayer** en vez
+    de transparencia, para casar con los personajes. Se reproducen con `steps()` sobre la posición del
+    fondo, y el último salto cae fuera de la tira: se apagan solos.
+  Los cuatro primeros van con **Web Animations API**, por la estela (ver arriba), multiplicados por el
+  factor de animación de los ajustes, y **se saltan con `prefers-reduced-motion`**: son adorno, no
+  información. jsdom no implementa `animate`, y el hook lo comprueba en vez de romper.
 - **Sacudida** del que recibe, solo si el daño fue > 0: un golpe bloqueado a 0 no debe verse igual
   que uno que ha dolido. Un golpe de 0 saca `Blocked` en vez del número, que es justo cuando el
   jugador necesita más explicación, no menos.

@@ -259,6 +259,18 @@ export function generarMapa(arco, opciones = {}) {
     });
   });
 
+  // El entrenador de cada nodo de élite se elige aquí, al final, cuando el tipo de
+  // cada nodo ya no va a cambiar —un combate puede acabar siendo descanso o
+  // pergamino—. Se decide al generar y no al entrar porque el mapa pinta su
+  // sprite: igual que con la rareza del pergamino, lo que se dibuja antes de
+  // elegir tiene que existir antes de elegir.
+  Object.values(nodos).forEach((nodo) => {
+    if (nodo.tipo !== 'combate' || nodo.subtipo !== 'entrenador') return;
+    const { enemigosNombrados } = commonEnemiesData;
+    if (enemigosNombrados.length === 0) return;
+    nodo.enemigoId = enemigosNombrados[numeroAleatorioEntre(0, enemigosNombrados.length - 1)].id;
+  });
+
   return {
     arcoId: arco.id,
     pisos,
@@ -373,9 +385,18 @@ export function resolverEnemigoDeNodo(nodo, arco) {
     const { plantillasGenericas, enemigosNombrados } = commonEnemiesData;
     const usarNombrado = nodo.subtipo === 'entrenador' && enemigosNombrados.length > 0;
 
-    const enemigoBase = usarNombrado
-      ? enemigosNombrados[numeroAleatorioEntre(0, enemigosNombrados.length - 1)]
-      : plantillasGenericas[numeroAleatorioEntre(0, plantillasGenericas.length - 1)];
+    // El entrenador ya viene elegido desde `generarMapa` (`nodo.enemigoId`), porque
+    // el mapa lo enseña: sortearlo aquí otra vez haría que el que sale a pelear no
+    // fuera el que se veía en el nodo. El sorteo queda solo de respaldo, para
+    // nodos montados a mano sin ese campo.
+    const entrenadorDelNodo = usarNombrado && nodo.enemigoId
+      ? enemigosNombrados.find((e) => e.id === nodo.enemigoId)
+      : null;
+
+    const enemigoBase = entrenadorDelNodo
+      ?? (usarNombrado
+        ? enemigosNombrados[numeroAleatorioEntre(0, enemigosNombrados.length - 1)]
+        : plantillasGenericas[numeroAleatorioEntre(0, plantillasGenericas.length - 1)]);
 
     return { enemigoBase, nivel: calcularNivelPorPiso(nodo.piso, arco) };
   }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { reproducir } from '../common/efectosDeSonido';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import { PanelMarco, TituloBloque } from '../common/PiezasUI';
 
@@ -31,6 +32,9 @@ export default function LogroToast() {
   // (temporizadores), así que van en un efecto.
   useEffect(() => {
     if (!notificacion) return undefined;
+    // Suena con el toast y no al desbloquearse: igual que el aviso, tiene que llegar
+    // cuando el jugador lo VE (ver "Un aviso puesto donde OCURRE la cosa" en CLAUDE.md).
+    reproducir('logro');
     const ocultar = setTimeout(() => setVisible(false), DURACION_VISIBLE_MS);
     const avanzarCola = setTimeout(
       () => descartarNotificacion(),

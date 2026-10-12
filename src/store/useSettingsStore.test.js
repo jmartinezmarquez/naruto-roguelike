@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  useSettingsStore, AJUSTES_POR_DEFECTO, FACTOR_ANIMACION, PASOS_VOLUMEN,
+  useSettingsStore, AJUSTES_POR_DEFECTO, FACTOR_ANIMACION, normalizarVolumen,
 } from './useSettingsStore';
 
 beforeEach(() => {
@@ -31,18 +31,31 @@ describe('volumen de la música', () => {
     expect(useSettingsStore.getState().volumenMusica).toBeGreaterThan(0);
   });
 
-  it('los pasos que ofrece Ajustes incluyen el silencio y el valor por defecto', () => {
-    // El selector de Ajustes busca el paso cuyo `valor` coincide con el guardado; si
-    // el valor por defecto no fuera uno de los pasos, la pantalla abriría con ninguno
-    // marcado y el jugador vería el ajuste "vacío".
-    const valores = PASOS_VOLUMEN.map((p) => p.valor);
-    expect(valores).toContain(0);
-    expect(valores).toContain(AJUSTES_POR_DEFECTO.volumenMusica);
+  it('se guarda siempre entre 0 y 1: fuera de ahí `audio.volume` lanza una excepción', () => {
+    useSettingsStore.getState().cambiarAjuste('volumenMusica', 1.5);
+    expect(useSettingsStore.getState().volumenMusica).toBe(1);
+    useSettingsStore.getState().cambiarAjuste('volumenMusica', -3);
+    expect(useSettingsStore.getState().volumenMusica).toBe(0);
+    expect(normalizarVolumen('basura')).toBe(0);
+    expect(normalizarVolumen(0.333333)).toBe(0.33);
   });
 
   it('se persiste como los demás', () => {
     useSettingsStore.getState().cambiarAjuste('volumenMusica', 0);
     expect(JSON.parse(localStorage.getItem('naruto-roguelike-ajustes')).volumenMusica).toBe(0);
+  });
+});
+
+describe('volumen de los efectos', () => {
+  it('es un ajuste aparte del de la música, y arranca sonando', () => {
+    expect(AJUSTES_POR_DEFECTO.volumenEfectos).toBeGreaterThan(0);
+  });
+
+  it('se persiste, y cambiarlo no toca la música', () => {
+    useSettingsStore.getState().cambiarAjuste('volumenEfectos', 0);
+    const guardado = JSON.parse(localStorage.getItem('naruto-roguelike-ajustes'));
+    expect(guardado.volumenEfectos).toBe(0);
+    expect(guardado.volumenMusica).toBe(useSettingsStore.getState().volumenMusica);
   });
 });
 

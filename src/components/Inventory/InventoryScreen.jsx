@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { reproducir } from '../common/efectosDeSonido';
 import { useGameStore } from '../../store/useGameStore';
 import itemsData from '../../data/items.json';
 import { nombrePersonaje, nombreCorto } from '../common/nombres';
@@ -273,13 +274,19 @@ export default function InventoryScreen() {
   const elegida = entradas.find((e) => e.clave === claveElegida) ?? null;
 
   function aplicar(entrada, idPersonaje) {
-    if (entrada.objeto.tipo === 'consumible') usarConsumible(entrada.objeto.id, idPersonaje);
-    else equiparObjeto(entrada.objeto.id, idPersonaje);
+    // El sonido según lo que HA PASADO, no lo que se pidió: el store devuelve `false`
+    // si no ha podido, y entonces no hay nada que celebrar.
+    if (entrada.objeto.tipo === 'consumible') {
+      if (usarConsumible(entrada.objeto.id, idPersonaje)) reproducir('curar');
+    } else if (equiparObjeto(entrada.objeto.id, idPersonaje)) {
+      reproducir('equipar');
+    }
     volverAlMapa();
   }
 
   function desequipar(idPersonaje) {
     desequiparObjeto(idPersonaje);
+    reproducir('desequipar');
     volverAlMapa();
   }
 

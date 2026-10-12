@@ -28,7 +28,7 @@ cambiarlo más de una vez.**
 | Combat | Velocidad de animación (×1 / ×2 / instantánea) | Ver abajo |
 | Combat | Saltar la pantalla de transformación | ⚠️ **Desactivada por defecto**, con test que lo fija |
 | Progress | Reiniciar la meta-progresión | Logros + Bingo Book, con confirmación. No toca la run en curso |
-| Sound | Volumen de la música (OFF / LOW / MID / HIGH) | Ya existe el sistema — ver [36](./36-musica.md). **Solo música**: el juego no tiene efectos de sonido a propósito, así que no hay un segundo control que no controle nada |
+| Sound | Volumen de la música y, aparte, el de los efectos (deslizador 0-100 cada uno; eran cuatro pasos) | Ver [36](./36-musica.md). El de efectos llegó con ellos (2026-10-12): mientras no existían, un segundo control no habría controlado nada |
 
 **Lo que se quedó fuera, para no volver a plantearlo:** idioma (el juego está escrito directamente en
 inglés, en una sola versión y sin i18n; un selector no es una opción de ajustes, es construir i18n),

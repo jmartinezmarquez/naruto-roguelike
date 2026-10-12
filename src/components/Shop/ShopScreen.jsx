@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/useGameStore';
+import { reproducir } from '../common/efectosDeSonido';
 import itemsData from '../../data/items.json';
 import { SPRITE_OBJETO, lineasDeEfecto } from '../Inventory/itemSprites';
 import {
@@ -81,6 +82,7 @@ function TarjetaItem({ entrada, oro, onComprar }) {
         type="button"
         disabled={!puedeComprar}
         onClick={onComprar}
+        data-sonido="ninguno"
         className="w-full py-2 text-[10px] font-display rounded-sm border border-sello-500/50 transition-colors bg-sello-600 hover:bg-sello-500 disabled:bg-tinta-800 disabled:border-marco disabled:text-pergamino-200/40 disabled:cursor-not-allowed text-sobre-sello"
       >
         Buy
@@ -133,7 +135,7 @@ export default function ShopScreen() {
               <TarjetaItem
                 entrada={entrada}
                 oro={oro}
-                onComprar={() => comprarItemTienda(entrada.id)}
+                onComprar={() => reproducir(comprarItemTienda(entrada.id) ? 'monedas' : 'error')}
               />
             </div>
           ))

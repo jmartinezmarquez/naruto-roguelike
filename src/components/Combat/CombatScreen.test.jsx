@@ -289,9 +289,10 @@ describe('el espacio', () => {
       correr(1000);
 
       act(() => { fireEvent.keyDown(window, { key: ' ' }); });
-      // `avanzarSiguienteArco` deja al jugador en el mapa del arco siguiente.
-      expect(useGameStore.getState().pantalla).toBe('mapa');
-      expect(useGameStore.getState().arcoActualId).not.toBe(arcoDePrueba.id);
+      // Fin de arco: a la pantalla de transición, igual que el botón. El arco NO cambia
+      // todavía — eso lo hace la transición al salir.
+      expect(useGameStore.getState().pantalla).toBe('transicionArco');
+      expect(useGameStore.getState().arcoActualId).toBe(arcoDePrueba.id);
     } finally {
       vi.useRealTimers();
     }

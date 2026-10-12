@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { useSettingsStore, PASOS_VOLUMEN } from '../../store/useSettingsStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { reproducir } from '../common/efectosDeSonido';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import { VentanaModal, TituloBloque, BotonSecundario } from '../common/PiezasUI';
 
@@ -85,12 +86,48 @@ function SelectorOpciones({ opciones, valor, onCambiar, etiqueta }) {
   );
 }
 
+/**
+ * Deslizador de volumen, 0-100. Cuadrado y en los colores del marco, como el
+ * interruptor de arriba: el control nativo del navegador sería lo único de la
+ * pantalla sin dibujar (ver `.deslizador` en index.css).
+ *
+ * El relleno hasta el pulgar va en `--relleno`, porque solo Firefox sabe pintar la
+ * parte recorrida de la pista por su cuenta.
+ *
+ * `alSoltar` es para el de efectos: al soltar suena un golpe de muestra, que es la
+ * única forma de saber cómo queda un volumen de efectos sin salir a jugar.
+ */
+function Deslizador({ valor, onCambiar, etiqueta, alSoltar = null }) {
+  const porcentaje = Math.round(valor * 100);
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value={porcentaje}
+        aria-label={etiqueta}
+        onChange={(e) => onCambiar(Number(e.target.value) / 100)}
+        onPointerUp={alSoltar ?? undefined}
+        onKeyUp={alSoltar ?? undefined}
+        className="deslizador w-28"
+        style={{ '--relleno': `${porcentaje}%` }}
+      />
+      <span className="font-display text-[9px] text-pergamino-200/70 w-7 text-right tabular-nums">
+        {porcentaje === 0 ? 'OFF' : porcentaje}
+      </span>
+    </div>
+  );
+}
+
 export default function SettingsScreen() {
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const tema = useSettingsStore((s) => s.tema);
   const velocidadCombate = useSettingsStore((s) => s.velocidadCombate);
   const saltarTransformacion = useSettingsStore((s) => s.saltarTransformacion);
   const volumenMusica = useSettingsStore((s) => s.volumenMusica);
+  const volumenEfectos = useSettingsStore((s) => s.volumenEfectos);
   const cambiarAjuste = useSettingsStore((s) => s.cambiarAjuste);
   const reiniciarLogros = useAchievementsStore((s) => s.reiniciarLogros);
 
@@ -148,18 +185,21 @@ export default function SettingsScreen() {
 
       <section className="flex flex-col gap-1 mt-3">
         <TituloBloque>Sound</TituloBloque>
-        {/* Solo música: el juego no tiene efectos de sonido a propósito, así que no
-            hay un segundo control que no controle nada. Misma regla que dejó esta
-            sección entera fuera hasta que hubo sistema. */}
+        {/* Dos controles separados: hay quien quiere su propia música y los golpes
+            del juego, y quien quiere la pista sin los clics. */}
         <FilaAjuste etiqueta="Music">
-          <SelectorOpciones
+          <Deslizador
             etiqueta="Music volume"
-            valor={PASOS_VOLUMEN.find((p) => p.valor === volumenMusica)?.id ?? 'medio'}
-            onCambiar={(id) => cambiarAjuste(
-              'volumenMusica',
-              PASOS_VOLUMEN.find((p) => p.id === id)?.valor ?? 0.5,
-            )}
-            opciones={PASOS_VOLUMEN.map(({ id, etiqueta }) => ({ id, etiqueta }))}
+            valor={volumenMusica}
+            onCambiar={(v) => cambiarAjuste('volumenMusica', v)}
+          />
+        </FilaAjuste>
+        <FilaAjuste etiqueta="Effects">
+          <Deslizador
+            etiqueta="Effects volume"
+            valor={volumenEfectos}
+            onCambiar={(v) => cambiarAjuste('volumenEfectos', v)}
+            alSoltar={() => reproducir('golpe')}
           />
         </FilaAjuste>
       </section>
