@@ -679,6 +679,11 @@ export const useGameStore = create((set, get) => ({
     let subidasDeNivel = [];
     let recompensas = null; // reasignada más abajo al acumular la cadena
     let arcoCompletado = false;
+    // Cómo estaba cada uno JUSTO antes de la curación de fin de arco: la pantalla de
+    // transición enseña la barra llenándose desde ahí y a los caídos levantándose.
+    // Va en el resumen y no se reconstruye después porque la curación lo pisa en el
+    // acto — la misma razón que `equipoAlEmpezar`.
+    let curacionDeArco = null;
     // Quiénes ya estaban caídos ANTES de este combate (no curados desde
     // entonces) — esos no ganan XP al ganar. Quien caiga DURANTE este mismo
     // combate (rondas encadenadas) sí ganó su XP, ya que participó.
@@ -790,6 +795,13 @@ export const useGameStore = create((set, get) => ({
           // equipo por completo (y revive a quien hubiera caído), de regalo
           // antes de pasar al siguiente arco — no hace falta ir a buscar un
           // nodo de descanso justo después de la pelea más dura del arco.
+          curacionDeArco = get().equipo.map((p) => ({
+            id: p.id,
+            nivel: p.nivel,
+            hpAntes: p.derrotado ? 0 : Math.max(0, p.hpActual),
+            hpMaximo: calcularHpMaximo(p),
+            cayo: Boolean(p.derrotado),
+          }));
           get()._curarEquipoCompleto();
           // ⚠️ **El aviso NO se pone aquí**, aunque la curación sí ocurra aquí. Esto corre
           // en cuanto el jefe muere en el motor, o sea **antes de que empiece la
@@ -875,7 +887,7 @@ export const useGameStore = create((set, get) => ({
 
     const resumen = {
       rondas, jugadorGanoFinal, logrosDesbloqueados, arcoCompletado, equipoAlEmpezar,
-      transformacionesDesbloqueadas, subidasDeNivel, recompensas, buffsAlEmpezar,
+      transformacionesDesbloqueadas, subidasDeNivel, recompensas, buffsAlEmpezar, curacionDeArco,
     };
     set({ ultimoResultadoCombate: resumen });
     return resumen;
@@ -927,10 +939,7 @@ export const useGameStore = create((set, get) => ({
    * en curso, p. ej. en tests), no hace nada y devuelve false.
    */
   avanzarSiguienteArco() {
-    const { arcoActualId, campanaActualId } = get();
-    const arcos = arcosDeCampana(campanaActualId);
-    const indiceActual = arcos.findIndex((a) => a.id === arcoActualId);
-    const siguienteArco = indiceActual === -1 ? null : arcos[indiceActual + 1];
+    const siguienteArco = get().obtenerSiguienteArco();
     if (!siguienteArco) return false;
 
     const mapaSiguiente = generarMapa(siguienteArco, {
@@ -956,6 +965,25 @@ export const useGameStore = create((set, get) => ({
       huboDerrotaEnEsteArco: false,
     });
     return true;
+  },
+
+  /** El arco que viene después del actual en la campaña en curso, o null si no hay. */
+  obtenerSiguienteArco() {
+    const { arcoActualId, campanaActualId } = get();
+    const arcos = arcosDeCampana(campanaActualId);
+    const indiceActual = arcos.findIndex((a) => a.id === arcoActualId);
+    return indiceActual === -1 ? null : arcos[indiceActual + 1] ?? null;
+  },
+
+  /**
+   * Tras ganar al jefe final de un arco que NO es el último, pasa a la pantalla de
+   * transición (`TransicionArcoScreen`). No avanza de arco: eso lo hace
+   * `avanzarSiguienteArco` al salir de ella, que es cuando el jugador ya ha visto el
+   * cierre. Así el resumen del combate —con `curacionDeArco`— sigue en el store
+   * mientras la pantalla lo necesita.
+   */
+  irATransicionArco() {
+    set({ pantalla: 'transicionArco' });
   },
 
   /** Tras ver el resultado del combate final de la run, pasa a la pantalla de Game Over. */

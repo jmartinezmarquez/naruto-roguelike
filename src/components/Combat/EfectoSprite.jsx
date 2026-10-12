@@ -35,18 +35,32 @@ export default function EfectoSprite({ nombre, refContenedor, refObjetivo, espej
 
   return (
     <div ref={nodo} aria-hidden="true" className="absolute z-20 pointer-events-none w-0 h-0">
-      <div
-        className="efecto-sprite"
-        style={{
-          width: efecto.lado,
-          height: efecto.lado,
-          backgroundImage: `url(${efecto.src})`,
-          transform: `translate(-50%, -50%)${espejo ? ' scaleX(-1)' : ''}`,
-          '--ancho-tira': `${efecto.lado * efecto.fotogramas}px`,
-          '--fotogramas': efecto.fotogramas,
-          '--duracion-efecto': `${efecto.ms}ms`,
-        }}
-      />
+      <TiraDeEfecto nombre={nombre} espejo={espejo} />
     </div>
+  );
+}
+
+/**
+ * La tira en sí, centrada en su punto de anclaje (un padre posicionado). Suelta para
+ * quien ya sabe dónde pintarla sin medir nada — la transición entre arcos la pone
+ * encima de cada ninja que se levanta.
+ */
+export function TiraDeEfecto({ nombre, espejo = false }) {
+  const efecto = EFECTOS[nombre];
+  if (!efecto) return null;
+  return (
+    <div
+      aria-hidden="true"
+      className="efecto-sprite pointer-events-none"
+      style={{
+        width: efecto.lado,
+        height: efecto.lado,
+        backgroundImage: `url(${efecto.src})`,
+        transform: `translate(-50%, -50%)${espejo ? ' scaleX(-1)' : ''}`,
+        '--ancho-tira': `${efecto.lado * efecto.fotogramas}px`,
+        '--fotogramas': efecto.fotogramas,
+        '--duracion-efecto': `${efecto.ms}ms`,
+      }}
+    />
   );
 }

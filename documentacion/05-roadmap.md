@@ -1453,7 +1453,7 @@ meter azar de verdad.
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas por
 > comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar. Los
 > huecos (1-6 y 8-14) son puntos hechos que se han movido a "Hecho" **conservando su número en el
-> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 18) y nunca
+> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 20) y nunca
 > uno de los huecos.
 >
 > **Abiertos: el 7, el 15, el 16 y el 17.** Los tres últimos son de 2026-08-15 y ninguno es de mecánica:
@@ -1640,8 +1640,11 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
 - **Bifurcación de riesgo/recompensa** en algún nodo de evento: elegir entre un camino más difícil
   con mejor recompensa o uno seguro con menos, al estilo "elite fight" de Slay the Spire.
 
-- **Evento narrativo de transición entre arcos** (ver [20](./20-arcos-encadenados.md)) — hoy es
-  instantáneo, un botón directo al mapa del siguiente arco. **Propuesto para el MVP el 2026-08-15 y no
+- ~~**Evento narrativo de transición entre arcos**~~ — **HECHO el 2026-10-12 como punto 19**
+  (`TransicionArcoScreen`, ver [20](./20-arcos-encadenados.md)). La forma que faltaba resultó ser tres
+  tiempos —cierre, curación, lo siguiente— y salió de tener ya sonido y sprites de efecto con los que
+  contarlos. Lo de abajo se conserva como historia. Era instantáneo, un botón directo al mapa del
+  siguiente arco. **Propuesto para el MVP el 2026-08-15 y no
   tomado**, y el motivo es útil: no está claro **qué forma tiene**. La observación que lo motivó sigue
   siendo válida y se guarda aquí — al cerrar un arco el equipo **revive y se cura entero** y cambia la
   música, y el jugador no ve ninguna de las dos cosas: se las cuenta un `<p>` dentro del cartel de

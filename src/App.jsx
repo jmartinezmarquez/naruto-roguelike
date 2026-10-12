@@ -18,6 +18,7 @@ import CharacterSelectScreen from './components/CharacterSelect/CharacterSelectS
 import HomeScreen from './components/Home/HomeScreen';
 import MusicaDeFondo from './components/common/MusicaDeFondo';
 import EfectosDeSonidoGlobales from './components/common/EfectosDeSonidoGlobales';
+import TransicionArcoScreen from './components/ArcTransition/TransicionArcoScreen';
 import gameBgDark from './assets/game-background-dark-theme.jpg';
 import gameBgLight from './assets/game-background-light-theme.jpg';
 import { useSettingsStore, FACTOR_ANIMACION } from './store/useSettingsStore';
@@ -28,6 +29,7 @@ function pantallaActual(pantalla) {
   if (pantalla === 'tienda') return <ShopScreen />;
   if (pantalla === 'reclutar') return <RecruitScreen />;
   if (pantalla === 'gameover') return <GameOverScreen />;
+  if (pantalla === 'transicionArco') return <TransicionArcoScreen />;
   // Estas cuatro NO sustituyen al mapa: se dibujan encima, como los diálogos de un
   // Pokelike, así que el jugador sigue viendo dónde está mientras decide o consulta.
   // El criterio para entrar en esta lista es que sean **consultas o decisiones

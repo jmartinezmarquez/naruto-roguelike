@@ -112,6 +112,26 @@ describe('encadenar arcos', () => {
     expect(useGameStore.getState().runGanada).toBe(false);
   });
 
+  it('el resumen guarda cómo estaba el equipo ANTES de la curación de fin de arco', () => {
+    // La pantalla de transición enseña las barras llenándose desde ahí y a los caídos
+    // levantándose. Del store no se puede sacar: la curación lo pisa en el acto.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 1 ? { ...p, derrotado: true, hpActual: 0 } : p)),
+    }));
+    const resumen = useGameStore.getState().jugarCombate(enemigoZabuzaDePrueba, 1);
+
+    const caido = resumen.curacionDeArco.find((m) => m.id === useGameStore.getState().equipo[1].id);
+    expect(caido).toMatchObject({ cayo: true, hpAntes: 0 });
+    expect(caido.hpMaximo).toBeGreaterThan(0);
+    // Y en el store ya están todos curados y en pie.
+    useGameStore.getState().equipo.forEach((p) => expect(p.derrotado).toBe(false));
+  });
+
+  it('un combate que no cierra arco no trae foto de curación', () => {
+    const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(resumen.curacionDeArco).toBeNull();
+  });
+
   it('derrotar a un enemigo con recompensa.finDeLaRun marca la run como terminada y ganada', () => {
     // El arco de prueba es pais_de_las_olas de verdad; se sustituye jefeFinalId
     // por un id de prueba para poder controlar la recompensa sin tocar datos reales.

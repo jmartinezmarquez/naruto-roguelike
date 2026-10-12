@@ -89,3 +89,28 @@ inconsistente.
 - `avanzarSiguienteArco()` pasa al siguiente arco de la secuencia manteniendo equipo y oro.
 - `avanzarSiguienteArco()` no hace nada (devuelve `false`) si el arco actual no está en
   `ORDEN_ARCOS`, o si ya es el último.
+
+## Pantalla de transición entre arcos (punto 19, 2026-10-12)
+
+Al ganar al jefe final de un arco que no es el último, el combate ya no llama a
+`avanzarSiguienteArco`: llama a `irATransicionArco()` y entra `TransicionArcoScreen`
+(`components/ArcTransition/`), que es quien avanza de arco **al salir**. Tres tiempos, cada uno con
+una sola cosa que contar y su sonido:
+
+1. **Cierre** — el nombre del arco cae como un sello, con el jefe tumbado (`arcoSuperado`: redoble de
+   taiko y campana).
+2. **Curación** — las barras se llenan desde donde acabó la pelea y los caídos se levantan con el
+   humo del shunshin (`curar` y `relevo`). Era lo que el jugador no veía: la curación de fin de arco
+   existía desde siempre y se contaba con un `<p>`.
+3. **Lo siguiente** — el nombre del arco que viene sobre el fondo de su columna del mapa
+   (`FONDO_COLUMNA`, movido a `common/fondosDeArco.js` para compartirlo) y el botón "Begin"
+   (`nuevoArco`: koto que sube y se queda abierto).
+
+Avanza sola, se salta con clic o Espacio (al tercer tiempo, **sin** avanzar de arco: el segundo Espacio
+es el que empieza), y con la velocidad instantánea sale ya en el tercero.
+
+⚠️ **La curación ya ha ocurrido cuando la pantalla se pinta**: `_curarEquipoCompleto` corre al morir el
+jefe. Lo que se enseña sale de `resumen.curacionDeArco`, la foto de justo antes que guarda
+`jugarCombate` — la misma trampa que `equipoAlEmpezar`: **cuando la pantalla empieza, el store ya tiene
+el estado final**. Con `equipo`, los caídos salían de pie desde el primer fotograma.
+

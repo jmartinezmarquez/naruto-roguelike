@@ -493,6 +493,17 @@ const SONIDOS = {
     SONIDOS.impactoJutsu(t, v);
     [55, 62, 67, 69, 74].forEach((n, i) => cuerda(t + 0.05 + i * 0.02, { midi: n, pico: 0.22, duracion: 1.8 }));
   },
+  // Arco superado: redoble de taiko que se acelera y la campana del templo encima.
+  arcoSuperado(t, v) {
+    [0, 0.2, 0.34, 0.44, 0.5].forEach((d, i) => taiko(t + d, { f: 66, pico: 0.3 + i * 0.07, duracion: 0.35, eco: i === 4 }));
+    metal(t + 0.5, { base: 660 * v, duracion: 2, pico: 0.12 });
+  },
+  // El arco que viene: koto que sube en pentatónica y se queda abierto, sin cerrar —
+  // es un principio, no un final.
+  nuevoArco(t) {
+    [[62, 0], [67, 0.14], [69, 0.28], [74, 0.42], [76, 0.62]].forEach(([n, d]) => cuerda(t + d, { midi: n, pico: 0.28, duracion: d > 0.5 ? 1.8 : 0.9 }));
+    taiko(t + 0.62, { f: 60, pico: 0.4, duracion: 0.6 });
+  },
   // Logro desbloqueado: campana de templo (rin), metal grave y largo.
   logro(t, v) {
     metal(t, { base: 880 * v, duracion: 1.6, pico: 0.12 });

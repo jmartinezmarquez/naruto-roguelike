@@ -18,9 +18,6 @@ import spriteDescanso from '../../assets/nodes/descanso.png';
 import spriteReclutarComun from '../../assets/nodes/reclutar-comun.png';
 import spriteReclutarLegendario from '../../assets/nodes/reclutar-legendario.png';
 import { SPRITE_OBJETO } from '../Inventory/itemSprites';
-import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
-import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
-import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
 import iconoLogros from '../../assets/menu/logros.png';
 import iconoEnciclopedia from '../../assets/menu/enciclopedia.png';
 import iconoAjustes from '../../assets/menu/ajustes.png';
@@ -35,6 +32,7 @@ import {
 } from '../common/PiezasUI';
 import { resumirBuffsActivos } from '../common/efectos';
 import { reproducir } from '../common/efectosDeSonido';
+import { FONDO_COLUMNA } from '../common/fondosDeArco';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
@@ -119,16 +117,8 @@ const COLOR_NODO = {
   jefe: 'border-sello-500 text-pergamino-100',
 };
 
-// Fondo de la columna central del mapa, uno por arco — recortado de
-// `assets/map-column-backgrounds.png` (hoja de referencia con las 4 columnas
-// etiquetadas; los recortes limpios viven en `assets/map-columns/*.png`).
-// La clave es el `id` del arco, así que un arco sin entrada simplemente se queda
-// con la columna negra en vez de romperse.
-const FONDO_COLUMNA = {
-  pais_de_las_olas: fondoColumnaOlas,
-  examen_chunin: fondoColumnaChunin,
-  invasion_de_pain: fondoColumnaPain,
-};
+// El fondo de la columna central, uno por arco: vive en `common/fondosDeArco.js`
+// porque la pantalla de transición entre arcos también lo enseña.
 
 // El tipo de dato que viaja en un arrastre de objeto, de la rejilla de la mochila
 // a una tarjeta del equipo. Es un tipo propio y no `text/plain` para que la

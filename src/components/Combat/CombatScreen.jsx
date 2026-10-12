@@ -693,7 +693,7 @@ export default function CombatScreen() {
   const saltarTransformacion = useSettingsStore((s) => s.saltarTransformacion);
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const irAGameOver = useGameStore((s) => s.irAGameOver);
-  const avanzarSiguienteArco = useGameStore((s) => s.avanzarSiguienteArco);
+  const irATransicionArco = useGameStore((s) => s.irATransicionArco);
   const irARecompensaMiniJefe = useGameStore((s) => s.irARecompensaMiniJefe);
   const recompensaMiniJefe = useGameStore((s) => s.recompensaMiniJefe);
   const desafioRecluta = useGameStore((s) => s.desafioRecluta);
@@ -702,7 +702,6 @@ export default function CombatScreen() {
   const continuarCadena = useGameStore((s) => s.continuarCadena);
   const runTerminada = useGameStore((s) => s.runTerminada);
   const runGanada = useGameStore((s) => s.runGanada);
-  const arcoActualDatos = useGameStore((s) => s.arcoActualDatos);
   const notificarLogros = useAchievementsStore((s) => s.notificar);
 
   const [indiceRonda, setIndiceRonda] = useState(0);
@@ -967,13 +966,14 @@ export default function CombatScreen() {
    */
   const avanzar = useCallback(() => {
     if (runTerminada) return irAGameOver();
-    if (resultado?.arcoCompletado) return avanzarSiguienteArco();
+    // Fin de arco: a la pantalla de transición, que es quien avanza de arco al salir.
+    if (resultado?.arcoCompletado) return irATransicionArco();
     if (recompensaMiniJefe) return irARecompensaMiniJefe();
     if (desafioRecluta && resultado?.jugadorGanoFinal) return irAReclutaDesafio();
     return volverAlMapa();
   }, [
     runTerminada, resultado, recompensaMiniJefe, desafioRecluta,
-    irAGameOver, avanzarSiguienteArco, irARecompensaMiniJefe, irAReclutaDesafio, volverAlMapa,
+    irAGameOver, irATransicionArco, irARecompensaMiniJefe, irAReclutaDesafio, volverAlMapa,
   ]);
 
   // ¿Está el combate cerrado y con la salida ya en pantalla? Es la condición que
@@ -1334,11 +1334,10 @@ export default function CombatScreen() {
                 </BotonPrincipal>
               </div>
             ) : resultado.arcoCompletado ? (
+              // Sin el "You have beaten X." que había encima: lo cuenta, en grande, la
+              // pantalla de transición que viene justo detrás.
               <div>
-                <p className="text-[10px] text-pergamino-200 leading-relaxed mb-3">
-                  You have beaten {arcoActualDatos?.nombre}.
-                </p>
-                <BotonPrincipal onClick={avanzarSiguienteArco} className="elevar-hover">
+                <BotonPrincipal onClick={irATransicionArco} className="elevar-hover">
                   Continue to next arc
                 </BotonPrincipal>
               </div>
