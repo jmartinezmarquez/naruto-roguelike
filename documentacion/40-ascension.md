@@ -64,5 +64,6 @@ un **suelo** para el descanso (supone que el equipo llega por debajo del 80%); y
 ## Pendiente
 
 - **La campaña difícil** (contenido aparte: arcos, enemigos y arte nuevos).
-- Un aviso en la pantalla de transición cuando el fin de arco no cura del todo (A5): hoy la barra se
-  queda a medias, pero ningún texto lo explica.
+- ~~Un aviso en la pantalla de transición cuando el fin de arco no cura del todo~~ — **HECHO el
+  2026-10-14**: bajo "The team recovers" sale *"No Respite (A5): only up to 50% of max HP."*, sacado de
+  `ascensions.json` (nombre, nivel y porcentaje), sin nada escrito a mano.

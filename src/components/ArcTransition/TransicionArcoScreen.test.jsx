@@ -71,3 +71,27 @@ describe('TransicionArcoScreen', () => {
     expect(screen.getByRole('button', { name: 'Begin' })).toBeInTheDocument();
   });
 });
+
+describe('curación parcial por ascensión', () => {
+  it('sin ascensión no dice nada: la curación es completa', () => {
+    render(<TransicionArcoScreen />);
+    espacio();
+    expect(screen.queryByText(/only up to/i)).toBeNull();
+  });
+
+  it('en A5 explica por qué la barra se queda a medias, y la barra para donde cura', () => {
+    const [a] = useGameStore.getState().equipo;
+    useGameStore.setState({
+      ascension: 5,
+      ultimoResultadoCombate: {
+        arcoCompletado: true,
+        curacionDeArco: [{ id: a.id, nivel: a.nivel, hpAntes: 10, hpDespues: 20, hpMaximo: 40, cayo: false }],
+      },
+    });
+    render(<TransicionArcoScreen />);
+    espacio();
+    expect(screen.getByText(/No Respite \(A5\): only up to 50% of max HP/)).toBeInTheDocument();
+    const [barra] = document.querySelectorAll('.llenar-hp');
+    expect(barra.style.getPropertyValue('--hasta')).toBe('50%');
+  });
+});
