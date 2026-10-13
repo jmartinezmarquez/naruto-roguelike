@@ -536,7 +536,7 @@ El punto tenía dos intenciones: **contenido** (el arco 1 no tenía reclutables 
 legendario) y **experimento** (cuánto cuesta parchear el juego con cosas nuevas).
 
 - [x] **Kakashi Hatake**, primer legendario **jugable** — hasta ahora los legendarios eran solo jefes
-  desbloqueables por logro. Raiton, `42/11/8/10`, Raikiri con carga rápida, **Sharingan a nivel 6** y
+  desbloqueables por logro. Raiton, `42/11/8/10`, Raikiri con carga rápida, **Sharingan a nivel 6** (7 desde el playtest 2026-10-13) y
   **Mangekyō a 35** (los dos dentro de la run, y en ese orden por la ficción: en el País de las Olas
   todavía no tiene el Mangekyō).
 - [x] **Los cascabeles** (`cascabeles`, equipable raro de 70): `first_attack_bonus` 0,6 +

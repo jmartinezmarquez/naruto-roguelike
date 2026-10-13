@@ -1110,8 +1110,12 @@ describe('desafío legendario (pergamino dorado)', () => {
     // pierde las tres rondas. Ese es el riesgo real que hace que el pergamino
     // dorado sea una decisión y no un regalo, y por eso la pantalla lo avisa.
     // Se arranca sin la pool del arco para que el rival sea Gaara y no un sorteo
-    // entre él y Kakashi: el margen medido es el suyo (63 de HP base).
-    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoSinLegendarioPropio);
+    // entre él y Kakashi. El nivel del desafío va subido a propósito: el test
+    // dependía del margen de las stats de Gaara, y al probar a rebajarlas el
+    // equipo de nivel 1 ganaba y el test rompía sin que hubiera cambiado lo que
+    // prueba.
+    const arcoDesafioImposible = { ...arcoSinLegendarioPropio, nivelDesafioLegendario: 30 };
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDesafioImposible);
     useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
     entrarEnNodoDorado();
     useGameStore.getState().iniciarDesafioLegendario();

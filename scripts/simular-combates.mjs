@@ -377,6 +377,118 @@ function triosDelRoster() {
 }
 
 // ---------------------------------------------------------------------------
+// 1b'. Jefes en una PRIMERA run (lo que de verdad se puede tener)
+// ---------------------------------------------------------------------------
+
+/**
+ * El bloque anterior promedia los 364 tríos del roster entero, y en una primera
+ * run casi ninguno existe: el pergamino verde ofrece los iniciales no elegidos más
+ * `personajesReclutablesIds` DEL ARCO EN CURSO (ver `candidatosReclutables` en el
+ * store), y en el arco 1 esa lista no tiene ningún común. Con el roster entero,
+ * Zabuza salía al 83%; con Naruto, Sasuke y Sakura —los únicos que se pueden tener
+ * al llegar a él— era un muro, porque ninguno es doton y Sasuke es katon. El
+ * playtest lo notó y el simulador no: medía un juego distinto del que se juega.
+ *
+ * Tamaño del equipo: se empieza con 1 y hay uno o dos pergaminos por arco (el
+ * segundo con `probabilidadSegundoNodoReclutar`), así que al mini-jefe del arco 1
+ * se llega solo o en pareja, al jefe final del arco 1 casi siempre en pareja, y a
+ * partir del arco 2 con tres. Se promedian TODOS los órdenes del equipo: un
+ * jugador nuevo no sabe aún qué orden le conviene contra cada jefe.
+ *
+ * "−2" es el camino que no lo pelea todo: un combate común da ~2 niveles en el
+ * arco 1, así que quien prefiere eventos o tienda llega dos niveles por debajo
+ * de la estimación, que es una esperanza y no un suelo.
+ */
+const INICIALES = roster.filter((p) => p.rareza === 'inicial');
+const porId = (id) => personajesData.personajes.find((p) => p.id === id);
+const comunesDelArco = (arco) => (arco.personajesReclutablesIds ?? [])
+  .map(porId).filter((p) => p && p.rareza !== 'legendario');
+
+function permutaciones(lista) {
+  if (lista.length <= 1) return [lista];
+  return lista.flatMap((x, i) => permutaciones([...lista.slice(0, i), ...lista.slice(i + 1)]).map((r) => [x, ...r]));
+}
+function combinaciones(lista, k) {
+  if (k === 0) return [[]];
+  return lista.flatMap((x, i) => combinaciones(lista.slice(i + 1), k - 1).map((r) => [x, ...r]));
+}
+
+/** Los equipos (sin orden) con los que se llega a cada jefe en una primera run. */
+function equiposDePrimeraRun(arco, rol) {
+  const indice = ARCOS.indexOf(arco);
+  if (indice === 0) {
+    return rol === 'mini-jefe'
+      ? [...combinaciones(INICIALES, 1), ...combinaciones(INICIALES, 2)]
+      : [...combinaciones(INICIALES, 2), ...combinaciones(INICIALES, 3)];
+  }
+  // Del arco 2 en adelante: la pareja de iniciales del arco 1 más un común del
+  // arco 2 (los del arco 3 llegan tarde y como reemplazo, no se cuentan).
+  const comunes = comunesDelArco(ARCOS[1]);
+  return combinaciones(INICIALES, 2).flatMap((pareja) => comunes.map((c) => [...pareja, c]));
+}
+
+function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, azar) {
+  const nivel = (p) => Math.max(1, nivelDe(p, arco, piso) + desfase);
+  const hpLleno = equipo.map((p) => crearLuchador(p, nivel(p)).hpMaximo);
+  const hp = rol === 'JEFE FINAL'
+    ? hpLleno
+    : hpAlLlegarAlPiso(equipo, arco, piso, azar).map((v, i) => Math.min(v, hpLleno[i]));
+  const enemigo = crearLuchador(jefe, nivelEnemigo);
+  for (let i = 0; i < equipo.length; i += 1) {
+    if (hp[i] <= 0) continue;
+    const jugador = crearLuchador(equipo[i], nivel(equipo[i]), hp[i]);
+    const { ganadorId } = resolverCombateCompleto(jugador, enemigo, azar);
+    if (ganadorId === jugador.id) return true;
+    if (ganadorId === null) return false;
+  }
+  return false;
+}
+
+{
+  console.log('\n\n=== Jefes en una PRIMERA run ===');
+  console.log(
+    '  (solo con quien se puede reclutar de verdad: iniciales en el arco 1, + un común del arco 2\n' +
+      '   después; todos los órdenes del equipo; "muros" = equipos que lo pierden más de la mitad)\n',
+  );
+
+  const azar = azarConSemilla(SEMILLA);
+  for (const arco of ARCOS) {
+    for (const [rol, id, nivel, piso] of jefesDelArco(arco)) {
+      const jefe = enemigosData.jefes.find((j) => j.id === id);
+      const equipos = equiposDePrimeraRun(arco, rol);
+      const columnas = [0, -2].map((desfase) => {
+        const tasas = equipos.map((equipo) => {
+          const ordenes = permutaciones(equipo);
+          const ganados = ordenes.filter((o) => nodoDePrimeraRun(o, arco, rol, nivel, piso, jefe, desfase, azar));
+          return { equipo, tasa: ganados.length / ordenes.length };
+        });
+        const muros = tasas.filter((t) => t.tasa < 0.5);
+        return { media: media(tasas.map((t) => t.tasa)), muros, total: tasas.length };
+      });
+      const [estimado, cauto] = columnas;
+      // `DETALLE=1 node scripts/simular-combates.mjs` lista todos los equipos
+      // atascados (con el nivel estimado y a −2), no solo los tres primeros.
+      if (process.env.DETALLE) {
+        for (const c of columnas) {
+          console.log('     ', c.muros.map((t) => `${t.equipo.map((p) => p.id).join('+')}=${Math.round(t.tasa * 100)}`).join('  '));
+        }
+      }
+      const peores = cauto.muros.slice(0, 3).map((t) => t.equipo.map((p) => p.id).join('+')).join(', ');
+      console.log(
+        `  ${`${rol} ${jefe.nombre}`.padEnd(30)} ` +
+          `nivel estimado ${porcentaje(estimado.media).padStart(4)} (muros ${estimado.muros.length}/${estimado.total})   ` +
+          `−2 ${porcentaje(cauto.media).padStart(4)} (muros ${cauto.muros.length}/${cauto.total})` +
+          (peores ? `   p.ej. ${peores}` : ''),
+      );
+    }
+  }
+  console.log(
+    '\n  Objetivo: en el arco 1, ningún muro con el nivel estimado — ahí no hay nada que elegir. Del arco 2\n' +
+      '  en adelante puede haber alguno: hay contrarresto reclutable y objetos (que este bloque no mide).',
+  );
+}
+
+// ---------------------------------------------------------------------------
 // 1c. Desafío legendario (nodo de reclutar dorado)
 // ---------------------------------------------------------------------------
 
@@ -443,6 +555,37 @@ function triosDelRoster() {
   }
   console.log('\n  Objetivo: entre el 45% y el 70%. Es opcional, así que puede doler — pero si el\n' +
     '  jugador nunca lo gana, el pergamino dorado es un cartel de "no entres".');
+
+  // Lo de arriba usa el roster entero, y en una primera run el único legendario
+  // que puede salir es el de la pool del arco (sin logros no hay jefes
+  // desbloqueados) y el equipo son iniciales: solo o en pareja en el piso del
+  // mini-jefe, en pareja después. Mismo método que "Jefes en una PRIMERA run".
+  console.log('\n  En una PRIMERA run (solo los legendarios de la pool del arco, equipo de iniciales):');
+  for (const arco of ARCOS) {
+    if (ARCOS.indexOf(arco) !== 0) continue; // del arco 2 en adelante ya no hay solo iniciales
+    const legendariosDeLaPool = LEGENDARIOS_JUGABLES.filter(
+      (p) => (arco.personajesReclutablesIds ?? []).includes(p.id),
+    );
+    for (const pisoMuestra of PISOS_MUESTRA) {
+      const piso = pisoMuestra ?? arco.pisoMiniJefe;
+      const equipos = piso <= arco.pisoMiniJefe
+        ? [...combinaciones(INICIALES, 1), ...combinaciones(INICIALES, 2)]
+        : combinaciones(INICIALES, 2);
+      for (const legendario of legendariosDeLaPool) {
+        const tasas = equipos.map((equipo) => {
+          const ordenes = permutaciones(equipo);
+          return ordenes.filter((o) => nodoDePrimeraRun(
+            o, arco, 'desafio', arco.nivelDesafioLegendario, piso, legendario, 0, azar,
+          )).length / ordenes.length;
+        });
+        console.log(
+          `  ${arco.nombre.padEnd(16)} piso ${piso}  ${legendario.nombre.padEnd(20)} ` +
+            `Nv.${String(arco.nivelDesafioLegendario).padEnd(3)} ganado ${porcentaje(media(tasas)).padStart(4)}  ` +
+            `(${equipos.map((e, i) => `${e.map((p) => p.id).join('+')}=${Math.round(tasas[i] * 100)}`).join('  ')})`,
+        );
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

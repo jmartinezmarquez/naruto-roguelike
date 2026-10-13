@@ -8,6 +8,7 @@ import {
   nivelesEstimadosDeLaRun,
 } from './leveling';
 import { calcularNivelPorPiso } from './mapGenerator';
+import { crearLuchador, resolverCombateCompleto } from './combat';
 import charactersData from '../data/characters.json';
 import enemiesData from '../data/enemies.json';
 import arco1 from '../data/arcs/pais-de-las-olas.json';
@@ -227,6 +228,64 @@ describe('arcos (invariantes de datos)', () => {
       // sin transformación a propósito. Lo que no vale es tener uno y no usarlo.
       if (!jefe?.modos?.length) continue;
       expect(jefe.modos[0].nivelDesbloqueo, id).toBeLessThanOrEqual(nivelDelCombate);
+    }
+  });
+});
+
+describe('jefes del arco 1 en una primera run (invariante de balance)', () => {
+  // En el arco 1 de una primera run solo se puede tener a los iniciales: el
+  // pergamino verde ofrece los no elegidos y `personajesReclutablesIds` del arco
+  // no tiene ningún común. El simulador medía a los jefes con los 14 del roster
+  // —Zabuza salía al 83%— y en el playtest era un muro: Haku y Zabuza eran suiton,
+  // ninguno de los iniciales es doton y Sasuke es katon. Con Naruto + Sasuke, el
+  // equipo más natural, Zabuza no se ganaba ni sacándole dos niveles.
+  //
+  // Al mini-jefe se llega a menudo con un solo personaje y al jefe final con dos,
+  // así que se exige que lo ganen CUALQUIER inicial solo y CUALQUIER pareja en
+  // cualquier orden, al nivel estimado y con el HP lleno. Ver
+  // documentacion/11-progresion-y-arcos.md, sección "primera run".
+  const ARCOS = [arco1, arco2, arco3];
+  const xpDeJefe = (id, arco) => enemiesData.jefes.find((j) => j.id === id)?.recompensa?.xp
+    ?? arco.xpCombateComun;
+  const iniciales = charactersData.personajes.filter((p) => p.rareza === 'inicial');
+  const nivelDe = (p, piso) => nivelesEstimadosDeLaRun(p.curvaXp, ARCOS, xpDeJefe)[arco1.id].get(piso);
+
+  function azarConSemilla(semilla) {
+    let estado = semilla;
+    return () => {
+      estado = (estado + 0x6D2B79F5) | 0;
+      let t = Math.imul(estado ^ (estado >>> 15), 1 | estado);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function ganaElNodo(equipo, jefeId, nivelJefe, piso) {
+    const azar = azarConSemilla(20261013);
+    const enemigo = crearLuchador(enemiesData.jefes.find((j) => j.id === jefeId), nivelJefe);
+    for (const personaje of equipo) {
+      const jugador = crearLuchador(personaje, nivelDe(personaje, piso));
+      const { ganadorId } = resolverCombateCompleto(jugador, enemigo, azar);
+      if (ganadorId === jugador.id) return true;
+      if (ganadorId === null) return false;
+    }
+    return false;
+  }
+
+  it('cualquier inicial gana solo al mini-jefe', () => {
+    for (const personaje of iniciales) {
+      expect(ganaElNodo([personaje], arco1.miniJefeId, arco1.nivelMiniJefe, arco1.pisoMiniJefe), personaje.id)
+        .toBe(true);
+    }
+  });
+
+  it('cualquier pareja de iniciales, en cualquier orden, gana al jefe final', () => {
+    for (const a of iniciales) {
+      for (const b of iniciales) {
+        if (a === b) continue;
+        expect(ganaElNodo([a, b], arco1.jefeFinalId, arco1.nivelJefeFinal, arco1.pisoJefeFinal), `${a.id}+${b.id}`)
+          .toBe(true);
+      }
     }
   });
 });

@@ -116,6 +116,9 @@ y los jefes finales el 82-88%, con el trío llegando al mini-jefe tocado del cam
 entre nodos) y al jefe final curado por el descanso garantizado del piso anterior. El nodo más
 justo es Haku, al 80%: es el primer mini-jefe de la run y al que se llega con menos recursos.
 
+> Desde v5 (al final del documento) los jefes de los arcos 1 y 2 están por debajo de estos ratios: se
+> calibran contra lo que el jugador puede tener al llegar a ellos, no contra un personaje medio.
+
 Como jugador y enemigo se escalan con la misma fórmula de nivel, el ratio se mantiene constante en
 cualquier nivel. (Bug histórico ya corregido: antes las stats de los jefes estaban puestas como si
 ya fueran "finales" y el escalado por nivel las multiplicaba otra vez encima.)
@@ -217,13 +220,15 @@ Con esa medida la lectura se dio la vuelta: Kakashi es **puesto 2-6 de 15**, nun
 | Pain: Animal (doton) | 4.º — 100% / 1,0 | neji, kiba, yamato |
 | Pain Deva (raiton) | 6.º — 92% / 2,2 | naruto, tenten, choji, sai (fuuton, 1,5× a raiton) |
 
+> Desde v5 (abajo) Haku es fuuton y Kakashi queda en desventaja contra él: la tabla es de antes.
+
 Y sale una **consecuencia de diseño que no se buscó y conviene no "arreglar"**: Kakashi es raiton, se
 consigue en el arco 1 y **los dos jefes del arco 1 son suiton**. O sea que el premio del pergamino
 dorado no ayuda con el jefe que viene justo después — se cobra en los arcos 2 y 3, donde tres de los
 cuatro jefes son doton. Ganarlo es una inversión, no un atajo.
 
 Sus números finales: `42/11/8/10` (hp/atk/def/spe), jutsu Raikiri a 2,5 con carga 36/10, Sharingan a
-nivel 6 (`first_hit_reduction` 0,4 + `ignore_defense` 0,2) y Mangekyō a 35 (`ignore_defense` 0,55 +
+nivel 6 —7 desde v5, ver abajo— (`first_hit_reduction` 0,4 + `ignore_defense` 0,2) y Mangekyō a 35 (`ignore_defense` 0,55 +
 `priority`). Se llegó ahí bajando desde `45/12/9/11`, que sí barría de verdad: era mejor que todo el
 roster en las cuatro estadísticas **y** en pasivas **y** en jutsu, que no es "legendario" sino
 "dominante". El desafío para conseguirlo se gana el 52% de las veces en el piso 3 y el 87% en el 6.
@@ -270,3 +275,81 @@ rediseño de balance.
 Gaara **sube** porque su modo es defensivo (defensa ×1,24 y `first_hit_reduction`) y dividir su ataque
 le quita más de lo que le da. Haku y Camino Animal siguen sin modo a propósito: no hay arte para
 ellos, y el test de invariante nuevo se salta a los jefes que no tienen ninguno.
+
+## v5 — Los jefes en una PRIMERA run (playtest 2026-10-13)
+
+**Síntoma:** en el playtest, Zabuza se sentía imposible para alguien que acaba de llegar, "sin ventaja
+de tipo ni transformación". El simulador decía lo contrario: 83% de nodos ganados.
+
+**El simulador medía otro juego.** El bloque "Jefes con el equipo de 3 en cadena" promedia los 364
+tríos del roster entero, y en el arco 1 de una primera run casi ninguno existe:
+
+- El pergamino verde ofrece los iniciales no elegidos más `personajesReclutablesIds` **del arco en
+  curso** (ver `candidatosReclutables`), y en el arco 1 esa lista solo tiene a Kakashi. Al llegar a
+  Haku y Zabuza solo se puede tener a **Naruto, Sasuke y Sakura**.
+- Ninguno de los tres es doton, el único tipo con ventaja contra suiton, y **los dos jefes del arco 1
+  eran suiton**. Sasuke es katon: pega ×0,5 y recibe ×1,5. El jutsu de Zabuza le quitaba 47 de sus 50 HP.
+- Se empieza con 1 personaje y hay uno o dos pergaminos por arco: a Haku se llega solo o en pareja, y a
+  Zabuza casi siempre en **pareja**, no en trío.
+- La estimación de nivel es una esperanza. Un combate común da ~2 niveles en el arco 1, así que quien
+  prefiere eventos o tienda llega dos por debajo, y como el combate es casi determinista, eso no
+  "baja un poco" la probabilidad: la lleva de 100% a 0%.
+
+Medido con eso (bloque nuevo **"Jefes en una PRIMERA run"** del simulador; `DETALLE=1` lista los
+equipos que se atascan):
+
+| Nodo | Antes (estimado / −2 niveles) | Después |
+|---|---|---|
+| mini-jefe Haku | 17% / 0% — 5 de 6 equipos atascados | 100% / 83% |
+| JEFE Zabuza | 33% / 0% — Naruto+Sasuke perdía incluso a Nv.12 | 100% / 100% |
+| mini-jefe Kabuto | 70% / 69% — 7 de 27 atascados | 73% / 72% (sin tocarlo: lo mueve Sakura) |
+| JEFE Gaara | 80% / 76% | 81% / 77% (ídem) |
+
+**Cambios:**
+
+1. **Haku pasa a fuuton.** Su Hyōton es agua + viento, y su recompensa ya era el pergamino de viento.
+   Así el arco 1 deja de tener dos jefes del mismo tipo, y Sasuke pasa de lastre a ser **su contrapeso**,
+   como en el puente. Contrapartida a sabiendas: Kakashi (raiton) queda en desventaja contra Haku, lo
+   que refuerza que ganarlo sea una inversión y no un atajo (ver la sección de Kakashi).
+2. **Haku 59/9/8 → 47/7/6** y **Zabuza 58/9/8 → 49/7/6** (hp/atk/def). Lo que más pesaba era la
+   **defensa**: Sakura le hacía 2 de daño por básico a Haku.
+3. **Sakura 40/7 → 44/8** (hp/atk). Era la inicial más floja (suma 62 contra 69 de Naruto), y
+   **todos** los equipos atascados que quedaban, en los tres arcos, la llevaban: suiton recibe ×1,5 de
+   los tres jefes doton. Elegir inicial no puede ser una trampa.
+**Lo que se deja como está, a propósito: los jefes de los arcos 2 y 3.** Se probó a rebajar a Kabuto y
+Gaara (al 85% y 93%) y se deshizo: ahí sí hay salida. Cada jefe tiene un contrarresto reclutable (Neji y
+Kiba contra los doton; Naruto, Tenten y Sai contra Pain), el jugador ya lleva objetos —que el bloque de
+primera run NO mide, así que sus cifras de esos arcos son pesimistas— y los equipos que se atascan son
+siempre Sakura con un común flojo y sin raiton, p. ej. Naruto + Sakura + Ino: un segundo suiton contra un
+arco de tres jefes doton. Esa elección el jugador la
+hace en el arco 2, entre nueve comunes (dos de ellos raiton) y con el jefe visible en el mapa. El arco 1
+era distinto: ahí no había nada que elegir.
+
+**Protegido por test:** `leveling.test.js` → "jefes del arco 1 en una primera run" exige que cualquier
+inicial solo gane a Haku y cualquier pareja, en cualquier orden, gane a Zabuza, al nivel estimado. Con
+los datos de antes fallan los dos.
+
+**Efecto secundario, y su arreglo — el segundo modo de Zabuza.** Los jefes reclutados por logro usan el
+mismo `statsBase`, así que al rebajarlo, Zabuza como **desafío legendario** de los arcos 2 y 3 pasó a
+ganarse el 93-100% (objetivo 45-70%; antes 62-93%). Se le dio un segundo modo, **Silent Killing**, a
+**nivel 20**: nunca se activa en el arco 1 (se pelea a 10) y sí en los desafíos (23 y 41) y si lo reclutas.
+`priority` (siempre ataca primero: no lo ves venir) + `ignore_defense` 0,4 + `heal_on_kill` 0,15, con
+multiplicadores 1,4 de ataque y 1,32 de defensa. Desafío: **57% / 80%** en el arco 2 y **74% / 97%** en el
+arco 3 (pisos 4 / 6) — de vuelta a sus cifras de antes. El arco 3 queda algo alto porque ahí el jugador ya
+lleva su segunda transformación; no se apretó más para no convertir al Zabuza reclutado en el mejor
+personaje del juego. Sin arte propio: `spriteDeModo` cae al de su primer modo, como los tier 2 sin dibujar.
+
+**Kakashi: Sharingan de 6 a 7.** El desafío del arco 1 se pelea a nivel 6, justo cuando lo destapaba. A 7 lo
+peleas sin él (le ganas "antes de que se descubra el ojo") y al unirse lo activa enseguida, porque el
+equipo pasa de 7 a partir del piso 5. Desafío con el roster entero: **55% → 67%** en el piso 4 y 86% → 93%
+en el 6; como recluta sigue en el puesto 2-5 en los arcos 2 y 3. Retocar su carga o su ataque no movía
+nada en una primera run y sí lo debilitaba como recluta, así que se descartó.
+
+**Lo que sigue duro a propósito:** en una primera run, el pergamino dorado del **piso 4** (el del
+mini-jefe) se gana el 50%: los equipos con Naruto (fuuton, ventaja sobre raiton) siempre, y Sasuke y/o
+Sakura nunca. Elegirlo ahí es saltarse a Haku y su XP para pelear contra un Kakashi tres niveles por
+encima, y la pantalla del desafío avisa. Del piso 5 en adelante se gana el 100% de las veces.
+
+**La lección, para el próximo jefe:** un jefe no se calibra contra el roster, sino contra **lo que el
+jugador puede tener al llegar a él**. Y un tipo de jefe que ningún personaje disponible contrarresta no
+es un jefe difícil, es un muro.

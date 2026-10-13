@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **507 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+- [x] Testing con Vitest — **509 tests**: 292 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
   componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -412,6 +412,19 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   Descartados en la misma conversación: elegir 1 de 3 tras un élite (no hay objetos para eso) y
   el modo ascensión (se harán campañas más difíciles).
 
+- [x] **Jefes en una primera run (playtest 2026-10-13)** — Zabuza "imposible para el que acaba de
+  llegar" y el simulador lo daba al 83%. ⚠️ **El simulador medía con el roster entero**, y en el arco 1
+  solo se puede tener a los tres iniciales (el pergamino verde ofrece los iniciales y
+  `personajesReclutablesIds` **del arco en curso**), casi siempre en **pareja**: con eso, Haku 17% y
+  Zabuza 33%, y 0% con dos niveles menos. Los dos eran suiton y ningún inicial es doton. Haku pasa a
+  **fuuton** (Hyōton = agua + viento; Sasuke pasa a ser su contrapeso), se rebajan Haku y Zabuza y se
+  sube a **Sakura**, que salía en todos los equipos atascados. Los jefes de los arcos 2 y 3 **no se
+  tocan a propósito** (73-98%): ahí hay contrarresto reclutable y objetos, y un poco más de dificultad está bien. Bloque nuevo
+  **"Jefes en una PRIMERA run"** en el simulador y test de invariante en `leveling.test.js`.
+  **Un jefe se calibra contra lo que el jugador PUEDE tener al llegar a él, no contra el roster.**
+  Al rebajarlo, Zabuza como desafío legendario de los arcos 2-3 quedó al 93-100%: se le dio un **segundo
+  modo a nivel 20** ("Silent Killing"), que no existe en el arco 1. Y el **Sharingan de Kakashi pasó de 6 a
+  7** para que su desafío del arco 1 (a nivel 6) se pelee sin él. Ver `documentacion/11-progresion-y-arcos.md`, sección "v5".
 
 ## Bugs ya resueltos (para no repetirlos)
 

@@ -4,11 +4,11 @@
     {
       "id": "haku",
       "nombre": "Haku",
-      "tipo": "suiton",
+      "tipo": "fuuton",
       "statsBase": {
-        "hp": 59,
-        "ataque": 9,
-        "defensa": 8,
+        "hp": 47,
+        "ataque": 7,
+        "defensa": 6,
         "velocidad": 10
       },
       "jutsu": {
@@ -39,9 +39,9 @@
       "nombre": "Zabuza Momochi",
       "tipo": "suiton",
       "statsBase": {
-        "hp": 58,
-        "ataque": 9,
-        "defensa": 8,
+        "hp": 49,
+        "ataque": 7,
+        "defensa": 6,
         "velocidad": 10
       },
       "jutsu": {
@@ -69,6 +69,27 @@
             {
               "id": "first_attack_bonus",
               "cantidad": 0.5
+            },
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.15
+            }
+          ]
+        },
+        {
+          "nombre": "Silent Killing",
+          "nivelDesbloqueo": 20,
+          "multiplicadores": {
+            "ataque": 1.4,
+            "defensa": 1.32,
+            "velocidad": 1.12,
+            "hp": 1.2
+          },
+          "pasivas": [
+            "priority",
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.4
             },
             {
               "id": "heal_on_kill",
