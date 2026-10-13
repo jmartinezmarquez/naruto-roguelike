@@ -16,7 +16,7 @@
     },
     {
       "tipo": "evento",
-      "peso": 20
+      "peso": 15
     },
     {
       "tipo": "descanso",
@@ -24,7 +24,7 @@
     },
     {
       "tipo": "tienda",
-      "peso": 8
+      "peso": 13
     }
   ],
   "poolRarezaReclutar": [

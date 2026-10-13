@@ -10,16 +10,6 @@
     "oroPorCombateGanado": {
       "min": 10,
       "max": 20
-    },
-    "oroPorEventoPositivo": {
-      "min": 5,
-      "max": 15
-    },
-    "precioReclutamientoPorRareza": {
-      "inicial": 40,
-      "comun": 40,
-      "raro": 70,
-      "legendario": 120
     }
   },
   "combate": {
@@ -52,7 +42,7 @@
     },
     "multiplicadorEficaciaFuerte": 1.5,
     "multiplicadorEficaciaDebil": 0.5,
-    "multiplicadorEficaciaNeutral": 1.0
+    "multiplicadorEficaciaNeutral": 1
   },
   "tienda": {
     "numeroObjetosOfrecidos": 3,
@@ -60,7 +50,15 @@
       "comun": 65,
       "raro": 30,
       "legendario": 5
-    }
+    },
+    "_comentarioServicios": "Lo que la tienda vende además de objetos, para que el oro tenga en qué gastarse cuando el equipo ya lleva sus tres equipables. cambiarOferta sube de precio cada vez dentro de la misma tienda (base + incremento × veces); curar es una vez por tienda y deja al equipo entero a tope (revive); vender paga fraccionVenta del precio, y los objetos sin precio de tienda (los de jefe) se valoran a precioReferenciaSinPrecio. Ver documentacion/15-tienda.md.",
+    "cambiarOferta": {
+      "base": 15,
+      "incremento": 10
+    },
+    "precioCuracion": 40,
+    "fraccionVenta": 0.5,
+    "precioReferenciaSinPrecio": 100
   },
   "guardado": {
     "claveLocalStorage": "naruto-roguelike-run-actual",

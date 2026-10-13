@@ -222,8 +222,26 @@ function generarCadenaEntrenador(namedEnemy, nivel) {
 function generarOfertaTienda() {
   const pool = itemsData.objetos.filter((o) => o.precioTienda !== null);
   return {
-    items: elegirVariosAlAzar(pool, 3).map((o) => ({ id: o.id, precio: o.precioTienda })),
+    items: elegirVariosAlAzar(pool, configGlobal.tienda.numeroObjetosOfrecidos).map((o) => ({ id: o.id, precio: o.precioTienda })),
+    // Servicios: cuántas veces se ha cambiado la oferta en ESTA tienda (sube el
+    // precio) y si ya se ha usado la curación (una por tienda).
+    cambiosDeOferta: 0,
+    curacionUsada: false,
   };
+}
+
+/** Lo que paga la tienda por un objeto: una fracción de su precio (ver `config.tienda`). */
+export function precioDeVenta(itemId) {
+  const objeto = itemsData.objetos.find((o) => o.id === itemId);
+  if (!objeto) return 0;
+  const { fraccionVenta, precioReferenciaSinPrecio } = configGlobal.tienda;
+  return Math.round((objeto.precioTienda ?? precioReferenciaSinPrecio) * fraccionVenta);
+}
+
+/** Cuánto cuesta cambiar la oferta ahora mismo en esta tienda. */
+export function precioCambiarOferta(tienda) {
+  const { base, incremento } = configGlobal.tienda.cambiarOferta;
+  return base + incremento * (tienda?.cambiosDeOferta ?? 0);
 }
 
 /**
@@ -642,11 +660,26 @@ export const useGameStore = create((set, get) => ({
    * `curarPersonaje` (restaura un % de HP — también revive si estaba
    * derrotado, a ese % de su HP máximo, no a HP completo).
    */
-  usarConsumible(itemId, idPersonaje) {
+  usarConsumible(itemId, idPersonaje = null) {
     const { inventario, equipo } = get();
     if (!inventario.includes(itemId)) return false;
     const item = itemsData.objetos.find((o) => o.id === itemId);
     if (!item || item.tipo !== 'consumible') return false;
+
+    // Pergaminos de entrenamiento: el buff temporal de los eventos, comprado. Es
+    // para todo el equipo, así que no necesita personaje.
+    if (item.efecto.tipo === 'buffTemporalEquipo') {
+      const posicion = inventario.indexOf(itemId);
+      set({
+        inventario: [...inventario.slice(0, posicion), ...inventario.slice(posicion + 1)],
+        buffsTemporales: [
+          ...get().buffsTemporales,
+          { multiplicadores: { [item.efecto.stat]: item.efecto.multiplicador }, combatesRestantes: item.efecto.combates },
+        ],
+      });
+      return true;
+    }
+
     const indice = equipo.findIndex((p) => p.id === idPersonaje);
     if (indice === -1) return false;
     if (item.efecto.tipo !== 'curarPersonaje') return false; // ningún otro efecto de consumible implementado todavía
@@ -1184,6 +1217,61 @@ export const useGameStore = create((set, get) => ({
     });
     get()._registrarVistosDeLaRun();
     get()._registrarProgreso({ objetosComprados: 1 });
+    return true;
+  },
+
+  /**
+   * Servicio de tienda: cambia los objetos que quedan por otros al azar. Cuesta más
+   * cada vez en la misma tienda (`precioCambiarOferta`), para que sea un gasto con
+   * fondo y no un "tira hasta que salga el legendario".
+   */
+  cambiarOfertaTienda() {
+    const { tiendaActual, oro } = get();
+    if (!tiendaActual) return false;
+    const precio = precioCambiarOferta(tiendaActual);
+    if (oro < precio) return false;
+    set({
+      oro: oro - precio,
+      tiendaActual: {
+        ...generarOfertaTienda(),
+        cambiosDeOferta: (tiendaActual.cambiosDeOferta ?? 0) + 1,
+        curacionUsada: Boolean(tiendaActual.curacionUsada),
+      },
+    });
+    get()._registrarVistosDeLaRun();
+    return true;
+  },
+
+  /**
+   * Servicio de tienda: cura y revive al equipo entero, una vez por tienda. Es el
+   * sumidero de oro que más sentido tiene, porque convierte oro en lo que de verdad
+   * escasea —vida—, y más en ascensión, donde el descanso ya no cura del todo.
+   * No se puede pagar si nadie lo necesita: sería tirar el oro.
+   */
+  curarEnTienda() {
+    const { tiendaActual, oro, equipo } = get();
+    if (!tiendaActual || tiendaActual.curacionUsada) return false;
+    const precio = configGlobal.tienda.precioCuracion;
+    const alguienLoNecesita = equipo.some((p) => p.derrotado || p.hpActual < calcularHpMaximo(p));
+    if (oro < precio || !alguienLoNecesita) return false;
+    get()._curarEquipoCompleto(1);
+    set({ oro: oro - precio, tiendaActual: { ...tiendaActual, curacionUsada: true } });
+    return true;
+  },
+
+  /**
+   * Servicio de tienda: vende un objeto de la mochila (no uno equipado: para eso
+   * hay que quitárselo antes, que es una decisión que no debe tomarse sin querer).
+   */
+  venderObjeto(itemId) {
+    const { tiendaActual, oro, inventario } = get();
+    if (!tiendaActual) return false;
+    const posicion = inventario.indexOf(itemId);
+    if (posicion === -1) return false;
+    set({
+      oro: oro + precioDeVenta(itemId),
+      inventario: [...inventario.slice(0, posicion), ...inventario.slice(posicion + 1)],
+    });
     return true;
   },
 

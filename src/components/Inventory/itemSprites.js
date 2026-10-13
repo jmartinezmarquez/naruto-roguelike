@@ -18,6 +18,11 @@ import anilloRinneganFragmento from '../../assets/items/anillo_rinnegan_fragment
 // están dibujados en ninguna y son dos esferas con una ranura, así que se dibujan
 // (`scripts/generar-sprite-cascabeles.py`). Placeholder declarado.
 import cascabeles from '../../assets/items/cascabeles.png';
+// Los pergaminos de entrenamiento tampoco salen de ninguna hoja: los dibuja
+// `scripts/generar-sprites-pergaminos.py`. Placeholder declarado, como los cascabeles.
+import pergaminoEntrenamientoAtaque from '../../assets/items/pergamino_entrenamiento_ataque.png';
+import pergaminoEntrenamientoDefensa from '../../assets/items/pergamino_entrenamiento_defensa.png';
+import pergaminoEntrenamientoVelocidad from '../../assets/items/pergamino_entrenamiento_velocidad.png';
 
 export const SPRITE_OBJETO = {
   pildora_soldado: pildoraSoldado,
@@ -31,6 +36,9 @@ export const SPRITE_OBJETO = {
   calabaza_arena: calabazaArena,
   anillo_rinnegan_fragmento: anilloRinneganFragmento,
   cascabeles,
+  pergamino_entrenamiento_ataque: pergaminoEntrenamientoAtaque,
+  pergamino_entrenamiento_defensa: pergaminoEntrenamientoDefensa,
+  pergamino_entrenamiento_velocidad: pergaminoEntrenamientoVelocidad,
 };
 
 // Color por rareza, el mismo código que usa la hoja de sprites del artista:
@@ -60,6 +68,9 @@ export const ETIQUETA_RAREZA = {
  */
 // Icono por pasiva. No es decoración: la rejilla del inventario se lee de un
 // vistazo por el icono, no leyendo tres frases.
+const ICONO_STAT = { ataque: '⚔', defensa: '🛡', velocidad: '⚡', hp: '❤' };
+const NOMBRE_STAT = { ataque: 'ATK', defensa: 'DEF', velocidad: 'SPD', hp: 'HP' };
+
 const ICONO_PASIVA = {
   first_jutsu_bonus: '🌀',
   first_attack_bonus: '⚔',
@@ -103,6 +114,14 @@ export function lineasDeEfecto(objeto) {
       return [{ icono: '❤', texto: `Heals ${parseInt(efecto.cantidad, 10)}% HP`, positivo: true }];
     case 'revivirUnaVez':
       return [{ icono: '✨', texto: `Revives once with ${efecto.hpAlRevivir} HP`, positivo: true }];
+    // El mismo efecto que dan algunos eventos ("ATK +20% durante 3 combates"),
+    // comprado. Para todo el equipo: por eso la mochila no pide a quién.
+    case 'buffTemporalEquipo':
+      return [{
+        icono: ICONO_STAT[efecto.stat] ?? '✦',
+        texto: `Squad ${NOMBRE_STAT[efecto.stat] ?? efecto.stat} +${Math.round((efecto.multiplicador - 1) * 100)}% for ${efecto.combates} battles`,
+        positivo: true,
+      }];
     default:
       return [];
   }

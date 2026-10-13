@@ -564,6 +564,41 @@ function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, 
 }
 
 // ---------------------------------------------------------------------------
+// 0b. Economía: cuánto oro entra y cuántas ocasiones hay de gastarlo
+// ---------------------------------------------------------------------------
+
+/**
+ * El oro sobraba (playtest 2026-10-14): con tres personajes y un hueco de equipo
+ * cada uno, a partir del arco 2 no había nada en que gastarlo. Esto mide las dos
+ * mitades de la pregunta con la misma esperanza que la curva de niveles —un camino,
+ * un nodo por piso, con los pesos del arco—: lo que entra y cuántas tiendas se
+ * pisan para gastarlo. Los eventos se cuentan por su saldo medio (ganan y pierden).
+ */
+{
+  const { economia, tienda } = configGlobal;
+  const oroPorCombate = (economia.oroPorCombateGanado.min + economia.oroPorCombateGanado.max) / 2;
+  console.log('\n\n=== Economía: oro que entra y tiendas para gastarlo (camino medio) ===\n');
+  let acumulado = economia.oroInicial;
+  let tiendasTotales = 0;
+  for (const arco of ARCOS) {
+    const total = arco.poolTiposNodo.reduce((a, n) => a + n.peso, 0);
+    const peso = (tipo) => (arco.poolTiposNodo.find((n) => n.tipo === tipo)?.peso ?? 0) / total;
+    const pisosNormales = arco.numeroPisos - 1 - 2; // sin el de salida ni los dos de jefe
+    const combates = pisosNormales * peso('combate') + 2;
+    const tiendas = pisosNormales * peso('tienda');
+    const oro = combates * oroPorCombate;
+    acumulado += oro;
+    tiendasTotales += tiendas;
+    console.log(`  ${arco.nombre.padEnd(16)} combates ${combates.toFixed(1)}  oro +${Math.round(oro)}  tiendas ${tiendas.toFixed(2)}  oro al acabar el arco ${Math.round(acumulado)}`);
+  }
+  const tresEquipables = 3 * 55;
+  const curacionYCambios = tienda.precioCuracion + tienda.cambiarOferta.base + (tienda.cambiarOferta.base + tienda.cambiarOferta.incremento);
+  console.log(`\n  Oro de la run: ~${Math.round(acumulado)}. Tiendas pisadas: ~${tiendasTotales.toFixed(1)}.`);
+  console.log(`  Gastable: tres equipables ~${tresEquipables}; por tienda, curar + cambiar dos veces ~${curacionYCambios}, más pergaminos de 35.`);
+  console.log('  Lectura: si el oro de la run pasa de lejos lo gastable en las tiendas que se pisan, sobra.');
+}
+
+// ---------------------------------------------------------------------------
 // 1c. Desafío legendario (nodo de reclutar dorado)
 // ---------------------------------------------------------------------------
 

@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **539 tests**: 385 de lógica (`engine/*.test.js`, `store/*.test.js`) y 154 de
+- [x] Testing con Vitest — **549 tests**: 391 de lógica (`engine/*.test.js`, `store/*.test.js`) y 158 de
   componente (las 13 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -439,6 +439,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - [x] **Fórmula de daño, XP y reclutas (2026-10-13, tarde)**: ⚠️ la eficacia de tipo se aplica DESPUÉS
   de restar la defensa — antes el ×0,5 era inmunidad y el ×1,5 un ×2 (`documentacion/11`, "v6"); todo
   recluta entra al nivel MEDIO del equipo; XP decreciente a partir de 3 niveles por encima del enemigo.
+
+- [x] **El oro sobraba (2026-10-14)** — `documentacion/15-tienda.md`: el problema eran dos, mucho oro
+  (~264 por run) y **pocas tiendas** (~1,3 por run). Pergaminos de entrenamiento (buff temporal de equipo,
+  35g), servicios de tienda (cambiar oferta con precio creciente, curar una vez por tienda, vender a
+  mitad de precio) y +5 de peso a la tienda en los tres arcos (~2,1 por run, sin tocar el peso del
+  combate). **El oro no se bajó**: sin nada que comprar, menos oro solo aburre antes. Bloque
+  "Economía" en el simulador.
 
 ## Bugs ya resueltos (para no repetirlos)
 

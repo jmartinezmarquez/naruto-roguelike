@@ -15,6 +15,51 @@
       "categoria": "consumible"
     },
     {
+      "id": "pergamino_entrenamiento_ataque",
+      "nombre": "Taijutsu Drill Scroll",
+      "descripcion": "A training regimen that leaves the whole squad hitting harder for a while.",
+      "tipo": "consumible",
+      "rareza": "comun",
+      "precioTienda": 35,
+      "efecto": {
+        "tipo": "buffTemporalEquipo",
+        "stat": "ataque",
+        "multiplicador": 1.15,
+        "combates": 3
+      },
+      "categoria": "consumible"
+    },
+    {
+      "id": "pergamino_entrenamiento_defensa",
+      "nombre": "Guard Drill Scroll",
+      "descripcion": "Footwork and blocking drills: the squad takes hits better for a while.",
+      "tipo": "consumible",
+      "rareza": "comun",
+      "precioTienda": 35,
+      "efecto": {
+        "tipo": "buffTemporalEquipo",
+        "stat": "defensa",
+        "multiplicador": 1.2,
+        "combates": 3
+      },
+      "categoria": "consumible"
+    },
+    {
+      "id": "pergamino_entrenamiento_velocidad",
+      "nombre": "Swift Step Scroll",
+      "descripcion": "Body flicker practice: the squad moves faster for a while.",
+      "tipo": "consumible",
+      "rareza": "comun",
+      "precioTienda": 35,
+      "efecto": {
+        "tipo": "buffTemporalEquipo",
+        "stat": "velocidad",
+        "multiplicador": 1.2,
+        "combates": 3
+      },
+      "categoria": "consumible"
+    },
+    {
       "id": "banda_repuesto",
       "nombre": "Spare Ninja Headband",
       "descripcion": "If the equipped carrier falls in battle, they revive with 1 HP. Consumed on activation (does not return to inventory).",

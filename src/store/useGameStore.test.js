@@ -1176,6 +1176,72 @@ describe('desafío legendario (pergamino dorado)', () => {
   });
 });
 
+describe('tienda: pergaminos de entrenamiento y servicios', () => {
+  const abrirTienda = (extra = {}) => useGameStore.setState({
+    tiendaActual: { items: [{ id: 'sello_chakra', precio: 40 }], cambiosDeOferta: 0, curacionUsada: false, ...extra },
+  });
+
+  it('un pergamino de entrenamiento se usa sin elegir personaje y da el buff temporal a todo el equipo', () => {
+    useGameStore.setState({ inventario: ['pergamino_entrenamiento_ataque'], buffsTemporales: [] });
+    expect(useGameStore.getState().usarConsumible('pergamino_entrenamiento_ataque')).toBe(true);
+    const { inventario, buffsTemporales } = useGameStore.getState();
+    expect(inventario).toEqual([]);
+    expect(buffsTemporales).toEqual([{ multiplicadores: { ataque: 1.15 }, combatesRestantes: 3 }]);
+  });
+
+  it('cambiar la oferta cuesta más cada vez en la misma tienda', () => {
+    abrirTienda();
+    useGameStore.setState({ oro: 100 });
+    const { base, incremento } = configGlobal.tienda.cambiarOferta;
+    expect(useGameStore.getState().cambiarOfertaTienda()).toBe(true);
+    expect(useGameStore.getState().cambiarOfertaTienda()).toBe(true);
+    expect(useGameStore.getState().oro).toBe(100 - base - (base + incremento));
+    expect(useGameStore.getState().tiendaActual.cambiosDeOferta).toBe(2);
+    expect(useGameStore.getState().tiendaActual.items).toHaveLength(configGlobal.tienda.numeroObjetosOfrecidos);
+  });
+
+  it('sin oro no cambia nada', () => {
+    abrirTienda();
+    useGameStore.setState({ oro: 0 });
+    expect(useGameStore.getState().cambiarOfertaTienda()).toBe(false);
+    expect(useGameStore.getState().tiendaActual.items[0].id).toBe('sello_chakra');
+  });
+
+  it('curar en la tienda cura y revive a todos, una sola vez, y no cobra si nadie lo necesita', () => {
+    abrirTienda();
+    useGameStore.setState({ oro: 200 });
+    expect(useGameStore.getState().curarEnTienda()).toBe(false); // todos a tope: no se tira el oro
+    expect(useGameStore.getState().oro).toBe(200);
+
+    const llenos = useGameStore.getState().equipo.map((p) => p.hpActual);
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, derrotado: true, hpActual: 0 } : { ...p, hpActual: 1 })),
+    }));
+    expect(useGameStore.getState().curarEnTienda()).toBe(true);
+    expect(useGameStore.getState().equipo.map((p) => p.hpActual)).toEqual(llenos);
+    expect(useGameStore.getState().equipo.every((p) => !p.derrotado)).toBe(true);
+    expect(useGameStore.getState().oro).toBe(200 - configGlobal.tienda.precioCuracion);
+
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.map((p) => ({ ...p, hpActual: 1 })) }));
+    expect(useGameStore.getState().curarEnTienda()).toBe(false); // ya usada en esta tienda
+  });
+
+  it('vender da una fracción del precio, y los objetos de jefe se valoran al precio de referencia', () => {
+    abrirTienda();
+    useGameStore.setState({ oro: 0, inventario: ['sello_chakra', 'calabaza_arena'] });
+    const { fraccionVenta, precioReferenciaSinPrecio } = configGlobal.tienda;
+    expect(useGameStore.getState().venderObjeto('sello_chakra')).toBe(true);
+    expect(useGameStore.getState().venderObjeto('calabaza_arena')).toBe(true);
+    expect(useGameStore.getState().oro).toBe(Math.round(40 * fraccionVenta) + Math.round(precioReferenciaSinPrecio * fraccionVenta));
+    expect(useGameStore.getState().inventario).toEqual([]);
+  });
+
+  it('fuera de una tienda no se puede vender', () => {
+    useGameStore.setState({ tiendaActual: null, inventario: ['sello_chakra'] });
+    expect(useGameStore.getState().venderObjeto('sello_chakra')).toBe(false);
+  });
+});
+
 describe('ascensión', () => {
   // Enemigo con mucha vida y sin pegada: se mide su HP máximo y el equipo gana igual.
   const sacoDeArena = (id) => ({

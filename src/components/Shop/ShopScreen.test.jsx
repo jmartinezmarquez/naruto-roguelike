@@ -82,7 +82,9 @@ describe('comprar', () => {
     // Que salga del escaparate es lo que impide comprar dos veces lo mismo con un
     // doble clic, que es como se descubren estos fallos.
     expect(tiendaActual.items.map((i) => i.id)).not.toContain(entrada.id);
-    expect(screen.queryByText(item.nombre)).toBeNull();
+    // Por botones de compra y no por nombre: el objeto comprado SÍ sigue en pantalla,
+    // en el panel de venta, que es justo donde tiene que estar.
+    expect(screen.getAllByRole('button', { name: 'Buy' })).toHaveLength(OFERTA.length - 1);
   });
 
   it('no se puede comprar dos veces el mismo objeto', async () => {
@@ -103,5 +105,35 @@ describe('sin tienda abierta', () => {
     useGameStore.setState({ tiendaActual: null });
     render(<ShopScreen />);
     expect(screen.getByText(/No shop is open/i)).toBeInTheDocument();
+  });
+});
+
+describe('servicios y venta', () => {
+  it('la curación no se puede pagar si el equipo está entero, y lo dice', () => {
+    useGameStore.setState({ oro: 500 });
+    render(<ShopScreen />);
+    expect(screen.getByText(/already at full health/i)).toBeInTheDocument();
+    const fila = screen.getByText('Field medic').closest('div').parentElement;
+    expect(within(fila).getByRole('button')).toBeDisabled();
+  });
+
+  it('cambiar la oferta cobra y enseña el precio siguiente, más alto', async () => {
+    useGameStore.setState({ oro: 500 });
+    render(<ShopScreen />);
+    const fila = () => screen.getByText('New wares').closest('div').parentElement;
+    const antes = within(fila()).getByRole('button').textContent;
+    await userEvent.click(within(fila()).getByRole('button'));
+    expect(useGameStore.getState().oro).toBe(500 - parseInt(antes, 10));
+    expect(parseInt(within(fila()).getByRole('button').textContent, 10)).toBeGreaterThan(parseInt(antes, 10));
+  });
+
+  it('vender lo suelto de la mochila: aparece con su precio y desaparece al venderlo', async () => {
+    useGameStore.setState({ oro: 0, inventario: ['sello_chakra'] });
+    render(<ShopScreen />);
+    const nombre = itemsData.objetos.find((o) => o.id === 'sello_chakra').nombre;
+    const fila = screen.getAllByText(nombre).at(-1).closest('div').parentElement;
+    await userEvent.click(within(fila).getByRole('button'));
+    expect(useGameStore.getState().oro).toBeGreaterThan(0);
+    expect(useGameStore.getState().inventario).toEqual([]);
   });
 });

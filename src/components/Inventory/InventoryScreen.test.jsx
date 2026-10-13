@@ -164,3 +164,17 @@ describe('la bolsa vacía', () => {
     expect(screen.getByText(/bag is empty/i)).toBeInTheDocument();
   });
 });
+
+describe('pergaminos de entrenamiento', () => {
+  it('un objeto para todo el equipo tiene UN botón, no uno por personaje, y da el buff', async () => {
+    useGameStore.setState({ inventario: ['pergamino_entrenamiento_defensa'], buffsTemporales: [] });
+    render(<InventoryScreen />);
+    const nombre = itemsData.objetos.find((o) => o.id === 'pergamino_entrenamiento_defensa').nombre;
+    await userEvent.click(screen.getByText(nombre));
+    expect(screen.getByText(/whole squad/i)).toBeInTheDocument();
+    const usar = screen.getAllByRole('button', { name: 'Use' });
+    expect(usar).toHaveLength(1);
+    await userEvent.click(usar[0]);
+    expect(useGameStore.getState().buffsTemporales).toEqual([{ multiplicadores: { defensa: 1.2 }, combatesRestantes: 3 }]);
+  });
+});
