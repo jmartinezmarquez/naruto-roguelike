@@ -102,6 +102,18 @@ describe('jugarCombate — victoria', () => {
     expect(oro).toBeGreaterThan(oroAntes);
     expect(equipo[0].xpActual).toBeGreaterThanOrEqual(0); // pudo subir de nivel y resetear xpActual
   });
+
+  it('quien le saca muchos niveles al enemigo cobra solo el mínimo de XP', () => {
+    // Forzar combates no puede seguir subiendo a nadie al mismo ritmo: ver
+    // `factorXpPorVentaja`. A nivel 40 contra nivel 1, la ventaja sobra de largo.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, nivel: 40, xpActual: 0 } : p)),
+    }));
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    const { minimo } = configGlobal.progresion.xpPorVentaja;
+    expect(useGameStore.getState().equipo[0].xpActual)
+      .toBe(Math.round(arcoDePrueba.xpCombateComun * minimo));
+  });
 });
 
 describe('encadenar arcos', () => {

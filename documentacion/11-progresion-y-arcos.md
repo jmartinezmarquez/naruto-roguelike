@@ -401,3 +401,12 @@ casi intacto, el mismo síntoma que la fase 4 ya arregló una vez):
 **Y el nivel de reclutamiento** pasa a ser el nivel **medio** del equipo para todos (antes, el del más
 fuerte para los comunes): forzar combates con uno solo y reclutar después dejaba a todo el equipo a su
 nivel, que es la otra mitad de "llegar diez niveles por encima".
+
+**XP decreciente por ventaja de nivel** (`factorXpPorVentaja` en `engine/leveling.js`,
+`config.progresion.xpPorVentaja`): a partir de **3 niveles** por encima del enemigo, cada nivel más
+quita un 15% de la XP, sin bajar del 25%. Se aplica a cada personaje según SU nivel (también en el
+banquillo) y también en `nivelesEstimadosDeLaRun`, para que el simulador siga midiendo el juego real. El
+margen existe porque el camino normal ya va 2-4 por encima tras el mini-jefe. Efecto medido: el camino
+normal no cambia (±1 nivel); el que lo pelea TODO llega a Gaara +2 y a Pain +2 (antes +4 y +5). **Ni
+peleándolo todo se llegaba a diez por encima** —se pisa un nodo por piso—: esos diez del playtest venían
+de reclutar al nivel del más fuerte y de la "inmunidad" de tipo, los dos ya arreglados arriba.

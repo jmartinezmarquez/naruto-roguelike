@@ -18,7 +18,7 @@ import arcoExamenChunin from '../data/arcs/examen-chunin.json';
 import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
-import { ganarXp, obtenerModoActivo } from '../engine/leveling';
+import { ganarXp, obtenerModoActivo, factorXpPorVentaja } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
@@ -784,7 +784,7 @@ export const useGameStore = create((set, get) => ({
         ({
           transformaciones: transformacionesDesbloqueadas, subidasDeNivel, recompensas,
         } = get()._aplicarVictoria(
-          activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate));
+          activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate, nivelEnemigo));
 
         // ¿Este enemigo era el jefe final del arco en curso? Si además lleva
         // recompensa.finDeLaRun (solo Pain la tiene), la run entera se ha
@@ -1258,7 +1258,7 @@ export const useGameStore = create((set, get) => ({
    * de banquillo por haber participado, pero su HP se queda a 0 — ganar XP
    * no debe "revivirlo" de regalo si sube de nivel.
    */
-  _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase, idsYaDerrotadosAntesDelCombate) {
+  _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase, idsYaDerrotadosAntesDelCombate, nivelEnemigo = null) {
     const { equipo, oro, inventario, arcoActualDatos } = get();
     // Los jefes traen su XP escrita. Los enemigos comunes no: cobran la del arco
     // (`xpCombateComun`), porque las mismas 5 plantillas genéricas se reutilizan en
@@ -1286,7 +1286,10 @@ export const useGameStore = create((set, get) => ({
     const equipoActualizado = equipo.map((p) => {
       if (idsYaDerrotadosAntesDelCombate.has(p.id)) return p;
 
-      const xpParaEste = p.id === idPersonaje ? xpGanada : Math.round(xpGanada * porcentajeBanquillo);
+      // Cada uno según SU nivel: un recluta recién llegado que va por debajo del
+      // resto no debe pagar la ventaja de los demás (ver `factorXpPorVentaja`).
+      const xpBase = p.id === idPersonaje ? xpGanada : xpGanada * porcentajeBanquillo;
+      const xpParaEste = Math.round(xpBase * factorXpPorVentaja(p.nivel, nivelEnemigo));
       // El activo parte del HP con el que ha terminado la pelea, no del que traía
       // la instancia: así el incremento por subir de nivel se suma encima en vez
       // de perderse al sobrescribir el hpActual.

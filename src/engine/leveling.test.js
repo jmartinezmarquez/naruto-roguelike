@@ -6,7 +6,9 @@ import {
   obtenerModoActivo,
   aplicarMultiplicadores,
   nivelesEstimadosDeLaRun,
+  factorXpPorVentaja,
 } from './leveling';
+import configGlobal from '../data/config.json';
 import { calcularNivelPorPiso } from './mapGenerator';
 import { crearLuchador, resolverCombateCompleto } from './combat';
 import charactersData from '../data/characters.json';
@@ -106,6 +108,30 @@ describe('aplicarMultiplicadores', () => {
   it('devuelve las stats sin cambios si no hay multiplicadores', () => {
     const stats = { hp: 100, ataque: 10, defensa: 10, velocidad: 10 };
     expect(aplicarMultiplicadores(stats, null)).toEqual(stats);
+  });
+});
+
+describe('factorXpPorVentaja', () => {
+  const { margenSinPenalizacion: margen, penalizacionPorNivel, minimo } = configGlobal.progresion.xpPorVentaja;
+
+  it('no penaliza ir por debajo, igualado o dentro del margen', () => {
+    expect(factorXpPorVentaja(5, 10)).toBe(1);
+    expect(factorXpPorVentaja(10, 10)).toBe(1);
+    expect(factorXpPorVentaja(10 + margen, 10)).toBe(1);
+  });
+
+  it('quita una parte por cada nivel de más fuera del margen', () => {
+    expect(factorXpPorVentaja(10 + margen + 1, 10)).toBeCloseTo(1 - penalizacionPorNivel);
+    expect(factorXpPorVentaja(10 + margen + 2, 10)).toBeCloseTo(1 - 2 * penalizacionPorNivel);
+  });
+
+  it('nunca baja del mínimo: ganar un combate siempre da algo', () => {
+    expect(factorXpPorVentaja(100, 1)).toBe(minimo);
+  });
+
+  it('sin nivel de enemigo conocido no toca la XP', () => {
+    expect(factorXpPorVentaja(30, null)).toBe(1);
+    expect(factorXpPorVentaja(30, Number.NaN)).toBe(1);
   });
 });
 

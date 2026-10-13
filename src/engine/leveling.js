@@ -3,6 +3,7 @@
 // solo recibe datos y devuelve datos nuevos, para poder testearse desde Node.
 
 import configGlobal from '../data/config.json';
+import { calcularNivelPorPiso } from './mapGenerator';
 
 /**
  * XP necesaria para pasar del nivel actual al siguiente.
@@ -57,6 +58,28 @@ export function ganarXp(personajeEstado, cantidadXp, curvaXp) {
 }
 
 /**
+ * Qué fracción de la XP de un combate se lleva un personaje según cuántos niveles
+ * le saque al enemigo (`config.progresion.xpPorVentaja`).
+ *
+ * Los enemigos tienen nivel FIJO (ver documentacion/11), así que nada impedía ir
+ * forzando combates hasta llegar a un jefe diez niveles por encima — y como la
+ * defensa se RESTA, diez niveles no son un +25%: son el doble de daño y la mitad
+ * de daño recibido. Escalar a los enemigos se probó y se descartó; esto frena la
+ * bola de nieve por el otro lado, sin tocarlos.
+ *
+ * Hay un margen sin penalización porque el camino normal YA va 2-4 niveles por
+ * encima en los pisos que siguen al mini-jefe: castigar eso movería la
+ * calibración de todo el juego, no solo la del que fuerza combates.
+ */
+export function factorXpPorVentaja(nivelPersonaje, nivelEnemigo) {
+  const regla = configGlobal.progresion.xpPorVentaja;
+  if (!regla || !Number.isFinite(nivelEnemigo)) return 1;
+  const exceso = nivelPersonaje - nivelEnemigo - regla.margenSinPenalizacion;
+  if (exceso <= 0) return 1;
+  return Math.max(regla.minimo, 1 - exceso * regla.penalizacionPorNivel);
+}
+
+/**
  * Nivel al que llega un personaje a cada piso de una run, jugando un camino: un
  * nodo por piso, con la XP que cabe esperar de él según los pesos del arco, la XP
  * entera de los dos jefes, y arrastrando el nivel de un arco al siguiente.
@@ -91,8 +114,13 @@ export function nivelesEstimadosDeLaRun(curvaXp, arcos, xpDeJefe) {
         : piso === arco.pisoJefeFinal
           ? xpDeJefe(arco.jefeFinalId, arco)
           : xpPorPisoNormal;
+      // La misma rebaja que aplica el store, o esto volvería a medir un juego
+      // distinto del que se juega.
+      const nivelEnemigo = piso === arco.pisoMiniJefe
+        ? arco.nivelMiniJefe
+        : piso === arco.pisoJefeFinal ? arco.nivelJefeFinal : calcularNivelPorPiso(piso, arco);
 
-      estado = ganarXp(estado, xp, curvaXp);
+      estado = ganarXp(estado, Math.round(xp * factorXpPorVentaja(estado.nivel, nivelEnemigo)), curvaXp);
     }
 
     porArco[arco.id] = nivelEnPiso;

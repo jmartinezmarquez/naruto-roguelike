@@ -44,6 +44,12 @@
     "nivelMaximo": 100,
     "crecimientoStatsPorNivel": 0.03,
     "porcentajeXpBanquillo": 0.6,
+    "xpPorVentaja": {
+      "_comentario": "XP decreciente si vas por encima del enemigo: a partir de margenSinPenalizacion niveles de ventaja, cada nivel más quita penalizacionPorNivel, sin bajar de minimo. Ver factorXpPorVentaja en engine/leveling.js.",
+      "margenSinPenalizacion": 3,
+      "penalizacionPorNivel": 0.15,
+      "minimo": 0.25
+    },
     "multiplicadorEficaciaFuerte": 1.5,
     "multiplicadorEficaciaDebil": 0.5,
     "multiplicadorEficaciaNeutral": 1.0
