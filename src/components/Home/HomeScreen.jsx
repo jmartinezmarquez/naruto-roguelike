@@ -12,6 +12,7 @@ import { PanelMarco, TituloBloque, BotonSecundario } from '../common/PiezasUI';
 import iconoLogros from '../../assets/menu/logros.png';
 import iconoEnciclopedia from '../../assets/menu/enciclopedia.png';
 import iconoAjustes from '../../assets/menu/ajustes.png';
+import iconoSalon from '../../assets/menu/salon.png';
 
 /**
  * Home: la puerta del juego y el selector de campañas (punto 18 del roadmap).
@@ -137,6 +138,7 @@ export default function HomeScreen() {
   const abrirLogros = useGameStore((s) => s.abrirLogros);
   const abrirEnciclopedia = useGameStore((s) => s.abrirEnciclopedia);
   const abrirAjustes = useGameStore((s) => s.abrirAjustes);
+  const abrirSalonDeLaFama = useGameStore((s) => s.abrirSalonDeLaFama);
   const logrosDesbloqueados = useAchievementsStore((s) => s.logrosDesbloqueados);
   const contadores = useAchievementsStore((s) => s.contadores);
   const vistos = useAchievementsStore((s) => s.vistos);
@@ -167,6 +169,8 @@ export default function HomeScreen() {
   const ATAJOS = [
     { etiqueta: 'Missions', icono: iconoLogros, onClick: abrirLogros },
     { etiqueta: 'Bingo Book', icono: iconoEnciclopedia, onClick: abrirEnciclopedia },
+    // Solo desde el Home: es lo que se mira entre partidas, no durante.
+    { etiqueta: 'Hall of Fame', icono: iconoSalon, onClick: abrirSalonDeLaFama },
     { etiqueta: 'Settings', icono: iconoAjustes, onClick: abrirAjustes },
   ];
 

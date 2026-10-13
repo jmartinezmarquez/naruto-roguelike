@@ -13,6 +13,11 @@ const CLAVE_STORAGE = 'naruto-roguelike-logros';
 const CLAVE_VISTOS = 'naruto-roguelike-vistos';
 const CLAVE_CONTADORES = 'naruto-roguelike-contadores';
 const CLAVE_MARCA = 'naruto-roguelike-marca';
+const CLAVE_SALON = 'naruto-roguelike-salon';
+
+// Cuántas runs ganadas guarda el Salón de la Fama. Las más recientes primero; con un
+// tope para que `localStorage` no crezca sin fin en quien juega mucho.
+export const MAXIMO_SALON_DE_LA_FAMA = 20;
 
 /**
  * Las cuatro categorías del registro de "visto" de la enciclopedia. Están aquí y
@@ -81,6 +86,9 @@ export const useAchievementsStore = create((set, get) => ({
 
   // El punto más lejano alcanzado nunca. Ver MARCA_VACIA.
   marca: MARCA_VACIA,
+  // Las runs ganadas: `{ fecha, campanaId, equipo: [{id, nivel}], medallas: [arcoId] }`,
+  // la más reciente primero. Ver `registrarEnSalonDeLaFama`.
+  salonDeLaFama: [],
 
   /** Carga los logros ya desbloqueados en sesiones anteriores. Llamar una vez al arrancar la app. */
   cargarLogros() {
@@ -99,6 +107,8 @@ export const useAchievementsStore = create((set, get) => ({
       set({ contadores: { ...CONTADORES_VACIO, ...JSON.parse(contadoresGuardados) } });
     }
 
+    const salonGuardado = localStorage.getItem(CLAVE_SALON);
+    if (salonGuardado) set({ salonDeLaFama: JSON.parse(salonGuardado) });
     const marcaGuardada = localStorage.getItem(CLAVE_MARCA);
     if (marcaGuardada) set({ marca: { ...MARCA_VACIA, ...JSON.parse(marcaGuardada) } });
   },
@@ -110,6 +120,17 @@ export const useAchievementsStore = create((set, get) => ({
    * el piso 8 del arco 2. Es idempotente y no toca el estado si no hay mejora, que es
    * lo que permite llamarlo en **cada nodo** sin pensar — igual que `registrarVistos`.
    */
+  /**
+   * Apunta una run ganada en el Salón de la Fama (la más reciente, primera). Lo llama
+   * `jugarCombate` al caer el jefe que acaba la run — es meta-progresión, por eso vive
+   * aquí y no en `useGameStore`, que muere con la run.
+   */
+  registrarEnSalonDeLaFama(entrada) {
+    const siguiente = [entrada, ...get().salonDeLaFama].slice(0, MAXIMO_SALON_DE_LA_FAMA);
+    set({ salonDeLaFama: siguiente });
+    localStorage.setItem(CLAVE_SALON, JSON.stringify(siguiente));
+  },
+
   registrarMarca({ arcoId, orden, piso }) {
     const actual = get().marca;
     const mejora = orden > actual.orden || (orden === actual.orden && piso > actual.piso);
@@ -229,13 +250,14 @@ export const useAchievementsStore = create((set, get) => ({
    * El "empezar de cero" de toda la meta-progresión, que es una opción de verdad
    * en Ajustes (ver documentacion/34-ajustes.md).
    *
-   * ⚠️ **Borra las CUATRO claves.** Dejar los contadores llenos mientras los logros
+   * ⚠️ **Borra las CINCO claves.** Dejar los contadores llenos mientras los logros
    * vuelven a cero es peor que no reiniciar: los de contador se volverían a
    * desbloquear en el acto, en el primer combate, y el jugador vería su reinicio
    * deshacerse solo. Lo mismo con los vistos y la enciclopedia, y con la marca — que
-   * es lo primero que se mira en el Home.
+   * es lo primero que se mira en el Home. Y con el Salón de la Fama: reiniciar y seguir
+   * viendo tus victorias de antes sería un reinicio a medias.
    *
-   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van cuatro.
+   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van cinco.
    */
   reiniciarLogros() {
     set({
@@ -244,10 +266,12 @@ export const useAchievementsStore = create((set, get) => ({
       vistos: VISTOS_VACIO,
       contadores: CONTADORES_VACIO,
       marca: MARCA_VACIA,
+      salonDeLaFama: [],
     });
     localStorage.removeItem(CLAVE_STORAGE);
     localStorage.removeItem(CLAVE_VISTOS);
     localStorage.removeItem(CLAVE_CONTADORES);
     localStorage.removeItem(CLAVE_MARCA);
+    localStorage.removeItem(CLAVE_SALON);
   },
 }));

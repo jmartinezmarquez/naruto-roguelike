@@ -33,6 +33,7 @@ import {
 import { resumirBuffsActivos } from '../common/efectos';
 import { reproducir } from '../common/efectosDeSonido';
 import { FONDO_COLUMNA } from '../common/fondosDeArco';
+import { FilaMedallas } from '../common/Medallas';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
@@ -723,6 +724,24 @@ function PanelBuffs({ buffsTemporales }) {
   );
 }
 
+/**
+ * Las medallas de la run, como el estuche de medallas de Pokémon: un hueco por arco de
+ * la campaña, en silueta hasta que cae su jefe. Arriba del todo de la columna porque es
+ * lo único que dice cuánto llevas de la run entera — el mapa solo cuenta el arco.
+ */
+function PanelMedallas({ arcos, medallas }) {
+  if (arcos.length === 0) return null;
+  return (
+    <PanelMarco className="p-2.5 flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-1">
+        <TituloBloque>Crests</TituloBloque>
+        <p className="text-[10px] text-pergamino-200/60 font-display">{medallas.length}/{arcos.length}</p>
+      </div>
+      <FilaMedallas arcos={arcos} ganadas={medallas} />
+    </PanelMarco>
+  );
+}
+
 function PanelObjetos({ inventario, oro, abrirMochila }) {
   const conteoPorId = inventario.reduce((acc, id) => {
     acc[id] = (acc[id] ?? 0) + 1;
@@ -1047,6 +1066,8 @@ export default function MapScreen() {
   const inventario = useGameStore((s) => s.inventario);
   const oro = useGameStore((s) => s.oro);
   const buffsTemporales = useGameStore((s) => s.buffsTemporales);
+  const medallas = useGameStore((s) => s.medallas);
+  const obtenerArcosDeLaCampana = useGameStore((s) => s.obtenerArcosDeLaCampana);
   // Los mismos multiplicadores que usa `jugarCombate`, para que la ficha de personaje
   // enseñe el número que de verdad pelea y no uno parecido.
   const multiplicadoresBuffs = useMemo(
@@ -1322,6 +1343,7 @@ export default function MapScreen() {
           {/* Encima de la mochila y no debajo: cuando hay un buff activo es lo más
               perecedero que hay en pantalla —se gasta solo, combate a combate— y es lo
               que puede cambiar a qué nodo vas ahora mismo. */}
+          <PanelMedallas arcos={obtenerArcosDeLaCampana()} medallas={medallas} />
           <PanelBuffs buffsTemporales={buffsTemporales} />
           <PanelObjetos inventario={inventario} oro={oro} abrirMochila={abrirMochila} />
           <RuedaChakra />

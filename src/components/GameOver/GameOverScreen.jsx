@@ -2,6 +2,7 @@ import { useGameStore } from '../../store/useGameStore';
 import { nombreCorto } from '../common/nombres';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
+import { FilaMedallas } from '../common/Medallas';
 
 export default function GameOverScreen() {
   const equipo = useGameStore((s) => s.equipo);
@@ -13,6 +14,8 @@ export default function GameOverScreen() {
   const obtenerHpMaximo = useGameStore((s) => s.obtenerHpMaximo);
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
   const irAlHome = useGameStore((s) => s.irAlHome);
+  const medallas = useGameStore((s) => s.medallas);
+  const obtenerArcosDeLaCampana = useGameStore((s) => s.obtenerArcosDeLaCampana);
 
   const pisoAlcanzado = nodoActualId !== null ? mapa?.nodos[nodoActualId]?.piso : null;
 
@@ -84,6 +87,17 @@ export default function GameOverScreen() {
             })}
           </div>
           <p className="text-[9px] text-oro/80 mt-1">Gold accumulated: {oro}</p>
+        </PanelMarco>
+
+        {/* Las medallas de la run: hasta dónde llegaste, en tres iconos. Al perder es
+            lo que queda de la partida; al ganar, la fila llena y la promesa de que
+            este equipo se queda en el Salón de la Fama. */}
+        <PanelMarco className="p-4 flex flex-col items-center gap-2">
+          <TituloBloque>Crests</TituloBloque>
+          <FilaMedallas arcos={obtenerArcosDeLaCampana()} ganadas={medallas} tamano={64} />
+          {runGanada && (
+            <p className="text-[9px] text-oro leading-relaxed">This squad enters the Hall of Fame.</p>
+          )}
         </PanelMarco>
 
         {/* Dos salidas, y hasta ahora solo había una. Sin la del Home, quien acababa

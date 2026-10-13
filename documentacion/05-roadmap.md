@@ -1453,7 +1453,7 @@ meter azar de verdad.
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas por
 > comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar. Los
 > huecos (1-6 y 8-14) son puntos hechos que se han movido a "Hecho" **conservando su número en el
-> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 20) y nunca
+> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 22) y nunca
 > uno de los huecos.
 >
 > **Abiertos: el 7, el 15, el 16 y el 17.** Los tres últimos son de 2026-08-15 y ninguno es de mecánica:
@@ -1658,5 +1658,8 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
 - Sistema de cuentas / guardado remoto.
 - ~~Tests de componentes React (hoy solo motor + store).~~ **HECHOS el 2026-08-21** — bloque propio
   en "Hecho". Quedan fuera `CombatScreen` y `MapScreen`, y está razonado allí por qué.
-- **Modificadores de dificultad entre runs** ("ascensión"): ligado a la condición de logro ya
+- ~~**Modificadores de dificultad entre runs** ("ascensión")~~ — **descartado el 2026-10-13**: la
+  dificultad creciente se hará con campañas más difíciles en el selector del Home. Ver
+  [39](./39-medallas-y-salon-de-la-fama.md), donde están también los puntos 20 (medallas de arco) y 21
+  (Salón de la Fama), hechos ese día. Era: ligado a la condición de logro ya
   propuesta pero sin implementar `completarRunEnDificultad` en `achievements.json`.

@@ -371,6 +371,10 @@ export const useGameStore = create((set, get) => ({
   runTerminada: false,
   runGanada: false,
   huboDerrotaEnEsteArco: false, // para el logro "completarArcoSinDerrotas" — se resetea en iniciarRun, se marca en _aplicarDerrota
+  // Ids de los arcos cuyo jefe final ha caído en ESTA run, en orden: las medallas, como
+  // las de gimnasio de Pokémon. Mueren con la run; las que quedan para siempre van al
+  // Salón de la Fama junto al equipo que las ganó.
+  medallas: [],
   // La campaña elegida en el Home. Decide QUÉ arcos se juegan y en qué orden, así que
   // `avanzarSiguienteArco` la lee para saber cuál viene después.
   campanaActualId: CAMPANA_POR_DEFECTO,
@@ -422,6 +426,7 @@ export const useGameStore = create((set, get) => ({
       runTerminada: false,
       runGanada: false,
       huboDerrotaEnEsteArco: false,
+      medallas: [],
     });
 
     // La enciclopedia arranca con lo que traes puesto: el personaje elegido y los
@@ -803,6 +808,12 @@ export const useGameStore = create((set, get) => ({
             cayo: Boolean(p.derrotado),
           }));
           get()._curarEquipoCompleto();
+          // La medalla del arco. Sin repetir: no debería poder ganarse dos veces el
+          // mismo arco en una run, pero si pasara, dos medallas iguales serían un bug
+          // visible en la fila del mapa.
+          if (!get().medallas.includes(arcoEnCurso.id)) {
+            set({ medallas: [...get().medallas, arcoEnCurso.id] });
+          }
           // ⚠️ **El aviso NO se pone aquí**, aunque la curación sí ocurra aquí. Esto corre
           // en cuanto el jefe muere en el motor, o sea **antes de que empiece la
           // animación del combate**: el toast salía por encima de la pelea del jefe final
@@ -813,6 +824,16 @@ export const useGameStore = create((set, get) => ({
         const runGanadaAqui = arcoCompletado && enemigoBase.recompensa?.finDeLaRun;
         if (runGanadaAqui) {
           set({ runTerminada: true, runGanada: true });
+          // Al Salón de la Fama, con el equipo tal y como ha ganado: ya curado y con
+          // los niveles de esta victoria (`_aplicarVictoria` y la curación de fin de
+          // arco han corrido justo arriba).
+          const { equipo, medallas, campanaActualId } = get();
+          useAchievementsStore.getState().registrarEnSalonDeLaFama({
+            fecha: new Date().toISOString().slice(0, 10),
+            campanaId: campanaActualId,
+            equipo: equipo.map((p) => ({ id: p.id, nivel: p.nivel })),
+            medallas,
+          });
         }
 
         // ⚠️ **Los contadores se suman ANTES de evaluar**, o el logro de "gana 10
@@ -965,6 +986,19 @@ export const useGameStore = create((set, get) => ({
       huboDerrotaEnEsteArco: false,
     });
     return true;
+  },
+
+  /** Los arcos de la campaña en curso, en orden: la fila de medallas tiene un hueco por cada uno. */
+  obtenerArcosDeLaCampana() {
+    return arcosDeCampana(get().campanaActualId);
+  },
+
+  /**
+   * Abre el Salón de la Fama. Como Missions y el Bingo Book, es meta-progresión, así
+   * que se abre también desde el Home, sin run.
+   */
+  abrirSalonDeLaFama() {
+    set({ pantalla: 'salonFama' });
   },
 
   /** El arco que viene después del actual en la campaña en curso, o null si no hay. */

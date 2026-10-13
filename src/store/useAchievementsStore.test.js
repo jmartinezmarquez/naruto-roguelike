@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } from './useAchievementsStore';
+import {
+  useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, MAXIMO_SALON_DE_LA_FAMA,
+} from './useAchievementsStore';
 import achievementsData from '../data/achievements.json';
 import { TIPOS_DE_CONDICION, TIPOS_DE_RECOMPENSA } from '../engine/achievements';
 import charactersData from '../data/characters.json';
@@ -10,7 +12,7 @@ beforeEach(() => {
   localStorage.clear();
   useAchievementsStore.setState({
     logrosDesbloqueados: [], notificacionesPendientes: [], vistos: VISTOS_VACIO,
-    contadores: CONTADORES_VACIO, marca: MARCA_VACIA,
+    contadores: CONTADORES_VACIO, marca: MARCA_VACIA, salonDeLaFama: [],
   });
 });
 
@@ -115,6 +117,34 @@ describe('reiniciarLogros (botón temporal de desarrollo)', () => {
 
     expect(useAchievementsStore.getState().marca).toEqual(MARCA_VACIA);
     expect(localStorage.getItem('naruto-roguelike-marca')).toBeNull();
+  });
+
+  it('y el Salón de la Fama: reiniciar y seguir viendo las victorias de antes sería a medias', () => {
+    useAchievementsStore.getState().registrarEnSalonDeLaFama({ fecha: '2026-10-13', equipo: [], medallas: [] });
+    useAchievementsStore.getState().reiniciarLogros();
+
+    expect(useAchievementsStore.getState().salonDeLaFama).toEqual([]);
+    expect(localStorage.getItem('naruto-roguelike-salon')).toBeNull();
+  });
+});
+
+describe('Salón de la Fama', () => {
+  it('guarda la run ganada, la más reciente primero, y sobrevive a recargar', () => {
+    const { registrarEnSalonDeLaFama } = useAchievementsStore.getState();
+    registrarEnSalonDeLaFama({ fecha: '2026-10-01', equipo: [{ id: 'naruto', nivel: 50 }], medallas: ['a'] });
+    registrarEnSalonDeLaFama({ fecha: '2026-10-02', equipo: [{ id: 'sasuke', nivel: 51 }], medallas: ['a', 'b'] });
+
+    useAchievementsStore.setState({ salonDeLaFama: [] });
+    useAchievementsStore.getState().cargarLogros();
+    expect(useAchievementsStore.getState().salonDeLaFama.map((e) => e.fecha)).toEqual(['2026-10-02', '2026-10-01']);
+  });
+
+  it('tiene tope: localStorage no crece sin fin en quien juega mucho', () => {
+    for (let i = 0; i < MAXIMO_SALON_DE_LA_FAMA + 5; i++) {
+      useAchievementsStore.getState().registrarEnSalonDeLaFama({ fecha: String(i), equipo: [], medallas: [] });
+    }
+    expect(useAchievementsStore.getState().salonDeLaFama).toHaveLength(MAXIMO_SALON_DE_LA_FAMA);
+    expect(useAchievementsStore.getState().salonDeLaFama[0].fecha).toBe(String(MAXIMO_SALON_DE_LA_FAMA + 4));
   });
 });
 

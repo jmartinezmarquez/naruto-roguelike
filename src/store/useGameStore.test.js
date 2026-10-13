@@ -127,6 +127,13 @@ describe('encadenar arcos', () => {
     useGameStore.getState().equipo.forEach((p) => expect(p.derrotado).toBe(false));
   });
 
+  it('ganar al jefe de un arco da su medalla, una sola vez', () => {
+    expect(useGameStore.getState().medallas).toEqual([]);
+    useGameStore.getState().jugarCombate(enemigoZabuzaDePrueba, 1);
+    const arcoId = useGameStore.getState().arcoActualId;
+    expect(useGameStore.getState().medallas).toEqual([arcoId]);
+  });
+
   it('un combate que no cierra arco no trae foto de curación', () => {
     const resumen = useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
     expect(resumen.curacionDeArco).toBeNull();
@@ -152,6 +159,30 @@ describe('encadenar arcos', () => {
     expect(resumen.arcoCompletado).toBe(true);
     expect(useGameStore.getState().runTerminada).toBe(true);
     expect(useGameStore.getState().runGanada).toBe(true);
+  });
+
+  it('ganar la run apunta al equipo en el Salón de la Fama, con sus medallas', () => {
+    useAchievementsStore.setState({ salonDeLaFama: [] });
+    useGameStore.setState((estado) => ({
+      arcoActualDatos: { ...estado.arcoActualDatos, jefeFinalId: 'pain_test' },
+    }));
+    useGameStore.getState().jugarCombate({
+      id: 'pain_test', nombre: 'Pain de Prueba', tipo: 'raiton',
+      statsBase: { hp: 1, ataque: 1, defensa: 1, velocidad: 1 },
+      jutsu: { nombre: 'Golpe Débil', danoBase: 0.1, efectoEstado: null },
+      modos: [], recompensa: { xp: 10, finDeLaRun: true },
+    }, 1);
+
+    const [entrada] = useAchievementsStore.getState().salonDeLaFama;
+    expect(entrada.equipo.map((p) => p.id)).toEqual(useGameStore.getState().equipo.map((p) => p.id));
+    expect(entrada.medallas).toEqual(useGameStore.getState().medallas);
+    expect(entrada.medallas).toHaveLength(1);
+  });
+
+  it('perder la run no apunta nada en el Salón de la Fama', () => {
+    useAchievementsStore.setState({ salonDeLaFama: [] });
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(useAchievementsStore.getState().salonDeLaFama).toEqual([]);
   });
 
   it('derrotar al jefe final de un arco cura y revive a todo el equipo (estilo Slay the Spire)', () => {

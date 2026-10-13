@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **497 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+- [x] Testing con Vitest — **507 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
   componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -404,6 +404,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   fondo. El combate va ahí con `irATransicionArco` y **la pantalla es quien avanza de arco al salir**.
   ⚠️ Pinta `resumen.curacionDeArco` (la foto de antes de curar) y no `equipo`, que ya está curado. Ver
   `documentacion/20-arcos-encadenados.md`.
+
+- [x] **Medallas de arco y Salón de la Fama** (puntos 20 y 21, `documentacion/39-medallas-y-salon-de-la-fama.md`):
+  una medalla por jefe final (`medalla` en el JSON del arco, `medallas` en la run, sprites
+  **dibujados** por `scripts/generar-sprites-medallas.py`) y cada run ganada guardada con su
+  equipo en `useAchievementsStore.salonDeLaFama`. ⚠️ `reiniciarLogros` borra ya **cinco** claves.
+  Descartados en la misma conversación: elegir 1 de 3 tras un élite (no hay objetos para eso) y
+  el modo ascensión (se harán campañas más difíciles).
+
 
 ## Bugs ya resueltos (para no repetirlos)
 

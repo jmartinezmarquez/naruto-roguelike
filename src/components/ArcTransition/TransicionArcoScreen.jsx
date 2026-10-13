@@ -8,6 +8,7 @@ import { reproducir } from '../common/efectosDeSonido';
 import { useAvanzarConTeclado } from '../common/useAvanzarConTeclado';
 import { PanelMarco, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
 import { TiraDeEfecto } from '../Combat/EfectoSprite';
+import { Medalla } from '../common/Medallas';
 
 /**
  * La transición entre arcos (punto 19 del roadmap — ver documentacion/20-arcos-encadenados.md).
@@ -140,6 +141,14 @@ export default function TransicionArcoScreen() {
       <header className="text-center">
         <p className="text-sello-500 text-[10px] tracking-[0.35em] uppercase mb-1">Arc complete</p>
         <h1 className="font-naruto text-4xl text-pergamino-100 sello-resultado">{arco?.nombre}</h1>
+        {/* La medalla del arco, a ×2 y con el mismo golpe de sello que el título:
+            es lo que te llevas de aquí, además del equipo curado. */}
+        {arco?.medalla && (
+          <div className="flex flex-col items-center mt-3 sello-resultado">
+            <Medalla arco={arco} tamano={64} />
+            <p className="text-[10px] text-oro font-display mt-1">{arco.medalla.nombre} earned</p>
+          </div>
+        )}
         {jefe && (
           <div className="flex items-center justify-center gap-2 mt-2">
             <img
