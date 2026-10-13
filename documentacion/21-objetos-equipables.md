@@ -135,8 +135,8 @@ pergaminos, no pide personaje. **No pasa por la XP decreciente**: 30 XP es más 
 menos de uno en el 3, y el oro que cuesta ya lo limita.
 
 Sprites: recortados de `src/assets/sprite-objetos-nuevos.png` por `scripts/generar-sprites-objetos-nuevos.py`.
-La hoja llegó con **7 de los 8** (faltan las pesas de Lee, que siguen con el icono provisional que dibuja
-el mismo script), en otro orden que el encargado —se asignan por lo que se ve, en `IDS_EN_LA_HOJA`— y
+La hoja llegó con **7 de los 8** (las pesas de Lee llegaron después, sueltas, en
+`src/assets/sprite-pesas-de-lee.png`: el script las lee de `SUELTOS`), en otro orden que el encargado —se asignan por lo que se ve, en `IDS_EN_LA_HOJA`— y
 con el damero **pintado** en RGB: se borra por inundación desde el borde, como en las hojas de chakra.
 ⚠️ Además el kunai y el chaleco **se tocan**, así que cuando faltan trozos el script parte el más ancho
 por su columna más fina (lo mismo que `generar-sprites-proyectiles.py`).

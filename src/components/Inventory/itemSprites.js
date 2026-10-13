@@ -24,9 +24,8 @@ import cascabeles from '../../assets/items/cascabeles.png';
 import pergaminoEntrenamientoAtaque from '../../assets/items/pergamino_entrenamiento_ataque.png';
 import pergaminoEntrenamientoDefensa from '../../assets/items/pergamino_entrenamiento_defensa.png';
 import pergaminoEntrenamientoVelocidad from '../../assets/items/pergamino_entrenamiento_velocidad.png';
-// Los 8 objetos del 2026-10-14, recortados de `assets/sprite-objetos-nuevos.png` por
-// `scripts/generar-sprites-objetos-nuevos.py`. La hoja trae 7: las pesas de Lee
-// siguen con el icono provisional que dibuja el mismo script.
+// Los 8 objetos del 2026-10-14, recortados por `scripts/generar-sprites-objetos-nuevos.py`:
+// siete de `assets/sprite-objetos-nuevos.png` y las pesas de Lee de su propia imagen.
 import unguentoCurativo from '../../assets/items/unguento_curativo.png';
 import kitNinjaMedico from '../../assets/items/kit_ninja_medico.png';
 import manualJonin from '../../assets/items/manual_jonin.png';
