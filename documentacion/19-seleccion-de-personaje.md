@@ -123,3 +123,18 @@ dependía del grosor de línea de cada trazo, más difícil de razonar que un ta
   siendo una limitación conocida del proyecto, ver [16 - Testing](./16-testing.md). En particular,
   el bug de las flechas invisibles de `RuedaChakra` y el de `PersonajeHoverCard` no habrían sido
   detectables por ningún test aquí — son bugs puramente visuales/SVG.
+
+## Los ★ ya reclutados también son iniciales (2026-10-14)
+
+A partir de la segunda run, el roster de la selección suma a **cualquier ninja de una estrella
+(`inicial` o `comun`) que ya haya estado en tu equipo** en alguna run: reclutarlo es lo que lo
+desbloquea. Sale del registro de ninjas del Bingo Book (`vistos.personajes`, que se apunta al tenerlo
+en el equipo), así que no hizo falta guardar nada nuevo. La regla vive en `rosterInicial`
+(`engine/achievements.js`).
+
+- **Raros y legendarios no entran por esta vía**, solo por logro: si Kakashi se desbloqueara por
+  tenerlo una vez, el pergamino dorado dejaría de ser un reto en las runs siguientes.
+- **La primera run no cambia**: con el registro vacío salen solo los tres iniciales, que es contra lo
+  que se calibraron los jefes del arco 1 (`documentacion/11`, "v5").
+- Empezar con un común no saca a nadie del pool de reclutables: los tres iniciales no elegidos siguen
+  saliendo en el pergamino verde del arco 1.
