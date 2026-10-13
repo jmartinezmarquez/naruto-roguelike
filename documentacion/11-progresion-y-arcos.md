@@ -353,3 +353,18 @@ encima, y la pantalla del desafío avisa. Del piso 5 en adelante se gana el 100%
 **La lección, para el próximo jefe:** un jefe no se calibra contra el roster, sino contra **lo que el
 jugador puede tener al llegar a él**. Y un tipo de jefe que ningún personaje disponible contrarresta no
 es un jefe difícil, es un muro.
+
+### v5, segunda parte — variación de daño, objetos en la medida y ventaja en el mapa
+
+- **Variación de daño ±10%** (`config.combate.variacionDano`, en `ejecutarAtaque`). El combate era casi
+  determinista y el balance, de todo o nada: Naruto + Sakura contra Zabuza saltaba del 0% al 100% de un
+  nivel al siguiente. Con la variación los umbrales se vuelven rampas (Sakura sola contra Zabuza:
+  0 → 36 → 58 → 100% de Nv.5 a Nv.8, antes 0 → 0 → 0 → 100%) y las medias del simulador apenas se
+  mueven (±1-3 puntos), así que no hubo que recalibrar. Sin `azar` no varía: los tests unitarios que
+  llaman a `ejecutarAtaque` a mano siguen midiendo números exactos. Si en el playtest se nota poco, el
+  siguiente paso es 0,15.
+- **El bloque de primera run mide también con objetos** (los `objetoGarantizado` de los jefes ya
+  derrotados, un suelo). Casi no mueve nada: Kabuto 70 → 70%, Gaara 81 → 82%. **Lo que saca a un equipo
+  de un muro es el tipo, no los objetos seguros.**
+- Por eso mismo, **el hover del jefe en el mapa dice qué tal le va a cada uno de tu equipo**
+  (Strong / Even / Weak), no solo el tipo del jefe.

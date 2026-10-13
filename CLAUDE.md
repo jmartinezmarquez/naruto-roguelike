@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **509 tests**: 292 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
+- [x] Testing con Vitest — **511 tests**: 294 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
   componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -425,6 +425,9 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   Al rebajarlo, Zabuza como desafío legendario de los arcos 2-3 quedó al 93-100%: se le dio un **segundo
   modo a nivel 20** ("Silent Killing"), que no existe en el arco 1. Y el **Sharingan de Kakashi pasó de 6 a
   7** para que su desafío del arco 1 (a nivel 6) se pelee sin él. Ver `documentacion/11-progresion-y-arcos.md`, sección "v5".
+  Después: **variación de daño ±10%** (`config.combate.variacionDano`) para que los umbrales de todo o
+  nada sean rampas, el **hover del jefe dice Strong/Even/Weak por cada miembro del equipo**, y la pasiva
+  `priority` se llama "Strikes First" (era "Inner Gates", el modo de Rock Lee).
 
 ## Bugs ya resueltos (para no repetirlos)
 

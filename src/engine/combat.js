@@ -193,7 +193,26 @@ function acumularCarga(luchador, cantidad) {
  * Muta hpActual, cargaJutsu y modificadoresTemporales de los luchadores dados.
  * Devuelve un resumen del turno, pensado para que la UI lo pueda mostrar.
  */
-export function ejecutarAtaque(atacante, defensor, esAtaqueExtra = false) {
+/**
+ * Variación del daño (±`config.combate.variacionDano`), solo si hay azar.
+ *
+ * Sin ella el combate era casi determinista, y eso hacía que el balance fuera de
+ * todo o nada: en el playtest de 2026-10-13, Naruto + Sakura contra Zabuza pasaba
+ * del 0% a Nv.8 al 100% a Nv.9. Dos niveles de diferencia no movían la
+ * probabilidad, decidían la pelea, y un equipo mal emparejado no tenía NINGUNA
+ * opción. Con la variación los umbrales se vuelven rampas.
+ *
+ * Sin `azar` no varía: los tests que llaman a `ejecutarAtaque` a mano miden
+ * números exactos, y el juego y el simulador siempre entran por `resolverTurno`,
+ * que sí lo pasa.
+ */
+function aplicarVariacion(cantidad, azar) {
+  const variacion = configGlobal.combate.variacionDano ?? 0;
+  if (!azar || variacion <= 0) return cantidad;
+  return Math.max(1, Math.round(cantidad * (1 + (azar() * 2 - 1) * variacion)));
+}
+
+export function ejecutarAtaque(atacante, defensor, esAtaqueExtra = false, azar = null) {
   const usaJutsu = atacante.cargaJutsu >= atacante.cargaMaxima;
   const ataque = usaJutsu ? atacante.jutsu : atacante.ataqueBasico;
 
@@ -212,7 +231,8 @@ export function ejecutarAtaque(atacante, defensor, esAtaqueExtra = false) {
     activadas: [],
   };
 
-  const { cantidad, danoBruto, eficacia } = calcularDano(atacante, defensor, ataque, contexto);
+  const { cantidad: cantidadBase, danoBruto, eficacia } = calcularDano(atacante, defensor, ataque, contexto);
+  const cantidad = aplicarVariacion(cantidadBase, azar);
   contexto.danoBruto = danoBruto;
 
   // El daño pasa por las pasivas del atacante y luego por las del defensor. El
@@ -302,11 +322,11 @@ export function resolverTurno(luchador1, luchador2, azar = Math.random) {
    * con tres golpes ya no se lee en pantalla.
    */
   function atacarConExtras(atacante, defensor) {
-    const eventos = [ejecutarAtaque(atacante, defensor)];
+    const eventos = [ejecutarAtaque(atacante, defensor, false, azar)];
     const repite = defensor.hpActual > 0
       && alguna(ENGANCHES.ATAQUE_EXTRA, atacante, { esJutsu: eventos[0].tipoAtaque === 'jutsu', azar });
     if (repite) {
-      eventos.push(ejecutarAtaque(atacante, defensor, true));
+      eventos.push(ejecutarAtaque(atacante, defensor, true, azar));
     }
     // ⚠️ **Quién ataca se marca por POSICIÓN, no por id.** Ver la nota de `ganadorEsPrimero`.
     const esPrimero = atacante === luchador1;

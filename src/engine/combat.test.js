@@ -378,3 +378,30 @@ describe('🐛 combate en ESPEJO: los dos luchadores con el mismo id', () => {
     expect(new Set(eventos.map((e) => e.atacanteEsPrimero)).size).toBe(2);
   });
 });
+
+describe('variación del daño', () => {
+  // Sin variación el combate era casi determinista y el balance, de todo o nada:
+  // un equipo pasaba de perder siempre a ganar siempre con un nivel de diferencia.
+  const golpe = (azar) => {
+    const atacante = crearLuchador({ ...personajeDePrueba, statsBase: { ...personajeDePrueba.statsBase, ataque: 60 } }, 10);
+    const defensor = crearLuchador(personajeDePrueba, 10);
+    return ejecutarAtaque(atacante, defensor, false, azar).dano;
+  };
+
+  it('sin azar no varía: los tests que llaman a mano siguen siendo exactos', () => {
+    expect(golpe(null)).toBe(golpe(null));
+    expect(golpe(() => 0.5)).toBe(golpe(null));
+  });
+
+  it('con azar se mueve dentro de ±variacionDano y en los dos sentidos', () => {
+    const variacion = configGlobal.combate.variacionDano;
+    expect(variacion).toBeGreaterThan(0);
+    const base = golpe(null);
+    const minimo = golpe(() => 0);
+    const maximo = golpe(() => 0.999999);
+    expect(minimo).toBeLessThan(base);
+    expect(maximo).toBeGreaterThan(base);
+    expect(minimo).toBeGreaterThanOrEqual(Math.floor(base * (1 - variacion)));
+    expect(maximo).toBeLessThanOrEqual(Math.ceil(base * (1 + variacion)));
+  });
+});

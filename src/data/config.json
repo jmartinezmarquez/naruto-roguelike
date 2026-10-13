@@ -24,6 +24,7 @@
   },
   "combate": {
     "turnosMaximos": 30,
+    "variacionDano": 0.1,
     "ordenPorVelocidad": true,
     "jutsu": {
       "_comentario": "Barra de jutsu: sube alAtacar por ataque básico propio y alRecibirDano por golpe recibido, y al llegar a cargaMaxima el SIGUIENTE ataque es el jutsu (que la vacía). cargaPorDefecto es red de seguridad para contenido nuevo (hoy todos traen la suya). ataqueBasicoPorDefecto NO es un defecto: es el ataque básico de TODOS los luchadores, único a propósito — lo que diferencia el daño básico de un personaje a otro es su stat de ataque, no un danoBase propio. Ningún personaje ni enemigo define ya el suyo. El motor sigue leyendo personajeBase.ataqueBasico si existiera, por si algún día un jefe merece uno.",
