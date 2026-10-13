@@ -15,6 +15,7 @@ export default function GameOverScreen() {
   const reiniciarRun = useGameStore((s) => s.reiniciarRun);
   const irAlHome = useGameStore((s) => s.irAlHome);
   const medallas = useGameStore((s) => s.medallas);
+  const ascension = useGameStore((s) => s.ascension);
   const obtenerArcosDeLaCampana = useGameStore((s) => s.obtenerArcosDeLaCampana);
 
   const pisoAlcanzado = nodoActualId !== null ? mapa?.nodos[nodoActualId]?.piso : null;
@@ -93,7 +94,7 @@ export default function GameOverScreen() {
             lo que queda de la partida; al ganar, la fila llena y la promesa de que
             este equipo se queda en el Salón de la Fama. */}
         <PanelMarco className="p-4 flex flex-col items-center gap-2">
-          <TituloBloque>Crests</TituloBloque>
+          <TituloBloque>Crests{ascension > 0 ? ` · Ascension ${ascension}` : ''}</TituloBloque>
           <FilaMedallas arcos={obtenerArcosDeLaCampana()} ganadas={medallas} tamano={64} />
           {runGanada && (
             <p className="text-[9px] text-oro leading-relaxed">This squad enters the Hall of Fame.</p>

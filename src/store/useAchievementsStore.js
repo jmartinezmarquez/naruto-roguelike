@@ -14,6 +14,7 @@ const CLAVE_VISTOS = 'naruto-roguelike-vistos';
 const CLAVE_CONTADORES = 'naruto-roguelike-contadores';
 const CLAVE_MARCA = 'naruto-roguelike-marca';
 const CLAVE_SALON = 'naruto-roguelike-salon';
+const CLAVE_ASCENSION = 'naruto-roguelike-ascension';
 
 // Cuántas runs ganadas guarda el Salón de la Fama. Las más recientes primero; con un
 // tope para que `localStorage` no crezca sin fin en quien juega mucho.
@@ -89,6 +90,9 @@ export const useAchievementsStore = create((set, get) => ({
   // Las runs ganadas: `{ fecha, campanaId, equipo: [{id, nivel}], medallas: [arcoId] }`,
   // la más reciente primero. Ver `registrarEnSalonDeLaFama`.
   salonDeLaFama: [],
+  // La ascensión más alta GANADA en cada campaña: `{ [campanaId]: nivel }`. Sin
+  // entrada = no has ganado ninguna, ni siquiera la A0. Ver `registrarAscensionGanada`.
+  ascensionesGanadas: {},
 
   /** Carga los logros ya desbloqueados en sesiones anteriores. Llamar una vez al arrancar la app. */
   cargarLogros() {
@@ -111,6 +115,21 @@ export const useAchievementsStore = create((set, get) => ({
     if (salonGuardado) set({ salonDeLaFama: JSON.parse(salonGuardado) });
     const marcaGuardada = localStorage.getItem(CLAVE_MARCA);
     if (marcaGuardada) set({ marca: { ...MARCA_VACIA, ...JSON.parse(marcaGuardada) } });
+    const ascensionGuardada = localStorage.getItem(CLAVE_ASCENSION);
+    if (ascensionGuardada) set({ ascensionesGanadas: JSON.parse(ascensionGuardada) });
+  },
+
+  /**
+   * Apunta que se ha ganado una run de `campanaId` en la ascensión `nivel`, **solo
+   * si mejora el récord** de esa campaña (ganar A1 después de A3 no te quita A4).
+   * Es lo que desbloquea el siguiente nivel en el Home.
+   */
+  registrarAscensionGanada(campanaId, nivel) {
+    const actual = get().ascensionesGanadas[campanaId];
+    if (actual != null && actual >= nivel) return;
+    const siguiente = { ...get().ascensionesGanadas, [campanaId]: nivel };
+    set({ ascensionesGanadas: siguiente });
+    localStorage.setItem(CLAVE_ASCENSION, JSON.stringify(siguiente));
   },
 
   /**
@@ -220,8 +239,9 @@ export const useAchievementsStore = create((set, get) => ({
    * ningún logro que no fuera "derrota a X" tenía dónde dispararse.
    */
   evaluarLogros(contexto = {}) {
-    const { logrosDesbloqueados, contadores, vistos } = get();
-    const contextoCompleto = { ...contexto, contadores, vistos };
+    const { logrosDesbloqueados, contadores, vistos, ascensionesGanadas } = get();
+    const ascensionMaximaGanada = Math.max(-1, ...Object.values(ascensionesGanadas));
+    const contextoCompleto = { ...contexto, contadores, vistos, ascensionMaximaGanada };
     const nuevos = evaluarLogrosDesbloqueables(achievementsData.logros, logrosDesbloqueados, contextoCompleto);
     if (nuevos.length === 0) return [];
 
@@ -250,14 +270,16 @@ export const useAchievementsStore = create((set, get) => ({
    * El "empezar de cero" de toda la meta-progresión, que es una opción de verdad
    * en Ajustes (ver documentacion/34-ajustes.md).
    *
-   * ⚠️ **Borra las CINCO claves.** Dejar los contadores llenos mientras los logros
+   * ⚠️ **Borra las SEIS claves.** Dejar los contadores llenos mientras los logros
    * vuelven a cero es peor que no reiniciar: los de contador se volverían a
    * desbloquear en el acto, en el primer combate, y el jugador vería su reinicio
    * deshacerse solo. Lo mismo con los vistos y la enciclopedia, y con la marca — que
    * es lo primero que se mira en el Home. Y con el Salón de la Fama: reiniciar y seguir
    * viendo tus victorias de antes sería un reinicio a medias.
    *
-   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van cinco.
+   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van seis:
+   * la última, las ascensiones ganadas — reiniciar y seguir pudiendo jugar en A5 sería
+   * otro reinicio a medias.
    */
   reiniciarLogros() {
     set({
@@ -267,11 +289,13 @@ export const useAchievementsStore = create((set, get) => ({
       contadores: CONTADORES_VACIO,
       marca: MARCA_VACIA,
       salonDeLaFama: [],
+      ascensionesGanadas: {},
     });
     localStorage.removeItem(CLAVE_STORAGE);
     localStorage.removeItem(CLAVE_VISTOS);
     localStorage.removeItem(CLAVE_CONTADORES);
     localStorage.removeItem(CLAVE_MARCA);
     localStorage.removeItem(CLAVE_SALON);
+    localStorage.removeItem(CLAVE_ASCENSION);
   },
 }));

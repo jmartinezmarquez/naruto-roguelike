@@ -45,5 +45,6 @@
 - [37 - Publicación web](./37-publicacion-web.md)
 - [38 - Home y campañas](./38-home-y-campanas.md)
 - [39 - Medallas de arco y Salón de la Fama](./39-medallas-y-salon-de-la-fama.md)
+- [40 - Ascensión](./40-ascension.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.

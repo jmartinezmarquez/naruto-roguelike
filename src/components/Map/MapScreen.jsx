@@ -35,6 +35,7 @@ import { resumirBuffsActivos } from '../common/efectos';
 import { reproducir } from '../common/efectosDeSonido';
 import { FONDO_COLUMNA } from '../common/fondosDeArco';
 import { FilaMedallas } from '../common/Medallas';
+import ascensionsData from '../../data/ascensions.json';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
@@ -764,12 +765,21 @@ function PanelBuffs({ buffsTemporales }) {
  * la campaña, en silueta hasta que cae su jefe. Arriba del todo de la columna porque es
  * lo único que dice cuánto llevas de la run entera — el mapa solo cuenta el arco.
  */
-function PanelMedallas({ arcos, medallas }) {
+function PanelMedallas({ arcos, medallas, ascension = 0 }) {
   if (arcos.length === 0) return null;
+  const definicion = ascensionsData.niveles.find((n) => n.nivel === ascension);
   return (
     <PanelMarco className="p-2.5 flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-1">
         <TituloBloque>Crests</TituloBloque>
+        {/* La ascensión va con las medallas porque las dos hablan de la run entera, no
+            del arco. El hover recuerda qué la hace más dura: a mitad de run es fácil
+            olvidar por qué el descanso solo ha curado el 60%. */}
+        {ascension > 0 && (
+          <HoverTooltip posicion="abajo" contenido={<EtiquetaFlotante>{definicion?.nombre}{ascension > 1 ? ` + ${ascension - 1} more` : ''}</EtiquetaFlotante>}>
+            <span className="font-display text-[9px] px-1.5 py-0.5 rounded-sm bg-sello-600 text-sobre-sello">A{ascension}</span>
+          </HoverTooltip>
+        )}
         <p className="text-[10px] text-pergamino-200/60 font-display">{medallas.length}/{arcos.length}</p>
       </div>
       <FilaMedallas arcos={arcos} ganadas={medallas} />
@@ -1102,6 +1112,7 @@ export default function MapScreen() {
   const oro = useGameStore((s) => s.oro);
   const buffsTemporales = useGameStore((s) => s.buffsTemporales);
   const medallas = useGameStore((s) => s.medallas);
+  const ascension = useGameStore((s) => s.ascension);
   const obtenerArcosDeLaCampana = useGameStore((s) => s.obtenerArcosDeLaCampana);
   // Los mismos multiplicadores que usa `jugarCombate`, para que la ficha de personaje
   // enseñe el número que de verdad pelea y no uno parecido.
@@ -1378,7 +1389,7 @@ export default function MapScreen() {
           {/* Encima de la mochila y no debajo: cuando hay un buff activo es lo más
               perecedero que hay en pantalla —se gasta solo, combate a combate— y es lo
               que puede cambiar a qué nodo vas ahora mismo. */}
-          <PanelMedallas arcos={obtenerArcosDeLaCampana()} medallas={medallas} />
+          <PanelMedallas arcos={obtenerArcosDeLaCampana()} medallas={medallas} ascension={ascension} />
           <PanelBuffs buffsTemporales={buffsTemporales} />
           <PanelObjetos inventario={inventario} oro={oro} abrirMochila={abrirMochila} />
           <RuedaChakra />

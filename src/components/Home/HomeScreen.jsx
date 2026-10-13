@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import campaignsData from '../../data/campaigns.json';
@@ -8,6 +9,8 @@ import arcoExamenChunin from '../../data/arcs/examen-chunin.json';
 import arcoInvasionDePain from '../../data/arcs/invasion-de-pain.json';
 import enemiesData from '../../data/enemies.json';
 import commonEnemiesData from '../../data/common-enemies.json';
+import ascensionsData from '../../data/ascensions.json';
+import { ascensionMaximaDisponible } from '../../engine/ascension';
 import { PanelMarco, TituloBloque, BotonSecundario } from '../common/PiezasUI';
 import iconoLogros from '../../assets/menu/logros.png';
 import iconoEnciclopedia from '../../assets/menu/enciclopedia.png';
@@ -133,6 +136,61 @@ function TarjetaCampana({ campana, marcador, logros, onElegir }) {
   );
 }
 
+/**
+ * La ascensión con la que se va a jugar la campaña. Va DEBAJO de la tarjeta y no
+ * dentro porque la tarjeta entera es un botón, y un botón dentro de otro no es
+ * HTML válido (y el clic en una pastilla arrancaría la campaña).
+ *
+ * Mientras no se haya ganado ninguna run, solo dice cómo se desbloquea: siete
+ * pastillas de las que seis están cerradas son un muro de candados para quien
+ * acaba de llegar. Ver documentacion/40-ascension.md.
+ */
+function SelectorAscension({ elegida, maxima, onElegir }) {
+  if (maxima === 0) {
+    return (
+      <p className="text-[9px] text-pergamino-200/60 text-center">
+        Win a run to unlock <span className="text-oro">Ascension 1</span>: the same road, harder.
+      </p>
+    );
+  }
+  const definicion = ascensionsData.niveles.find((n) => n.nivel === elegida);
+  const niveles = [0, ...ascensionsData.niveles.map((n) => n.nivel)];
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="flex items-center gap-1 flex-wrap justify-center" role="radiogroup" aria-label="Ascension">
+        {niveles.map((nivel) => {
+          const abierta = nivel <= maxima;
+          const activa = nivel === elegida;
+          return (
+            <button
+              key={nivel}
+              type="button"
+              role="radio"
+              aria-checked={activa}
+              disabled={!abierta}
+              onClick={() => onElegir(nivel)}
+              title={abierta ? undefined : `Win on Ascension ${nivel - 1} to unlock`}
+              className={[
+                'font-display text-[9px] px-2 py-1 rounded-sm border transition-colors',
+                activa ? 'bg-sello-600 text-sobre-sello border-sello-500'
+                  : abierta ? 'bg-tinta-900 text-pergamino-100 border-marco hover:bg-tinta-800'
+                    : 'bg-tinta-950 text-pergamino-200/30 border-marco/40 cursor-not-allowed',
+              ].join(' ')}
+            >
+              {nivel === 0 ? 'A0' : `A${nivel}`}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[9px] text-pergamino-200/70 text-center leading-relaxed">
+        {definicion
+          ? <><span className="text-oro">{definicion.nombre}.</span> {definicion.descripcion}{elegida > 1 ? ' Plus everything below.' : ''}</>
+          : 'The road as it was first walked.'}
+      </p>
+    </div>
+  );
+}
+
 export default function HomeScreen() {
   const elegirCampana = useGameStore((s) => s.elegirCampana);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
@@ -143,6 +201,10 @@ export default function HomeScreen() {
   const contadores = useAchievementsStore((s) => s.contadores);
   const vistos = useAchievementsStore((s) => s.vistos);
   const marca = useAchievementsStore((s) => s.marca);
+  const ascensionesGanadas = useAchievementsStore((s) => s.ascensionesGanadas);
+  // Lo que el jugador ha tocado en cada selector. Sin tocar, la más alta disponible:
+  // quien acaba de desbloquear A2 viene a jugar A2.
+  const [ascensionTocada, setAscensionTocada] = useState({});
 
   // ⚠️ Estas cifras son **globales, no por campaña**: los contadores y el registro de
   // vistos suman desde que existe la partida guardada. Con una sola campaña es lo
@@ -193,15 +255,25 @@ export default function HomeScreen() {
       </PanelMarco>
 
       <div className="w-full max-w-3xl flex flex-col gap-3">
-        {campaignsData.campanas.map((campana) => (
-          <TarjetaCampana
-            key={campana.id}
-            campana={campana}
-            marcador={marcador}
-            logros={`${logrosDesbloqueados.length}/${TOTAL_LOGROS}`}
-            onElegir={elegirCampana}
-          />
-        ))}
+        {campaignsData.campanas.map((campana) => {
+          const maxima = ascensionMaximaDisponible(ascensionsData.niveles, ascensionesGanadas[campana.id]);
+          const elegida = Math.min(ascensionTocada[campana.id] ?? maxima, maxima);
+          return (
+            <div key={campana.id} className="flex flex-col gap-2">
+              <TarjetaCampana
+                campana={campana}
+                marcador={marcador}
+                logros={`${logrosDesbloqueados.length}/${TOTAL_LOGROS}`}
+                onElegir={(id) => elegirCampana(id, elegida)}
+              />
+              <SelectorAscension
+                elegida={elegida}
+                maxima={maxima}
+                onElegir={(nivel) => setAscensionTocada((t) => ({ ...t, [campana.id]: nivel }))}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <PanelMarco tono="hueco" className="p-3 w-full max-w-3xl">

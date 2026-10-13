@@ -15,6 +15,7 @@ export const TIPOS_DE_CONDICION = [
   'completarArcoSinDerrotas',
   'contadorMinimo',
   'coleccionMinima',
+  'ascensionMinima',
 ];
 
 export const TIPOS_DE_RECOMPENSA = [
@@ -50,6 +51,12 @@ function cumpleCondicion(condicion, contexto) {
     // bandido no es haber visto 12 enemigos.
     case 'coleccionMinima':
       return (contexto.vistos?.[condicion.categoria]?.length ?? 0) >= condicion.cantidad;
+    // "Gana una run en la ascensión N o más", en cualquier campaña. Lo completa
+    // `evaluarLogros` desde lo guardado (`ascensionMaximaGanada`, -1 si ninguna),
+    // como los contadores: ganar A3 sin haber pasado por A2 no puede pasar, pero
+    // si pasara, el logro de A2 tiene que saltar igual.
+    case 'ascensionMinima':
+      return (contexto.ascensionMaximaGanada ?? -1) >= condicion.nivel;
     default:
       return false;
   }

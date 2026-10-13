@@ -112,8 +112,8 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **511 tests**: 294 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
-  componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
+- [x] Testing con Vitest — **539 tests**: 385 de lógica (`engine/*.test.js`, `store/*.test.js`) y 154 de
+  componente (las 13 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
   ⚠️ **El entorno global sigue siendo `node`**: cada test de UI declara `// @vitest-environment jsdom`
@@ -428,6 +428,17 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   Después: **variación de daño ±10%** (`config.combate.variacionDano`) para que los umbrales de todo o
   nada sean rampas, el **hover del jefe dice Strong/Even/Weak por cada miembro del equipo**, y la pasiva
   `priority` se llama "Strikes First" (era "Inner Gates", el modo de Rock Lee).
+
+- [x] **Ascensión** (punto 22, `documentacion/40-ascension.md`): cinco niveles acumulativos en
+  `src/data/ascensions.json` (comunes +15%, descanso al 80%, jefes +5%, −30% de oro, fin de arco al 50%),
+  cada uno se abre ganando en el anterior. Calibrados con el bloque "Ascensión" del simulador: los
+  primeros números puestos a ojo dejaban los jefes finales al 37-48%. ⚠️ `reiniciarLogros` borra ya
+  **seis** claves. ⚠️ `ascensionElegida` sobrevive a `iniciarRun` (es lo que hace que "reiniciar" repita
+  la misma), así que **el `beforeEach` de los tests del store la pone a 0** o un test que elige A3 deja a
+  todos los siguientes en A3 — pasó. La campaña difícil queda pendiente: es contenido, no código.
+- [x] **Fórmula de daño, XP y reclutas (2026-10-13, tarde)**: ⚠️ la eficacia de tipo se aplica DESPUÉS
+  de restar la defensa — antes el ×0,5 era inmunidad y el ×1,5 un ×2 (`documentacion/11`, "v6"); todo
+  recluta entra al nivel MEDIO del equipo; XP decreciente a partir de 3 niveles por encima del enemigo.
 
 ## Bugs ya resueltos (para no repetirlos)
 

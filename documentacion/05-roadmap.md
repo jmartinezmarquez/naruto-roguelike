@@ -1663,3 +1663,8 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
   [39](./39-medallas-y-salon-de-la-fama.md), donde están también los puntos 20 (medallas de arco) y 21
   (Salón de la Fama), hechos ese día. Era: ligado a la condición de logro ya
   propuesta pero sin implementar `completarRunEnDificultad` en `achievements.json`.
+  **Recuperada y HECHA esa misma tarde** como punto 22, a petición del playtest: cinco niveles de
+  ascensión con sus logros. Ver [40](./40-ascension.md).
+- **Campaña difícil** (pedida en el playtest del 2026-10-13, junto con la ascensión): una segunda
+  entrada en el Home. Es contenido —arcos, enemigos y arte nuevos—, no código: `campaigns.json` ya
+  admite más de una.

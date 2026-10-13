@@ -12,7 +12,7 @@ beforeEach(() => {
   localStorage.clear();
   useAchievementsStore.setState({
     logrosDesbloqueados: [], notificacionesPendientes: [], vistos: VISTOS_VACIO,
-    contadores: CONTADORES_VACIO, marca: MARCA_VACIA, salonDeLaFama: [],
+    contadores: CONTADORES_VACIO, marca: MARCA_VACIA, salonDeLaFama: [], ascensionesGanadas: {},
   });
 });
 
@@ -363,5 +363,35 @@ describe('registrarMarca (hasta dónde se llegó)', () => {
     localStorage.setItem('naruto-roguelike-marca', JSON.stringify({ arcoId: 'invasion_de_pain', orden: 2, piso: 4 }));
     useAchievementsStore.getState().cargarLogros();
     expect(marca().piso).toBe(4);
+  });
+});
+
+describe('ascensiones ganadas', () => {
+  it('guarda la más alta por campaña y nunca la baja', () => {
+    const { registrarAscensionGanada } = useAchievementsStore.getState();
+    registrarAscensionGanada('camino_ninja', 0);
+    registrarAscensionGanada('camino_ninja', 3);
+    registrarAscensionGanada('camino_ninja', 1); // ganar una más baja no quita la A3
+    registrarAscensionGanada('otra', 2);
+    expect(useAchievementsStore.getState().ascensionesGanadas).toEqual({ camino_ninja: 3, otra: 2 });
+    expect(JSON.parse(localStorage.getItem('naruto-roguelike-ascension'))).toEqual({ camino_ninja: 3, otra: 2 });
+  });
+
+  it('cargarLogros la recupera, y reiniciarLogros la borra con todo lo demás', () => {
+    useAchievementsStore.getState().registrarAscensionGanada('camino_ninja', 2);
+    useAchievementsStore.setState({ ascensionesGanadas: {} });
+    useAchievementsStore.getState().cargarLogros();
+    expect(useAchievementsStore.getState().ascensionesGanadas).toEqual({ camino_ninja: 2 });
+
+    useAchievementsStore.getState().reiniciarLogros();
+    expect(useAchievementsStore.getState().ascensionesGanadas).toEqual({});
+    expect(localStorage.getItem('naruto-roguelike-ascension')).toBeNull();
+  });
+
+  it('los logros de ascensión leen lo guardado, en cualquier punto de evaluación', () => {
+    useAchievementsStore.getState().registrarAscensionGanada('camino_ninja', 1);
+    const nuevos = useAchievementsStore.getState().evaluarLogros({}).map((l) => l.id);
+    expect(nuevos).toContain('ascension_1');
+    expect(nuevos).not.toContain('ascension_2');
   });
 });

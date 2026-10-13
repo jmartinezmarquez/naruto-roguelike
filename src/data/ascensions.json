@@ -1,0 +1,35 @@
+{
+  "_comentario": "Niveles de ascensión: la misma campaña, más difícil. Son ACUMULATIVOS — jugar en A3 aplica los modificadores de A1, A2 y A3 —, y cada uno se desbloquea ganando una run en el anterior (useAchievementsStore.ascensionesGanadas, por campaña). El motor no sabe qué significa cada número: lo junta engine/ascension.js y lo aplica el store. Modificadores: statsComunes y statsJefes multiplican hp/ataque/defensa del enemigo (jefes = los de enemies.json, incluido el desafío legendario); curacionDescanso y curacionFinDeArco son la fracción del HP máximo hasta la que curan (y a la que reviven); multiplicadorOro, el oro de cada combate ganado. Ver documentacion/40-ascension.md.",
+  "niveles": [
+    {
+      "nivel": 1,
+      "nombre": "Sharper Blades",
+      "descripcion": "Common enemies are 15% stronger.",
+      "modificadores": { "statsComunes": 1.15 }
+    },
+    {
+      "nivel": 2,
+      "nombre": "Restless Nights",
+      "descripcion": "Rest nodes only heal up to 80% of max HP.",
+      "modificadores": { "curacionDescanso": 0.8 }
+    },
+    {
+      "nivel": 3,
+      "nombre": "Seasoned Foes",
+      "descripcion": "Bosses and mini-bosses are 5% stronger.",
+      "modificadores": { "statsJefes": 1.05 }
+    },
+    {
+      "nivel": 4,
+      "nombre": "Lean Missions",
+      "descripcion": "Battles pay 30% less gold.",
+      "modificadores": { "multiplicadorOro": 0.7 }
+    },
+    {
+      "nivel": 5,
+      "nombre": "No Respite",
+      "descripcion": "Beating an arc's boss only heals the team up to 50% of max HP.",
+      "modificadores": { "curacionFinDeArco": 0.5 }
+    }
+  ]
+}

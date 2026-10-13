@@ -60,7 +60,12 @@ beforeEach(() => {
     contadores: CONTADORES_VACIO,
     marca: MARCA_VACIA,
     notificacionesPendientes: [],
+    ascensionesGanadas: {},
   });
+  // La ascensión elegida vive en el store de la run y sobrevive a iniciarRun (es lo
+  // que hace que "reiniciar" repita la misma): sin esto, un test que elige A3 deja a
+  // todos los siguientes jugando en A3.
+  useGameStore.setState({ ascensionElegida: 0 });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -1168,6 +1173,99 @@ describe('desafío legendario (pergamino dorado)', () => {
 
     const { reclutarActual } = useGameStore.getState();
     expect(reclutarActual.personajes.some((p) => p.personajeId === 'zabuza')).toBe(false);
+  });
+});
+
+describe('ascensión', () => {
+  // Enemigo con mucha vida y sin pegada: se mide su HP máximo y el equipo gana igual.
+  const sacoDeArena = (id) => ({
+    ...enemigoDebilDePrueba, id, statsBase: { hp: 100, ataque: 1, defensa: 1, velocidad: 1 },
+  });
+  const hpMaximoDelRival = () => useGameStore.getState().ultimoResultadoCombate.rondas[0].enemigo.hpMaximo;
+  const conAscension = (nivel) => useGameStore.setState({ ascension: nivel });
+
+  it('la run arranca con la ascensión elegida en el Home, y A0 por defecto', () => {
+    expect(useGameStore.getState().ascension).toBe(0);
+    useGameStore.getState().elegirCampana('camino_ninja', 3);
+    useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+    expect(useGameStore.getState().ascension).toBe(3);
+  });
+
+  it('A1 endurece a los comunes y deja a los jefes como estaban', () => {
+    useGameStore.getState().jugarCombate(sacoDeArena('comun_test'), 10);
+    const comunA0 = hpMaximoDelRival();
+    conAscension(1);
+    useGameStore.getState().jugarCombate(sacoDeArena('comun_test'), 10);
+    expect(hpMaximoDelRival() / comunA0).toBeCloseTo(1.15, 1);
+
+    useGameStore.getState().jugarCombate({ ...sacoDeArena('zabuza'), recompensa: { xp: 1 } }, 10);
+    const jefeA1 = hpMaximoDelRival();
+    conAscension(0);
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+    useGameStore.getState().jugarCombate({ ...sacoDeArena('zabuza'), recompensa: { xp: 1 } }, 10);
+    expect(jefeA1).toBe(hpMaximoDelRival());
+  });
+
+  it('A3 endurece también a los jefes', () => {
+    useGameStore.getState().jugarCombate({ ...sacoDeArena('zabuza'), recompensa: { xp: 1 } }, 10);
+    const jefeA0 = hpMaximoDelRival();
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+    conAscension(3);
+    useGameStore.getState().jugarCombate({ ...sacoDeArena('zabuza'), recompensa: { xp: 1 } }, 10);
+    const ratio = hpMaximoDelRival() / jefeA0;
+    expect(ratio).toBeGreaterThan(1.03);
+    expect(ratio).toBeLessThan(1.07);
+  });
+
+  it('A2: el descanso cura hasta el 80% y levanta a los caídos a ese 80%', () => {
+    conAscension(2);
+    const llenos = useGameStore.getState().equipo.map((p) => p.hpActual); // el beforeEach los deja a tope
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, derrotado: true, hpActual: 0 } : { ...p, hpActual: 1 })),
+      mapa: { nodos: { descanso_test: { tipo: 'descanso', piso: 3, conexiones: [], visitado: false } }, nodosIniciales: ['descanso_test'] },
+      nodoActualId: null,
+    }));
+    useGameStore.getState().avanzarANodo('descanso_test');
+    const { equipo, avisoUltimoNodo } = useGameStore.getState();
+    equipo.forEach((p, i) => {
+      expect(p.derrotado).toBe(false);
+      expect(p.hpActual).toBe(Math.round(llenos[i] * 0.8));
+    });
+    expect(avisoUltimoNodo).toMatch(/80%/);
+  });
+
+  it('el descanso nunca quita vida a quien ya estaba por encima de la fracción', () => {
+    conAscension(2);
+    const antes = useGameStore.getState().equipo.map((p) => p.hpActual); // a tope
+    useGameStore.getState()._curarEquipoCompleto(0.6);
+    expect(useGameStore.getState().equipo.map((p) => p.hpActual)).toEqual(antes);
+  });
+
+  it('A4 paga menos oro por combate', () => {
+    const oro0 = useGameStore.getState().oro;
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    const ganadoA0 = useGameStore.getState().oro - oro0;
+    conAscension(4);
+    const oro1 = useGameStore.getState().oro;
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(useGameStore.getState().oro - oro1).toBe(Math.round(ganadoA0 * 0.7));
+  });
+
+  it('ganar la run en una ascensión la apunta, la lleva al Salón de la Fama y suelta su logro', () => {
+    useAchievementsStore.setState({ salonDeLaFama: [], ascensionesGanadas: {} });
+    conAscension(2);
+    useGameStore.setState((estado) => ({
+      arcoActualDatos: { ...estado.arcoActualDatos, jefeFinalId: 'pain_test' },
+    }));
+    useGameStore.getState().jugarCombate({
+      ...enemigoDebilDePrueba, id: 'pain_test', recompensa: { xp: 10, finDeLaRun: true },
+    }, 1);
+
+    const meta = useAchievementsStore.getState();
+    expect(meta.ascensionesGanadas[useGameStore.getState().campanaActualId]).toBe(2);
+    expect(meta.salonDeLaFama[0].ascension).toBe(2);
+    expect(meta.logrosDesbloqueados).toEqual(expect.arrayContaining(['ascension_1', 'ascension_2']));
+    expect(meta.logrosDesbloqueados).not.toContain('ascension_3');
   });
 });
 

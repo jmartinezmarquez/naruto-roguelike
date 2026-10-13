@@ -511,6 +511,59 @@ function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, 
 }
 
 // ---------------------------------------------------------------------------
+// 1b''. Ascensión: cuánto endurece cada nivel a los jefes
+// ---------------------------------------------------------------------------
+
+/**
+ * Los jefes con el trío en cadena (como el bloque 1b), en cada nivel de ascensión.
+ * Mide lo que un combate puede medir: las stats de jefe (`statsJefes`) y que al jefe
+ * final se llega con el HP que deja el descanso (`curacionDescanso`; aquí se supone
+ * que el equipo llega tocado por debajo de esa fracción, que es el caso que la
+ * ascensión castiga). Lo demás —comunes más duros por el camino, menos oro, la
+ * curación de fin de arco— no cabe en un combate suelto, así que estas cifras son
+ * un TECHO: la run real en ese nivel es algo más dura.
+ */
+{
+  const { modificadoresDeAscension } = await import('../src/engine/ascension.js');
+  const { default: ascensionsData } = await import('../src/data/ascensions.json');
+  console.log('\n\n=== Ascensión: jefes con el trío en cadena, nivel a nivel ===');
+  console.log('  (techo: no mide los comunes más duros por el camino, el oro ni la curación de fin de arco)\n');
+
+  const niveles = [0, ...ascensionsData.niveles.map((n) => n.nivel)];
+  console.log(`  ${''.padEnd(30)} ${niveles.map((n) => `A${n}`.padStart(5)).join('')}`);
+  for (const arco of ARCOS) {
+    for (const [rol, id, nivel, piso] of jefesDelArco(arco)) {
+      const base = enemigosData.jefes.find((j) => j.id === id);
+      const celdas = niveles.map((a) => {
+        const mods = modificadoresDeAscension(ascensionsData.niveles, a);
+        const jefe = {
+          ...base,
+          statsBase: {
+            ...base.statsBase,
+            hp: base.statsBase.hp * mods.statsJefes,
+            ataque: base.statsBase.ataque * mods.statsJefes,
+            defensa: base.statsBase.defensa * mods.statsJefes,
+          },
+        };
+        const azar = azarConSemilla(SEMILLA);
+        const rs = triosDelRoster().map((trio) => {
+          const hpDeEntrada = piso === arco.pisoJefeFinal
+            ? trio.map((p) => Math.round(crearLuchador(p, nivelDe(p, arco, piso)).hpMaximo * mods.curacionDescanso))
+            : hpAlLlegarAlPiso(trio, arco, piso, azar);
+          return simularNodoDeJefe(trio, arco, piso, jefe, nivel, azar, hpDeEntrada);
+        });
+        return porcentaje(rs.filter((r) => r.gano).length / rs.length).padStart(5);
+      });
+      console.log(`  ${`${rol} ${base.nombre}`.padEnd(30)} ${celdas.join('')}`);
+    }
+  }
+  console.log(
+    '\n  Objetivo: que cada nivel se note (unos puntos menos que el anterior en algún jefe) y que A5\n' +
+      '  siga siendo ganable: con los jefes finales por debajo del ~50% la run se pierde casi siempre.',
+  );
+}
+
+// ---------------------------------------------------------------------------
 // 1c. Desafío legendario (nodo de reclutar dorado)
 // ---------------------------------------------------------------------------
 

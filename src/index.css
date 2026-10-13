@@ -559,7 +559,7 @@ img {
 
 @keyframes llenar-hp {
   from { width: var(--desde, 0%); }
-  to { width: 100%; }
+  to { width: var(--hasta, 100%); }
 }
 
 .llenar-hp { animation: llenar-hp calc(1100ms * var(--factor-animacion, 1)) ease-out calc(250ms * var(--factor-animacion, 1)) both; }

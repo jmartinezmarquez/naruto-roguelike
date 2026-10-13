@@ -300,6 +300,66 @@
       "recompensa": {
         "tipo": "ninguna"
       }
+    },
+    {
+      "id": "ascension_1",
+      "nombre": "Sharper Than Before",
+      "descripcion": "Win a run on Ascension 1 or higher.",
+      "condicion": {
+        "tipo": "ascensionMinima",
+        "nivel": 1
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "ascension_2",
+      "nombre": "Sleepless Shinobi",
+      "descripcion": "Win a run on Ascension 2 or higher.",
+      "condicion": {
+        "tipo": "ascensionMinima",
+        "nivel": 2
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "ascension_3",
+      "nombre": "Chunin Material",
+      "descripcion": "Win a run on Ascension 3 or higher.",
+      "condicion": {
+        "tipo": "ascensionMinima",
+        "nivel": 3
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "ascension_4",
+      "nombre": "Living Off Scraps",
+      "descripcion": "Win a run on Ascension 4 or higher.",
+      "condicion": {
+        "tipo": "ascensionMinima",
+        "nivel": 4
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
+    },
+    {
+      "id": "ascension_5",
+      "nombre": "The Will of Fire",
+      "descripcion": "Win a run on Ascension 5. Nothing left to prove.",
+      "condicion": {
+        "tipo": "ascensionMinima",
+        "nivel": 5
+      },
+      "recompensa": {
+        "tipo": "ninguna"
+      }
     }
   ],
   "_pendienteDeImplementar": {

@@ -34,7 +34,11 @@ function EntradaDelSalon({ entrada, numero }) {
   return (
     <PanelMarco esquinas={false} className="px-3 py-2.5 flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="font-display text-[10px] text-oro">#{numero} · {campana?.nombre ?? 'Campaign'}</p>
+        <p className="font-display text-[10px] text-oro">
+          #{numero} · {campana?.nombre ?? 'Campaign'}
+          {/* Las entradas de antes de la ascensión no la traen: son A0. */}
+          {entrada.ascension > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-sm bg-sello-600 text-sobre-sello">A{entrada.ascension}</span>}
+        </p>
         <p className="text-[9px] text-pergamino-200/60">{entrada.fecha}</p>
       </div>
       <div className="flex items-end justify-between gap-3 flex-wrap">

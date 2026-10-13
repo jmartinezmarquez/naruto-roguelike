@@ -41,6 +41,11 @@ const MS_CURACION = 2300;
 function TarjetaRecuperacion({ miembro, curando }) {
   const sprite = spriteDeCombate(miembro.id, miembro.nivel);
   const desde = miembro.hpMaximo > 0 ? (miembro.hpAntes / miembro.hpMaximo) * 100 : 100;
+  // Hasta dónde llega la curación: el 100% salvo en ascensión alta, donde se queda
+  // a medias. Sin `hpDespues` (resúmenes de antes de que existiera) se asume entera.
+  const hasta = miembro.hpMaximo > 0 && miembro.hpDespues != null
+    ? Math.max(desde, (miembro.hpDespues / miembro.hpMaximo) * 100)
+    : 100;
   return (
     <div className="flex flex-col items-center w-28">
       <div className="relative w-24 h-24 flex items-end justify-center">
@@ -71,7 +76,7 @@ function TarjetaRecuperacion({ miembro, curando }) {
       <div className="relative h-2.5 w-full bg-tinta-800 rounded-sm overflow-hidden mt-1 border border-marco">
         <div
           className={`absolute inset-y-0 left-0 bg-exito ${curando ? 'llenar-hp' : ''}`}
-          style={{ width: curando ? '100%' : `${desde}%`, '--desde': `${desde}%` }}
+          style={{ width: curando ? `${hasta}%` : `${desde}%`, '--desde': `${desde}%`, '--hasta': `${hasta}%` }}
         />
       </div>
     </div>

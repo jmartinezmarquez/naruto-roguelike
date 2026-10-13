@@ -13,6 +13,7 @@ import enemiesData from '../data/enemies.json';
 import commonEnemiesData from '../data/common-enemies.json';
 import achievementsData from '../data/achievements.json';
 import campaignsData from '../data/campaigns.json';
+import ascensionsData from '../data/ascensions.json';
 import arcoPaisDeLasOlas from '../data/arcs/pais-de-las-olas.json';
 import arcoExamenChunin from '../data/arcs/examen-chunin.json';
 import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
@@ -22,6 +23,7 @@ import { ganarXp, obtenerModoActivo, factorXpPorVentaja } from '../engine/leveli
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
+import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/ascension';
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
@@ -378,6 +380,11 @@ export const useGameStore = create((set, get) => ({
   // La campaña elegida en el Home. Decide QUÉ arcos se juegan y en qué orden, así que
   // `avanzarSiguienteArco` la lee para saber cuál viene después.
   campanaActualId: CAMPANA_POR_DEFECTO,
+  // La ascensión que se ha elegido en el Home para la PRÓXIMA run, y la de la run en
+  // curso. Son dos porque "reiniciar" vuelve a empezar con la misma, y la de la run
+  // tiene que quedarse fija aunque alguien toque el selector a mitad de partida.
+  ascensionElegida: 0,
+  ascension: 0,
 
   // ---------- ACCIONES ----------
 
@@ -389,6 +396,7 @@ export const useGameStore = create((set, get) => ({
    * concreto, que es lo que hacen los tests.
    */
   iniciarRun(personajesInicialesIds, arco = arcosDeCampana(get().campanaActualId)[0]) {
+    const ascension = get().ascensionElegida;
     const tamanoMaximo = configGlobal.equipo.tamanoMaximo;
     const equipoInicial = personajesInicialesIds
       .slice(0, tamanoMaximo)
@@ -427,6 +435,7 @@ export const useGameStore = create((set, get) => ({
       runGanada: false,
       huboDerrotaEnEsteArco: false,
       medallas: [],
+      ascension,
     });
 
     // La enciclopedia arranca con lo que traes puesto: el personaje elegido y los
@@ -494,8 +503,13 @@ export const useGameStore = create((set, get) => ({
 
     if (nodo.tipo === 'descanso') {
       // Auto-resuelto: cura y revive a todo el equipo, sin pantalla propia.
-      get()._curarEquipoCompleto();
-      set({ avisoUltimoNodo: 'Team fully healed at the rest node.' });
+      const fraccion = get()._modificadoresDeAscension().curacionDescanso;
+      get()._curarEquipoCompleto(fraccion);
+      set({
+        avisoUltimoNodo: fraccion < 1
+          ? `Team healed to ${Math.round(fraccion * 100)}% at the rest node.`
+          : 'Team fully healed at the rest node.',
+      });
       return null;
     }
 
@@ -673,7 +687,13 @@ export const useGameStore = create((set, get) => ({
    * independientemente de cuántas rondas haya habido.
    */
   jugarCombate(enemigoBase, nivelEnemigo, consumirBuffs = true) {
-    const luchadorEnemigo = crearLuchador(enemigoBase, nivelEnemigo);
+    // Ascensión: comunes y jefes más duros. "Jefe" es todo lo de enemies.json —el
+    // desafío legendario incluido, que mecánicamente es un jefe— más los
+    // legendarios jugables cuando salen de rival (Kakashi).
+    const esJefe = enemiesData.jefes.some((j) => j.id === enemigoBase.id) || enemigoBase.rareza === 'legendario';
+    const luchadorEnemigo = crearLuchador(
+      enemigoBase, nivelEnemigo, null, multiplicadoresDeEnemigo(get()._modificadoresDeAscension(), esJefe),
+    );
     const rondas = [];
     let jugadorGanoFinal = false;
     let logrosDesbloqueados = [];
@@ -797,14 +817,19 @@ export const useGameStore = create((set, get) => ({
           // equipo por completo (y revive a quien hubiera caído), de regalo
           // antes de pasar al siguiente arco — no hace falta ir a buscar un
           // nodo de descanso justo después de la pelea más dura del arco.
-          curacionDeArco = get().equipo.map((p) => ({
+          const fraccionFinDeArco = get()._modificadoresDeAscension().curacionFinDeArco;
+          const antesDeCurar = get().equipo;
+          get()._curarEquipoCompleto(fraccionFinDeArco);
+          // `hpDespues` va en la foto porque con la ascensión 5 la curación ya no
+          // llega al máximo, y la pantalla de transición pintaba la barra hasta el 100%.
+          curacionDeArco = antesDeCurar.map((p) => ({
             id: p.id,
             nivel: p.nivel,
             hpAntes: p.derrotado ? 0 : Math.max(0, p.hpActual),
+            hpDespues: get().equipo.find((q) => q.id === p.id)?.hpActual ?? calcularHpMaximo(p),
             hpMaximo: calcularHpMaximo(p),
             cayo: Boolean(p.derrotado),
           }));
-          get()._curarEquipoCompleto();
           // La medalla del arco. Sin repetir: no debería poder ganarse dos veces el
           // mismo arco en una run, pero si pasara, dos medallas iguales serían un bug
           // visible en la fila del mapa.
@@ -824,13 +849,17 @@ export const useGameStore = create((set, get) => ({
           // Al Salón de la Fama, con el equipo tal y como ha ganado: ya curado y con
           // los niveles de esta victoria (`_aplicarVictoria` y la curación de fin de
           // arco han corrido justo arriba).
-          const { equipo, medallas, campanaActualId } = get();
+          const { equipo, medallas, campanaActualId, ascension } = get();
           useAchievementsStore.getState().registrarEnSalonDeLaFama({
             fecha: new Date().toISOString().slice(0, 10),
             campanaId: campanaActualId,
             equipo: equipo.map((p) => ({ id: p.id, nivel: p.nivel })),
             medallas,
+            ascension,
           });
+          // Antes de evaluar logros (más abajo), para que los de ascensión salten
+          // en este mismo combate y no en el siguiente.
+          useAchievementsStore.getState().registrarAscensionGanada(campanaActualId, ascension);
         }
 
         // ⚠️ **Los contadores se suman ANTES de evaluar**, o el logro de "gana 10
@@ -979,7 +1008,9 @@ export const useGameStore = create((set, get) => ({
       cadenaEnemigos: null,
       // El aviso de la curación se entrega AQUÍ y no al morir el jefe: ver la nota en
       // `jugarCombate`. Llega con el jugador al mapa del arco nuevo.
-      avisoUltimoNodo: 'Team fully healed after completing the arc.',
+      avisoUltimoNodo: get()._modificadoresDeAscension().curacionFinDeArco < 1
+        ? `Team healed to ${Math.round(get()._modificadoresDeAscension().curacionFinDeArco * 100)}% after completing the arc.`
+        : 'Team fully healed after completing the arc.',
       huboDerrotaEnEsteArco: false,
     });
     return true;
@@ -1047,8 +1078,13 @@ export const useGameStore = create((set, get) => ({
    * en qué orden (`campaigns.json`), así que se guarda antes de que `iniciarRun` lea
    * el primero.
    */
-  elegirCampana(campanaId) {
-    set({ campanaActualId: campanaId, pantalla: 'seleccionPersonaje' });
+  elegirCampana(campanaId, ascension = 0) {
+    set({ campanaActualId: campanaId, ascensionElegida: ascension, pantalla: 'seleccionPersonaje' });
+  },
+
+  /** Los modificadores de la ascensión de la run en curso (ver engine/ascension.js). */
+  _modificadoresDeAscension() {
+    return modificadoresDeAscension(ascensionsData.niveles, get().ascension);
   },
 
   /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */
@@ -1267,8 +1303,9 @@ export const useGameStore = create((set, get) => ({
     const xpGanada = enemigoBase.recompensa?.xp ?? arcoActualDatos?.xpCombateComun ?? 20;
     const porcentajeBanquillo = configGlobal.progresion.porcentajeXpBanquillo;
     const oroGanado = Math.round(
-      (configGlobal.economia.oroPorCombateGanado.min +
-        configGlobal.economia.oroPorCombateGanado.max) / 2,
+      ((configGlobal.economia.oroPorCombateGanado.min +
+        configGlobal.economia.oroPorCombateGanado.max) / 2)
+        * get()._modificadoresDeAscension().multiplicadorOro,
     );
 
     // Transformaciones desbloqueadas en esta victoria. Se detectan comparando el
@@ -1478,11 +1515,19 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
-  /** Interno: cura y revive a todo el equipo de golpe (nodo de descanso automático). */
-  _curarEquipoCompleto() {
+  /**
+   * Interno: cura y revive a todo el equipo de golpe. `fraccion` es hasta dónde
+   * cura, sobre el HP máximo (la ascensión la baja). Nunca quita vida: quien ya
+   * estaba por encima se queda como estaba, y el caído se levanta a esa fracción.
+   */
+  _curarEquipoCompleto(fraccion = 1) {
     const { equipo } = get();
     set({
-      equipo: equipo.map((p) => ({ ...p, derrotado: false, hpActual: calcularHpMaximo(p) })),
+      equipo: equipo.map((p) => {
+        const objetivo = Math.max(1, Math.round(calcularHpMaximo(p) * fraccion));
+        const hpActual = p.derrotado ? objetivo : Math.max(p.hpActual, objetivo);
+        return { ...p, derrotado: false, hpActual };
+      }),
     });
   },
 
