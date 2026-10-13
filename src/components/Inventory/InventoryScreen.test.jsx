@@ -178,3 +178,13 @@ describe('pergaminos de entrenamiento', () => {
     expect(useGameStore.getState().buffsTemporales).toEqual([{ multiplicadores: { defensa: 1.2 }, combatesRestantes: 3 }]);
   });
 });
+
+describe('sprites de objeto (invariante de datos)', () => {
+  it('todo objeto de items.json tiene sprite', async () => {
+    // Sin él la tienda y la mochila enseñan una caja vacía y no falla nada: añadir un
+    // objeto es solo datos, y este test es lo que recuerda que también es un dibujo.
+    const { SPRITE_OBJETO } = await import('./itemSprites');
+    const sinSprite = itemsData.objetos.filter((o) => !SPRITE_OBJETO[o.id]).map((o) => o.id);
+    expect(sinSprite).toEqual([]);
+  });
+});

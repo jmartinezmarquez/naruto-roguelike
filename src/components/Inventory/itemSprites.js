@@ -24,6 +24,17 @@ import cascabeles from '../../assets/items/cascabeles.png';
 import pergaminoEntrenamientoAtaque from '../../assets/items/pergamino_entrenamiento_ataque.png';
 import pergaminoEntrenamientoDefensa from '../../assets/items/pergamino_entrenamiento_defensa.png';
 import pergaminoEntrenamientoVelocidad from '../../assets/items/pergamino_entrenamiento_velocidad.png';
+// Los 8 objetos del 2026-10-14: provisionales dibujados por
+// `scripts/generar-sprites-objetos-nuevos.py` hasta que llegue la hoja, que el mismo
+// script recorta en cuanto existe.
+import unguentoCurativo from '../../assets/items/unguento_curativo.png';
+import kitNinjaMedico from '../../assets/items/kit_ninja_medico.png';
+import manualJonin from '../../assets/items/manual_jonin.png';
+import pesasDeLee from '../../assets/items/pesas_de_lee.png';
+import cuchillasDeAsuma from '../../assets/items/cuchillas_de_asuma.png';
+import chalecoChunin from '../../assets/items/chaleco_chunin.png';
+import bolsaDeSellosExplosivos from '../../assets/items/bolsa_de_sellos_explosivos.png';
+import talismanOchoPuertas from '../../assets/items/talisman_ocho_puertas.png';
 
 export const SPRITE_OBJETO = {
   pildora_soldado: pildoraSoldado,
@@ -40,6 +51,14 @@ export const SPRITE_OBJETO = {
   pergamino_entrenamiento_ataque: pergaminoEntrenamientoAtaque,
   pergamino_entrenamiento_defensa: pergaminoEntrenamientoDefensa,
   pergamino_entrenamiento_velocidad: pergaminoEntrenamientoVelocidad,
+  unguento_curativo: unguentoCurativo,
+  kit_ninja_medico: kitNinjaMedico,
+  manual_jonin: manualJonin,
+  pesas_de_lee: pesasDeLee,
+  cuchillas_de_asuma: cuchillasDeAsuma,
+  chaleco_chunin: chalecoChunin,
+  bolsa_de_sellos_explosivos: bolsaDeSellosExplosivos,
+  talisman_ocho_puertas: talismanOchoPuertas,
 };
 
 // Color por rareza, el mismo código que usa la hoja de sprites del artista:
@@ -112,11 +131,19 @@ export function lineasDeEfecto(objeto) {
 
   switch (efecto.tipo) {
     case 'curarPersonaje':
-      return [{ icono: '❤', texto: `Heals ${parseInt(efecto.cantidad, 10)}% HP`, positivo: true }];
+      return [{
+        icono: '❤',
+        // Curar el 100% revive (`usarConsumible` levanta al caído a esa fracción): decirlo,
+        // porque es lo que distingue al kit médico de la píldora.
+        texto: parseInt(efecto.cantidad, 10) >= 100 ? 'Fully heals, even a fallen ally' : `Heals ${parseInt(efecto.cantidad, 10)}% HP`,
+        positivo: true,
+      }];
     case 'revivirUnaVez':
       return [{ icono: '✨', texto: `Revives once with ${efecto.hpAlRevivir} HP`, positivo: true }];
     // El mismo efecto que dan algunos eventos ("ATK +20% durante 3 combates"),
     // comprado. Para todo el equipo: por eso la mochila no pide a quién.
+    case 'ganarXpEquipo':
+      return [{ icono: '📜', texto: `Squad gains ${efecto.cantidad} XP`, positivo: true }];
     case 'buffTemporalEquipo':
       return [{
         icono: ICONO_STAT[efecto.stat] ?? '✦',

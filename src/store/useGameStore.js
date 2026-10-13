@@ -680,6 +680,17 @@ export const useGameStore = create((set, get) => ({
       return true;
     }
 
+    // Manual de jōnin: la XP de equipo de los eventos, comprada. Como en el evento,
+    // los caídos no aprenden nada. Tampoco necesita personaje.
+    if (item.efecto.tipo === 'ganarXpEquipo') {
+      const posicion = inventario.indexOf(itemId);
+      set({
+        inventario: [...inventario.slice(0, posicion), ...inventario.slice(posicion + 1)],
+        equipo: equipo.map((p) => (p.derrotado ? p : aplicarXpYActualizarHp(p, item.efecto.cantidad))),
+      });
+      return true;
+    }
+
     const indice = equipo.findIndex((p) => p.id === idPersonaje);
     if (indice === -1) return false;
     if (item.efecto.tipo !== 'curarPersonaje') return false; // ningún otro efecto de consumible implementado todavía

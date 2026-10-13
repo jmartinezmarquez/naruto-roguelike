@@ -1189,6 +1189,31 @@ describe('tienda: pergaminos de entrenamiento y servicios', () => {
     expect(buffsTemporales).toEqual([{ multiplicadores: { ataque: 1.15 }, combatesRestantes: 3 }]);
   });
 
+  it('el kit médico levanta a un caído con la vida entera', () => {
+    const lleno = useGameStore.getState().equipo[0].hpActual;
+    useGameStore.setState((estado) => ({
+      inventario: ['kit_ninja_medico'],
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, derrotado: true, hpActual: 0 } : p)),
+    }));
+    expect(useGameStore.getState().usarConsumible('kit_ninja_medico', 'naruto')).toBe(true);
+    const naruto = useGameStore.getState().equipo[0];
+    expect(naruto.derrotado).toBe(false);
+    expect(naruto.hpActual).toBe(lleno);
+  });
+
+  it('el manual de jōnin da XP a todo el equipo en pie, sin elegir personaje, y no a los caídos', () => {
+    useGameStore.setState((estado) => ({
+      inventario: ['manual_jonin'],
+      equipo: estado.equipo.map((p, i) => ({ ...p, nivel: 30, xpActual: 0, derrotado: i === 2, hpActual: i === 2 ? 0 : p.hpActual })),
+    }));
+    expect(useGameStore.getState().usarConsumible('manual_jonin')).toBe(true);
+    const [a, b, caido] = useGameStore.getState().equipo;
+    expect(a.xpActual).toBe(30);
+    expect(b.xpActual).toBe(30);
+    expect(caido.xpActual).toBe(0);
+    expect(useGameStore.getState().inventario).toEqual([]);
+  });
+
   it('cambiar la oferta cuesta más cada vez en la misma tienda', () => {
     abrirTienda();
     useGameStore.setState({ oro: 100 });

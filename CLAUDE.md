@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **553 tests**: 394 de lógica (`engine/*.test.js`, `store/*.test.js`) y 159 de
+- [x] Testing con Vitest — **556 tests**: 396 de lógica (`engine/*.test.js`, `store/*.test.js`) y 160 de
   componente (las 13 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -450,6 +450,12 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - [x] **Los ★ ya reclutados son iniciales** (`rosterInicial` en `engine/achievements.js`): desde la segunda
   run, cualquier común que haya estado en tu equipo (registro del Bingo Book) se puede elegir para empezar.
   Raros y legendarios, solo por logro. La primera run sigue siendo solo los tres iniciales.
+
+- [x] **Ocho objetos más** (`documentacion/21-objetos-equipables.md`): 5 equipables con las cuatro pasivas
+  que ningún objeto usaba y 3 consumibles (ungüento, kit médico que revive, manual de XP de equipo).
+  Ajustados con el bloque "Peso de los objetos" del simulador — el talismán de riesgo daba +0,0 a la
+  primera. Sprites provisionales: `generar-sprites-objetos-nuevos.py` recorta la hoja en cuanto exista.
+  ⚠️ Test nuevo: **todo objeto tiene que tener sprite**.
 
 ## Bugs ya resueltos (para no repetirlos)
 

@@ -85,7 +85,7 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
   const esConsumible = objeto.tipo === 'consumible';
   // Pergaminos de entrenamiento: el efecto es de todo el equipo, así que un botón
   // por personaje mentiría (los tres harían lo mismo).
-  const esDeEquipo = objeto.efecto?.tipo === 'buffTemporalEquipo';
+  const esDeEquipo = ['buffTemporalEquipo', 'ganarXpEquipo'].includes(objeto.efecto?.tipo);
   const efectos = lineasDeEfecto(objeto);
   // Id del personaje a quien se le iba a equipar algo teniendo ya otra cosa
   // puesta. Equipar encima devuelve el objeto anterior a la mochila, y eso no
