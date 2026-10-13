@@ -1538,6 +1538,10 @@ que sigue **descartado para el MVP** por mover la curva de niveles de la run ent
 
 ### Pendiente de arte
 
+> 🎨 **Desde el 2026-10-14 el arte se está rehaciendo entero en un estilo nuevo.** El encargo completo
+> —14 hojas con sus prompts, en orden— está en [41](./41-arte-estilo-nuevo.md), y las hojas las recorta
+> `scripts/generar-sprites-estilo-nuevo.py`. Lo que sigue es la lista histórica de huecos.
+
 Cosas que no están hechas por falta de dibujo, no por falta de código. Van juntas aquí y no dentro
 del punto que las dejó a medias, porque los puntos terminados se marcan `[x]` y nadie vuelve a
 leerlos buscando trabajo.

@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **558 tests**: 396 de lógica (`engine/*.test.js`, `store/*.test.js`) y 162 de
+- [x] Testing con Vitest — **560 tests**: 397 de lógica (`engine/*.test.js`, `store/*.test.js`) y 163 de
   componente (las 13 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -456,6 +456,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   Ajustados con el bloque "Peso de los objetos" del simulador — el talismán de riesgo daba +0,0 a la
   primera. Sprites provisionales: `generar-sprites-objetos-nuevos.py` recorta la hoja en cuanto exista.
   ⚠️ Test nuevo: **todo objeto tiene que tener sprite**.
+
+- [x] **Estilo nuevo de arte** (`documentacion/41-arte-estilo-nuevo.md`): los 25 sprites que faltaban llegaron
+  de un generador de imágenes y gustaron más que el original, así que se rehace todo en ese estilo. El
+  encargo son 14 hojas con sus prompts; `scripts/generar-sprites-estilo-nuevo.py` las recorta (reparto
+  en partes iguales + corte por la columna más fina, porque las auras se tocan). ⚠️ **Cada personaje se
+  pide en la misma hoja que sus transformaciones**, o la transformación sale "otro" personaje. ⚠️ Los
+  scripts viejos ya no escriben placeholders: correrlos pisaría el arte nuevo. Tests nuevos: todo modo
+  tiene sprite y todo luchador a distancia, proyectil.
 
 ## Bugs ya resueltos (para no repetirlos)
 

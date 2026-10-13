@@ -5,9 +5,9 @@ carpeta de `src/assets/`.
 
 Uso:  python scripts/generar-sprites-estilo-nuevo.py      (necesita Pillow)
 
-Es el script del cambio de estilo: cada hoja nueva se añade a `HOJAS` (fichero,
-carpeta de destino y qué id es cada dibujo, de izquierda a derecha) y ya está. Las
-hojas que aún no existen se saltan, así que se puede correr a medias.
+Es el script del cambio de estilo: cada hoja está en `HOJAS` con qué es cada dibujo,
+de izquierda a derecha. Las hojas que aún no existen se saltan, así que se puede correr
+a medias, según vayan llegando.
 
 **Cómo separa los dibujos.** En estas hojas las auras de las transformaciones se
 tocan (los dragones de Tenten llegan a Neji y a Shikamaru), así que buscar columnas
@@ -33,20 +33,79 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
 ASSETS = os.path.join(RAIZ, 'src', 'assets')
 
+# Cada hoja: (fichero en src/assets/, celdas de izquierda a derecha). Cada celda es
+# 'carpeta/id' —la carpeta decide el tipo, ver TIPO_POR_CARPETA— o None para descartar
+# ese dibujo. Una hoja puede mezclar carpetas: el personaje y sus transformaciones van
+# JUNTOS a propósito, para que el generador mantenga cara, ropa y escala entre ellos.
+# Los prompts de cada hoja están en documentacion/41-arte-estilo-nuevo.md.
 HOJAS = [
-    ('sprite-pendientes-personajes.png', 'characters', 'personaje',
-     ['kakashi', 'sai', 'yamato', 'camino_animal_pain']),
-    ('sprite-pendientes-transformaciones-1.png', 'transformations', 'transformacion',
-     ['kakashi_0', 'sai_0', 'yamato_0', None]),
-    ('sprite-pendientes-transformaciones-2a.png', 'transformations', 'transformacion',
-     ['rock_lee_1', 'neji_1', 'tenten_1', 'shikamaru_1', 'ino_1', 'choji_1']),
-    ('sprite-pendientes-transformaciones-2b.png', 'transformations', 'transformacion',
-     ['kiba_1', 'hinata_1', 'shino_1', 'kakashi_1', 'zabuza_1']),
-    ('sprite-pendientes-proyectiles.png', 'projectiles', 'proyectil',
-     ['neji', 'shikamaru', 'kiba', 'sai', 'yamato', 'camino_animal_pain']),
-    ('sprite-pendientes-cascabeles.png', 'items', 'objeto',
-     ['cascabeles']),
+    # --- Tanda 1 (2026-10-14): lo que faltaba ---
+    ('sprite-pendientes-personajes.png',
+     ['characters/kakashi', 'characters/sai', 'characters/yamato', 'characters/camino_animal_pain']),
+    ('sprite-pendientes-transformaciones-1.png',
+     ['transformations/kakashi_0', 'transformations/sai_0', 'transformations/yamato_0', None]),
+    ('sprite-pendientes-transformaciones-2a.png',
+     ['transformations/rock_lee_1', 'transformations/neji_1', 'transformations/tenten_1',
+      'transformations/shikamaru_1', 'transformations/ino_1', 'transformations/choji_1']),
+    ('sprite-pendientes-transformaciones-2b.png',
+     ['transformations/kiba_1', 'transformations/hinata_1', 'transformations/shino_1',
+      'transformations/kakashi_1', 'transformations/zabuza_1']),
+    ('sprite-pendientes-proyectiles.png',
+     ['projectiles/neji', 'projectiles/shikamaru', 'projectiles/kiba', 'projectiles/sai',
+      'projectiles/yamato', 'projectiles/camino_animal_pain']),
+    ('sprite-pendientes-cascabeles.png', ['items/cascabeles']),
+
+    # --- Tanda 2: rehacer en el estilo nuevo lo que ya existía ---
+    ('sprite-estilo-nuevo-01.png',
+     ['characters/naruto', 'transformations/naruto_0', 'transformations/naruto_1',
+      'characters/sasuke', 'transformations/sasuke_0', 'transformations/sasuke_1']),
+    ('sprite-estilo-nuevo-02.png',
+     ['characters/sakura', 'transformations/sakura_0', 'transformations/sakura_1',
+      'characters/rock_lee', 'transformations/rock_lee_0']),
+    ('sprite-estilo-nuevo-03.png',
+     ['characters/neji', 'transformations/neji_0', 'characters/tenten', 'transformations/tenten_0',
+      'characters/shikamaru', 'transformations/shikamaru_0']),
+    ('sprite-estilo-nuevo-04.png',
+     ['characters/ino', 'transformations/ino_0', 'characters/choji', 'transformations/choji_0',
+      'characters/kiba', 'transformations/kiba_0']),
+    ('sprite-estilo-nuevo-05.png',
+     ['characters/hinata', 'transformations/hinata_0', 'characters/shino', 'transformations/shino_0',
+      'characters/haku']),
+    ('sprite-estilo-nuevo-06.png',
+     ['characters/zabuza', 'transformations/zabuza_0', 'characters/kabuto', 'transformations/kabuto_0',
+      'characters/genin_rival_doton', 'characters/genin_rival_suiton']),
+    ('sprite-estilo-nuevo-07.png',
+     ['characters/gaara', 'transformations/gaara_0', 'transformations/gaara_1',
+      'characters/pain_camino_deva', 'transformations/pain_camino_deva_0']),
+    ('sprite-estilo-nuevo-08.png',
+     ['characters/zaku', 'characters/dosu', 'characters/kin',
+      'characters/genin_rival_katon', 'characters/genin_rival_fuuton', 'characters/genin_rival_raiton']),
+    ('sprite-estilo-nuevo-09.png',
+     ['projectiles/kunai', 'projectiles/naruto', 'projectiles/sasuke', 'projectiles/sakura',
+      'projectiles/tenten', 'projectiles/ino']),
+    ('sprite-estilo-nuevo-10.png',
+     ['projectiles/choji', 'projectiles/hinata', 'projectiles/shino', 'projectiles/haku',
+      'projectiles/zabuza', 'projectiles/kabuto']),
+    ('sprite-estilo-nuevo-11.png',
+     ['projectiles/gaara', 'projectiles/pain_camino_deva', 'projectiles/zaku', 'projectiles/dosu',
+      'projectiles/kin']),
+    ('sprite-estilo-nuevo-12.png',
+     ['projectiles/genin_rival_katon', 'projectiles/genin_rival_fuuton', 'projectiles/genin_rival_raiton',
+      'projectiles/genin_rival_doton', 'projectiles/genin_rival_suiton']),
+    ('sprite-estilo-nuevo-13.png',
+     ['items/pildora_soldado', 'items/banda_repuesto', 'items/sello_chakra', 'items/pergamino_reserva',
+      'items/semilla_sabio']),
+    ('sprite-estilo-nuevo-14.png',
+     ['items/fragmento_sello_maldito', 'items/pergamino_viento', 'items/kubikiribocho_fragmento',
+      'items/calabaza_arena', 'items/anillo_rinnegan_fragmento']),
 ]
+
+TIPO_POR_CARPETA = {
+    'characters': 'personaje',
+    'transformations': 'transformacion',
+    'projectiles': 'proyectil',
+    'items': 'objeto',
+}
 
 # Medido sobre los sprites que ya había (mediana de cada carpeta):
 #   personajes      lienzo 96, 62 px de alto, pies en y=78
@@ -150,15 +209,16 @@ def colocar(dibujo, tipo):
 
 
 if __name__ == '__main__':
-    for fichero, carpeta, tipo, ids in HOJAS:
+    for fichero, celdas in HOJAS:
         ruta = os.path.join(ASSETS, fichero)
         if not os.path.exists(ruta):
             print('--', fichero, 'no existe todavía, se salta')
             continue
         hoja = Image.open(ruta).convert('RGBA')
-        for (x0, x1), ident in zip(cortes(hoja, len(ids)), ids):
-            if ident is None:
+        for (x0, x1), celda in zip(cortes(hoja, len(celdas)), celdas):
+            if celda is None:
                 continue
-            sprite = colocar(limpio(hoja.crop((x0, 0, x1, hoja.height))), tipo)
+            carpeta, ident = celda.split('/')
+            sprite = colocar(limpio(hoja.crop((x0, 0, x1, hoja.height))), TIPO_POR_CARPETA[carpeta])
             sprite.save(os.path.join(ASSETS, carpeta, f'{ident}.png'))
-            print('ok', carpeta, ident, (x0, x1))
+            print('ok', celda, (x0, x1))
