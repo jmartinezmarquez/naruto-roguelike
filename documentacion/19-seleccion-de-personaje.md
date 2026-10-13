@@ -50,8 +50,9 @@ vía normal de crecer el equipo, así que hacía falta un flujo real:
   personaje reemplazado sale del equipo (y de la run) tal cual estaba — no hay banquillo fuera del
   equipo, así que no vuelve.
 - **`reclutarDeTienda(personajeId, idAReemplazar = null)`** pasa el parámetro tal cual.
-- **Nivel del reclutado**: `avanzarANodo` calcula `nivelReclutamiento` como el nivel del personaje
-  más fuerte del equipo actual (`Math.max(...equipo.map(p => p.nivel))`), NO con
+- **Nivel del reclutado**: el nivel **medio** del equipo, redondeado hacia abajo (`generarOfertaReclutar`).
+  Hasta el playtest de 2026-10-13 era el del personaje más fuerte (`Math.max`), y eso premiaba forzar
+  combates con uno solo y reclutar después: todo el equipo entraba a su nivel. Antes de eso, NO con
   `calcularNivelPorPiso` como antes — ese cálculo daba niveles muy bajos en pisos tempranos (p. ej.
   nivel 2) sin relación con lo subido de nivel que ya estuviera el equipo por el propio combate, lo
   que hacía que reclutar fuera casi siempre peor que quedarse con quien ya tenías. Además, si el

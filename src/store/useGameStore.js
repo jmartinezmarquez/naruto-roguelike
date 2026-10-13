@@ -303,7 +303,7 @@ function rarezasReclutarDisponibles(equipoActual, arcoActualDatos) {
  * usado para que la pantalla no mienta. El mapa sí se queda con el pergamino
  * dorado dibujado — es el único punto donde el icono puede prometer de más.
  */
-function generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento, rarezaNodo = 'comun') {
+function generarOfertaReclutar(equipoActual, arcoActualDatos, rarezaNodo = 'comun') {
   const candidatos = candidatosReclutables(equipoActual, arcoActualDatos);
   const deLaRareza = (rareza) =>
     candidatos.filter((c) => (RAREZAS_POR_PERGAMINO[rareza] ?? []).includes(c.rareza));
@@ -318,19 +318,19 @@ function generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento
 
   const esDesafio = rareza === 'legendario' && elegibles.length > 0;
 
-  // Un legendario entra al nivel **medio** del equipo, no al del más fuerte como
-  // el resto de reclutas. Sus stats base ya son de jefe (90 de HP y 14 de ataque
-  // contra los 38 y 8,5 de un común), así que darle además el nivel del mejor del
-  // equipo lo convertía en un personaje que gana él solo lo que queda de run —
-  // sobre todo si el pergamino sale pronto. Redondeo hacia abajo, que es el
-  // "incluso menos" de la nota de playtest.
+  // Todo recluta entra al nivel **medio** del equipo, redondeado hacia abajo.
+  // Primero fue el legendario: sus stats ya son de jefe, y con el nivel del mejor
+  // del equipo ganaba él solo lo que quedaba de run. En el playtest de 2026-10-13
+  // se extendió a los comunes, que entraban al nivel del MÁS FUERTE: quien forzaba
+  // combates con uno solo y reclutaba después tenía un equipo entero a ese nivel,
+  // y eso ayudaba a llegar a los jefes diez niveles por encima.
   const nivelMedioDelEquipo = equipoActual.length > 0
     ? Math.max(1, Math.floor(equipoActual.reduce((acc, p) => acc + p.nivel, 0) / equipoActual.length))
     : 1;
 
   return {
     personajes: elegirVariosAlAzar(elegibles, esDesafio ? 1 : 3),
-    nivelReclutamiento: esDesafio ? nivelMedioDelEquipo : nivelReclutamiento,
+    nivelReclutamiento: nivelMedioDelEquipo,
     rareza,
     esDesafio,
     // Nivel FIJO del arco, no relativo al equipo: es la misma regla que rige a
@@ -506,10 +506,7 @@ export const useGameStore = create((set, get) => ({
 
     if (nodo.tipo === 'reclutar') {
       const equipoActual = get().equipo;
-      const nivelReclutamiento = Math.max(1, ...equipoActual.map((p) => p.nivel));
-      const oferta = generarOfertaReclutar(
-        equipoActual, arcoActualDatos, nivelReclutamiento, nodo.rareza ?? 'comun',
-      );
+      const oferta = generarOfertaReclutar(equipoActual, arcoActualDatos, nodo.rareza ?? 'comun');
       set({ reclutarActual: oferta, desafioRecluta: null, pantalla: 'reclutar' });
       return null;
     }

@@ -1160,7 +1160,7 @@ describe('desafío legendario (pergamino dorado)', () => {
 });
 
 describe('nivel de reclutamiento al entrar en un nodo de reclutar', () => {
-  it('usa el nivel del personaje más fuerte del equipo, no el nivel fijo del piso', () => {
+  it('usa el nivel MEDIO del equipo, redondeado hacia abajo — ni el del más fuerte ni el del piso', () => {
     useGameStore.setState((estado) => ({
       equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, nivel: 8 } : p)),
     }));
@@ -1172,8 +1172,12 @@ describe('nivel de reclutamiento al entrar en un nodo de reclutar', () => {
       nodoActualId: null,
     });
 
+    const { equipo } = useGameStore.getState();
+    const medio = Math.floor(equipo.reduce((acc, p) => acc + p.nivel, 0) / equipo.length);
+    expect(medio).toBeLessThan(8); // si no, el test no distingue las dos reglas
+
     useGameStore.getState().avanzarANodo('reclutar_test');
-    expect(useGameStore.getState().reclutarActual.nivelReclutamiento).toBe(8);
+    expect(useGameStore.getState().reclutarActual.nivelReclutamiento).toBe(medio);
   });
 });
 
