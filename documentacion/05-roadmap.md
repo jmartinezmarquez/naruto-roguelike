@@ -1545,9 +1545,9 @@ leerlos buscando trabajo.
 📋 **El trabajo de hacerlas es el punto 15**, que las agrupa en cuatro tandas y explica en qué orden
 conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactamente; el punto dice cómo.
 
-- **Los tres pergaminos de entrenamiento de la tienda** (2026-10-14) están dibujados por script
-  (`scripts/generar-sprites-pergaminos.py`): pergamino cerrado con una banda de color y un símbolo. Hace
-  falta dibujo de verdad; el nombre del PNG es el `id` del objeto y se mantiene.
+- ~~**Los tres pergaminos de entrenamiento de la tienda**~~ — **HECHOS el 2026-10-14**: llegó la hoja
+  (`assets/sprite-pergaminos-entrenamiento.png`) y `scripts/generar-sprites-pergaminos.py` pasó de
+  dibujarlos a recortarlos.
 - **El segundo modo de Zabuza ("Silent Killing", 2026-10-13)** usa el sprite de su primer modo.
 - ~~**Los nodos de entrenador, mini-jefe y jefe no llevan sprite del personaje concreto.**~~ — **HECHO**
   (ver tanda 2 del punto 15).

@@ -1,16 +1,21 @@
 """
-Dibuja los PERGAMINOS DE ENTRENAMIENTO de la tienda en `src/assets/items/<id>.png`.
+Recorta los PERGAMINOS DE ENTRENAMIENTO de la tienda de
+`src/assets/sprite-pergaminos-entrenamiento.png` (la hoja del artista trae los tres
+juntos, de izquierda a derecha: ataque, defensa, velocidad) a un PNG por objeto en
+`src/assets/items/<id>.png`.
 
 Uso:  python scripts/generar-sprites-pergaminos.py      (necesita Pillow)
 
-**Este script DIBUJA, no recorta**, como `generar-sprites-medallas.py`: la hoja de
-objetos del artista no trae estos tres. Es un pergamino cerrado con su banda de color
-y un símbolo geométrico por stat (puño, escudo, ráfaga); el color es lo que los
-distingue de un vistazo en la tienda. Si llega dibujo de verdad, este archivo se borra
-y el nombre del PNG (el `id` del objeto) se mantiene. Está en "Pendiente de arte".
+Hasta el 2026-10-14 este script DIBUJABA los pergaminos con formas geométricas,
+porque no había arte; ahora recorta el de verdad y los nombres de los PNG (el `id`
+del objeto en items.json) se mantienen.
 
-Se dibujan a 29×29 lógicos ampliados ×4 = 116 px, el lienzo del resto de
-`assets/items/`, para que se pinten a la misma escala que los demás objetos.
+- La hoja ya trae **fondo transparente**, así que no hace falta el relleno por
+  inundación de `generar-sprites-objetos.py`: los tres dibujos se separan por las
+  **columnas de alfa vacías** entre ellos.
+- Cada uno sale en un lienzo **cuadrado** con el dibujo centrado y un margen, como el
+  resto de `assets/items/`, y reducido a 116 px — el tamaño de los demás objetos, para
+  que en la tienda y la mochila se vean a la misma escala.
 
 **No editar a mano los PNG generados**: se pisan al volver a correr esto.
 """
@@ -21,75 +26,60 @@ from PIL import Image
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
+HOJA = os.path.join(RAIZ, 'src', 'assets', 'sprite-pergaminos-entrenamiento.png')
 DESTINO = os.path.join(RAIZ, 'src', 'assets', 'items')
 
-LADO = 29
-ESCALA = 4
-CONTORNO = (34, 28, 30, 255)
-PAPEL = (226, 210, 170, 255)
-PAPEL_SOMBRA = (190, 168, 124, 255)
-MADERA = (120, 78, 44, 255)
-MADERA_LUZ = (160, 110, 64, 255)
+# En el orden en que aparecen en la hoja, de izquierda a derecha.
+IDS = [
+    'pergamino_entrenamiento_ataque',
+    'pergamino_entrenamiento_defensa',
+    'pergamino_entrenamiento_velocidad',
+]
 
-PERGAMINOS = {
-    # id: (color de la banda, color oscuro de la banda, símbolo)
-    'pergamino_entrenamiento_ataque': ((196, 58, 48, 255), (140, 36, 30, 255), 'puno'),
-    'pergamino_entrenamiento_defensa': ((58, 104, 178, 255), (36, 68, 128, 255), 'escudo'),
-    'pergamino_entrenamiento_velocidad': ((70, 156, 84, 255), (42, 106, 54, 255), 'rafaga'),
-}
-
-SIMBOLOS = {
-    # 5×5, '#' = trazo. Sencillos a propósito: a 116 px tienen que leerse.
-    'puno': ['.###.', '#####', '#####', '.###.', '.#.#.'],
-    'escudo': ['#####', '#####', '#####', '.###.', '..#..'],
-    'rafaga': ['#....', '.##..', '..###', '.##..', '#....'],
-}
+LADO_FINAL = 116      # el lienzo del resto de assets/items/
+MARGEN = 0.04         # aire alrededor del dibujo, en fracción del lado del cuadrado
+ALFA_MINIMO = 16      # por debajo de esto un píxel cuenta como vacío (restos de antialias)
+HUECO_MINIMO = 8      # columnas vacías seguidas que separan dos dibujos
 
 
-def dibujar(banda, banda_oscura, simbolo):
-    px = [[None] * LADO for _ in range(LADO)]
+def tramos_de_columnas(alfa, ancho, alto):
+    """Los rangos [x0, x1) de columnas con algo pintado, separados por huecos vacíos."""
+    datos = alfa.load()
+    llena = [any(datos[x, y] >= ALFA_MINIMO for y in range(alto)) for x in range(ancho)]
+    tramos, inicio, vacias = [], None, 0
+    for x, hay in enumerate(llena):
+        if hay:
+            if inicio is None:
+                inicio = x
+            vacias = 0
+        elif inicio is not None:
+            vacias += 1
+            if vacias >= HUECO_MINIMO:
+                tramos.append((inicio, x - vacias + 1))
+                inicio, vacias = None, 0
+    if inicio is not None:
+        tramos.append((inicio, ancho))
+    return tramos
 
-    def pintar(x0, y0, x1, y1, color):
-        for y in range(y0, y1 + 1):
-            for x in range(x0, x1 + 1):
-                if 0 <= x < LADO and 0 <= y < LADO:
-                    px[y][x] = color
 
-    # Cuerpo de papel enrollado, en diagonal suave no: recto y centrado, que es lo que
-    # mejor se lee a este tamaño.
-    pintar(5, 8, 23, 20, PAPEL)
-    pintar(5, 18, 23, 20, PAPEL_SOMBRA)
-    # Rodillos de madera a los lados, sobresaliendo.
-    for x0 in (2, 24):
-        pintar(x0, 6, x0 + 2, 22, MADERA)
-        pintar(x0, 6, x0 + 2, 7, MADERA_LUZ)
-    # Banda de color con el símbolo encima.
-    pintar(11, 8, 17, 20, banda)
-    pintar(11, 18, 17, 20, banda_oscura)
-    for dy, fila in enumerate(SIMBOLOS[simbolo]):
-        for dx, c in enumerate(fila):
-            if c == '#':
-                px[10 + dy][12 + dx] = PAPEL
-
-    # Contorno de 1 px por fuera de todo lo pintado.
-    dentro = lambda x, y: 0 <= x < LADO and 0 <= y < LADO and px[y][x] is not None
-    borde = [
-        (x, y) for y in range(LADO) for x in range(LADO)
-        if px[y][x] is None and any(dentro(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-    ]
-    for x, y in borde:
-        px[y][x] = CONTORNO
-
-    im = Image.new('RGBA', (LADO, LADO), (0, 0, 0, 0))
-    for y in range(LADO):
-        for x in range(LADO):
-            if px[y][x]:
-                im.putpixel((x, y), px[y][x])
-    return im.resize((LADO * ESCALA, LADO * ESCALA), Image.NEAREST)
+def recortar(hoja, x0, x1):
+    trozo = hoja.crop((x0, 0, x1, hoja.height))
+    caja = trozo.getchannel('A').point(lambda a: 255 if a >= ALFA_MINIMO else 0).getbbox()
+    dibujo = trozo.crop(caja)
+    lado = round(max(dibujo.size) * (1 + 2 * MARGEN))
+    lienzo = Image.new('RGBA', (lado, lado), (0, 0, 0, 0))
+    lienzo.paste(dibujo, ((lado - dibujo.width) // 2, (lado - dibujo.height) // 2), dibujo)
+    # LANCZOS y no NEAREST: la hoja viene a ~6× de su tamaño final y NEAREST se
+    # comería líneas sueltas del contorno al reducir tanto.
+    return lienzo.resize((LADO_FINAL, LADO_FINAL), Image.Resampling.LANCZOS)
 
 
 if __name__ == '__main__':
-    for ident, (banda, oscura, simbolo) in PERGAMINOS.items():
+    hoja = Image.open(HOJA).convert('RGBA')
+    tramos = tramos_de_columnas(hoja.getchannel('A'), hoja.width, hoja.height)
+    if len(tramos) != len(IDS):
+        raise SystemExit(f'Se esperaban {len(IDS)} dibujos en la hoja y salen {len(tramos)}: {tramos}')
+    for ident, (x0, x1) in zip(IDS, tramos):
         ruta = os.path.join(DESTINO, f'{ident}.png')
-        dibujar(banda, oscura, simbolo).save(ruta)
-        print('ok', ruta)
+        recortar(hoja, x0, x1).save(ruta)
+        print('ok', ident, (x0, x1))

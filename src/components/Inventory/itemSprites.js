@@ -18,8 +18,9 @@ import anilloRinneganFragmento from '../../assets/items/anillo_rinnegan_fragment
 // están dibujados en ninguna y son dos esferas con una ranura, así que se dibujan
 // (`scripts/generar-sprite-cascabeles.py`). Placeholder declarado.
 import cascabeles from '../../assets/items/cascabeles.png';
-// Los pergaminos de entrenamiento tampoco salen de ninguna hoja: los dibuja
-// `scripts/generar-sprites-pergaminos.py`. Placeholder declarado, como los cascabeles.
+// Los pergaminos de entrenamiento tienen su propia hoja
+// (`assets/sprite-pergaminos-entrenamiento.png`), que recorta
+// `scripts/generar-sprites-pergaminos.py`.
 import pergaminoEntrenamientoAtaque from '../../assets/items/pergamino_entrenamiento_ataque.png';
 import pergaminoEntrenamientoDefensa from '../../assets/items/pergamino_entrenamiento_defensa.png';
 import pergaminoEntrenamientoVelocidad from '../../assets/items/pergamino_entrenamiento_velocidad.png';

@@ -45,8 +45,9 @@ se subió la frecuencia de la tienda:
 
 - **Pergaminos de entrenamiento** (consumibles comunes, 35 de oro): el `buffTemporalEquipo` que ya daban
   tres eventos, comprado — ATK +15%, DEF +20% o SPD +20% para **todo el equipo** durante 3 combates. La
-  mochila los usa con un solo botón (no pide personaje) y el mapa ya enseñaba los buffs activos. Sprites
-  **dibujados** por `scripts/generar-sprites-pergaminos.py` (en "Pendiente de arte").
+  mochila los usa con un solo botón (no pide personaje) y el mapa ya enseñaba los buffs activos. Sprites recortados
+  de `assets/sprite-pergaminos-entrenamiento.png` por `scripts/generar-sprites-pergaminos.py` (el primer
+  día los dibujaba el propio script con formas geométricas, hasta que llegó la hoja).
 - **Servicios** (`config.tienda`):
   - **New wares**: cambia lo que queda por otros objetos; 15 de oro y +10 cada vez en la misma tienda,
     para que sea un gasto con fondo y no un "tira hasta que salga el legendario".
