@@ -134,7 +134,11 @@ El **manual** es la XP de equipo de los eventos (`ganarXpEquipo`), comprada; com
 pergaminos, no pide personaje. **No pasa por la XP decreciente**: 30 XP es más de un nivel en el arco 1 y
 menos de uno en el 3, y el oro que cuesta ya lo limita.
 
-Sprites: **provisionales**, dibujados por `scripts/generar-sprites-objetos-nuevos.py`, que en cuanto exista
-la hoja `src/assets/sprite-objetos-nuevos.png` pasa a recortarla (ver "Pendiente de arte" en el roadmap).
+Sprites: recortados de `src/assets/sprite-objetos-nuevos.png` por `scripts/generar-sprites-objetos-nuevos.py`.
+La hoja llegó con **7 de los 8** (faltan las pesas de Lee, que siguen con el icono provisional que dibuja
+el mismo script), en otro orden que el encargado —se asignan por lo que se ve, en `IDS_EN_LA_HOJA`— y
+con el damero **pintado** en RGB: se borra por inundación desde el borde, como en las hojas de chakra.
+⚠️ Además el kunai y el chaleco **se tocan**, así que cuando faltan trozos el script parte el más ancho
+por su columna más fina (lo mismo que `generar-sprites-proyectiles.py`).
 Hay un test nuevo que exige sprite para **todo** objeto de `items.json`: añadir un objeto es solo datos,
 y sin el test un objeto sin dibujo salía como una caja vacía sin que fallara nada.

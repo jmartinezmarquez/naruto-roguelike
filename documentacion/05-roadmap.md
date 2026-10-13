@@ -1549,12 +1549,10 @@ conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactament
   (`assets/sprite-pergaminos-entrenamiento.png`) y `scripts/generar-sprites-pergaminos.py` pasó de
   dibujarlos a recortarlos.
 - **El segundo modo de Zabuza ("Silent Killing", 2026-10-13)** usa el sprite de su primer modo.
-- **Los 8 objetos del 2026-10-14** llevan sprites provisionales. **El encargo**: una hoja PNG con **fondo
-  transparente**, `src/assets/sprite-objetos-nuevos.png`, con los 8 dibujos separados por aire y en este
-  orden de lectura (por filas, de izquierda a derecha; vale una fila de 8 o dos de 4): ungüento curativo
-  (tarro), kit de ninja médico (caja con cruz), manual de jōnin (libro), pesas de tobillo de Lee,
-  cuchillas de Asuma, chaleco chūnin, bolsa de sellos explosivos, talismán de las Ocho Puertas. Luego
-  `python scripts/generar-sprites-objetos-nuevos.py` los recorta solo — el mismo flujo que los pergaminos.
+- **Las pesas de tobillo de Lee** (`pesas_de_lee`) siguen con icono provisional: la hoja de los objetos
+  del 2026-10-14 (`src/assets/sprite-objetos-nuevos.png`) trajo los otros 7. Cuando haya dibujo, se añade
+  a la hoja y su id a `IDS_EN_LA_HOJA` de `scripts/generar-sprites-objetos-nuevos.py`, en el orden en
+  que aparezca, y se vuelve a correr el script.
 - ~~**Los nodos de entrenador, mini-jefe y jefe no llevan sprite del personaje concreto.**~~ — **HECHO**
   (ver tanda 2 del punto 15).
 - ~~**Los 5 tipos de chakra y los 4 iconos del menú**~~ — **HECHOS el 2026-08-19**, en una sola tanda
