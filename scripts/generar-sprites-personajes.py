@@ -59,11 +59,11 @@ PANELES = [
 # placeholders declarados, no un descuido: Sai y Yamato no tienen arte propio, y
 # Camino Animal comparte panel con Camino Deva. Se eligen por tipo de chakra para
 # que al menos el color pegue. Ver el punto 2 del roadmap.
-PLACEHOLDERS = {
-    'sai': 'genin_rival_fuuton',       # Sai es fuuton
-    'yamato': 'genin_rival_doton',     # Yamato es doton
-    'camino_animal_pain': 'pain_camino_deva',
-}
+#
+# ⚠️ **Vacío desde el 2026-10-14**: Sai, Yamato y Camino Animal tienen ya sprite propio
+# del estilo nuevo (`generar-sprites-estilo-nuevo.py`). Si se rellenara otra vez, correr
+# este script **pisaría** ese arte con el placeholder.
+PLACEHOLDERS = {}
 
 # Placeholders que además se **recolorean**, para los que un copia-y-pega no basta.
 # Kakashi es legendario y se pelea contra él en un pergamino dorado: si sale con el
@@ -75,13 +75,10 @@ PLACEHOLDERS = {
 # pelo es la masa de color dominante de la coronilla), y `tonos` son los colores de
 # reemplazo del más claro al más oscuro. No se escribe ningún color de origen: se
 # mide sobre el propio sprite, como todo lo demás en este script.
-RECOLOREADOS = {
-    'kakashi': {
-        'origen': 'genin_rival_raiton',   # Kakashi es raiton
-        'banda': 0.34,
-        'tonos': [(206, 206, 198), (150, 150, 144), (104, 104, 100)],
-    },
-}
+#
+# ⚠️ **Vacío desde el 2026-10-14**, por lo mismo: Kakashi tiene ya sprite propio. El
+# mecanismo se queda por si otro personaje lo necesita mientras llega su dibujo.
+RECOLOREADOS = {}
 
 UMBRAL_OSCURO = 70       # por debajo de esto un píxel cuenta como marco
 DENSIDAD_SEPARADOR = 0.88  # qué parte de una línea tiene que ser marco para serlo

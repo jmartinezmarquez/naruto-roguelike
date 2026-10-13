@@ -2,14 +2,11 @@
 // con `scripts/generar-sprites-transformaciones.py`. La clave es
 // `<personajeId>_<indice del modo en su array `modos`>`.
 //
-// **Los tier 2 de nueve personajes no están dibujados** (la hoja solo trae el
-// segundo modo de Naruto, Sasuke, Sakura y los jefes), así que `spriteDeModo`
-// cae al tier 1 del mismo personaje: ya lleva su aura y se lee como "está
-// transformado", que es lo que tiene que comunicar la pantalla. Es un
-// placeholder declarado — está en la sección "Pendiente de arte" del roadmap.
-//
-// Sai y Yamato no tienen ninguno y devuelven `null`: quien lo pinte cae a su
-// sprite normal.
+// Los que la hoja original no traía —los tier 2 de los comunes, Kakashi, Sai, Yamato
+// y el segundo modo de Zabuza— llegaron con el estilo nuevo
+// (`scripts/generar-sprites-estilo-nuevo.py`). Hay un test que exige sprite para
+// cada modo de cada luchador; la caída al tier 1 de `spriteDeModo` queda solo como
+// red de seguridad para el próximo modo que se añada sin dibujo.
 
 import naruto0 from '../../assets/transformations/naruto_0.png';
 import naruto1 from '../../assets/transformations/naruto_1.png';
@@ -31,8 +28,23 @@ import kabuto0 from '../../assets/transformations/kabuto_0.png';
 import gaara0 from '../../assets/transformations/gaara_0.png';
 import gaara1 from '../../assets/transformations/gaara_1.png';
 import painDeva0 from '../../assets/transformations/pain_camino_deva_0.png';
+// Estilo nuevo (2026-10-14), de `scripts/generar-sprites-estilo-nuevo.py`: los que faltaban.
+import kakashi0 from '../../assets/transformations/kakashi_0.png';
+import kakashi1 from '../../assets/transformations/kakashi_1.png';
+import sai0 from '../../assets/transformations/sai_0.png';
+import yamato0 from '../../assets/transformations/yamato_0.png';
+import rockLee1 from '../../assets/transformations/rock_lee_1.png';
+import neji1 from '../../assets/transformations/neji_1.png';
+import tenten1 from '../../assets/transformations/tenten_1.png';
+import shikamaru1 from '../../assets/transformations/shikamaru_1.png';
+import ino1 from '../../assets/transformations/ino_1.png';
+import choji1 from '../../assets/transformations/choji_1.png';
+import kiba1 from '../../assets/transformations/kiba_1.png';
+import hinata1 from '../../assets/transformations/hinata_1.png';
+import shino1 from '../../assets/transformations/shino_1.png';
+import zabuza1 from '../../assets/transformations/zabuza_1.png';
 
-const SPRITE_MODO = {
+export const SPRITE_MODO = {
   naruto_0: naruto0,
   naruto_1: naruto1,
   sasuke_0: sasuke0,
@@ -53,6 +65,20 @@ const SPRITE_MODO = {
   gaara_0: gaara0,
   gaara_1: gaara1,
   pain_camino_deva_0: painDeva0,
+  kakashi_0: kakashi0,
+  kakashi_1: kakashi1,
+  sai_0: sai0,
+  yamato_0: yamato0,
+  rock_lee_1: rockLee1,
+  neji_1: neji1,
+  tenten_1: tenten1,
+  shikamaru_1: shikamaru1,
+  ino_1: ino1,
+  choji_1: choji1,
+  kiba_1: kiba1,
+  hinata_1: hinata1,
+  shino_1: shino1,
+  zabuza_1: zabuza1,
 };
 
 /** El sprite de un modo concreto, cayendo al primer modo del personaje si ese no está dibujado. */

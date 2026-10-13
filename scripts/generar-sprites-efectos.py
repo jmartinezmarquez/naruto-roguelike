@@ -4,7 +4,7 @@ de fotogramas que la pantalla de combate reproduce con `steps()`.
 
 Uso:  python scripts/generar-sprites-efectos.py      (necesita Pillow)
 
-**Este script DIBUJA, no recorta**, como `generar-sprite-cascabeles.py`: ninguna de
+**Este script DIBUJA, no recorta**, como hacía `generar-sprite-cascabeles.py` (borrado al llegar su arte): ninguna de
 las hojas del artista trae efectos. Y aquí no es un placeholder — los efectos son
 formas geométricas (nubes de círculos, arcos, estrellas, explosiones), justo lo que
 un script dibuja tan bien como una mano. Lo que NO se dibuja así son personajes.

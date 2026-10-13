@@ -71,3 +71,14 @@ describe('un id desconocido', () => {
     expect(spriteDeProyectil(undefined, true)).toBe(SPRITE_KUNAI);
   });
 });
+
+describe('estilo nuevo (2026-10-14): ya no falta ningún proyectil', () => {
+  it('todo personaje y jefe tiene proyectil propio, salvo los de cuerpo a cuerpo', () => {
+    // Los de cuerpo a cuerpo son una decisión, no un hueco: Rock Lee (taijutsu) y
+    // Kakashi (Raikiri). Cualquier otro que caiga al kunai es un dibujo que falta.
+    const CUERPO_A_CUERPO = new Set(['rock_lee', 'kakashi']);
+    const ids = [...charactersData.personajes, ...enemiesData.jefes].map((p) => p.id);
+    const sinProyectil = ids.filter((id) => !CUERPO_A_CUERPO.has(id) && spriteDeProyectil(id, true) === SPRITE_KUNAI);
+    expect(sinProyectil).toEqual([]);
+  });
+});

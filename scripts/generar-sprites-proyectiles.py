@@ -84,9 +84,10 @@ REJILLA = [
     ['haku', 'zabuza', 'kabuto', 'gaara', 'pain_camino_deva', None, None],
 ]
 
-# Camino Animal no tiene proyectil propio: comparte el de Camino Deva, igual que
-# comparte sprite de personaje. Placeholder declarado, ver el roadmap.
-PLACEHOLDERS = {'camino_animal_pain': 'pain_camino_deva'}
+# ⚠️ **Vacío desde el 2026-10-14**: Camino Animal compartía el proyectil de Camino Deva
+# y ahora tiene el suyo del estilo nuevo (`generar-sprites-estilo-nuevo.py`). Si se
+# rellenara otra vez, correr este script pisaría ese arte.
+PLACEHOLDERS = {}
 
 UMBRAL_OSCURO = 70
 DENSIDAD_SEPARADOR = 0.85

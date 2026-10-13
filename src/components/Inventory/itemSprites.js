@@ -14,9 +14,8 @@ import pergaminoViento from '../../assets/items/pergamino_viento.png';
 import kubikiribochoFragmento from '../../assets/items/kubikiribocho_fragmento.png';
 import calabazaArena from '../../assets/items/calabaza_arena.png';
 import anilloRinneganFragmento from '../../assets/items/anillo_rinnegan_fragmento.png';
-// El único sprite del juego que no sale de una hoja del artista: los cascabeles no
-// están dibujados en ninguna y son dos esferas con una ranura, así que se dibujan
-// (`scripts/generar-sprite-cascabeles.py`). Placeholder declarado.
+// Los cascabeles se dibujaban por script hasta que llegó su arte con el estilo nuevo
+// (`scripts/generar-sprites-estilo-nuevo.py`).
 import cascabeles from '../../assets/items/cascabeles.png';
 // Los pergaminos de entrenamiento tienen su propia hoja
 // (`assets/sprite-pergaminos-entrenamiento.png`), que recorta

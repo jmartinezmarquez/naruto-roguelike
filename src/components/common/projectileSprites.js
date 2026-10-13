@@ -5,9 +5,9 @@
 // `ataqueBasicoPorDefecto` en config.json, ver documentacion/29), así que solo
 // los jutsus tienen proyectil propio.
 //
-// Quien no aparezca aquí lanza el kunai también en su jutsu, y es correcto:
-// Rock Lee es cuerpo a cuerpo a propósito, y Neji, Shikamaru, Kiba, Sai y Yamato
-// no están dibujados en la hoja del artista.
+// Quien no aparezca aquí lanza el kunai también en su jutsu, y es correcto: Rock Lee
+// y Kakashi (Raikiri) son cuerpo a cuerpo a propósito. Neji, Shikamaru, Kiba, Sai y
+// Yamato, que faltaban en la hoja del artista, llegaron con el estilo nuevo.
 //
 // Los cinco genin rivales sí lo están, pero en la OTRA hoja
 // (`map-sprites-idle-all-characters.png`, al final de su tira de ataque), así que
@@ -28,6 +28,12 @@ import zabuza from '../../assets/projectiles/zabuza.png';
 import kabuto from '../../assets/projectiles/kabuto.png';
 import gaara from '../../assets/projectiles/gaara.png';
 import caminoAnimalPain from '../../assets/projectiles/camino_animal_pain.png';
+// Estilo nuevo (2026-10-14), de `scripts/generar-sprites-estilo-nuevo.py`.
+import nejiJutsu from '../../assets/projectiles/neji.png';
+import shikamaruJutsu from '../../assets/projectiles/shikamaru.png';
+import kibaJutsu from '../../assets/projectiles/kiba.png';
+import saiJutsu from '../../assets/projectiles/sai.png';
+import yamatoJutsu from '../../assets/projectiles/yamato.png';
 import painCaminoDeva from '../../assets/projectiles/pain_camino_deva.png';
 import zaku from '../../assets/projectiles/zaku.png';
 import dosu from '../../assets/projectiles/dosu.png';
@@ -54,6 +60,11 @@ const SPRITE_JUTSU = {
   kabuto,
   gaara,
   camino_animal_pain: caminoAnimalPain,
+  neji: nejiJutsu,
+  shikamaru: shikamaruJutsu,
+  kiba: kibaJutsu,
+  sai: saiJutsu,
+  yamato: yamatoJutsu,
   pain_camino_deva: painCaminoDeva,
   zaku,
   dosu,

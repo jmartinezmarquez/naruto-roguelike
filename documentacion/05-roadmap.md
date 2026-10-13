@@ -1548,7 +1548,7 @@ conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactament
 - ~~**Los tres pergaminos de entrenamiento de la tienda**~~ — **HECHOS el 2026-10-14**: llegó la hoja
   (`assets/sprite-pergaminos-entrenamiento.png`) y `scripts/generar-sprites-pergaminos.py` pasó de
   dibujarlos a recortarlos.
-- **El segundo modo de Zabuza ("Silent Killing", 2026-10-13)** usa el sprite de su primer modo.
+- ~~**El segundo modo de Zabuza ("Silent Killing")**~~ — **HECHO el 2026-10-14** con el estilo nuevo.
 - ~~**Los 8 objetos del 2026-10-14**~~ — **HECHOS**: siete en `src/assets/sprite-objetos-nuevos.png` y las
   pesas de Lee en `src/assets/sprite-pesas-de-lee.png`, recortados por `scripts/generar-sprites-objetos-nuevos.py`.
 - ~~**Los nodos de entrenador, mini-jefe y jefe no llevan sprite del personaje concreto.**~~ — **HECHO**
@@ -1556,7 +1556,8 @@ conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactament
 - ~~**Los 5 tipos de chakra y los 4 iconos del menú**~~ — **HECHOS el 2026-08-19**, en una sola tanda
   como decía esta entrada. Están en `assets/chakra/` y `assets/menu/`, recortados por
   `scripts/generar-sprites-iconos.py`.
-- **El menú vertical no tiene sprites propios de icono.** Usa la maqueta entera
+- ~~**El menú vertical no tiene sprites propios de icono.**~~ — **Entrada desactualizada (revisado el
+  2026-10-14)**: los iconos ya existen en `assets/menu/` y el menú ya es CSS. Lo que sigue es historia. Usa la maqueta entera
   (`assets/menu/columna-menu.png`) con cuatro botones transparentes encima, porque esa hoja es un menú
   ya dibujado —marco, huecos e iconos juntos— y recortarla se lleva el marco o agujerea el sombreado.
   **Lo que hace falta**: cuatro PNG en `src/assets/menu/` (pergamino, libro, engranaje, torii) en un
@@ -1568,39 +1569,43 @@ conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactament
   vive pegado al borde derecho): no depende de los sprites y no hay que volver a ella.
   Y el reparto de iconos deja de ser un apaño en el **punto 14**: el engranaje pasa a ser Ajustes —que es
   lo que la maqueta dibujó— y pantalla completa se muda dentro de esa pantalla.
-- **Los 5 tipos de chakra se dibujan con emoji.** La rueda del mapa (`RuedaChakra`) y las pastillas de
+- ~~**Los 5 tipos de chakra se dibujan con emoji.**~~ — **Entrada desactualizada (revisado el 2026-10-14)**:
+  los cinco están en `assets/chakra/`. Lo que sigue es historia. La rueda del mapa (`RuedaChakra`) y las pastillas de
   tipo usan 🔥💨⚡🪨💧, que es lo único de la interfaz que no está dibujado — se ve sobre todo al lado de
   los sprites, que sí lo están. **Lo que hace falta**: cinco PNG en un lienzo común, en el mismo estilo
   que los iconos de nodo. Van **con los cuatro del menú vertical, de una tacada**: hacerlos por
   separado es la forma segura de que salgan de dos estilos distintos. Salió del playtest del
   2026-08-14; el cursor de escritura que los delataba ya está arreglado, que era la mitad de código.
-- **Sai y Yamato no tienen sprite propio.** Llevan de placeholder el genin rival de su naturaleza de
+- ~~**Sai y Yamato no tienen sprite propio.**~~ — **HECHO el 2026-10-14** (estilo nuevo). Llevan de placeholder el genin rival de su naturaleza de
   chakra (fuuton y doton). Declarado en `PLACEHOLDERS` de `scripts/generar-sprites-personajes.py`.
-- **Kakashi tampoco**, y con él un copia-y-pega no valía: es legendario y se pelea contra él en el
+- ~~**Kakashi tampoco**~~ — **HECHO el 2026-10-14** (estilo nuevo). Y con él un copia-y-pega no valía: es legendario y se pelea contra él en el
   pergamino dorado, así que con el sprite exacto del genin raiton el desafío parecería un combate
   común. Lleva ese mismo sprite **con el pelo recoloreado a plata** (`RECOLOREADOS` en el mismo
   script). El recolor va por **ventana de luminosidad, no por color exacto**: el dibujo está
   antialiaseado y el pelo son decenas de variantes de un tono, así que contar colores cambiaba 12
   píxeles de 96×96 y el "color dominante" de la coronilla salía siendo el negro del contorno — el
   mismo problema que el papel texturizado de la hoja.
-- **Kakashi no tiene sprite de transformación ni proyectil de jutsu.** Cae a su sprite normal y a
+- ~~**Kakashi no tiene sprite de transformación**~~ — **HECHO el 2026-10-14** (sus dos modos). El proyectil
+  no hace falta: el Raikiri es cuerpo a cuerpo, como Rock Lee. Cae a su sprite normal y a
   kunai, como Sai y Yamato. El kunai chirría más en su caso porque el Raikiri es cuerpo a cuerpo; el
   sitio donde se resolvería es el tratamiento de melé que ya tiene Rock Lee.
-- **Los cascabeles están dibujados por script, no por un artista**
+- ~~**Los cascabeles están dibujados por script**~~ — **HECHO el 2026-10-14**: arte del estilo nuevo, y el
+  script que los dibujaba se borró.
   (`scripts/generar-sprite-cascabeles.py`): dos esferas de cuatro tonos con su ranura y una cuerda
   roja, en rejilla lógica de 28×28 ampliada ×4. Es el **único** sprite del juego que no sale de una
   hoja. Cuando exista el dibujo de verdad, ese script se borra y el objeto pasa a
   `generar-sprites-objetos.py` como todos los demás.
-- **Camino Animal de Pain comparte sprite y proyectil con Camino Deva**, que es el único Pain que
+- ~~**Camino Animal de Pain comparte sprite y proyectil con Camino Deva**~~ — **HECHO el 2026-10-14**., que es el único Pain que
   hay dibujado. Mismo sitio.
 - ~~**Los genin rivales no tienen proyectil de jutsu**~~ — **HECHO el 2026-08-21**, y era lo que decía
   esta entrada: el dibujo ya estaba en la última casilla de cada panel de la fila 5 de
   `map-sprites-idle-all-characters.png`. Lo saca ahora `generar-sprites-proyectiles.py`, que por eso lee
   las dos hojas.
-- **Neji, Shikamaru, Kiba, Sai y Yamato tampoco tienen proyectil de jutsu**: no están dibujados en
+- ~~**Neji, Shikamaru, Kiba, Sai y Yamato tampoco tienen proyectil de jutsu**~~ — **HECHO el 2026-10-14**.: no están dibujados en
   `projectile-sprites.png`. Lanzan kunai. (Rock Lee no cuenta: es cuerpo a cuerpo a propósito, así
   lo marca la propia hoja.)
-- **Los tier 2 de nueve personajes no tienen sprite de transformación** (la hoja solo trae el
+- ~~**Los tier 2 de nueve personajes no tienen sprite de transformación**~~ — **HECHO el 2026-10-14**, con
+  los de Kakashi, Sai y Yamato. Hay test: todo modo tiene que tener sprite. (la hoja solo trae el
   segundo modo de Naruto, Sasuke, Sakura y los jefes). `spriteDeModo` cae al tier 1 del mismo
   personaje, que ya lleva aura y se lee como "está transformado". Sai y Yamato no tienen ninguno y
   caen a su sprite normal — que además ya es un placeholder, así que son los dos que peor se ven.
