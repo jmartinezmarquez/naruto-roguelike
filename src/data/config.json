@@ -10,20 +10,11 @@
     "oroPorCombateGanado": {
       "min": 10,
       "max": 20
-    },
-    "oroPorEventoPositivo": {
-      "min": 5,
-      "max": 15
-    },
-    "precioReclutamientoPorRareza": {
-      "inicial": 40,
-      "comun": 40,
-      "raro": 70,
-      "legendario": 120
     }
   },
   "combate": {
     "turnosMaximos": 30,
+    "variacionDano": 0.1,
     "ordenPorVelocidad": true,
     "jutsu": {
       "_comentario": "Barra de jutsu: sube alAtacar por ataque básico propio y alRecibirDano por golpe recibido, y al llegar a cargaMaxima el SIGUIENTE ataque es el jutsu (que la vacía). cargaPorDefecto es red de seguridad para contenido nuevo (hoy todos traen la suya). ataqueBasicoPorDefecto NO es un defecto: es el ataque básico de TODOS los luchadores, único a propósito — lo que diferencia el daño básico de un personaje a otro es su stat de ataque, no un danoBase propio. Ningún personaje ni enemigo define ya el suyo. El motor sigue leyendo personajeBase.ataqueBasico si existiera, por si algún día un jefe merece uno.",
@@ -43,9 +34,15 @@
     "nivelMaximo": 100,
     "crecimientoStatsPorNivel": 0.03,
     "porcentajeXpBanquillo": 0.6,
+    "xpPorVentaja": {
+      "_comentario": "XP decreciente si vas por encima del enemigo: a partir de margenSinPenalizacion niveles de ventaja, cada nivel más quita penalizacionPorNivel, sin bajar de minimo. Ver factorXpPorVentaja en engine/leveling.js.",
+      "margenSinPenalizacion": 3,
+      "penalizacionPorNivel": 0.15,
+      "minimo": 0.25
+    },
     "multiplicadorEficaciaFuerte": 1.5,
     "multiplicadorEficaciaDebil": 0.5,
-    "multiplicadorEficaciaNeutral": 1.0
+    "multiplicadorEficaciaNeutral": 1
   },
   "tienda": {
     "numeroObjetosOfrecidos": 3,
@@ -53,7 +50,15 @@
       "comun": 65,
       "raro": 30,
       "legendario": 5
-    }
+    },
+    "_comentarioServicios": "Lo que la tienda vende además de objetos, para que el oro tenga en qué gastarse cuando el equipo ya lleva sus tres equipables. cambiarOferta sube de precio cada vez dentro de la misma tienda (base + incremento × veces); curar es una vez por tienda y deja al equipo entero a tope (revive); vender paga fraccionVenta del precio, y los objetos sin precio de tienda (los de jefe) se valoran a precioReferenciaSinPrecio. Ver documentacion/15-tienda.md.",
+    "cambiarOferta": {
+      "base": 15,
+      "incremento": 10
+    },
+    "precioCuracion": 40,
+    "fraccionVenta": 0.5,
+    "precioReferenciaSinPrecio": 100
   },
   "guardado": {
     "claveLocalStorage": "naruto-roguelike-run-actual",

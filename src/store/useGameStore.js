@@ -13,15 +13,17 @@ import enemiesData from '../data/enemies.json';
 import commonEnemiesData from '../data/common-enemies.json';
 import achievementsData from '../data/achievements.json';
 import campaignsData from '../data/campaigns.json';
+import ascensionsData from '../data/ascensions.json';
 import arcoPaisDeLasOlas from '../data/arcs/pais-de-las-olas.json';
 import arcoExamenChunin from '../data/arcs/examen-chunin.json';
 import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
-import { ganarXp, obtenerModoActivo } from '../engine/leveling';
+import { ganarXp, obtenerModoActivo, factorXpPorVentaja } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
+import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/ascension';
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
@@ -220,8 +222,26 @@ function generarCadenaEntrenador(namedEnemy, nivel) {
 function generarOfertaTienda() {
   const pool = itemsData.objetos.filter((o) => o.precioTienda !== null);
   return {
-    items: elegirVariosAlAzar(pool, 3).map((o) => ({ id: o.id, precio: o.precioTienda })),
+    items: elegirVariosAlAzar(pool, configGlobal.tienda.numeroObjetosOfrecidos).map((o) => ({ id: o.id, precio: o.precioTienda })),
+    // Servicios: cuántas veces se ha cambiado la oferta en ESTA tienda (sube el
+    // precio) y si ya se ha usado la curación (una por tienda).
+    cambiosDeOferta: 0,
+    curacionUsada: false,
   };
+}
+
+/** Lo que paga la tienda por un objeto: una fracción de su precio (ver `config.tienda`). */
+export function precioDeVenta(itemId) {
+  const objeto = itemsData.objetos.find((o) => o.id === itemId);
+  if (!objeto) return 0;
+  const { fraccionVenta, precioReferenciaSinPrecio } = configGlobal.tienda;
+  return Math.round((objeto.precioTienda ?? precioReferenciaSinPrecio) * fraccionVenta);
+}
+
+/** Cuánto cuesta cambiar la oferta ahora mismo en esta tienda. */
+export function precioCambiarOferta(tienda) {
+  const { base, incremento } = configGlobal.tienda.cambiarOferta;
+  return base + incremento * (tienda?.cambiosDeOferta ?? 0);
 }
 
 /**
@@ -303,7 +323,7 @@ function rarezasReclutarDisponibles(equipoActual, arcoActualDatos) {
  * usado para que la pantalla no mienta. El mapa sí se queda con el pergamino
  * dorado dibujado — es el único punto donde el icono puede prometer de más.
  */
-function generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento, rarezaNodo = 'comun') {
+function generarOfertaReclutar(equipoActual, arcoActualDatos, rarezaNodo = 'comun') {
   const candidatos = candidatosReclutables(equipoActual, arcoActualDatos);
   const deLaRareza = (rareza) =>
     candidatos.filter((c) => (RAREZAS_POR_PERGAMINO[rareza] ?? []).includes(c.rareza));
@@ -318,19 +338,19 @@ function generarOfertaReclutar(equipoActual, arcoActualDatos, nivelReclutamiento
 
   const esDesafio = rareza === 'legendario' && elegibles.length > 0;
 
-  // Un legendario entra al nivel **medio** del equipo, no al del más fuerte como
-  // el resto de reclutas. Sus stats base ya son de jefe (90 de HP y 14 de ataque
-  // contra los 38 y 8,5 de un común), así que darle además el nivel del mejor del
-  // equipo lo convertía en un personaje que gana él solo lo que queda de run —
-  // sobre todo si el pergamino sale pronto. Redondeo hacia abajo, que es el
-  // "incluso menos" de la nota de playtest.
+  // Todo recluta entra al nivel **medio** del equipo, redondeado hacia abajo.
+  // Primero fue el legendario: sus stats ya son de jefe, y con el nivel del mejor
+  // del equipo ganaba él solo lo que quedaba de run. En el playtest de 2026-10-13
+  // se extendió a los comunes, que entraban al nivel del MÁS FUERTE: quien forzaba
+  // combates con uno solo y reclutaba después tenía un equipo entero a ese nivel,
+  // y eso ayudaba a llegar a los jefes diez niveles por encima.
   const nivelMedioDelEquipo = equipoActual.length > 0
     ? Math.max(1, Math.floor(equipoActual.reduce((acc, p) => acc + p.nivel, 0) / equipoActual.length))
     : 1;
 
   return {
     personajes: elegirVariosAlAzar(elegibles, esDesafio ? 1 : 3),
-    nivelReclutamiento: esDesafio ? nivelMedioDelEquipo : nivelReclutamiento,
+    nivelReclutamiento: nivelMedioDelEquipo,
     rareza,
     esDesafio,
     // Nivel FIJO del arco, no relativo al equipo: es la misma regla que rige a
@@ -371,9 +391,18 @@ export const useGameStore = create((set, get) => ({
   runTerminada: false,
   runGanada: false,
   huboDerrotaEnEsteArco: false, // para el logro "completarArcoSinDerrotas" — se resetea en iniciarRun, se marca en _aplicarDerrota
+  // Ids de los arcos cuyo jefe final ha caído en ESTA run, en orden: las medallas, como
+  // las de gimnasio de Pokémon. Mueren con la run; las que quedan para siempre van al
+  // Salón de la Fama junto al equipo que las ganó.
+  medallas: [],
   // La campaña elegida en el Home. Decide QUÉ arcos se juegan y en qué orden, así que
   // `avanzarSiguienteArco` la lee para saber cuál viene después.
   campanaActualId: CAMPANA_POR_DEFECTO,
+  // La ascensión que se ha elegido en el Home para la PRÓXIMA run, y la de la run en
+  // curso. Son dos porque "reiniciar" vuelve a empezar con la misma, y la de la run
+  // tiene que quedarse fija aunque alguien toque el selector a mitad de partida.
+  ascensionElegida: 0,
+  ascension: 0,
 
   // ---------- ACCIONES ----------
 
@@ -385,6 +414,7 @@ export const useGameStore = create((set, get) => ({
    * concreto, que es lo que hacen los tests.
    */
   iniciarRun(personajesInicialesIds, arco = arcosDeCampana(get().campanaActualId)[0]) {
+    const ascension = get().ascensionElegida;
     const tamanoMaximo = configGlobal.equipo.tamanoMaximo;
     const equipoInicial = personajesInicialesIds
       .slice(0, tamanoMaximo)
@@ -422,6 +452,8 @@ export const useGameStore = create((set, get) => ({
       runTerminada: false,
       runGanada: false,
       huboDerrotaEnEsteArco: false,
+      medallas: [],
+      ascension,
     });
 
     // La enciclopedia arranca con lo que traes puesto: el personaje elegido y los
@@ -489,8 +521,13 @@ export const useGameStore = create((set, get) => ({
 
     if (nodo.tipo === 'descanso') {
       // Auto-resuelto: cura y revive a todo el equipo, sin pantalla propia.
-      get()._curarEquipoCompleto();
-      set({ avisoUltimoNodo: 'Team fully healed at the rest node.' });
+      const fraccion = get()._modificadoresDeAscension().curacionDescanso;
+      get()._curarEquipoCompleto(fraccion);
+      set({
+        avisoUltimoNodo: fraccion < 1
+          ? `Team healed to ${Math.round(fraccion * 100)}% at the rest node.`
+          : 'Team fully healed at the rest node.',
+      });
       return null;
     }
 
@@ -501,10 +538,7 @@ export const useGameStore = create((set, get) => ({
 
     if (nodo.tipo === 'reclutar') {
       const equipoActual = get().equipo;
-      const nivelReclutamiento = Math.max(1, ...equipoActual.map((p) => p.nivel));
-      const oferta = generarOfertaReclutar(
-        equipoActual, arcoActualDatos, nivelReclutamiento, nodo.rareza ?? 'comun',
-      );
+      const oferta = generarOfertaReclutar(equipoActual, arcoActualDatos, nodo.rareza ?? 'comun');
       set({ reclutarActual: oferta, desafioRecluta: null, pantalla: 'reclutar' });
       return null;
     }
@@ -626,11 +660,37 @@ export const useGameStore = create((set, get) => ({
    * `curarPersonaje` (restaura un % de HP — también revive si estaba
    * derrotado, a ese % de su HP máximo, no a HP completo).
    */
-  usarConsumible(itemId, idPersonaje) {
+  usarConsumible(itemId, idPersonaje = null) {
     const { inventario, equipo } = get();
     if (!inventario.includes(itemId)) return false;
     const item = itemsData.objetos.find((o) => o.id === itemId);
     if (!item || item.tipo !== 'consumible') return false;
+
+    // Pergaminos de entrenamiento: el buff temporal de los eventos, comprado. Es
+    // para todo el equipo, así que no necesita personaje.
+    if (item.efecto.tipo === 'buffTemporalEquipo') {
+      const posicion = inventario.indexOf(itemId);
+      set({
+        inventario: [...inventario.slice(0, posicion), ...inventario.slice(posicion + 1)],
+        buffsTemporales: [
+          ...get().buffsTemporales,
+          { multiplicadores: { [item.efecto.stat]: item.efecto.multiplicador }, combatesRestantes: item.efecto.combates },
+        ],
+      });
+      return true;
+    }
+
+    // Manual de jōnin: la XP de equipo de los eventos, comprada. Como en el evento,
+    // los caídos no aprenden nada. Tampoco necesita personaje.
+    if (item.efecto.tipo === 'ganarXpEquipo') {
+      const posicion = inventario.indexOf(itemId);
+      set({
+        inventario: [...inventario.slice(0, posicion), ...inventario.slice(posicion + 1)],
+        equipo: equipo.map((p) => (p.derrotado ? p : aplicarXpYActualizarHp(p, item.efecto.cantidad))),
+      });
+      return true;
+    }
+
     const indice = equipo.findIndex((p) => p.id === idPersonaje);
     if (indice === -1) return false;
     if (item.efecto.tipo !== 'curarPersonaje') return false; // ningún otro efecto de consumible implementado todavía
@@ -671,7 +731,13 @@ export const useGameStore = create((set, get) => ({
    * independientemente de cuántas rondas haya habido.
    */
   jugarCombate(enemigoBase, nivelEnemigo, consumirBuffs = true) {
-    const luchadorEnemigo = crearLuchador(enemigoBase, nivelEnemigo);
+    // Ascensión: comunes y jefes más duros. "Jefe" es todo lo de enemies.json —el
+    // desafío legendario incluido, que mecánicamente es un jefe— más los
+    // legendarios jugables cuando salen de rival (Kakashi).
+    const esJefe = enemiesData.jefes.some((j) => j.id === enemigoBase.id) || enemigoBase.rareza === 'legendario';
+    const luchadorEnemigo = crearLuchador(
+      enemigoBase, nivelEnemigo, null, multiplicadoresDeEnemigo(get()._modificadoresDeAscension(), esJefe),
+    );
     const rondas = [];
     let jugadorGanoFinal = false;
     let logrosDesbloqueados = [];
@@ -782,7 +848,7 @@ export const useGameStore = create((set, get) => ({
         ({
           transformaciones: transformacionesDesbloqueadas, subidasDeNivel, recompensas,
         } = get()._aplicarVictoria(
-          activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate));
+          activo.id, luchadorJugador.hpActual, enemigoBase, idsYaDerrotadosAntesDelCombate, nivelEnemigo));
 
         // ¿Este enemigo era el jefe final del arco en curso? Si además lleva
         // recompensa.finDeLaRun (solo Pain la tiene), la run entera se ha
@@ -795,14 +861,25 @@ export const useGameStore = create((set, get) => ({
           // equipo por completo (y revive a quien hubiera caído), de regalo
           // antes de pasar al siguiente arco — no hace falta ir a buscar un
           // nodo de descanso justo después de la pelea más dura del arco.
-          curacionDeArco = get().equipo.map((p) => ({
+          const fraccionFinDeArco = get()._modificadoresDeAscension().curacionFinDeArco;
+          const antesDeCurar = get().equipo;
+          get()._curarEquipoCompleto(fraccionFinDeArco);
+          // `hpDespues` va en la foto porque con la ascensión 5 la curación ya no
+          // llega al máximo, y la pantalla de transición pintaba la barra hasta el 100%.
+          curacionDeArco = antesDeCurar.map((p) => ({
             id: p.id,
             nivel: p.nivel,
             hpAntes: p.derrotado ? 0 : Math.max(0, p.hpActual),
+            hpDespues: get().equipo.find((q) => q.id === p.id)?.hpActual ?? calcularHpMaximo(p),
             hpMaximo: calcularHpMaximo(p),
             cayo: Boolean(p.derrotado),
           }));
-          get()._curarEquipoCompleto();
+          // La medalla del arco. Sin repetir: no debería poder ganarse dos veces el
+          // mismo arco en una run, pero si pasara, dos medallas iguales serían un bug
+          // visible en la fila del mapa.
+          if (!get().medallas.includes(arcoEnCurso.id)) {
+            set({ medallas: [...get().medallas, arcoEnCurso.id] });
+          }
           // ⚠️ **El aviso NO se pone aquí**, aunque la curación sí ocurra aquí. Esto corre
           // en cuanto el jefe muere en el motor, o sea **antes de que empiece la
           // animación del combate**: el toast salía por encima de la pelea del jefe final
@@ -813,6 +890,20 @@ export const useGameStore = create((set, get) => ({
         const runGanadaAqui = arcoCompletado && enemigoBase.recompensa?.finDeLaRun;
         if (runGanadaAqui) {
           set({ runTerminada: true, runGanada: true });
+          // Al Salón de la Fama, con el equipo tal y como ha ganado: ya curado y con
+          // los niveles de esta victoria (`_aplicarVictoria` y la curación de fin de
+          // arco han corrido justo arriba).
+          const { equipo, medallas, campanaActualId, ascension } = get();
+          useAchievementsStore.getState().registrarEnSalonDeLaFama({
+            fecha: new Date().toISOString().slice(0, 10),
+            campanaId: campanaActualId,
+            equipo: equipo.map((p) => ({ id: p.id, nivel: p.nivel })),
+            medallas,
+            ascension,
+          });
+          // Antes de evaluar logros (más abajo), para que los de ascensión salten
+          // en este mismo combate y no en el siguiente.
+          useAchievementsStore.getState().registrarAscensionGanada(campanaActualId, ascension);
         }
 
         // ⚠️ **Los contadores se suman ANTES de evaluar**, o el logro de "gana 10
@@ -961,10 +1052,25 @@ export const useGameStore = create((set, get) => ({
       cadenaEnemigos: null,
       // El aviso de la curación se entrega AQUÍ y no al morir el jefe: ver la nota en
       // `jugarCombate`. Llega con el jugador al mapa del arco nuevo.
-      avisoUltimoNodo: 'Team fully healed after completing the arc.',
+      avisoUltimoNodo: get()._modificadoresDeAscension().curacionFinDeArco < 1
+        ? `Team healed to ${Math.round(get()._modificadoresDeAscension().curacionFinDeArco * 100)}% after completing the arc.`
+        : 'Team fully healed after completing the arc.',
       huboDerrotaEnEsteArco: false,
     });
     return true;
+  },
+
+  /** Los arcos de la campaña en curso, en orden: la fila de medallas tiene un hueco por cada uno. */
+  obtenerArcosDeLaCampana() {
+    return arcosDeCampana(get().campanaActualId);
+  },
+
+  /**
+   * Abre el Salón de la Fama. Como Missions y el Bingo Book, es meta-progresión, así
+   * que se abre también desde el Home, sin run.
+   */
+  abrirSalonDeLaFama() {
+    set({ pantalla: 'salonFama' });
   },
 
   /** El arco que viene después del actual en la campaña en curso, o null si no hay. */
@@ -1016,8 +1122,13 @@ export const useGameStore = create((set, get) => ({
    * en qué orden (`campaigns.json`), así que se guarda antes de que `iniciarRun` lea
    * el primero.
    */
-  elegirCampana(campanaId) {
-    set({ campanaActualId: campanaId, pantalla: 'seleccionPersonaje' });
+  elegirCampana(campanaId, ascension = 0) {
+    set({ campanaActualId: campanaId, ascensionElegida: ascension, pantalla: 'seleccionPersonaje' });
+  },
+
+  /** Los modificadores de la ascensión de la run en curso (ver engine/ascension.js). */
+  _modificadoresDeAscension() {
+    return modificadoresDeAscension(ascensionsData.niveles, get().ascension);
   },
 
   /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */
@@ -1117,6 +1228,61 @@ export const useGameStore = create((set, get) => ({
     });
     get()._registrarVistosDeLaRun();
     get()._registrarProgreso({ objetosComprados: 1 });
+    return true;
+  },
+
+  /**
+   * Servicio de tienda: cambia los objetos que quedan por otros al azar. Cuesta más
+   * cada vez en la misma tienda (`precioCambiarOferta`), para que sea un gasto con
+   * fondo y no un "tira hasta que salga el legendario".
+   */
+  cambiarOfertaTienda() {
+    const { tiendaActual, oro } = get();
+    if (!tiendaActual) return false;
+    const precio = precioCambiarOferta(tiendaActual);
+    if (oro < precio) return false;
+    set({
+      oro: oro - precio,
+      tiendaActual: {
+        ...generarOfertaTienda(),
+        cambiosDeOferta: (tiendaActual.cambiosDeOferta ?? 0) + 1,
+        curacionUsada: Boolean(tiendaActual.curacionUsada),
+      },
+    });
+    get()._registrarVistosDeLaRun();
+    return true;
+  },
+
+  /**
+   * Servicio de tienda: cura y revive al equipo entero, una vez por tienda. Es el
+   * sumidero de oro que más sentido tiene, porque convierte oro en lo que de verdad
+   * escasea —vida—, y más en ascensión, donde el descanso ya no cura del todo.
+   * No se puede pagar si nadie lo necesita: sería tirar el oro.
+   */
+  curarEnTienda() {
+    const { tiendaActual, oro, equipo } = get();
+    if (!tiendaActual || tiendaActual.curacionUsada) return false;
+    const precio = configGlobal.tienda.precioCuracion;
+    const alguienLoNecesita = equipo.some((p) => p.derrotado || p.hpActual < calcularHpMaximo(p));
+    if (oro < precio || !alguienLoNecesita) return false;
+    get()._curarEquipoCompleto(1);
+    set({ oro: oro - precio, tiendaActual: { ...tiendaActual, curacionUsada: true } });
+    return true;
+  },
+
+  /**
+   * Servicio de tienda: vende un objeto de la mochila (no uno equipado: para eso
+   * hay que quitárselo antes, que es una decisión que no debe tomarse sin querer).
+   */
+  venderObjeto(itemId) {
+    const { tiendaActual, oro, inventario } = get();
+    if (!tiendaActual) return false;
+    const posicion = inventario.indexOf(itemId);
+    if (posicion === -1) return false;
+    set({
+      oro: oro + precioDeVenta(itemId),
+      inventario: [...inventario.slice(0, posicion), ...inventario.slice(posicion + 1)],
+    });
     return true;
   },
 
@@ -1227,7 +1393,7 @@ export const useGameStore = create((set, get) => ({
    * de banquillo por haber participado, pero su HP se queda a 0 — ganar XP
    * no debe "revivirlo" de regalo si sube de nivel.
    */
-  _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase, idsYaDerrotadosAntesDelCombate) {
+  _aplicarVictoria(idPersonaje, hpFinalActivo, enemigoBase, idsYaDerrotadosAntesDelCombate, nivelEnemigo = null) {
     const { equipo, oro, inventario, arcoActualDatos } = get();
     // Los jefes traen su XP escrita. Los enemigos comunes no: cobran la del arco
     // (`xpCombateComun`), porque las mismas 5 plantillas genéricas se reutilizan en
@@ -1236,8 +1402,9 @@ export const useGameStore = create((set, get) => ({
     const xpGanada = enemigoBase.recompensa?.xp ?? arcoActualDatos?.xpCombateComun ?? 20;
     const porcentajeBanquillo = configGlobal.progresion.porcentajeXpBanquillo;
     const oroGanado = Math.round(
-      (configGlobal.economia.oroPorCombateGanado.min +
-        configGlobal.economia.oroPorCombateGanado.max) / 2,
+      ((configGlobal.economia.oroPorCombateGanado.min +
+        configGlobal.economia.oroPorCombateGanado.max) / 2)
+        * get()._modificadoresDeAscension().multiplicadorOro,
     );
 
     // Transformaciones desbloqueadas en esta victoria. Se detectan comparando el
@@ -1255,7 +1422,10 @@ export const useGameStore = create((set, get) => ({
     const equipoActualizado = equipo.map((p) => {
       if (idsYaDerrotadosAntesDelCombate.has(p.id)) return p;
 
-      const xpParaEste = p.id === idPersonaje ? xpGanada : Math.round(xpGanada * porcentajeBanquillo);
+      // Cada uno según SU nivel: un recluta recién llegado que va por debajo del
+      // resto no debe pagar la ventaja de los demás (ver `factorXpPorVentaja`).
+      const xpBase = p.id === idPersonaje ? xpGanada : xpGanada * porcentajeBanquillo;
+      const xpParaEste = Math.round(xpBase * factorXpPorVentaja(p.nivel, nivelEnemigo));
       // El activo parte del HP con el que ha terminado la pelea, no del que traía
       // la instancia: así el incremento por subir de nivel se suma encima en vez
       // de perderse al sobrescribir el hpActual.
@@ -1444,11 +1614,19 @@ export const useGameStore = create((set, get) => ({
     });
   },
 
-  /** Interno: cura y revive a todo el equipo de golpe (nodo de descanso automático). */
-  _curarEquipoCompleto() {
+  /**
+   * Interno: cura y revive a todo el equipo de golpe. `fraccion` es hasta dónde
+   * cura, sobre el HP máximo (la ascensión la baja). Nunca quita vida: quien ya
+   * estaba por encima se queda como estaba, y el caído se levanta a esa fracción.
+   */
+  _curarEquipoCompleto(fraccion = 1) {
     const { equipo } = get();
     set({
-      equipo: equipo.map((p) => ({ ...p, derrotado: false, hpActual: calcularHpMaximo(p) })),
+      equipo: equipo.map((p) => {
+        const objetivo = Math.max(1, Math.round(calcularHpMaximo(p) * fraccion));
+        const hpActual = p.derrotado ? objetivo : Math.max(p.hpActual, objetivo);
+        return { ...p, derrotado: false, hpActual };
+      }),
     });
   },
 

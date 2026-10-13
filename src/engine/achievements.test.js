@@ -5,6 +5,7 @@ import {
   obtenerObjetosInicialesDesbloqueados,
   obtenerPersonajesInicialesDesbloqueados,
   progresoDeLogro,
+  rosterInicial,
 } from './achievements';
 
 const logrosDePrueba = [
@@ -162,5 +163,28 @@ describe('progresoDeLogro', () => {
 
   it('devuelve null para una condición de suceso: no tiene medias tintas', () => {
     expect(progresoDeLogro(logrosDePrueba[0], {})).toBeNull();
+  });
+});
+
+describe('rosterInicial', () => {
+  const personajes = [
+    { id: 'a', rareza: 'inicial' },
+    { id: 'b', rareza: 'comun' },
+    { id: 'c', rareza: 'comun' },
+    { id: 'd', rareza: 'raro' },
+    { id: 'e', rareza: 'legendario' },
+  ];
+
+  it('en la primera run (nada visto, ningún logro) solo salen los iniciales', () => {
+    expect(rosterInicial(personajes, [], []).map((p) => p.id)).toEqual(['a']);
+  });
+
+  it('un común que ya estuvo en tu equipo pasa a ser elegible', () => {
+    expect(rosterInicial(personajes, [], ['c']).map((p) => p.id)).toEqual(['a', 'c']);
+  });
+
+  it('raros y legendarios no se desbloquean por haberlos tenido: solo por logro', () => {
+    expect(rosterInicial(personajes, [], ['d', 'e']).map((p) => p.id)).toEqual(['a']);
+    expect(rosterInicial(personajes, ['d'], ['e']).map((p) => p.id)).toEqual(['a', 'd']);
   });
 });

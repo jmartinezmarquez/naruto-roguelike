@@ -536,7 +536,7 @@ El punto tenía dos intenciones: **contenido** (el arco 1 no tenía reclutables 
 legendario) y **experimento** (cuánto cuesta parchear el juego con cosas nuevas).
 
 - [x] **Kakashi Hatake**, primer legendario **jugable** — hasta ahora los legendarios eran solo jefes
-  desbloqueables por logro. Raiton, `42/11/8/10`, Raikiri con carga rápida, **Sharingan a nivel 6** y
+  desbloqueables por logro. Raiton, `42/11/8/10`, Raikiri con carga rápida, **Sharingan a nivel 6** (7 desde el playtest 2026-10-13) y
   **Mangekyō a 35** (los dos dentro de la run, y en ese orden por la ficción: en el País de las Olas
   todavía no tiene el Mangekyō).
 - [x] **Los cascabeles** (`cascabeles`, equipable raro de 70): `first_attack_bonus` 0,6 +
@@ -1453,7 +1453,7 @@ meter azar de verdad.
 > **La numeración está congelada a propósito.** Hay referencias a "punto N del roadmap" repartidas por
 > comentarios de código y otros documentos, y ya se han desincronizado dos veces al renumerar. Los
 > huecos (1-6 y 8-14) son puntos hechos que se han movido a "Hecho" **conservando su número en el
-> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 20) y nunca
+> título**, no errores de numeración. Un punto nuevo coge el siguiente número libre (hoy el 22) y nunca
 > uno de los huecos.
 >
 > **Abiertos: el 7, el 15, el 16 y el 17.** Los tres últimos son de 2026-08-15 y ninguno es de mecánica:
@@ -1545,6 +1545,12 @@ leerlos buscando trabajo.
 📋 **El trabajo de hacerlas es el punto 15**, que las agrupa en cuatro tandas y explica en qué orden
 conviene atacarlas. Esta sección sigue siendo la lista de qué falta exactamente; el punto dice cómo.
 
+- ~~**Los tres pergaminos de entrenamiento de la tienda**~~ — **HECHOS el 2026-10-14**: llegó la hoja
+  (`assets/sprite-pergaminos-entrenamiento.png`) y `scripts/generar-sprites-pergaminos.py` pasó de
+  dibujarlos a recortarlos.
+- **El segundo modo de Zabuza ("Silent Killing", 2026-10-13)** usa el sprite de su primer modo.
+- ~~**Los 8 objetos del 2026-10-14**~~ — **HECHOS**: siete en `src/assets/sprite-objetos-nuevos.png` y las
+  pesas de Lee en `src/assets/sprite-pesas-de-lee.png`, recortados por `scripts/generar-sprites-objetos-nuevos.py`.
 - ~~**Los nodos de entrenador, mini-jefe y jefe no llevan sprite del personaje concreto.**~~ — **HECHO**
   (ver tanda 2 del punto 15).
 - ~~**Los 5 tipos de chakra y los 4 iconos del menú**~~ — **HECHOS el 2026-08-19**, en una sola tanda
@@ -1658,5 +1664,13 @@ más grandes de lo que cabe en una sesión de bugfixing/ajuste:
 - Sistema de cuentas / guardado remoto.
 - ~~Tests de componentes React (hoy solo motor + store).~~ **HECHOS el 2026-08-21** — bloque propio
   en "Hecho". Quedan fuera `CombatScreen` y `MapScreen`, y está razonado allí por qué.
-- **Modificadores de dificultad entre runs** ("ascensión"): ligado a la condición de logro ya
+- ~~**Modificadores de dificultad entre runs** ("ascensión")~~ — **descartado el 2026-10-13**: la
+  dificultad creciente se hará con campañas más difíciles en el selector del Home. Ver
+  [39](./39-medallas-y-salon-de-la-fama.md), donde están también los puntos 20 (medallas de arco) y 21
+  (Salón de la Fama), hechos ese día. Era: ligado a la condición de logro ya
   propuesta pero sin implementar `completarRunEnDificultad` en `achievements.json`.
+  **Recuperada y HECHA esa misma tarde** como punto 22, a petición del playtest: cinco niveles de
+  ascensión con sus logros. Ver [40](./40-ascension.md).
+- **Campaña difícil** (pedida en el playtest del 2026-10-13, junto con la ascensión): una segunda
+  entrada en el Home. Es contenido —arcos, enemigos y arte nuevos—, no código: `campaigns.json` ya
+  admite más de una.

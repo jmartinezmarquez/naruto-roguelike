@@ -4,7 +4,7 @@ import { useAchievementsStore } from '../../store/useAchievementsStore';
 import personajesData from '../../data/characters.json';
 import achievementsData from '../../data/achievements.json';
 import configGlobal from '../../data/config.json';
-import { obtenerPersonajesInicialesDesbloqueados } from '../../engine/achievements';
+import { obtenerPersonajesInicialesDesbloqueados, rosterInicial } from '../../engine/achievements';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { CabeceraPantalla, BotonSecundario } from '../common/PiezasUI';
 
@@ -32,8 +32,9 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
 
 /**
  * Pantalla de arranque real: elige `numeroPersonajesInicialesAElegir` (hoy 1)
- * personaje del roster desbloqueado — los "inicial" de characters.json más
- * los que haya desbloqueado algún logro (desbloquearPersonajeInicial). El
+ * personaje del roster desbloqueado — los "inicial" de characters.json, los
+ * que haya desbloqueado algún logro (desbloquearPersonajeInicial) y los de una
+ * estrella que ya hayas reclutado alguna vez (`rosterInicial`). El
  * resto del equipo (hasta tamanoMaximo) se rellena reclutando durante la
  * run, no aquí — ver documentacion/19-seleccion-de-personaje.md.
  *
@@ -46,6 +47,7 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
 export default function CharacterSelectScreen({ onConfirmar }) {
   const irAlHome = useGameStore((s) => s.irAlHome);
   const logrosDesbloqueados = useAchievementsStore((s) => s.logrosDesbloqueados);
+  const personajesVistos = useAchievementsStore((s) => s.vistos.personajes);
   const [seleccionados, setSeleccionados] = useState([]);
 
   const numeroAElegir = configGlobal.equipo.numeroPersonajesInicialesAElegir;
@@ -54,9 +56,7 @@ export default function CharacterSelectScreen({ onConfirmar }) {
     achievementsData.logros,
     logrosDesbloqueados,
   );
-  const roster = personajesData.personajes.filter(
-    (p) => p.rareza === 'inicial' || idsDesbloqueadosPorLogro.includes(p.id),
-  );
+  const roster = rosterInicial(personajesData.personajes, idsDesbloqueadosPorLogro, personajesVistos ?? []);
 
   function elegir(id) {
     if (numeroAElegir === 1) {
@@ -87,7 +87,8 @@ export default function CharacterSelectScreen({ onConfirmar }) {
       <div className="max-w-3xl w-full text-center flex flex-col gap-6">
         <CabeceraPantalla antetitulo="A new path" titulo="Choose your ninja" />
         <p className="text-[10px] text-pergamino-200 -mt-4">
-          The rest of your team is built by recruiting during the adventure.
+          The rest of your team is built by recruiting during the adventure. Any ★ ninja you
+          recruit can be your starter in later runs.
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

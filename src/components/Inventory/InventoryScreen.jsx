@@ -83,6 +83,9 @@ function ListaObjetos({ entradas, onElegir }) {
 function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar }) {
   const objeto = entrada.objeto;
   const esConsumible = objeto.tipo === 'consumible';
+  // Pergaminos de entrenamiento: el efecto es de todo el equipo, así que un botón
+  // por personaje mentiría (los tres harían lo mismo).
+  const esDeEquipo = ['buffTemporalEquipo', 'ganarXpEquipo'].includes(objeto.efecto?.tipo);
   const efectos = lineasDeEfecto(objeto);
   // Id del personaje a quien se le iba a equipar algo teniendo ya otra cosa
   // puesta. Equipar encima devuelve el objeto anterior a la mochila, y eso no
@@ -150,7 +153,18 @@ function FichaObjeto({ entrada, equipo, obtenerHpMaximo, onAplicar, onDesequipar
       {/* Sin `objeto.descripcion`: texto narrativo que no cambia ninguna
           decisión. Va a la enciclopedia (punto 10 del roadmap). */}
 
-      {entrada.equipadoPor ? (
+      {esDeEquipo ? (
+        <div className="flex items-center justify-between gap-2 border-t border-marco pt-3">
+          <p className="text-[9px] text-pergamino-200/60">Affects the whole squad.</p>
+          <button
+            type="button"
+            onClick={() => onAplicar(entrada, null)}
+            className="font-display text-[9px] px-3 py-1.5 rounded-sm bg-sello-600 text-sobre-sello hover:bg-sello-500 transition-colors shrink-0"
+          >
+            Use
+          </button>
+        </div>
+      ) : entrada.equipadoPor ? (
         <div className="flex items-center justify-between gap-2 border-t border-marco pt-3">
           <p className="text-[9px] text-pergamino-200/60">
             Worn by <span className="text-pergamino-100">{nombrePersonaje(entrada.equipadoPor)}</span>

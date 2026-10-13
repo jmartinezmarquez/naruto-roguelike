@@ -631,10 +631,21 @@ pequeño y no lo es** (el guardado que "ya existía" no funciona), y **el 16 par
 
 # Plan de cierre — de aquí al 6 de septiembre (escrito el 2026-08-15)
 
+> ## Actualización (2026-08-31): entrega movida al 16 de septiembre
+>
+> Diez días parados por vacaciones (último commit el 2026-08-21) sin que el objetivo se moviera —
+> **entrega el 2026-09-16, no el 06-09**, mismo margen de trabajo real que se planificó al escribir
+> esto. No cambia nada del orden ni del criterio: el MVP sigue prácticamente cerrado (publicado, 403
+> tests, README con enlace) y lo que queda son las capturas del README, `principal.mp3`, la mitad de
+> los proyectiles de genin que faltan y, sobre todo, el **playtest** — que es justo lo que no se pudo
+> hacer estas vacaciones. La ventana de **Congelación pasa de "1-6 sept" a "11-16 sept"**: los diez
+> días de en medio (01 al 10) son para el playtest y los retoques que salgan de él, no para abrir
+> sistemas nuevos — la regla de fondo del plan de cierre no cambia, solo la fecha.
+
 **El objetivo cambia las prioridades, así que va primero.** Esto no es "terminar un juego": es
 **demostrar qué da un mes de trabajo intermitente con Claude**. Primer commit el 2026-08-06, entrega el
-2026-09-06. Hoy quedan **22 días** y se ha trabajado en **10 días distintos** (53 commits), o sea que lo
-realista es **entre 8 y 12 sesiones más**.
+2026-09-06 ~~2026-09-16 (ver actualización arriba)~~. Hoy quedan **22 días** y se ha trabajado en **10
+días distintos** (53 commits), o sea que lo realista es **entre 8 y 12 sesiones más**.
 
 ## Qué es el entregable de verdad (y por eso se reordena el roadmap)
 
@@ -680,7 +691,8 @@ iconos actuales (el marco a CSS no depende de ellos).
 | **3** | **16 — menú vertical** | Requisito del 18 y mata el último `window.confirm` del juego |
 | **4** | **18 — Home + `campaigns.json`** | La primera pantalla que ve un visitante. Es lo que hace que parezca un producto y no una demo |
 | **5-7** | **15 — arte que llegue** + **7 — playtest** | En paralelo: el dibujo es suyo, la integración es de script |
-| **1-6 sept** | **Congelación** | Ni un sistema nuevo. Solo bugs del playtest, retoques y volver a publicar |
+| **1-10 sept** | **Playtest y retoques** (era la propia congelación; movida por la actualización del 2026-08-31) | En paralelo, con lo que salga del punto 15/7 |
+| **11-16 sept** | **Congelación** | Ni un sistema nuevo. Solo bugs del playtest, retoques y volver a publicar |
 
 ⚠️ **La congelación no es prudencia, es la lección de este propio roadmap**: los últimos cinco puntos
 han descubierto trabajo al abrirlos (el guardado que no guardaba, el menú clavado a cuatro entradas, la

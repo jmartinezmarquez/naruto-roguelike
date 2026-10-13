@@ -8,6 +8,24 @@ import { reproducir } from '../common/efectosDeSonido';
 import { useAvanzarConTeclado } from '../common/useAvanzarConTeclado';
 import { PanelMarco, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
 import { TiraDeEfecto } from '../Combat/EfectoSprite';
+import { Medalla } from '../common/Medallas';
+import ascensionsData from '../../data/ascensions.json';
+import { modificadoresDeAscension } from '../../engine/ascension';
+
+/**
+ * Por qué la curación de fin de arco no llega al máximo, si es que no llega: el nombre
+ * del nivel de ascensión que lo provoca y hasta dónde cura. Sale de los datos y no
+ * lleva "A5" ni "50%" escritos, para que no mienta si cambia el número o el nivel.
+ * null si la curación es completa.
+ */
+function avisoCuracionParcial(ascension) {
+  const fraccion = modificadoresDeAscension(ascensionsData.niveles, ascension).curacionFinDeArco;
+  if (fraccion >= 1) return null;
+  const nivel = ascensionsData.niveles
+    .filter((n) => n.nivel <= ascension && n.modificadores?.curacionFinDeArco != null)
+    .at(-1);
+  return { nivel, porcentaje: Math.round(fraccion * 100) };
+}
 
 /**
  * La transición entre arcos (punto 19 del roadmap — ver documentacion/20-arcos-encadenados.md).
@@ -40,6 +58,11 @@ const MS_CURACION = 2300;
 function TarjetaRecuperacion({ miembro, curando }) {
   const sprite = spriteDeCombate(miembro.id, miembro.nivel);
   const desde = miembro.hpMaximo > 0 ? (miembro.hpAntes / miembro.hpMaximo) * 100 : 100;
+  // Hasta dónde llega la curación: el 100% salvo en ascensión alta, donde se queda
+  // a medias. Sin `hpDespues` (resúmenes de antes de que existiera) se asume entera.
+  const hasta = miembro.hpMaximo > 0 && miembro.hpDespues != null
+    ? Math.max(desde, (miembro.hpDespues / miembro.hpMaximo) * 100)
+    : 100;
   return (
     <div className="flex flex-col items-center w-28">
       <div className="relative w-24 h-24 flex items-end justify-center">
@@ -70,7 +93,7 @@ function TarjetaRecuperacion({ miembro, curando }) {
       <div className="relative h-2.5 w-full bg-tinta-800 rounded-sm overflow-hidden mt-1 border border-marco">
         <div
           className={`absolute inset-y-0 left-0 bg-exito ${curando ? 'llenar-hp' : ''}`}
-          style={{ width: curando ? '100%' : `${desde}%`, '--desde': `${desde}%` }}
+          style={{ width: curando ? `${hasta}%` : `${desde}%`, '--desde': `${desde}%`, '--hasta': `${hasta}%` }}
         />
       </div>
     </div>
@@ -84,7 +107,10 @@ export default function TransicionArcoScreen() {
   const obtenerSiguienteArco = useGameStore((s) => s.obtenerSiguienteArco);
   const avanzarSiguienteArco = useGameStore((s) => s.avanzarSiguienteArco);
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
+  const ascension = useGameStore((s) => s.ascension);
   const factorAnimacion = useFactorAnimacion();
+  // Sin esto la barra se quedaba a medias y nada explicaba por qué: se leía como un bug.
+  const avisoParcial = avisoCuracionParcial(ascension);
 
   const [fase, setFase] = useState('cierre'); // cierre → curacion → siguiente
   // Instantánea: directo al final. Se DERIVA en vez de forzar el estado desde un
@@ -140,6 +166,14 @@ export default function TransicionArcoScreen() {
       <header className="text-center">
         <p className="text-sello-500 text-[10px] tracking-[0.35em] uppercase mb-1">Arc complete</p>
         <h1 className="font-naruto text-4xl text-pergamino-100 sello-resultado">{arco?.nombre}</h1>
+        {/* La medalla del arco, a ×2 y con el mismo golpe de sello que el título:
+            es lo que te llevas de aquí, además del equipo curado. */}
+        {arco?.medalla && (
+          <div className="flex flex-col items-center mt-3 sello-resultado">
+            <Medalla arco={arco} tamano={64} />
+            <p className="text-[10px] text-oro font-display mt-1">{arco.medalla.nombre} earned</p>
+          </div>
+        )}
         {jefe && (
           <div className="flex items-center justify-center gap-2 mt-2">
             <img
@@ -158,6 +192,12 @@ export default function TransicionArcoScreen() {
       {curando && (
         <PanelMarco className="px-5 pt-3 pb-4 aparecer">
           <TituloBloque className="text-center">The team recovers</TituloBloque>
+          {avisoParcial && (
+            <p className="text-[9px] text-sello-500 text-center mt-1 leading-relaxed">
+              {avisoParcial.nivel ? `${avisoParcial.nivel.nombre} (A${avisoParcial.nivel.nivel}): ` : ''}
+              only up to {avisoParcial.porcentaje}% of max HP.
+            </p>
+          )}
           <div className="flex flex-wrap justify-center gap-4 mt-2">
             {miembros.map((m) => (
               <TarjetaRecuperacion key={m.id} miembro={m} curando={curando} />

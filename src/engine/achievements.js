@@ -15,6 +15,7 @@ export const TIPOS_DE_CONDICION = [
   'completarArcoSinDerrotas',
   'contadorMinimo',
   'coleccionMinima',
+  'ascensionMinima',
 ];
 
 export const TIPOS_DE_RECOMPENSA = [
@@ -50,6 +51,12 @@ function cumpleCondicion(condicion, contexto) {
     // bandido no es haber visto 12 enemigos.
     case 'coleccionMinima':
       return (contexto.vistos?.[condicion.categoria]?.length ?? 0) >= condicion.cantidad;
+    // "Gana una run en la ascensión N o más", en cualquier campaña. Lo completa
+    // `evaluarLogros` desde lo guardado (`ascensionMaximaGanada`, -1 si ninguna),
+    // como los contadores: ganar A3 sin haber pasado por A2 no puede pasar, pero
+    // si pasara, el logro de A2 tiene que saltar igual.
+    case 'ascensionMinima':
+      return (contexto.ascensionMaximaGanada ?? -1) >= condicion.nivel;
     default:
       return false;
   }
@@ -102,4 +109,27 @@ export function obtenerPersonajesInicialesDesbloqueados(logros, idsDesbloqueados
   return logros
     .filter((l) => idsDesbloqueados.includes(l.id) && l.recompensa.tipo === 'desbloquearPersonajeInicial')
     .map((l) => l.recompensa.personajeId);
+}
+
+/**
+ * Las rarezas de "una estrella": las que se pueden elegir como inicial en cuanto
+ * se han tenido en el equipo alguna vez. Raros y legendarios no — esos se ganan
+ * con un logro, o el reto de conseguirlos (el pergamino dorado) dejaría de existir.
+ */
+export const RAREZAS_DE_UNA_ESTRELLA = ['inicial', 'comun'];
+
+/**
+ * El roster de la pantalla de selección: los "inicial" de siempre, los que haya
+ * desbloqueado un logro (`desbloquearPersonajeInicial`) y **los de una estrella
+ * que ya hayan estado en tu equipo en alguna run** (`idsVistos`, el registro de
+ * ninjas del Bingo Book). Reclutar a alguien es lo que lo desbloquea.
+ *
+ * En la primera run `idsVistos` está vacío y salen solo los tres iniciales, así que
+ * la calibración de la primera run (documentacion/11, "v5") no se mueve.
+ * Conserva el orden de `personajes`, que es el del JSON.
+ */
+export function rosterInicial(personajes, idsDesbloqueadosPorLogro, idsVistos) {
+  return personajes.filter((p) => p.rareza === 'inicial'
+    || idsDesbloqueadosPorLogro.includes(p.id)
+    || (RAREZAS_DE_UNA_ESTRELLA.includes(p.rareza) && idsVistos.includes(p.id)));
 }

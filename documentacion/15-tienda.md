@@ -35,6 +35,38 @@ inventario o "Saltar" para ignorarlo.
 - Los jefes finales (Zabuza, Gaara, Pain) auto-añaden su `objetoGarantizado` sin pantalla extra
   (la transición de arco ya es suficiente pantalla).
 
+## El oro sobraba: pergaminos, servicios y más tiendas (playtest 2026-10-14)
+
+Con tres personajes y un hueco de equipo cada uno, a partir del arco 2 el oro no tenía en qué gastarse.
+Medido con el bloque **"Economía"** de `scripts/simular-combates.mjs`, el diagnóstico tenía dos mitades:
+entraban ~264 de oro por run y **solo se pisaban ~1,3 tiendas** (peso del 8-9% en el mapa). Bajar el oro
+no arreglaba nada —sin nada que comprar, menos oro solo aburre antes—, así que se hicieron sumideros y
+se subió la frecuencia de la tienda:
+
+- **Pergaminos de entrenamiento** (consumibles comunes, 35 de oro): el `buffTemporalEquipo` que ya daban
+  tres eventos, comprado — ATK +15%, DEF +20% o SPD +20% para **todo el equipo** durante 3 combates. La
+  mochila los usa con un solo botón (no pide personaje) y el mapa ya enseñaba los buffs activos. Sprites recortados
+  de `assets/sprite-pergaminos-entrenamiento.png` por `scripts/generar-sprites-pergaminos.py` (el primer
+  día los dibujaba el propio script con formas geométricas, hasta que llegó la hoja).
+- **Servicios** (`config.tienda`):
+  - **New wares**: cambia lo que queda por otros objetos; 15 de oro y +10 cada vez en la misma tienda,
+    para que sea un gasto con fondo y no un "tira hasta que salga el legendario".
+  - **Field medic**: cura y revive a todo el equipo, 40 de oro, **una vez por tienda**. Convierte oro en
+    lo que de verdad escasea —vida—, y más en ascensión, donde el descanso ya no cura del todo. No deja
+    pagar si nadie lo necesita.
+  - **Sell**: lo suelto de la mochila a la mitad de su precio (lo equipado, no: hay que quitárselo antes
+    a quien lo lleva). Los objetos de jefe, sin precio de tienda, se valoran a 100.
+- **Más tiendas**: 5 puntos de peso del evento a la tienda en los tres arcos. De ~1,3 a **~2,1 tiendas por
+  run**, sin tocar el peso del combate, así que la XP y la curva de niveles no cambian.
+
+Con eso, lo gastable (~165 en equipables + ~80 por tienda en servicios + pergaminos) pasa de lo que entra:
+el oro deja de sobrar **sin bajarlo**. La ascensión 4 ya lo recorta otro 30%.
+
+De paso se borraron dos parámetros de `config.economia` que no leía nadie
+(`precioReclutamientoPorRareza`, de cuando la tienda reclutaba, y `oroPorEventoPositivo`).
+⚠️ **`config.tienda.probabilidadRareza` tampoco se usa**: la oferta es un sorteo uniforme entre los
+objetos con precio. Usarla cambiaría qué sale en la tienda y queda como decisión pendiente.
+
 ## Dirección visual
 
 Puesto de mercader ambulante, mismos tokens de tinta/pergamino que el resto de la UI. El texto de

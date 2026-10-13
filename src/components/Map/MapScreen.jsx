@@ -26,6 +26,7 @@ import iconoHome from '../../assets/menu/home.png';
 import itemsData from '../../data/items.json';
 import commonEnemiesData from '../../data/common-enemies.json';
 import { calcularNivelPorPiso } from '../../engine/mapGenerator';
+import { obtenerEficacia } from '../../engine/combat';
 import {
   PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante, VentanaModal, BotonSecundario,
   ChipEfecto,
@@ -33,6 +34,8 @@ import {
 import { resumirBuffsActivos } from '../common/efectos';
 import { reproducir } from '../common/efectosDeSonido';
 import { FONDO_COLUMNA } from '../common/fondosDeArco';
+import { FilaMedallas } from '../common/Medallas';
+import ascensionsData from '../../data/ascensions.json';
 
 // Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
 // original del artista trae los 5 iconos juntos; los recortes viven en
@@ -183,6 +186,39 @@ function calcularPosiciones(mapa) {
   return posiciones;
 }
 
+const VENTAJA = {
+  fuerte: { marca: '▲', texto: 'Strong', clase: 'text-exito' },
+  debil: { marca: '▼', texto: 'Weak', clase: 'text-sello-500' },
+  neutral: { marca: '=', texto: 'Even', clase: 'text-pergamino-200/70' },
+};
+
+/**
+ * Cómo le va a cada miembro del equipo contra el rival, por naturaleza. El tipo
+ * del jefe ya salía en el hover, pero leer "Suiton" no le dice a quien empieza qué
+ * hacer con eso: en el playtest de 2026-10-13 Zabuza era un muro para el equipo
+ * de iniciales precisamente por el tipo, y el tipo pesa más que dos niveles. La
+ * tabla es simétrica (si tú le pegas ×1,5, él te pega ×0,5), así que una sola
+ * palabra basta por personaje. Los caídos salen apagados: no entran a pelear.
+ */
+function VentajaDelEquipo({ tipoRival }) {
+  const equipo = useGameStore((s) => s.equipo);
+  if (!tipoRival || equipo.length === 0) return null;
+  return (
+    <ul className="mt-1.5 space-y-0.5 text-[9px]">
+      {equipo.map((p) => {
+        const eficacia = obtenerEficacia(tipoDeLuchador(p.id), tipoRival);
+        const v = eficacia > 1 ? VENTAJA.fuerte : eficacia < 1 ? VENTAJA.debil : VENTAJA.neutral;
+        return (
+          <li key={p.id} className={`flex justify-between gap-3 ${p.derrotado ? 'opacity-40' : ''}`}>
+            <span>{nombreCorto(p.id)}</span>
+            <span className={v.clase}>{v.marca} {v.texto}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /**
  * Lo que se ve al pasar por encima de un mini-jefe o de un jefe final: quién es, a
  * qué nivel pelea y de qué naturaleza es.
@@ -214,6 +250,7 @@ function EtiquetaFichaDeJefe({ id, nivel, geninAntes = 0 }) {
         )}
       </div>
       {modo && <p className="text-[9px] text-pergamino-200/70 mt-1.5">{modo}</p>}
+      <VentajaDelEquipo tipoRival={tipo} />
       {/* Solo en el entrenador: no se pelea solo, viene detrás de sus genin. Sin
           esto el hover prometía un 1 contra 1 y el nodo era una cadena. */}
       {geninAntes > 0 && (
@@ -723,6 +760,33 @@ function PanelBuffs({ buffsTemporales }) {
   );
 }
 
+/**
+ * Las medallas de la run, como el estuche de medallas de Pokémon: un hueco por arco de
+ * la campaña, en silueta hasta que cae su jefe. Arriba del todo de la columna porque es
+ * lo único que dice cuánto llevas de la run entera — el mapa solo cuenta el arco.
+ */
+function PanelMedallas({ arcos, medallas, ascension = 0 }) {
+  if (arcos.length === 0) return null;
+  const definicion = ascensionsData.niveles.find((n) => n.nivel === ascension);
+  return (
+    <PanelMarco className="p-2.5 flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-1">
+        <TituloBloque>Crests</TituloBloque>
+        {/* La ascensión va con las medallas porque las dos hablan de la run entera, no
+            del arco. El hover recuerda qué la hace más dura: a mitad de run es fácil
+            olvidar por qué el descanso solo ha curado el 60%. */}
+        {ascension > 0 && (
+          <HoverTooltip posicion="abajo" contenido={<EtiquetaFlotante>{definicion?.nombre}{ascension > 1 ? ` + ${ascension - 1} more` : ''}</EtiquetaFlotante>}>
+            <span className="font-display text-[9px] px-1.5 py-0.5 rounded-sm bg-sello-600 text-sobre-sello">A{ascension}</span>
+          </HoverTooltip>
+        )}
+        <p className="text-[10px] text-pergamino-200/60 font-display">{medallas.length}/{arcos.length}</p>
+      </div>
+      <FilaMedallas arcos={arcos} ganadas={medallas} />
+    </PanelMarco>
+  );
+}
+
 function PanelObjetos({ inventario, oro, abrirMochila }) {
   const conteoPorId = inventario.reduce((acc, id) => {
     acc[id] = (acc[id] ?? 0) + 1;
@@ -1047,6 +1111,9 @@ export default function MapScreen() {
   const inventario = useGameStore((s) => s.inventario);
   const oro = useGameStore((s) => s.oro);
   const buffsTemporales = useGameStore((s) => s.buffsTemporales);
+  const medallas = useGameStore((s) => s.medallas);
+  const ascension = useGameStore((s) => s.ascension);
+  const obtenerArcosDeLaCampana = useGameStore((s) => s.obtenerArcosDeLaCampana);
   // Los mismos multiplicadores que usa `jugarCombate`, para que la ficha de personaje
   // enseñe el número que de verdad pelea y no uno parecido.
   const multiplicadoresBuffs = useMemo(
@@ -1322,6 +1389,7 @@ export default function MapScreen() {
           {/* Encima de la mochila y no debajo: cuando hay un buff activo es lo más
               perecedero que hay en pantalla —se gasta solo, combate a combate— y es lo
               que puede cambiar a qué nodo vas ahora mismo. */}
+          <PanelMedallas arcos={obtenerArcosDeLaCampana()} medallas={medallas} ascension={ascension} />
           <PanelBuffs buffsTemporales={buffsTemporales} />
           <PanelObjetos inventario={inventario} oro={oro} abrirMochila={abrirMochila} />
           <RuedaChakra />

@@ -5,7 +5,8 @@
 Se quitó `reclutamiento` del `poolTiposNodo` de los 3 arcos (su peso se repartió a `tienda`). El
 reclutamiento pasa a ser una de las cosas que se pueden hacer en un nodo de tienda: gastar oro
 para añadir a alguien de `personajesReclutablesIds` del arco al equipo, con precio según su
-`rareza` (`config.economia.precioReclutamientoPorRareza`: comun 40 / raro 70 / legendario 120).
+`rareza` (`config.economia.precioReclutamientoPorRareza`: comun 40 / raro 70 / legendario 120 — **borrado el
+2026-10-14**: la tienda dejó de reclutar y nadie lo leía).
 
 Motivo: con economía de oro y objetos ya existente, tiene más sentido unificar ahí que mantener
 un nodo gratuito aislado.

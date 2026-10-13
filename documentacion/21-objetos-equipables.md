@@ -105,3 +105,40 @@ no dan bonificación de stats), `calcularBonificacionDeObjetoEquipado` con/sin o
 - `curacionPostCombate` vía `_aplicarVictoria`: cura un % extra por encima del HP final de combate.
 - `usarConsumible`: cura/revive y gasta 1 copia; falla si no está en el inventario o no es
   consumible.
+
+## Ocho objetos más (2026-10-14)
+
+Para que haya variedad en la tienda: el catálogo pasa de 14 a 22 objetos. **Todo sale del catálogo de
+pasivas que ya existía**, sin tocar el motor de combate: los equipables nuevos usan las cuatro pasivas
+que ningún objeto llevaba todavía (`basic_attack_bonus`, `damage_floor`, `reduce_damage_taken`,
+`repeat_basic_chance`), y los consumibles, efectos que ya resolvía el store.
+
+| Objeto | Tipo | Rareza · precio | Qué hace | Peso contra jefes* |
+|---|---|---|---|---|
+| Ankle Weights (`pesas_de_lee`) | equipable | común · 45 | 20% de que el básico golpee dos veces | +4,8 |
+| Trench Knives (`cuchillas_de_asuma`) | equipable | común · 45 | Básicos +30% | +8,3 |
+| Flak Jacket (`chaleco_chunin`) | equipable | raro · 65 | −12% de daño recibido | +4,8 |
+| Explosive Tag Pouch (`bolsa_de_sellos_explosivos`) | equipable | raro · 70 | El daño nunca baja del 50% + primer ataque +25% | +4,8 |
+| Eight Gates Talisman (`talisman_ocho_puertas`) | equipable, riesgo | raro · 75 | 50% de doble básico, pero recibe +15% | +6,0 |
+| Healing Ointment (`unguento_curativo`) | consumible | común · 15 | Cura un 25% | — |
+| Medical Ninja Kit (`kit_ninja_medico`) | consumible | raro · 45 | Cura el 100% y levanta a un caído | — |
+| Jonin Field Manual (`manual_jonin`) | consumible | raro · 60 | +30 XP a todo el equipo en pie | — |
+
+\* Puntos de victoria contra jefes con el objeto equipado, bloque "Peso de los objetos" del simulador.
+Los objetos que ya existían van de +3,6 a +9,5 (sin contar los de jefe). Dos salieron mal a la primera y
+se ajustaron con esa medida: el **talismán** con 35%/+20% daba **+0,0** —la penalización se comía la
+ventaja, y un objeto de riesgo que no compensa no lo lleva nadie— y las **cuchillas** con +20% se
+quedaban en +3,6, flojas al lado del Sello de Chakra al mismo precio.
+
+El **manual** es la XP de equipo de los eventos (`ganarXpEquipo`), comprada; como la mochila los
+pergaminos, no pide personaje. **No pasa por la XP decreciente**: 30 XP es más de un nivel en el arco 1 y
+menos de uno en el 3, y el oro que cuesta ya lo limita.
+
+Sprites: recortados de `src/assets/sprite-objetos-nuevos.png` por `scripts/generar-sprites-objetos-nuevos.py`.
+La hoja llegó con **7 de los 8** (las pesas de Lee llegaron después, sueltas, en
+`src/assets/sprite-pesas-de-lee.png`: el script las lee de `SUELTOS`), en otro orden que el encargado —se asignan por lo que se ve, en `IDS_EN_LA_HOJA`— y
+con el damero **pintado** en RGB: se borra por inundación desde el borde, como en las hojas de chakra.
+⚠️ Además el kunai y el chaleco **se tocan**, así que cuando faltan trozos el script parte el más ancho
+por su columna más fina (lo mismo que `generar-sprites-proyectiles.py`).
+Hay un test nuevo que exige sprite para **todo** objeto de `items.json`: añadir un objeto es solo datos,
+y sin el test un objeto sin dibujo salía como una caja vacía sin que fallara nada.

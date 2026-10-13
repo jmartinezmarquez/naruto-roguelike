@@ -11,6 +11,7 @@ import GameOverScreen from './components/GameOver/GameOverScreen';
 import AchievementsScreen from './components/Achievements/AchievementsScreen';
 import EncyclopediaScreen from './components/Encyclopedia/EncyclopediaScreen';
 import SettingsScreen from './components/Settings/SettingsScreen';
+import SalonDeLaFamaScreen from './components/HallOfFame/SalonDeLaFamaScreen';
 import InventoryScreen from './components/Inventory/InventoryScreen';
 import LogroToast from './components/Achievements/LogroToast';
 import AvisoToast from './components/Map/AvisoToast';
@@ -121,6 +122,7 @@ export default function App() {
           {pantalla === 'logros' && <AchievementsScreen />}
           {pantalla === 'enciclopedia' && <EncyclopediaScreen />}
           {pantalla === 'ajustes' && <SettingsScreen />}
+          {pantalla === 'salonFama' && <SalonDeLaFamaScreen />}
           <LogroToast />
         </>
       ) : (

@@ -1,9 +1,10 @@
-import { useGameStore } from '../../store/useGameStore';
+import { useGameStore, precioDeVenta, precioCambiarOferta } from '../../store/useGameStore';
+import configGlobal from '../../data/config.json';
 import { reproducir } from '../common/efectosDeSonido';
 import itemsData from '../../data/items.json';
 import { SPRITE_OBJETO, lineasDeEfecto } from '../Inventory/itemSprites';
 import {
-  PanelMarco, CabeceraPantalla, IconoEnmarcado, BotonSecundario,
+  PanelMarco, CabeceraPantalla, IconoEnmarcado, BotonSecundario, TituloBloque,
 } from '../common/PiezasUI';
 
 const SHOP_FLAVOR = {
@@ -91,12 +92,99 @@ function TarjetaItem({ entrada, oro, onComprar }) {
   );
 }
 
+const CLASE_BOTON_SERVICIO = 'font-display text-[9px] px-3 py-1.5 rounded-sm transition-colors shrink-0 '
+  + 'bg-sello-600 text-sobre-sello hover:bg-sello-500 disabled:bg-tinta-800 disabled:text-pergamino-200/40 disabled:cursor-not-allowed';
+
+/** Una fila de servicio: qué hace a la izquierda, botón con su precio a la derecha. */
+function FilaServicio({ titulo, detalle, precio, deshabilitado, motivo, onClick }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="font-display text-[10px] text-pergamino-100">{titulo}</p>
+        <p className="text-[9px] text-pergamino-200/60 leading-relaxed">{motivo ?? detalle}</p>
+      </div>
+      <button type="button" disabled={deshabilitado} onClick={onClick} data-sonido="ninguno" className={CLASE_BOTON_SERVICIO}>
+        {precio}g
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Lo que la tienda vende además de objetos. Existe porque el oro sobraba: con tres
+ * personajes y un hueco de equipo cada uno, a partir del arco 2 no había nada en
+ * que gastarlo. Ver documentacion/15-tienda.md.
+ */
+function PanelServicios({ tienda, oro, equipo, obtenerHpMaximo, onCambiar, onCurar }) {
+  const precioCambio = precioCambiarOferta(tienda);
+  const precioCuracion = configGlobal.tienda.precioCuracion;
+  const necesitaCura = equipo.some((p) => p.derrotado || p.hpActual < (obtenerHpMaximo(p.id) ?? p.hpActual));
+  return (
+    <PanelMarco className="p-3 w-full max-w-md flex flex-col gap-2.5">
+      <TituloBloque>Services</TituloBloque>
+      <FilaServicio
+        titulo="New wares"
+        detalle="Swap what's left for three other items. Costs more each time here."
+        precio={precioCambio}
+        deshabilitado={oro < precioCambio}
+        onClick={onCambiar}
+      />
+      <FilaServicio
+        titulo="Field medic"
+        detalle="Fully heals and revives the whole squad. Once per shop."
+        precio={precioCuracion}
+        deshabilitado={tienda.curacionUsada || !necesitaCura || oro < precioCuracion}
+        motivo={tienda.curacionUsada ? 'Already used in this shop.' : !necesitaCura ? 'Your squad is already at full health.' : null}
+        onClick={onCurar}
+      />
+    </PanelMarco>
+  );
+}
+
+/**
+ * Vender lo que llevas suelto en la mochila. Solo lo suelto: lo equipado hay que
+ * quitárselo antes a quien lo lleva, que es una decisión que no debe tomarse de un
+ * clic en otra pantalla.
+ */
+function PanelVenta({ inventario, onVender }) {
+  const sueltos = [...new Set(inventario)];
+  if (sueltos.length === 0) return null;
+  return (
+    <PanelMarco className="p-3 w-full max-w-md flex flex-col gap-2">
+      <TituloBloque>Sell</TituloBloque>
+      {sueltos.map((id) => {
+        const objeto = itemsData.objetos.find((o) => o.id === id);
+        const copias = inventario.filter((x) => x === id).length;
+        return (
+          <div key={id} className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <IconoEnmarcado src={SPRITE_OBJETO[id]} tamano="w-8 h-8" vacio="📦" />
+              <p className="text-[10px] text-pergamino-100 truncate">
+                {objeto?.nombre ?? id}{copias > 1 ? ` ×${copias}` : ''}
+              </p>
+            </div>
+            <button type="button" onClick={() => onVender(id)} data-sonido="ninguno" className={CLASE_BOTON_SERVICIO}>
+              +{precioDeVenta(id)}g
+            </button>
+          </div>
+        );
+      })}
+    </PanelMarco>
+  );
+}
+
 export default function ShopScreen() {
   const tienda = useGameStore((s) => s.tiendaActual);
   const oro = useGameStore((s) => s.oro);
   const arcoActualDatos = useGameStore((s) => s.arcoActualDatos);
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const comprarItemTienda = useGameStore((s) => s.comprarItemTienda);
+  const cambiarOfertaTienda = useGameStore((s) => s.cambiarOfertaTienda);
+  const curarEnTienda = useGameStore((s) => s.curarEnTienda);
+  const venderObjeto = useGameStore((s) => s.venderObjeto);
+  const equipo = useGameStore((s) => s.equipo);
+  const inventario = useGameStore((s) => s.inventario);
+  const obtenerHpMaximo = useGameStore((s) => s.obtenerHpMaximo);
 
   if (!tienda) {
     return (
@@ -145,6 +233,16 @@ export default function ShopScreen() {
           </p>
         )}
       </div>
+
+      <PanelServicios
+        tienda={tienda}
+        oro={oro}
+        equipo={equipo}
+        obtenerHpMaximo={obtenerHpMaximo}
+        onCambiar={() => reproducir(cambiarOfertaTienda() ? 'monedas' : 'error')}
+        onCurar={() => reproducir(curarEnTienda() ? 'curar' : 'error')}
+      />
+      <PanelVenta inventario={inventario} onVender={(id) => reproducir(venderObjeto(id) ? 'monedas' : 'error')} />
 
       {/* "Leave" es salir, no elegir, así que no lleva `elevar-hover`: el rebote se
           reserva para lo que el jugador elige. `sobreFondo` porque no está dentro de

@@ -2,6 +2,7 @@
   "_comentario": "Tercer y último arco del MVP. Licencia creativa: no sigue un arco 1:1 del manga, es una compresión de la Invasión de Pain a Konoha adaptada al formato roguelike. Nivel de enemigos fijo por piso, recalibrado (ver pais-de-las-olas.json).",
   "id": "invasion_de_pain",
   "nombre": "Pain's Invasion",
+  "medalla": { "nombre": "Cloud Crest" },
   "temaVisual": "konoha_en_ruinas",
   "numeroPisos": 8,
   "nodosPorPiso": {
@@ -15,7 +16,7 @@
     },
     {
       "tipo": "evento",
-      "peso": 20
+      "peso": 15
     },
     {
       "tipo": "descanso",
@@ -23,7 +24,7 @@
     },
     {
       "tipo": "tienda",
-      "peso": 8
+      "peso": 13
     }
   ],
   "poolRarezaReclutar": [

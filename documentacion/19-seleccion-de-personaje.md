@@ -50,8 +50,9 @@ vía normal de crecer el equipo, así que hacía falta un flujo real:
   personaje reemplazado sale del equipo (y de la run) tal cual estaba — no hay banquillo fuera del
   equipo, así que no vuelve.
 - **`reclutarDeTienda(personajeId, idAReemplazar = null)`** pasa el parámetro tal cual.
-- **Nivel del reclutado**: `avanzarANodo` calcula `nivelReclutamiento` como el nivel del personaje
-  más fuerte del equipo actual (`Math.max(...equipo.map(p => p.nivel))`), NO con
+- **Nivel del reclutado**: el nivel **medio** del equipo, redondeado hacia abajo (`generarOfertaReclutar`).
+  Hasta el playtest de 2026-10-13 era el del personaje más fuerte (`Math.max`), y eso premiaba forzar
+  combates con uno solo y reclutar después: todo el equipo entraba a su nivel. Antes de eso, NO con
   `calcularNivelPorPiso` como antes — ese cálculo daba niveles muy bajos en pisos tempranos (p. ej.
   nivel 2) sin relación con lo subido de nivel que ya estuviera el equipo por el propio combate, lo
   que hacía que reclutar fuera casi siempre peor que quedarse con quien ya tenías. Además, si el
@@ -122,3 +123,18 @@ dependía del grosor de línea de cada trazo, más difícil de razonar que un ta
   siendo una limitación conocida del proyecto, ver [16 - Testing](./16-testing.md). En particular,
   el bug de las flechas invisibles de `RuedaChakra` y el de `PersonajeHoverCard` no habrían sido
   detectables por ningún test aquí — son bugs puramente visuales/SVG.
+
+## Los ★ ya reclutados también son iniciales (2026-10-14)
+
+A partir de la segunda run, el roster de la selección suma a **cualquier ninja de una estrella
+(`inicial` o `comun`) que ya haya estado en tu equipo** en alguna run: reclutarlo es lo que lo
+desbloquea. Sale del registro de ninjas del Bingo Book (`vistos.personajes`, que se apunta al tenerlo
+en el equipo), así que no hizo falta guardar nada nuevo. La regla vive en `rosterInicial`
+(`engine/achievements.js`).
+
+- **Raros y legendarios no entran por esta vía**, solo por logro: si Kakashi se desbloqueara por
+  tenerlo una vez, el pergamino dorado dejaría de ser un reto en las runs siguientes.
+- **La primera run no cambia**: con el registro vacío salen solo los tres iniciales, que es contra lo
+  que se calibraron los jefes del arco 1 (`documentacion/11`, "v5").
+- Empezar con un común no saca a nadie del pool de reclutables: los tres iniciales no elegidos siguen
+  saliendo en el pergamino verde del arco 1.

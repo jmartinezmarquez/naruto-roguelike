@@ -53,7 +53,7 @@ Array `eventos`, 12 eventos canónicos (4 por arco), cada uno con `id`, `arcoId`
 
 ## `config.json`
 
-Parámetros globales: tamaño de equipo, economía (oro inicial, oro por combate/evento, y **`precioReclutamientoPorRareza`**: `{ comun: 40, raro: 70, legendario: 120 }` — diseño preparado para el reclutamiento vía tienda), reglas de combate, progresión (nivel máximo 100, `porcentajeXpBanquillo`) y ajustes de tienda/guardado.
+Parámetros globales: tamaño de equipo, economía (oro inicial y oro por combate; `precioReclutamientoPorRareza` y `oroPorEventoPositivo` se borraron el 2026-10-14 porque no los leía nadie), reglas de combate, progresión (nivel máximo 100, `porcentajeXpBanquillo`) y ajustes de tienda (incluidos los precios de sus servicios, ver [15](./15-tienda.md)) y guardado.
 
 ## `arcs/*.json`
 

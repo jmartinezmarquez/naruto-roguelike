@@ -112,8 +112,8 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **497 tests**: 290 de lógica (`engine/*.test.js`, `store/*.test.js`) y 113 de
-  componente (las 12 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
+- [x] Testing con Vitest — **558 tests**: 396 de lógica (`engine/*.test.js`, `store/*.test.js`) y 162 de
+  componente (las 13 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
   ⚠️ **El entorno global sigue siendo `node`**: cada test de UI declara `// @vitest-environment jsdom`
@@ -405,6 +405,58 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   ⚠️ Pinta `resumen.curacionDeArco` (la foto de antes de curar) y no `equipo`, que ya está curado. Ver
   `documentacion/20-arcos-encadenados.md`.
 
+- [x] **Medallas de arco y Salón de la Fama** (puntos 20 y 21, `documentacion/39-medallas-y-salon-de-la-fama.md`):
+  una medalla por jefe final (`medalla` en el JSON del arco, `medallas` en la run, sprites
+  **dibujados** por `scripts/generar-sprites-medallas.py`) y cada run ganada guardada con su
+  equipo en `useAchievementsStore.salonDeLaFama`. ⚠️ `reiniciarLogros` borra ya **cinco** claves.
+  Descartados en la misma conversación: elegir 1 de 3 tras un élite (no hay objetos para eso) y
+  el modo ascensión (se harán campañas más difíciles).
+
+- [x] **Jefes en una primera run (playtest 2026-10-13)** — Zabuza "imposible para el que acaba de
+  llegar" y el simulador lo daba al 83%. ⚠️ **El simulador medía con el roster entero**, y en el arco 1
+  solo se puede tener a los tres iniciales (el pergamino verde ofrece los iniciales y
+  `personajesReclutablesIds` **del arco en curso**), casi siempre en **pareja**: con eso, Haku 17% y
+  Zabuza 33%, y 0% con dos niveles menos. Los dos eran suiton y ningún inicial es doton. Haku pasa a
+  **fuuton** (Hyōton = agua + viento; Sasuke pasa a ser su contrapeso), se rebajan Haku y Zabuza y se
+  sube a **Sakura**, que salía en todos los equipos atascados. Los jefes de los arcos 2 y 3 **no se
+  tocan a propósito** (73-98%): ahí hay contrarresto reclutable y objetos, y un poco más de dificultad está bien. Bloque nuevo
+  **"Jefes en una PRIMERA run"** en el simulador y test de invariante en `leveling.test.js`.
+  **Un jefe se calibra contra lo que el jugador PUEDE tener al llegar a él, no contra el roster.**
+  Al rebajarlo, Zabuza como desafío legendario de los arcos 2-3 quedó al 93-100%: se le dio un **segundo
+  modo a nivel 20** ("Silent Killing"), que no existe en el arco 1. Y el **Sharingan de Kakashi pasó de 6 a
+  7** para que su desafío del arco 1 (a nivel 6) se pelee sin él. Ver `documentacion/11-progresion-y-arcos.md`, sección "v5".
+  Después: **variación de daño ±10%** (`config.combate.variacionDano`) para que los umbrales de todo o
+  nada sean rampas, el **hover del jefe dice Strong/Even/Weak por cada miembro del equipo**, y la pasiva
+  `priority` se llama "Strikes First" (era "Inner Gates", el modo de Rock Lee).
+
+- [x] **Ascensión** (punto 22, `documentacion/40-ascension.md`): cinco niveles acumulativos en
+  `src/data/ascensions.json` (comunes +15%, descanso al 80%, jefes +5%, −30% de oro, fin de arco al 50%),
+  cada uno se abre ganando en el anterior. Calibrados con el bloque "Ascensión" del simulador: los
+  primeros números puestos a ojo dejaban los jefes finales al 37-48%. ⚠️ `reiniciarLogros` borra ya
+  **seis** claves. ⚠️ `ascensionElegida` sobrevive a `iniciarRun` (es lo que hace que "reiniciar" repita
+  la misma), así que **el `beforeEach` de los tests del store la pone a 0** o un test que elige A3 deja a
+  todos los siguientes en A3 — pasó. La campaña difícil queda pendiente: es contenido, no código.
+- [x] **Fórmula de daño, XP y reclutas (2026-10-13, tarde)**: ⚠️ la eficacia de tipo se aplica DESPUÉS
+  de restar la defensa — antes el ×0,5 era inmunidad y el ×1,5 un ×2 (`documentacion/11`, "v6"); todo
+  recluta entra al nivel MEDIO del equipo; XP decreciente a partir de 3 niveles por encima del enemigo.
+
+- [x] **El oro sobraba (2026-10-14)** — `documentacion/15-tienda.md`: el problema eran dos, mucho oro
+  (~264 por run) y **pocas tiendas** (~1,3 por run). Pergaminos de entrenamiento (buff temporal de equipo,
+  35g), servicios de tienda (cambiar oferta con precio creciente, curar una vez por tienda, vender a
+  mitad de precio) y +5 de peso a la tienda en los tres arcos (~2,1 por run, sin tocar el peso del
+  combate). **El oro no se bajó**: sin nada que comprar, menos oro solo aburre antes. Bloque
+  "Economía" en el simulador.
+
+- [x] **Los ★ ya reclutados son iniciales** (`rosterInicial` en `engine/achievements.js`): desde la segunda
+  run, cualquier común que haya estado en tu equipo (registro del Bingo Book) se puede elegir para empezar.
+  Raros y legendarios, solo por logro. La primera run sigue siendo solo los tres iniciales.
+
+- [x] **Ocho objetos más** (`documentacion/21-objetos-equipables.md`): 5 equipables con las cuatro pasivas
+  que ningún objeto usaba y 3 consumibles (ungüento, kit médico que revive, manual de XP de equipo).
+  Ajustados con el bloque "Peso de los objetos" del simulador — el talismán de riesgo daba +0,0 a la
+  primera. Sprites provisionales: `generar-sprites-objetos-nuevos.py` recorta la hoja en cuanto exista.
+  ⚠️ Test nuevo: **todo objeto tiene que tener sprite**.
+
 ## Bugs ya resueltos (para no repetirlos)
 
 - ⚠️ **Distinguir bandos por `id` en un combate donde los dos pueden ser el MISMO personaje.** Los
@@ -480,7 +532,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 - `EventScreen` sin importar en `App.jsx` — la pantalla nunca se renderizaba, ningún error visible.
 - Piso 1 podía generar un nodo de `descanso` (desventaja de partida) — ahora hay un test específico para esto.
 - `setState` síncrono dentro del cuerpo de un `useEffect` (React) — el patrón correcto para resetear estado al cambiar una prop/valor es ajustarlo durante el render, no en un efecto (ver `CombatScreen.jsx`, comentarios en el código).
-- Nivel de reclutamiento calculado con `calcularNivelPorPiso` (nivel del piso) en vez del nivel del equipo — con la run empezando en 1 solo personaje, daba reclutas muy por debajo del resto (ej. nivel 2). Ahora se usa el nivel del personaje más fuerte del equipo — ver `documentacion/19-seleccion-de-personaje.md`.
+- Nivel de reclutamiento calculado con `calcularNivelPorPiso` (nivel del piso) en vez del nivel del equipo — con la run empezando en 1 solo personaje, daba reclutas muy por debajo del resto (ej. nivel 2). Ahora se usa el nivel **medio** del equipo (fue el del más fuerte hasta el 2026-10-13, y premiaba forzar combates con uno solo) — ver `documentacion/19-seleccion-de-personaje.md`.
 - SVG: un `markerEnd` (punta de flecha) que termina justo en el centro de una forma dibujada DESPUÉS (p. ej. un círculo) queda completamente tapado por esa forma, aunque el trazo de la línea sí se vea. Hay que recortar el final del trazo al borde de la forma destino, no al centro — ver el bug de `RuedaChakra` en `documentacion/19-seleccion-de-personaje.md`.
 - CSS mal formado que **el build no detecta**: al editar `index.css` quedó texto de comentario fuera
   de su bloque `/* */` y un `*/` suelto. Tailwind no falló — `npm run build` dio OK — pero descartó

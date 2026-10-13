@@ -15,6 +15,90 @@
       "categoria": "consumible"
     },
     {
+      "id": "pergamino_entrenamiento_ataque",
+      "nombre": "Taijutsu Drill Scroll",
+      "descripcion": "A training regimen that leaves the whole squad hitting harder for a while.",
+      "tipo": "consumible",
+      "rareza": "comun",
+      "precioTienda": 35,
+      "efecto": {
+        "tipo": "buffTemporalEquipo",
+        "stat": "ataque",
+        "multiplicador": 1.15,
+        "combates": 3
+      },
+      "categoria": "consumible"
+    },
+    {
+      "id": "pergamino_entrenamiento_defensa",
+      "nombre": "Guard Drill Scroll",
+      "descripcion": "Footwork and blocking drills: the squad takes hits better for a while.",
+      "tipo": "consumible",
+      "rareza": "comun",
+      "precioTienda": 35,
+      "efecto": {
+        "tipo": "buffTemporalEquipo",
+        "stat": "defensa",
+        "multiplicador": 1.2,
+        "combates": 3
+      },
+      "categoria": "consumible"
+    },
+    {
+      "id": "pergamino_entrenamiento_velocidad",
+      "nombre": "Swift Step Scroll",
+      "descripcion": "Body flicker practice: the squad moves faster for a while.",
+      "tipo": "consumible",
+      "rareza": "comun",
+      "precioTienda": 35,
+      "efecto": {
+        "tipo": "buffTemporalEquipo",
+        "stat": "velocidad",
+        "multiplicador": 1.2,
+        "combates": 3
+      },
+      "categoria": "consumible"
+    },
+    {
+      "id": "unguento_curativo",
+      "nombre": "Healing Ointment",
+      "descripcion": "A cheap salve every genin carries. Patches up a scratch, not a stab wound.",
+      "tipo": "consumible",
+      "rareza": "comun",
+      "precioTienda": 15,
+      "efecto": {
+        "tipo": "curarPersonaje",
+        "cantidad": "25porciento"
+      },
+      "categoria": "consumible"
+    },
+    {
+      "id": "kit_ninja_medico",
+      "nombre": "Medical Ninja Kit",
+      "descripcion": "Everything a medic-nin needs to put a comrade back on their feet — even one who had already fallen.",
+      "tipo": "consumible",
+      "rareza": "raro",
+      "precioTienda": 45,
+      "efecto": {
+        "tipo": "curarPersonaje",
+        "cantidad": "100porciento"
+      },
+      "categoria": "consumible"
+    },
+    {
+      "id": "manual_jonin",
+      "nombre": "Jonin Field Manual",
+      "descripcion": "Hard-won lessons from veteran shinobi. The whole squad learns something.",
+      "tipo": "consumible",
+      "rareza": "raro",
+      "precioTienda": 60,
+      "efecto": {
+        "tipo": "ganarXpEquipo",
+        "cantidad": 30
+      },
+      "categoria": "consumible"
+    },
+    {
       "id": "banda_repuesto",
       "nombre": "Spare Ninja Headband",
       "descripcion": "If the equipped carrier falls in battle, they revive with 1 HP. Consumed on activation (does not return to inventory).",
@@ -101,6 +185,89 @@
       "categoria": "combate",
       "pasivas": [
         "priority"
+      ]
+    },
+    {
+      "id": "pesas_de_lee",
+      "nombre": "Ankle Weights",
+      "descripcion": "Training weights in the style of Konoha's Green Beast. Take them off and every strike comes faster.",
+      "tipo": "equipable",
+      "rareza": "comun",
+      "precioTienda": 45,
+      "categoria": "combate",
+      "pasivas": [
+        {
+          "id": "repeat_basic_chance",
+          "cantidad": 0.2
+        }
+      ]
+    },
+    {
+      "id": "cuchillas_de_asuma",
+      "nombre": "Trench Knives",
+      "descripcion": "Chakra-conducting blades: plain attacks cut deeper.",
+      "tipo": "equipable",
+      "rareza": "comun",
+      "precioTienda": 45,
+      "categoria": "combate",
+      "pasivas": [
+        {
+          "id": "basic_attack_bonus",
+          "cantidad": 0.3
+        }
+      ]
+    },
+    {
+      "id": "chaleco_chunin",
+      "nombre": "Flak Jacket",
+      "descripcion": "Standard-issue chunin vest. Not glamorous, but it keeps you alive.",
+      "tipo": "equipable",
+      "rareza": "raro",
+      "precioTienda": 65,
+      "categoria": "supervivencia",
+      "pasivas": [
+        {
+          "id": "reduce_damage_taken",
+          "cantidad": 0.12
+        }
+      ]
+    },
+    {
+      "id": "bolsa_de_sellos_explosivos",
+      "nombre": "Explosive Tag Pouch",
+      "descripcion": "However tough the target, a paper bomb always leaves a mark.",
+      "tipo": "equipable",
+      "rareza": "raro",
+      "precioTienda": 70,
+      "categoria": "combate",
+      "pasivas": [
+        {
+          "id": "damage_floor",
+          "cantidad": 0.5
+        },
+        {
+          "id": "first_attack_bonus",
+          "cantidad": 0.25
+        }
+      ]
+    },
+    {
+      "id": "talisman_ocho_puertas",
+      "nombre": "Eight Gates Talisman",
+      "descripcion": "Opens gates the body was never meant to open. Blinding speed, at a price.",
+      "tipo": "equipable",
+      "rareza": "raro",
+      "precioTienda": 75,
+      "categoria": "riesgo",
+      "pasivas": [
+        {
+          "id": "repeat_basic_chance",
+          "cantidad": 0.5
+        },
+        {
+          "id": "increase_damage_taken",
+          "cantidad": 0.15
+        }
       ]
     },
     {

@@ -78,3 +78,12 @@ describe('elegir', () => {
     expect(elegidos).toHaveLength(1);
   });
 });
+
+describe('los ★ ya reclutados', () => {
+  it('un común que estuvo en tu equipo en otra run aparece como inicial; uno que no, no', () => {
+    useAchievementsStore.setState({ vistos: { ...useAchievementsStore.getState().vistos, personajes: ['rock_lee'] } });
+    render(<CharacterSelectScreen onConfirmar={() => {}} />);
+    expect(screen.getAllByText(/Rock Lee/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Neji/)).toBeNull();
+  });
+});

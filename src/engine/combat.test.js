@@ -140,18 +140,24 @@ describe('barra de jutsu', () => {
     expect(jutsu.dano).toBeGreaterThan(basico.dano);
   });
 
-  it('cuando la defensa se traga el ataque entero, los dos caen al suelo de 1', () => {
-    // El rival es suiton y el atacante katon: eficacia ×0.5, y con esa penalización
-    // su defensa vale más que el ataque recibido. Ninguno de los dos golpes hace
-    // nada, y los dos se quedan en el mínimo de 1 — el mismo que ya existía para
-    // que ningún ataque haga 0. Es la única situación en la que el jutsu NO pega
-    // más que el básico, y es la correcta: contra ese rival no funciona ninguno de
-    // los dos, y la respuesta del juego es cambiar de personaje, no pegar más.
-    const atacante = crearLuchador(cargadorRapido, 5);
-    const defensor = crearLuchador(rivalDePrueba, 5);
+  it('la eficacia de tipo multiplica el daño YA restada la defensa: ×0,5 es la mitad, no cero', () => {
+    // Antes se multiplicaba el ataque por la eficacia y DESPUÉS se restaba la
+    // defensa. Con ataque y defensa parecidos, (0,5·atk − 0,5·def) es casi cero, y
+    // este mismo fixture lo fijaba como correcto: "contra ese rival no funciona
+    // ninguno de los dos golpes". En el playtest de 2026-10-13 Gaara le hacía 1 de
+    // daño a Kakashi al mismo nivel; el ×0,5 de la tabla era inmunidad y el ×1,5,
+    // un ×2. La tabla de tipos tiene que significar lo que dice.
+    const atacante = () => {
+      const luchador = crearLuchador({ ...personajeDePrueba, statsBase: { ...personajeDePrueba.statsBase, ataque: 40 } }, 5);
+      return luchador;
+    };
+    const neutral = ejecutarAtaque(atacante(), crearLuchador({ ...rivalDePrueba, tipo: 'katon' }, 5)).dano;
+    const debil = ejecutarAtaque(atacante(), crearLuchador(rivalDePrueba, 5)).dano; // katon → suiton
+    const fuerte = ejecutarAtaque(atacante(), crearLuchador({ ...rivalDePrueba, tipo: 'fuuton' }, 5)).dano;
 
-    expect(ejecutarAtaque(atacante, defensor).dano).toBe(1);
-    expect(ejecutarAtaque(atacante, defensor).dano).toBe(1);
+    expect(debil).toBeGreaterThan(1);
+    expect(debil / neutral).toBeCloseTo(0.5, 1);
+    expect(fuerte / neutral).toBeCloseTo(1.5, 1);
   });
 
   it('solo el jutsu aplica efectoEstado, el ataque básico no', () => {
@@ -376,5 +382,32 @@ describe('🐛 combate en ESPEJO: los dos luchadores con el mismo id', () => {
       expect(typeof evento.atacanteEsPrimero).toBe('boolean');
     }
     expect(new Set(eventos.map((e) => e.atacanteEsPrimero)).size).toBe(2);
+  });
+});
+
+describe('variación del daño', () => {
+  // Sin variación el combate era casi determinista y el balance, de todo o nada:
+  // un equipo pasaba de perder siempre a ganar siempre con un nivel de diferencia.
+  const golpe = (azar) => {
+    const atacante = crearLuchador({ ...personajeDePrueba, statsBase: { ...personajeDePrueba.statsBase, ataque: 60 } }, 10);
+    const defensor = crearLuchador(personajeDePrueba, 10);
+    return ejecutarAtaque(atacante, defensor, false, azar).dano;
+  };
+
+  it('sin azar no varía: los tests que llaman a mano siguen siendo exactos', () => {
+    expect(golpe(null)).toBe(golpe(null));
+    expect(golpe(() => 0.5)).toBe(golpe(null));
+  });
+
+  it('con azar se mueve dentro de ±variacionDano y en los dos sentidos', () => {
+    const variacion = configGlobal.combate.variacionDano;
+    expect(variacion).toBeGreaterThan(0);
+    const base = golpe(null);
+    const minimo = golpe(() => 0);
+    const maximo = golpe(() => 0.999999);
+    expect(minimo).toBeLessThan(base);
+    expect(maximo).toBeGreaterThan(base);
+    expect(minimo).toBeGreaterThanOrEqual(Math.floor(base * (1 - variacion)));
+    expect(maximo).toBeLessThanOrEqual(Math.ceil(base * (1 + variacion)));
   });
 });

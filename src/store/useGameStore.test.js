@@ -60,7 +60,12 @@ beforeEach(() => {
     contadores: CONTADORES_VACIO,
     marca: MARCA_VACIA,
     notificacionesPendientes: [],
+    ascensionesGanadas: {},
   });
+  // La ascensión elegida vive en el store de la run y sobrevive a iniciarRun (es lo
+  // que hace que "reiniciar" repita la misma): sin esto, un test que elige A3 deja a
+  // todos los siguientes jugando en A3.
+  useGameStore.setState({ ascensionElegida: 0 });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -102,6 +107,18 @@ describe('jugarCombate — victoria', () => {
     expect(oro).toBeGreaterThan(oroAntes);
     expect(equipo[0].xpActual).toBeGreaterThanOrEqual(0); // pudo subir de nivel y resetear xpActual
   });
+
+  it('quien le saca muchos niveles al enemigo cobra solo el mínimo de XP', () => {
+    // Forzar combates no puede seguir subiendo a nadie al mismo ritmo: ver
+    // `factorXpPorVentaja`. A nivel 40 contra nivel 1, la ventaja sobra de largo.
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, nivel: 40, xpActual: 0 } : p)),
+    }));
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    const { minimo } = configGlobal.progresion.xpPorVentaja;
+    expect(useGameStore.getState().equipo[0].xpActual)
+      .toBe(Math.round(arcoDePrueba.xpCombateComun * minimo));
+  });
 });
 
 describe('encadenar arcos', () => {
@@ -125,6 +142,13 @@ describe('encadenar arcos', () => {
     expect(caido.hpMaximo).toBeGreaterThan(0);
     // Y en el store ya están todos curados y en pie.
     useGameStore.getState().equipo.forEach((p) => expect(p.derrotado).toBe(false));
+  });
+
+  it('ganar al jefe de un arco da su medalla, una sola vez', () => {
+    expect(useGameStore.getState().medallas).toEqual([]);
+    useGameStore.getState().jugarCombate(enemigoZabuzaDePrueba, 1);
+    const arcoId = useGameStore.getState().arcoActualId;
+    expect(useGameStore.getState().medallas).toEqual([arcoId]);
   });
 
   it('un combate que no cierra arco no trae foto de curación', () => {
@@ -152,6 +176,30 @@ describe('encadenar arcos', () => {
     expect(resumen.arcoCompletado).toBe(true);
     expect(useGameStore.getState().runTerminada).toBe(true);
     expect(useGameStore.getState().runGanada).toBe(true);
+  });
+
+  it('ganar la run apunta al equipo en el Salón de la Fama, con sus medallas', () => {
+    useAchievementsStore.setState({ salonDeLaFama: [] });
+    useGameStore.setState((estado) => ({
+      arcoActualDatos: { ...estado.arcoActualDatos, jefeFinalId: 'pain_test' },
+    }));
+    useGameStore.getState().jugarCombate({
+      id: 'pain_test', nombre: 'Pain de Prueba', tipo: 'raiton',
+      statsBase: { hp: 1, ataque: 1, defensa: 1, velocidad: 1 },
+      jutsu: { nombre: 'Golpe Débil', danoBase: 0.1, efectoEstado: null },
+      modos: [], recompensa: { xp: 10, finDeLaRun: true },
+    }, 1);
+
+    const [entrada] = useAchievementsStore.getState().salonDeLaFama;
+    expect(entrada.equipo.map((p) => p.id)).toEqual(useGameStore.getState().equipo.map((p) => p.id));
+    expect(entrada.medallas).toEqual(useGameStore.getState().medallas);
+    expect(entrada.medallas).toHaveLength(1);
+  });
+
+  it('perder la run no apunta nada en el Salón de la Fama', () => {
+    useAchievementsStore.setState({ salonDeLaFama: [] });
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(useAchievementsStore.getState().salonDeLaFama).toEqual([]);
   });
 
   it('derrotar al jefe final de un arco cura y revive a todo el equipo (estilo Slay the Spire)', () => {
@@ -1079,8 +1127,12 @@ describe('desafío legendario (pergamino dorado)', () => {
     // pierde las tres rondas. Ese es el riesgo real que hace que el pergamino
     // dorado sea una decisión y no un regalo, y por eso la pantalla lo avisa.
     // Se arranca sin la pool del arco para que el rival sea Gaara y no un sorteo
-    // entre él y Kakashi: el margen medido es el suyo (63 de HP base).
-    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoSinLegendarioPropio);
+    // entre él y Kakashi. El nivel del desafío va subido a propósito: el test
+    // dependía del margen de las stats de Gaara, y al probar a rebajarlas el
+    // equipo de nivel 1 ganaba y el test rompía sin que hubiera cambiado lo que
+    // prueba.
+    const arcoDesafioImposible = { ...arcoSinLegendarioPropio, nivelDesafioLegendario: 30 };
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDesafioImposible);
     useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
     entrarEnNodoDorado();
     useGameStore.getState().iniciarDesafioLegendario();
@@ -1124,8 +1176,192 @@ describe('desafío legendario (pergamino dorado)', () => {
   });
 });
 
+describe('tienda: pergaminos de entrenamiento y servicios', () => {
+  const abrirTienda = (extra = {}) => useGameStore.setState({
+    tiendaActual: { items: [{ id: 'sello_chakra', precio: 40 }], cambiosDeOferta: 0, curacionUsada: false, ...extra },
+  });
+
+  it('un pergamino de entrenamiento se usa sin elegir personaje y da el buff temporal a todo el equipo', () => {
+    useGameStore.setState({ inventario: ['pergamino_entrenamiento_ataque'], buffsTemporales: [] });
+    expect(useGameStore.getState().usarConsumible('pergamino_entrenamiento_ataque')).toBe(true);
+    const { inventario, buffsTemporales } = useGameStore.getState();
+    expect(inventario).toEqual([]);
+    expect(buffsTemporales).toEqual([{ multiplicadores: { ataque: 1.15 }, combatesRestantes: 3 }]);
+  });
+
+  it('el kit médico levanta a un caído con la vida entera', () => {
+    const lleno = useGameStore.getState().equipo[0].hpActual;
+    useGameStore.setState((estado) => ({
+      inventario: ['kit_ninja_medico'],
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, derrotado: true, hpActual: 0 } : p)),
+    }));
+    expect(useGameStore.getState().usarConsumible('kit_ninja_medico', 'naruto')).toBe(true);
+    const naruto = useGameStore.getState().equipo[0];
+    expect(naruto.derrotado).toBe(false);
+    expect(naruto.hpActual).toBe(lleno);
+  });
+
+  it('el manual de jōnin da XP a todo el equipo en pie, sin elegir personaje, y no a los caídos', () => {
+    useGameStore.setState((estado) => ({
+      inventario: ['manual_jonin'],
+      equipo: estado.equipo.map((p, i) => ({ ...p, nivel: 30, xpActual: 0, derrotado: i === 2, hpActual: i === 2 ? 0 : p.hpActual })),
+    }));
+    expect(useGameStore.getState().usarConsumible('manual_jonin')).toBe(true);
+    const [a, b, caido] = useGameStore.getState().equipo;
+    expect(a.xpActual).toBe(30);
+    expect(b.xpActual).toBe(30);
+    expect(caido.xpActual).toBe(0);
+    expect(useGameStore.getState().inventario).toEqual([]);
+  });
+
+  it('cambiar la oferta cuesta más cada vez en la misma tienda', () => {
+    abrirTienda();
+    useGameStore.setState({ oro: 100 });
+    const { base, incremento } = configGlobal.tienda.cambiarOferta;
+    expect(useGameStore.getState().cambiarOfertaTienda()).toBe(true);
+    expect(useGameStore.getState().cambiarOfertaTienda()).toBe(true);
+    expect(useGameStore.getState().oro).toBe(100 - base - (base + incremento));
+    expect(useGameStore.getState().tiendaActual.cambiosDeOferta).toBe(2);
+    expect(useGameStore.getState().tiendaActual.items).toHaveLength(configGlobal.tienda.numeroObjetosOfrecidos);
+  });
+
+  it('sin oro no cambia nada', () => {
+    abrirTienda();
+    useGameStore.setState({ oro: 0 });
+    expect(useGameStore.getState().cambiarOfertaTienda()).toBe(false);
+    expect(useGameStore.getState().tiendaActual.items[0].id).toBe('sello_chakra');
+  });
+
+  it('curar en la tienda cura y revive a todos, una sola vez, y no cobra si nadie lo necesita', () => {
+    abrirTienda();
+    useGameStore.setState({ oro: 200 });
+    expect(useGameStore.getState().curarEnTienda()).toBe(false); // todos a tope: no se tira el oro
+    expect(useGameStore.getState().oro).toBe(200);
+
+    const llenos = useGameStore.getState().equipo.map((p) => p.hpActual);
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, derrotado: true, hpActual: 0 } : { ...p, hpActual: 1 })),
+    }));
+    expect(useGameStore.getState().curarEnTienda()).toBe(true);
+    expect(useGameStore.getState().equipo.map((p) => p.hpActual)).toEqual(llenos);
+    expect(useGameStore.getState().equipo.every((p) => !p.derrotado)).toBe(true);
+    expect(useGameStore.getState().oro).toBe(200 - configGlobal.tienda.precioCuracion);
+
+    useGameStore.setState((estado) => ({ equipo: estado.equipo.map((p) => ({ ...p, hpActual: 1 })) }));
+    expect(useGameStore.getState().curarEnTienda()).toBe(false); // ya usada en esta tienda
+  });
+
+  it('vender da una fracción del precio, y los objetos de jefe se valoran al precio de referencia', () => {
+    abrirTienda();
+    useGameStore.setState({ oro: 0, inventario: ['sello_chakra', 'calabaza_arena'] });
+    const { fraccionVenta, precioReferenciaSinPrecio } = configGlobal.tienda;
+    expect(useGameStore.getState().venderObjeto('sello_chakra')).toBe(true);
+    expect(useGameStore.getState().venderObjeto('calabaza_arena')).toBe(true);
+    expect(useGameStore.getState().oro).toBe(Math.round(40 * fraccionVenta) + Math.round(precioReferenciaSinPrecio * fraccionVenta));
+    expect(useGameStore.getState().inventario).toEqual([]);
+  });
+
+  it('fuera de una tienda no se puede vender', () => {
+    useGameStore.setState({ tiendaActual: null, inventario: ['sello_chakra'] });
+    expect(useGameStore.getState().venderObjeto('sello_chakra')).toBe(false);
+  });
+});
+
+describe('ascensión', () => {
+  // Enemigo con mucha vida y sin pegada: se mide su HP máximo y el equipo gana igual.
+  const sacoDeArena = (id) => ({
+    ...enemigoDebilDePrueba, id, statsBase: { hp: 100, ataque: 1, defensa: 1, velocidad: 1 },
+  });
+  const hpMaximoDelRival = () => useGameStore.getState().ultimoResultadoCombate.rondas[0].enemigo.hpMaximo;
+  const conAscension = (nivel) => useGameStore.setState({ ascension: nivel });
+
+  it('la run arranca con la ascensión elegida en el Home, y A0 por defecto', () => {
+    expect(useGameStore.getState().ascension).toBe(0);
+    useGameStore.getState().elegirCampana('camino_ninja', 3);
+    useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+    expect(useGameStore.getState().ascension).toBe(3);
+  });
+
+  it('A1 endurece a los comunes y deja a los jefes como estaban', () => {
+    useGameStore.getState().jugarCombate(sacoDeArena('comun_test'), 10);
+    const comunA0 = hpMaximoDelRival();
+    conAscension(1);
+    useGameStore.getState().jugarCombate(sacoDeArena('comun_test'), 10);
+    expect(hpMaximoDelRival() / comunA0).toBeCloseTo(1.15, 1);
+
+    useGameStore.getState().jugarCombate({ ...sacoDeArena('zabuza'), recompensa: { xp: 1 } }, 10);
+    const jefeA1 = hpMaximoDelRival();
+    conAscension(0);
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+    useGameStore.getState().jugarCombate({ ...sacoDeArena('zabuza'), recompensa: { xp: 1 } }, 10);
+    expect(jefeA1).toBe(hpMaximoDelRival());
+  });
+
+  it('A3 endurece también a los jefes', () => {
+    useGameStore.getState().jugarCombate({ ...sacoDeArena('zabuza'), recompensa: { xp: 1 } }, 10);
+    const jefeA0 = hpMaximoDelRival();
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+    conAscension(3);
+    useGameStore.getState().jugarCombate({ ...sacoDeArena('zabuza'), recompensa: { xp: 1 } }, 10);
+    const ratio = hpMaximoDelRival() / jefeA0;
+    expect(ratio).toBeGreaterThan(1.03);
+    expect(ratio).toBeLessThan(1.07);
+  });
+
+  it('A2: el descanso cura hasta el 80% y levanta a los caídos a ese 80%', () => {
+    conAscension(2);
+    const llenos = useGameStore.getState().equipo.map((p) => p.hpActual); // el beforeEach los deja a tope
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, derrotado: true, hpActual: 0 } : { ...p, hpActual: 1 })),
+      mapa: { nodos: { descanso_test: { tipo: 'descanso', piso: 3, conexiones: [], visitado: false } }, nodosIniciales: ['descanso_test'] },
+      nodoActualId: null,
+    }));
+    useGameStore.getState().avanzarANodo('descanso_test');
+    const { equipo, avisoUltimoNodo } = useGameStore.getState();
+    equipo.forEach((p, i) => {
+      expect(p.derrotado).toBe(false);
+      expect(p.hpActual).toBe(Math.round(llenos[i] * 0.8));
+    });
+    expect(avisoUltimoNodo).toMatch(/80%/);
+  });
+
+  it('el descanso nunca quita vida a quien ya estaba por encima de la fracción', () => {
+    conAscension(2);
+    const antes = useGameStore.getState().equipo.map((p) => p.hpActual); // a tope
+    useGameStore.getState()._curarEquipoCompleto(0.6);
+    expect(useGameStore.getState().equipo.map((p) => p.hpActual)).toEqual(antes);
+  });
+
+  it('A4 paga menos oro por combate', () => {
+    const oro0 = useGameStore.getState().oro;
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    const ganadoA0 = useGameStore.getState().oro - oro0;
+    conAscension(4);
+    const oro1 = useGameStore.getState().oro;
+    useGameStore.getState().jugarCombate(enemigoDebilDePrueba, 1);
+    expect(useGameStore.getState().oro - oro1).toBe(Math.round(ganadoA0 * 0.7));
+  });
+
+  it('ganar la run en una ascensión la apunta, la lleva al Salón de la Fama y suelta su logro', () => {
+    useAchievementsStore.setState({ salonDeLaFama: [], ascensionesGanadas: {} });
+    conAscension(2);
+    useGameStore.setState((estado) => ({
+      arcoActualDatos: { ...estado.arcoActualDatos, jefeFinalId: 'pain_test' },
+    }));
+    useGameStore.getState().jugarCombate({
+      ...enemigoDebilDePrueba, id: 'pain_test', recompensa: { xp: 10, finDeLaRun: true },
+    }, 1);
+
+    const meta = useAchievementsStore.getState();
+    expect(meta.ascensionesGanadas[useGameStore.getState().campanaActualId]).toBe(2);
+    expect(meta.salonDeLaFama[0].ascension).toBe(2);
+    expect(meta.logrosDesbloqueados).toEqual(expect.arrayContaining(['ascension_1', 'ascension_2']));
+    expect(meta.logrosDesbloqueados).not.toContain('ascension_3');
+  });
+});
+
 describe('nivel de reclutamiento al entrar en un nodo de reclutar', () => {
-  it('usa el nivel del personaje más fuerte del equipo, no el nivel fijo del piso', () => {
+  it('usa el nivel MEDIO del equipo, redondeado hacia abajo — ni el del más fuerte ni el del piso', () => {
     useGameStore.setState((estado) => ({
       equipo: estado.equipo.map((p, i) => (i === 0 ? { ...p, nivel: 8 } : p)),
     }));
@@ -1137,8 +1373,12 @@ describe('nivel de reclutamiento al entrar en un nodo de reclutar', () => {
       nodoActualId: null,
     });
 
+    const { equipo } = useGameStore.getState();
+    const medio = Math.floor(equipo.reduce((acc, p) => acc + p.nivel, 0) / equipo.length);
+    expect(medio).toBeLessThan(8); // si no, el test no distingue las dos reglas
+
     useGameStore.getState().avanzarANodo('reclutar_test');
-    expect(useGameStore.getState().reclutarActual.nivelReclutamiento).toBe(8);
+    expect(useGameStore.getState().reclutarActual.nivelReclutamiento).toBe(medio);
   });
 });
 
