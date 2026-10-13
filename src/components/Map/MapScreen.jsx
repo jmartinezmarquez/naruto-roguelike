@@ -26,6 +26,7 @@ import iconoHome from '../../assets/menu/home.png';
 import itemsData from '../../data/items.json';
 import commonEnemiesData from '../../data/common-enemies.json';
 import { calcularNivelPorPiso } from '../../engine/mapGenerator';
+import { obtenerEficacia } from '../../engine/combat';
 import {
   PanelMarco, TituloBloque, AdornoMarco, EtiquetaFlotante, VentanaModal, BotonSecundario,
   ChipEfecto,
@@ -184,6 +185,39 @@ function calcularPosiciones(mapa) {
   return posiciones;
 }
 
+const VENTAJA = {
+  fuerte: { marca: '▲', texto: 'Strong', clase: 'text-exito' },
+  debil: { marca: '▼', texto: 'Weak', clase: 'text-sello-500' },
+  neutral: { marca: '=', texto: 'Even', clase: 'text-pergamino-200/70' },
+};
+
+/**
+ * Cómo le va a cada miembro del equipo contra el rival, por naturaleza. El tipo
+ * del jefe ya salía en el hover, pero leer "Suiton" no le dice a quien empieza qué
+ * hacer con eso: en el playtest de 2026-10-13 Zabuza era un muro para el equipo
+ * de iniciales precisamente por el tipo, y el tipo pesa más que dos niveles. La
+ * tabla es simétrica (si tú le pegas ×1,5, él te pega ×0,5), así que una sola
+ * palabra basta por personaje. Los caídos salen apagados: no entran a pelear.
+ */
+function VentajaDelEquipo({ tipoRival }) {
+  const equipo = useGameStore((s) => s.equipo);
+  if (!tipoRival || equipo.length === 0) return null;
+  return (
+    <ul className="mt-1.5 space-y-0.5 text-[9px]">
+      {equipo.map((p) => {
+        const eficacia = obtenerEficacia(tipoDeLuchador(p.id), tipoRival);
+        const v = eficacia > 1 ? VENTAJA.fuerte : eficacia < 1 ? VENTAJA.debil : VENTAJA.neutral;
+        return (
+          <li key={p.id} className={`flex justify-between gap-3 ${p.derrotado ? 'opacity-40' : ''}`}>
+            <span>{nombreCorto(p.id)}</span>
+            <span className={v.clase}>{v.marca} {v.texto}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /**
  * Lo que se ve al pasar por encima de un mini-jefe o de un jefe final: quién es, a
  * qué nivel pelea y de qué naturaleza es.
@@ -215,6 +249,7 @@ function EtiquetaFichaDeJefe({ id, nivel, geninAntes = 0 }) {
         )}
       </div>
       {modo && <p className="text-[9px] text-pergamino-200/70 mt-1.5">{modo}</p>}
+      <VentajaDelEquipo tipoRival={tipo} />
       {/* Solo en el entrenador: no se pelea solo, viene detrás de sus genin. Sin
           esto el hover prometía un 1 contra 1 y el nodo era una cadena. */}
       {geninAntes > 0 && (
