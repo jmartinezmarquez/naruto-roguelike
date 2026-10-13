@@ -368,3 +368,36 @@ es un jefe difícil, es un muro.
   de un muro es el tipo, no los objetos seguros.**
 - Por eso mismo, **el hover del jefe en el mapa dice qué tal le va a cada uno de tu equipo**
   (Strong / Even / Weak), no solo el tipo del jefe.
+
+## v6 — La tabla de tipos no significaba lo que decía (playtest 2026-10-13, segunda parte)
+
+**Síntoma:** "Kakashi contra Gaara, yendo 10 niveles por encima, Gaara apenas hace 1 de daño". Parecía
+cosa de niveles y **no lo era**: al MISMO nivel (27 contra 27) Gaara ya hacía 1 por golpe y 2 con el jutsu.
+
+**Causa:** `calcularDano` multiplicaba el ataque por la eficacia y DESPUÉS restaba la defensa:
+`(atk·eficacia − 0,5·def)·potencia`. Con ataque y defensa parecidos —lo normal—, eso deforma la tabla:
+neutral = 0,5; ventaja ×1,5 → 1,0 (**×2**); desventaja ×0,5 → ≈0 (**inmunidad**, el suelo de 1). Gaara
+es doton, Kakashi raiton. Es el mismo fallo que el de la defensa plana: un multiplicador aplicado antes
+de una resta no es el multiplicador que declaran los datos. Y explica por qué en v5 "el tipo pesaba
+más que dos niveles". Había un test que fijaba la inmunidad como correcta ("contra ese rival no funciona
+ninguno de los dos golpes"); se reescribió para exigir ×0,5 y ×1,5 de verdad.
+
+**Arreglo:** `(atk − 0,5·def)·potencia·eficacia`.
+
+**Recalibración,** porque el arreglo hacía el juego más fácil en general (comunes al 99-100% y con el HP
+casi intacto, el mismo síntoma que la fase 4 ya arregló una vez):
+
+| | Antes del arreglo | Solo el arreglo | Final |
+|---|---|---|---|
+| Comunes, victorias / HP final | 94-99% / 79-93% | 99-100% / 85-96% | 96-100% / 71-93% |
+| Gaara (primera run) | 81% | 94% | 82% |
+| Camino Animal (primera run) | 91% | 100% | 87% |
+| Pain (en cadena) | 85% | 91% | 87% |
+
+- Genin genéricos: **ataque +1 y HP ×1,2**.
+- Gaara 63/9/7 → **63/10/7**, Camino Animal 59/9/8 → **63/10/8**, Pain 56/8/8 → **60/9/8**.
+- Arco 1 sin cambios: Haku y Zabuza siguen al 100% en primera run.
+
+**Y el nivel de reclutamiento** pasa a ser el nivel **medio** del equipo para todos (antes, el del más
+fuerte para los comunes): forzar combates con uno solo y reclutar después dejaba a todo el equipo a su
+nivel, que es la otra mitad de "llegar diez niveles por encima".

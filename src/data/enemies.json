@@ -169,7 +169,7 @@
       "tipo": "doton",
       "statsBase": {
         "hp": 63,
-        "ataque": 9,
+        "ataque": 10,
         "defensa": 7,
         "velocidad": 10
       },
@@ -239,8 +239,8 @@
       "nombre": "Pain: Animal Path",
       "tipo": "doton",
       "statsBase": {
-        "hp": 59,
-        "ataque": 9,
+        "hp": 63,
+        "ataque": 10,
         "defensa": 8,
         "velocidad": 10
       },
@@ -271,8 +271,8 @@
       "nombre": "Pain (Deva Path)",
       "tipo": "raiton",
       "statsBase": {
-        "hp": 56,
-        "ataque": 8,
+        "hp": 60,
+        "ataque": 9,
         "defensa": 8,
         "velocidad": 9
       },

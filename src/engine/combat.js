@@ -135,7 +135,15 @@ export function calcularDano(atacante, defensor, ataque, contexto = {}) {
   // Multiplicar la defensa por `danoBase` deja la reducción en el MISMO porcentaje
   // para los dos ataques, así que la diferencia entre básico y jutsu vuelve a ser
   // la que declaran los datos. Salió del playtest.
-  const cantidad = danoBruto - defensaEfectiva * 0.5 * ataque.danoBase;
+  //
+  // ⚠️ Y la eficacia se aplica DESPUÉS de restar la defensa, no antes. Antes se
+  // multiplicaba el ataque y luego se restaba, y con ataque y defensa parecidos eso
+  // deformaba la tabla de tipos: (1,5·atk − 0,5·def) es el DOBLE de un neutral, y
+  // (0,5·atk − 0,5·def) es casi cero. El ×1,5 pegaba ×2 y el ×0,5 era inmunidad:
+  // en el playtest de 2026-10-13 Gaara le hacía 1 de daño a Kakashi al mismo
+  // nivel. Igual que con la defensa plana: un multiplicador aplicado antes de una
+  // resta no es el multiplicador que declaran los datos.
+  const cantidad = (ataqueEfectivo - defensaEfectiva * 0.5) * ataque.danoBase * eficacia;
   return { cantidad: Math.max(1, Math.round(cantidad)), danoBruto, eficacia };
 }
 

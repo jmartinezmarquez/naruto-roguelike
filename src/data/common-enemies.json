@@ -6,8 +6,8 @@
       "nombre": "Rival Genin",
       "tipo": "katon",
       "statsBase": {
-        "hp": 20,
-        "ataque": 5,
+        "hp": 24,
+        "ataque": 6,
         "defensa": 4,
         "velocidad": 5
       },
@@ -28,8 +28,8 @@
       "nombre": "Rival Genin",
       "tipo": "fuuton",
       "statsBase": {
-        "hp": 18,
-        "ataque": 5,
+        "hp": 22,
+        "ataque": 6,
         "defensa": 3,
         "velocidad": 6
       },
@@ -50,8 +50,8 @@
       "nombre": "Rival Genin",
       "tipo": "raiton",
       "statsBase": {
-        "hp": 19,
-        "ataque": 6,
+        "hp": 23,
+        "ataque": 7,
         "defensa": 3,
         "velocidad": 5
       },
@@ -72,8 +72,8 @@
       "nombre": "Rival Genin",
       "tipo": "doton",
       "statsBase": {
-        "hp": 22,
-        "ataque": 4,
+        "hp": 26,
+        "ataque": 5,
         "defensa": 6,
         "velocidad": 3
       },
@@ -94,8 +94,8 @@
       "nombre": "Rival Genin",
       "tipo": "suiton",
       "statsBase": {
-        "hp": 20,
-        "ataque": 5,
+        "hp": 24,
+        "ataque": 6,
         "defensa": 5,
         "velocidad": 4
       },
