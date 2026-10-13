@@ -427,7 +427,26 @@ function equiposDePrimeraRun(arco, rol) {
   return combinaciones(INICIALES, 2).flatMap((pareja) => comunes.map((c) => [...pareja, c]));
 }
 
-function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, azar) {
+/**
+ * Los objetos que una primera run tiene SEGURO al llegar a un jefe: los
+ * garantizados de los jefes ya derrotados (`recompensa.objetoGarantizado`), el
+ * más reciente primero. Es un suelo, no una media: la tienda y los eventos dan
+ * más, pero esos dependen del camino. Sin esto, las cifras de los arcos 2 y 3
+ * eran pesimistas sin saber cuánto.
+ */
+function objetosGarantizadosAntesDe(arco, rol) {
+  const combates = ARCOS.flatMap((a) => [[a, 'mini-jefe', a.miniJefeId], [a, 'JEFE FINAL', a.jefeFinalId]]);
+  const hasta = combates.findIndex(([a, r]) => a === arco && r === rol);
+  return combates.slice(0, hasta)
+    .map(([, , id]) => enemigosData.jefes.find((j) => j.id === id)?.recompensa?.objetoGarantizado)
+    .filter(Boolean)
+    .map((id) => objetosData.objetos.find((o) => o.id === id))
+    .filter((o) => o?.tipo === 'equipable')
+    .reverse();
+}
+
+// `objetos[i]` lo lleva quien pelea en la posición i: el más reciente, al que abre.
+function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, azar, objetos = []) {
   const nivel = (p) => Math.max(1, nivelDe(p, arco, piso) + desfase);
   const hpLleno = equipo.map((p) => crearLuchador(p, nivel(p)).hpMaximo);
   const hp = rol === 'JEFE FINAL'
@@ -436,7 +455,7 @@ function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, 
   const enemigo = crearLuchador(jefe, nivelEnemigo);
   for (let i = 0; i < equipo.length; i += 1) {
     if (hp[i] <= 0) continue;
-    const jugador = crearLuchador(equipo[i], nivel(equipo[i]), hp[i]);
+    const jugador = crearLuchador(equipo[i], nivel(equipo[i]), hp[i], null, 1, objetos[i]?.pasivas ?? []);
     const { ganadorId } = resolverCombateCompleto(jugador, enemigo, azar);
     if (ganadorId === jugador.id) return true;
     if (ganadorId === null) return false;
@@ -448,7 +467,8 @@ function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, 
   console.log('\n\n=== Jefes en una PRIMERA run ===');
   console.log(
     '  (solo con quien se puede reclutar de verdad: iniciales en el arco 1, + un común del arco 2\n' +
-      '   después; todos los órdenes del equipo; "muros" = equipos que lo pierden más de la mitad)\n',
+      '   después; todos los órdenes del equipo; "muros" = equipos que lo pierden más de la mitad;\n' +
+      '   "con objetos" = nivel estimado + los objetos garantizados de los jefes anteriores, un suelo)\n',
   );
 
   const azar = azarConSemilla(SEMILLA);
@@ -456,20 +476,21 @@ function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, 
     for (const [rol, id, nivel, piso] of jefesDelArco(arco)) {
       const jefe = enemigosData.jefes.find((j) => j.id === id);
       const equipos = equiposDePrimeraRun(arco, rol);
-      const columnas = [0, -2].map((desfase) => {
+      const objetos = objetosGarantizadosAntesDe(arco, rol);
+      const columnas = [[0, []], [-2, []], [0, objetos]].map(([desfase, conObjetos]) => {
         const tasas = equipos.map((equipo) => {
           const ordenes = permutaciones(equipo);
-          const ganados = ordenes.filter((o) => nodoDePrimeraRun(o, arco, rol, nivel, piso, jefe, desfase, azar));
+          const ganados = ordenes.filter((o) => nodoDePrimeraRun(o, arco, rol, nivel, piso, jefe, desfase, azar, conObjetos));
           return { equipo, tasa: ganados.length / ordenes.length };
         });
         const muros = tasas.filter((t) => t.tasa < 0.5);
         return { media: media(tasas.map((t) => t.tasa)), muros, total: tasas.length };
       });
-      const [estimado, cauto] = columnas;
+      const [estimado, cauto, equipado] = columnas;
       // `DETALLE=1 node scripts/simular-combates.mjs` lista todos los equipos
       // atascados (con el nivel estimado y a −2), no solo los tres primeros.
       if (process.env.DETALLE) {
-        for (const c of columnas) {
+        for (const c of [estimado, cauto]) {
           console.log('     ', c.muros.map((t) => `${t.equipo.map((p) => p.id).join('+')}=${Math.round(t.tasa * 100)}`).join('  '));
         }
       }
@@ -477,7 +498,8 @@ function nodoDePrimeraRun(equipo, arco, rol, nivelEnemigo, piso, jefe, desfase, 
       console.log(
         `  ${`${rol} ${jefe.nombre}`.padEnd(30)} ` +
           `nivel estimado ${porcentaje(estimado.media).padStart(4)} (muros ${estimado.muros.length}/${estimado.total})   ` +
-          `−2 ${porcentaje(cauto.media).padStart(4)} (muros ${cauto.muros.length}/${cauto.total})` +
+          `−2 ${porcentaje(cauto.media).padStart(4)} (muros ${cauto.muros.length}/${cauto.total})   ` +
+          `con objetos ${objetos.length ? `${porcentaje(equipado.media).padStart(4)} (muros ${equipado.muros.length})` : '  — '}` +
           (peores ? `   p.ej. ${peores}` : ''),
       );
     }
