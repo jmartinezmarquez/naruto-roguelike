@@ -262,6 +262,15 @@ def explosion(tipo, colores):
 
 
 if __name__ == '__main__':
+    # ⚠️ Este arte se está rehaciendo en el estilo nuevo (documentacion/41). Si ya ha
+    # llegado su hoja, correr esto PISARÍA el arte nuevo con el viejo: se para.
+    import os as _os
+    import sys as _sys
+    _assets = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), 'src', 'assets')
+    _nuevas = [h for h in ('sprite-estilo-nuevo-20.png', 'sprite-estilo-nuevo-21.png', 'sprite-estilo-nuevo-22.png', 'sprite-estilo-nuevo-23.png', 'sprite-estilo-nuevo-24.png', 'sprite-estilo-nuevo-25.png', 'sprite-estilo-nuevo-26.png', 'sprite-estilo-nuevo-27.png', 'sprite-estilo-nuevo-28.png',) if _os.path.exists(_os.path.join(_assets, h))]
+    if _nuevas:
+        _sys.exit(f'No se ejecuta: ya existe {_nuevas} del estilo nuevo, y esto pisaría su arte. '
+                  'Usa scripts/generar-sprites-estilo-nuevo.py.')
     os.makedirs(DESTINO, exist_ok=True)
     humo()
     corte()

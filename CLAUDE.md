@@ -459,10 +459,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 
 - [x] **Estilo nuevo de arte** (`documentacion/41-arte-estilo-nuevo.md`): los 25 sprites que faltaban llegaron
   de un generador de imágenes y gustaron más que el original, así que se rehace todo en ese estilo. El
-  encargo son 14 hojas con sus prompts; `scripts/generar-sprites-estilo-nuevo.py` las recorta (reparto
+  encargo son 31 hojas con sus prompts (01-14 personajes/transformaciones/proyectiles/objetos, 15-31 el
+  resto: nodos, chakra, menú, medallas, tiras de efectos y columnas del mapa); `scripts/generar-sprites-estilo-nuevo.py` las recorta (reparto
   en partes iguales + corte por la columna más fina, porque las auras se tocan). ⚠️ **Cada personaje se
   pide en la misma hoja que sus transformaciones**, o la transformación sale "otro" personaje. ⚠️ Los
-  scripts viejos ya no escriben placeholders: correrlos pisaría el arte nuevo. Tests nuevos: todo modo
+  scripts viejos ya no escriben placeholders, y los de iconos/efectos/columnas **se niegan a correr** si
+  ya existe la hoja nueva de lo suyo: pisarían el arte nuevo. ⚠️ Las tiras de efecto se reducen con la
+  MISMA escala en todos los fotogramas, o la explosión deja de crecer. Tests nuevos: todo modo
   tiene sprite y todo luchador a distancia, proyectil.
 
 ## Bugs ya resueltos (para no repetirlos)

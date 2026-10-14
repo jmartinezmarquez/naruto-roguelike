@@ -25,8 +25,9 @@ function spriteDeMedalla(arcoId) {
  * convención que el Bingo Book para lo que aún no has visto: el hueco dice que hay
  * algo que conseguir, sin destripar cómo es.
  *
- * `tamano` en píxeles, siempre múltiplo de 32 (el lienzo de la medalla): el pixel art
- * a escalas no enteras duplica unas columnas y otras no.
+ * `tamano` en píxeles, siempre múltiplo de 32: el pixel art a escalas no enteras duplica
+ * unas columnas y otras no. El lienzo era de 32; con el estilo nuevo (documentacion/41)
+ * pasa a 64, que sigue siendo múltiplo de las dos escalas a las que se pinta (32 y 64).
  */
 export function Medalla({ arco, ganada = true, tamano = 32, className = '' }) {
   const sprite = spriteDeMedalla(arco.id);

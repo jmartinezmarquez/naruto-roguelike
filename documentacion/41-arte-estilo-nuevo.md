@@ -4,6 +4,10 @@ El 2026-10-14 se pidieron a un generador de imágenes los 25 sprites que faltaba
 bastante mejor que el arte original. Se decidió **pasar todo el juego a ese estilo**. Este documento
 es el encargo completo: cómo se pide, cómo entra en el juego y los prompts de cada hoja, en orden.
 
+- **Hojas 01-14**: personajes, transformaciones, proyectiles y objetos.
+- **Hojas 15-31**: el resto del arte — nodos del mapa, chakra, menú, medallas, efectos de combate y
+  fondos de columna del mapa.
+
 ## Cómo entra una hoja en el juego
 
 1. Se genera la hoja con su prompt (abajo) y se guarda en `src/assets/` **con el nombre exacto** que
@@ -253,10 +257,177 @@ Left to right:
 
 ---
 
-## Fuera de este encargo (de momento)
+## Bloque de estilo — iconos de interfaz
 
-El resto del arte del juego no es de "personaje" y se decide aparte, si se quiere unificar también:
-iconos de nodo del mapa (`assets/nodes/`), naturalezas de chakra (`assets/chakra/`), iconos del menú
-(`assets/menu/`), medallas (`assets/medals/`, dibujadas por script), sprites de efecto del combate
-(`assets/effects/`, dibujados por script), fondos de columna del mapa (`assets/map-columns/`) y los
-pergaminos de entrenamiento y los objetos nuevos, que ya son del estilo nuevo.
+Va delante de los prompts de las hojas 15-19.
+
+```
+Pixel art game UI icons in the exact style of the attached reference images: one object per icon, thick black outline, crisp pixels, simple 3-4 tone shading, no blur. Transparent background (real alpha, NOT a checkerboard). No text, no letters, no frames around the whole image. All icons the same size, in a single horizontal row, evenly spaced, in the exact order listed.
+```
+
+## Bloque de estilo — tiras de animación
+
+Va delante de los prompts de las hojas 20-28. Adjuntar también el efecto actual como referencia de la
+animación (`src/assets/effects/<nombre>.png`, el que diga cada hoja).
+
+```
+A pixel art animation strip in the exact style of the attached reference images: the SAME effect shown as consecutive animation frames, left to right, in a single horizontal row, evenly spaced, each frame centered in its own equal-width slot. Thick black outline where it makes sense, crisp pixels, no blur. The last frames fade out by breaking into sparse dithered pixels, not by becoming transparent. Transparent background (real alpha, NOT a checkerboard). No text, no frame numbers, no borders.
+```
+
+## Bloque de estilo — fondos de columna del mapa
+
+Va delante de los prompts de las hojas 29-31. ⚠️ **La regla de estos fondos no es estética, es de
+legibilidad**: encima se pintan los nodos del mapa, así que el centro tiene que ser liso (ver
+`documentacion/13-ui-mapa-y-combate.md`). Por eso se piden como una ruta de Pokémon y no como un paisaje.
+
+```
+A vertical pixel art map background, portrait format (about 5:8), seen from directly above like a Pokémon route, in the style of the attached reference images. The CENTER 60% of the width must be plain flat ground with almost no detail (small game icons will be drawn on top of it). All the decoration goes in a dense border on the LEFT and RIGHT edges only. No characters, no text, no UI, no path lines, no vignette.
+```
+
+---
+
+## Hoja 15 → `sprite-estilo-nuevo-15.png` (nodos del mapa)
+
+```
+[UI ICON STYLE BLOCK]
+
+Four round map-node medallions with a carved stone rim, left to right:
+1. Battle: two crossed kunai over a dark red background.
+2. Event: a rolled scroll with a big question mark, over a purple background.
+3. Rest: a white medical tent with a red cross, over a green background.
+4. Shop: a small wooden merchant stall with lanterns and goods, over a brown background.
+```
+
+## Hoja 16 → `sprite-estilo-nuevo-16.png` (pergaminos de reclutar)
+
+```
+[UI ICON STYLE BLOCK]
+
+Three hanging "wanted poster" scrolls, each showing the Konoha leaf symbol at the top and the dark silhouette of a ninja in the middle, left to right:
+1. Common: green scroll rods, plain paper.
+2. Rare: blue scroll rods, paper with a faint blue glow.
+3. Legendary: gold scroll rods, paper with a strong golden glow and small sparkles.
+```
+
+## Hoja 17 → `sprite-estilo-nuevo-17.png` (naturalezas de chakra)
+
+```
+[UI ICON STYLE BLOCK]
+
+The five chakra natures as simple elemental symbols, left to right:
+1. Fire: a bright orange-red flame.
+2. Wind: a pale white and lavender tornado swirl.
+3. Lightning: a yellow zig-zag lightning bolt.
+4. Earth: a solid grey-brown boulder.
+5. Water: a blue water drop.
+```
+
+## Hoja 18 → `sprite-estilo-nuevo-18.png` (menú)
+
+```
+[UI ICON STYLE BLOCK]
+
+Six menu icons, left to right:
+1. Missions: a red rolled scroll with the Konoha leaf symbol and a tassel.
+2. Bingo Book: a closed old book with the Konoha leaf symbol on the cover.
+3. Settings: a silver gear.
+4. Restart: a red torii gate with a flame burning inside it.
+5. Hall of Fame: a golden trophy cup.
+6. Home: a small Japanese-style house with a red roof.
+```
+
+## Hoja 19 → `sprite-estilo-nuevo-19.png` (medallas de arco)
+
+```
+[UI ICON STYLE BLOCK]
+
+Three arc medals, like Pokémon gym badges, each with its own shape and color so they read at a glance, left to right:
+1. Wave Crest (Land of Waves): a round blue badge with white sea waves.
+2. Sand Crest (Chunin Exams): a sand-colored hexagonal badge with an hourglass of sand.
+3. Cloud Crest (Pain's Invasion): a black shield-shaped badge with a red Akatsuki cloud and a gold rim.
+```
+
+## Hoja 20 → `sprite-estilo-nuevo-20.png` (efecto: tajo) — referencia `effects/corte.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+4 frames of a fast white crescent slash (a blade cut): 1) a thin sliver appearing, 2) the full bright white-blue crescent, 3) the crescent breaking into dithered pixels, 4) almost gone, a few scattered pixels.
+```
+
+## Hoja 21 → `sprite-estilo-nuevo-21.png` (efecto: impacto) — referencia `effects/estrella.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+4 frames of a hit-impact star: 1) a small orange spark, 2) a big sharp eight-pointed golden-orange star, 3) the star turning white and breaking into dithered pixels, 4) almost gone.
+```
+
+## Hoja 22 → `sprite-estilo-nuevo-22.png` (efecto: impacto metálico) — referencia `effects/estrella-metal.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+4 frames of a metallic hit-impact star (a kunai hitting metal): 1) a small blue-white spark, 2) a big sharp eight-pointed icy blue-white star, 3) the star turning white and breaking into dithered pixels, 4) almost gone.
+```
+
+## Hojas 23-27 (efecto: explosión de jutsu, una por naturaleza) — referencia `effects/explosion-katon.png`
+
+Mismo prompt cinco veces, cambiando solo la línea del elemento. Cada una en su fichero:
+
+| Hoja | Fichero | Línea del elemento |
+|---|---|---|
+| 23 | `sprite-estilo-nuevo-23.png` | `Element: FIRE — orange, red and yellow flames.` |
+| 24 | `sprite-estilo-nuevo-24.png` | `Element: WIND — pale green and white cutting gusts and swirls.` |
+| 25 | `sprite-estilo-nuevo-25.png` | `Element: LIGHTNING — yellow and white electric sparks and arcs.` |
+| 26 | `sprite-estilo-nuevo-26.png` | `Element: EARTH — brown rock chunks and dust.` |
+| 27 | `sprite-estilo-nuevo-27.png` | `Element: WATER — blue water splash and droplets.` |
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+6 frames of a jutsu impact explosion that GROWS and then fades: 1) a tiny burst, 2) a small explosion, 3) a big full explosion with a bright core, 4) a large ring with a hollow center, 5) the ring breaking up into dithered pixels, 6) almost gone, scattered pixels.
+[ELEMENT LINE]
+```
+
+## Hoja 28 → `sprite-estilo-nuevo-28.png` (efecto: humo de relevo) — referencia `effects/humo.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+6 frames of a ninja "poof" smoke puff (the smoke when a ninja swaps in): 1) a tiny white puff, 2) a small cloud, 3) a big round white cloud, 4) the cloud at full size starting to thin out, 5) the cloud dissolving into dithered pixels, 6) almost gone.
+```
+
+## Hoja 29 → `sprite-estilo-nuevo-29.png` (columna: Land of Waves)
+
+```
+[MAP BACKGROUND STYLE BLOCK]
+
+Land of Waves: the flat center is pale sandy ground. Left and right borders: calm sea water with small waves, wooden docks and pier posts, misty pine trees and a few reeds.
+```
+
+## Hoja 30 → `sprite-estilo-nuevo-30.png` (columna: Chunin Exams)
+
+```
+[MAP BACKGROUND STYLE BLOCK]
+
+Chunin Exams, Forest of Death: the flat center is dark green forest floor. Left and right borders: huge dark tree trunks with giant roots, thick bushes and a few big mushrooms.
+```
+
+## Hoja 31 → `sprite-estilo-nuevo-31.png` (columna: Pain's Invasion)
+
+```
+[MAP BACKGROUND STYLE BLOCK]
+
+Pain's Invasion, destroyed Konoha: the flat center is cracked grey-brown earth. Left and right borders: rubble, broken wooden walls and roof tiles, splintered beams and small fires.
+```
+
+---
+
+Con la hoja 31 ya no queda arte del estilo viejo en el juego, salvo los fondos de la página
+(`game-background-*.jpg`), que no son sprites y se deciden aparte.
+
+⚠️ **Los scripts viejos de estas carpetas** (`generar-columnas-mapa.py`, `generar-icono-home.py`,
+`generar-sprites-efectos.py`, `generar-sprites-iconos.py`, `generar-sprites-medallas.py`,
+`generar-sprites-nodo-reclutar.py`) **se niegan a correr** en cuanto existe la hoja nueva de lo que
+generan: si no, pisarían el arte nuevo con el viejo.

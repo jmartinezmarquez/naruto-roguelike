@@ -98,6 +98,32 @@ HOJAS = [
     ('sprite-estilo-nuevo-14.png',
      ['items/fragmento_sello_maldito', 'items/pergamino_viento', 'items/kubikiribocho_fragmento',
       'items/calabaza_arena', 'items/anillo_rinnegan_fragmento']),
+
+    # --- Tanda 3: el arte que no es de personaje ---
+    ('sprite-estilo-nuevo-15.png',
+     ['nodes/combate', 'nodes/evento', 'nodes/descanso', 'nodes/tienda']),
+    ('sprite-estilo-nuevo-16.png',
+     ['nodes/reclutar-comun', 'nodes/reclutar-raro', 'nodes/reclutar-legendario']),
+    ('sprite-estilo-nuevo-17.png',
+     ['chakra/katon', 'chakra/fuuton', 'chakra/raiton', 'chakra/doton', 'chakra/suiton']),
+    ('sprite-estilo-nuevo-18.png',
+     ['menu/logros', 'menu/enciclopedia', 'menu/ajustes', 'menu/reiniciar', 'menu/salon', 'menu/home']),
+    ('sprite-estilo-nuevo-19.png',
+     ['medals/pais_de_las_olas', 'medals/examen_chunin', 'medals/invasion_de_pain']),
+    # Tiras de animación: UNA tira por hoja, un fotograma por celda (ver TIRAS).
+    ('sprite-estilo-nuevo-20.png', ['effects/corte']),
+    ('sprite-estilo-nuevo-21.png', ['effects/estrella']),
+    ('sprite-estilo-nuevo-22.png', ['effects/estrella-metal']),
+    ('sprite-estilo-nuevo-23.png', ['effects/explosion-katon']),
+    ('sprite-estilo-nuevo-24.png', ['effects/explosion-fuuton']),
+    ('sprite-estilo-nuevo-25.png', ['effects/explosion-raiton']),
+    ('sprite-estilo-nuevo-26.png', ['effects/explosion-doton']),
+    ('sprite-estilo-nuevo-27.png', ['effects/explosion-suiton']),
+    ('sprite-estilo-nuevo-28.png', ['effects/humo']),
+    # Fondos: una imagen entera por hoja.
+    ('sprite-estilo-nuevo-29.png', ['map-columns/pais_de_las_olas']),
+    ('sprite-estilo-nuevo-30.png', ['map-columns/examen_chunin']),
+    ('sprite-estilo-nuevo-31.png', ['map-columns/invasion_de_pain']),
 ]
 
 TIPO_POR_CARPETA = {
@@ -105,7 +131,42 @@ TIPO_POR_CARPETA = {
     'transformations': 'transformacion',
     'projectiles': 'proyectil',
     'items': 'objeto',
+    'nodes': 'icono',
+    'chakra': 'icono',
+    'menu': 'icono',
+    'medals': 'icono',
+    'effects': 'tira',
+    'map-columns': 'fondo',
 }
+
+# Iconos: lienzo cuadrado y margen, por carpeta. Los nodos y el menú van a 128 como
+# los que había (el juego los pinta con tamaño fijo por CSS). Las medallas suben de 32
+# a 64: el juego las pinta a 32 y a 64, y a 32 el arte nuevo perdía casi todo.
+ICONOS = {
+    'nodes': {'lienzo': 128, 'margen_frac': 0.03},
+    'chakra': {'lienzo': 96, 'margen_frac': 0.06},
+    'menu': {'lienzo': 128, 'margen_frac': 0.04},
+    'medals': {'lienzo': 64, 'margen_frac': 0.02},
+}
+
+# Tiras de animación: cuántos fotogramas y de qué lado. ⚠️ Tienen que coincidir con
+# `lado` y `fotogramas` de src/components/Combat/spritesDeEfecto.js, o la animación
+# CSS (steps() sobre el fondo) se descuadra.
+TIRAS = {
+    'corte': (4, 64),
+    'estrella': (4, 64),
+    'estrella-metal': (4, 64),
+    'explosion-katon': (6, 96),
+    'explosion-fuuton': (6, 96),
+    'explosion-raiton': (6, 96),
+    'explosion-doton': (6, 96),
+    'explosion-suiton': (6, 96),
+    'humo': (6, 80),
+}
+
+# Fondos de columna del mapa: el tamaño de los que había. Se recorta para CUBRIR, no
+# para caber: un fondo con bandas vacías se vería roto.
+FONDOS = {'map-columns': (520, 832)}
 
 # Medido sobre los sprites que ya había (mediana de cada carpeta):
 #   personajes      lienzo 96, 62 px de alto, pies en y=78
@@ -208,6 +269,50 @@ def colocar(dibujo, tipo):
     return lienzo
 
 
+def colocar_icono(dibujo, carpeta):
+    c = ICONOS[carpeta]
+    lienzo = Image.new('RGBA', (c['lienzo'], c['lienzo']), (0, 0, 0, 0))
+    util = c['lienzo'] * (1 - 2 * c['margen_frac'])
+    escala = min(util / dibujo.width, util / dibujo.height)
+    d = reducir(dibujo, dibujo.width * escala, dibujo.height * escala)
+    lienzo.alpha_composite(d, ((c['lienzo'] - d.width) // 2, (c['lienzo'] - d.height) // 2))
+    return lienzo
+
+
+def tira(hoja, fotogramas, lado):
+    """
+    Una tira de animación: la hoja trae los fotogramas en fila. ⚠️ Todos se reducen con
+    la MISMA escala —la del fotograma más grande—, no cada uno a su caja: una explosión
+    que crece tiene que crecer, y escalando cada fotograma por separado saldrían todos
+    del mismo tamaño. Por lo mismo no se limpian "restos del vecino": los últimos
+    fotogramas de un desvanecido son motas sueltas a propósito.
+    """
+    trozos = []
+    for x0, x1 in cortes(hoja, fotogramas):
+        trozo = hoja.crop((x0, 0, x1, hoja.height))
+        trozo.putalpha(trozo.getchannel('A').point(lambda a: a if a >= ALFA_MINIMO else 0))
+        caja = mascara(trozo).getbbox()
+        trozos.append(trozo.crop(caja) if caja else None)
+    vivos = [x for x in trozos if x]
+    escala = min(lado * 0.94 / max(x.width for x in vivos), lado * 0.94 / max(x.height for x in vivos))
+    resultado = Image.new('RGBA', (lado * fotogramas, lado), (0, 0, 0, 0))
+    for k, trozo in enumerate(trozos):
+        if trozo is None:
+            continue
+        d = reducir(trozo, trozo.width * escala, trozo.height * escala)
+        resultado.alpha_composite(d, (k * lado + (lado - d.width) // 2, (lado - d.height) // 2))
+    return resultado
+
+
+def fondo(imagen, ancho, alto):
+    """Reducida para CUBRIR el tamaño y recortada al centro."""
+    imagen = imagen.convert('RGB')
+    escala = max(ancho / imagen.width, alto / imagen.height)
+    d = imagen.resize((round(imagen.width * escala), round(imagen.height * escala)), Image.Resampling.LANCZOS)
+    x0, y0 = (d.width - ancho) // 2, (d.height - alto) // 2
+    return d.crop((x0, y0, x0 + ancho, y0 + alto))
+
+
 if __name__ == '__main__':
     for fichero, celdas in HOJAS:
         ruta = os.path.join(ASSETS, fichero)
@@ -215,10 +320,27 @@ if __name__ == '__main__':
             print('--', fichero, 'no existe todavía, se salta')
             continue
         hoja = Image.open(ruta).convert('RGBA')
+        primera = next(c for c in celdas if c)
+        carpeta, ident = primera.split('/')
+        tipo = TIPO_POR_CARPETA[carpeta]
+        destino = os.path.join(ASSETS, carpeta)
+
+        if tipo == 'tira':
+            fotogramas, lado = TIRAS[ident]
+            tira(hoja, fotogramas, lado).save(os.path.join(destino, f'{ident}.png'))
+            print('ok', primera, f'{fotogramas} fotogramas de {lado}')
+            continue
+        if tipo == 'fondo':
+            fondo(hoja, *FONDOS[carpeta]).save(os.path.join(destino, f'{ident}.png'))
+            print('ok', primera, FONDOS[carpeta])
+            continue
+
         for (x0, x1), celda in zip(cortes(hoja, len(celdas)), celdas):
             if celda is None:
                 continue
             carpeta, ident = celda.split('/')
-            sprite = colocar(limpio(hoja.crop((x0, 0, x1, hoja.height))), TIPO_POR_CARPETA[carpeta])
+            tipo = TIPO_POR_CARPETA[carpeta]
+            dibujo = limpio(hoja.crop((x0, 0, x1, hoja.height)))
+            sprite = colocar_icono(dibujo, carpeta) if tipo == 'icono' else colocar(dibujo, tipo)
             sprite.save(os.path.join(ASSETS, carpeta, f'{ident}.png'))
             print('ok', celda, (x0, x1))
