@@ -421,8 +421,12 @@ export const useGameStore = create((set, get) => ({
       .slice(0, tamanoMaximo)
       .map((id) => crearInstanciaPersonaje(id));
 
-    // Los de un logro y los del gacha.
-    const inventarioInicial = useAchievementsStore.getState().objetosInicialesDesbloqueados();
+    // UNO de los objetos iniciales desbloqueados (por logro o en el gacha), al azar
+    // (documentacion/42). Todos a la vez hacían cada run más fácil con cada
+    // desbloqueo, y con el gacha serían nueve objetos antes del primer combate.
+    const poolInicial = useAchievementsStore.getState().objetosInicialesDesbloqueados();
+    const objetoInicial = poolInicial.length > 0 ? poolInicial[Math.floor(Math.random() * poolInicial.length)] : null;
+    const inventarioInicial = objetoInicial ? [objetoInicial] : [];
     const mapaInicial = generarMapa(arco, {
       rarezasReclutarDisponibles: rarezasReclutarDisponibles(equipoInicial, arco),
     });
@@ -447,7 +451,10 @@ export const useGameStore = create((set, get) => ({
       desafioRecluta: null,
       recompensaMiniJefe: null,
       cadenaEnemigos: null,
-      avisoUltimoNodo: null,
+      // Al azar, así que hay que decirlo: si no, aparece en la mochila sin explicación.
+      avisoUltimoNodo: objetoInicial
+        ? `Starting item: ${itemsData.objetos.find((o) => o.id === objetoInicial)?.nombre ?? objetoInicial}`
+        : null,
       runTerminada: false,
       runGanada: false,
       huboDerrotaEnEsteArco: false,

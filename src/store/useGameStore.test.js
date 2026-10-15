@@ -1,3 +1,4 @@
+import { ESTADO_INVOCACION_VACIO } from '../engine/invocacion';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
 import {
@@ -66,6 +67,8 @@ beforeEach(() => {
     ascensionesGanadas: {},
     pergaminos: PERGAMINOS_VACIOS,
     maestria: {},
+    aspectosElegidos: {},
+    invocacion: ESTADO_INVOCACION_VACIO,
   });
   // La ascensión elegida vive en el store de la run y sobrevive a iniciarRun (es lo
   // que hace que "reiniciar" repita la misma): sin esto, un test que elige A3 deja a
@@ -959,6 +962,27 @@ describe('logros (a través de jugarCombate)', () => {
 
     useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
     expect(useGameStore.getState().inventario).toContain('sello_chakra');
+    expect(useGameStore.getState().avisoUltimoNodo).toMatch(/Starting item/);
+  });
+
+  it('con varios objetos iniciales desbloqueados, la run empieza con UNO al azar', () => {
+    useAchievementsStore.setState({
+      invocacion: { ...useAchievementsStore.getState().invocacion, objetos: ['pildora_soldado', 'pesas_de_lee', 'sello_chakra'] },
+    });
+    const vistos = new Set();
+    for (let i = 0; i < 30; i++) {
+      useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+      const { inventario } = useGameStore.getState();
+      expect(inventario).toHaveLength(1);
+      vistos.add(inventario[0]);
+    }
+    expect(vistos.size).toBeGreaterThan(1);
+  });
+
+  it('sin objetos iniciales desbloqueados, la run empieza con la mochila vacía y sin aviso', () => {
+    useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+    expect(useGameStore.getState().inventario).toEqual([]);
+    expect(useGameStore.getState().avisoUltimoNodo).toBeNull();
   });
 });
 

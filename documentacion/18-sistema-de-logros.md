@@ -158,8 +158,10 @@ los del siguiente.
   mitad de arco.
 - **`generarOfertaTienda`** añade a `personajesReclutablesIds` del arco los ids que devuelve
   `obtenerPersonajesReclutablesDesbloqueados`, antes de filtrar por quién ya está en el equipo.
-- **`iniciarRun`** rellena el inventario inicial con `obtenerObjetosInicialesDesbloqueados` en vez
-  de empezar siempre vacío.
+- **`iniciarRun`** empieza la run con **UNO** de los objetos iniciales desbloqueados, al azar, y lo
+  anuncia en el toast del mapa. El pool es el de los logros más el del gacha
+  (`useAchievementsStore.objetosInicialesDesbloqueados`). ⚠️ Antes los daba **todos**, y con el gacha
+  eso habrían sido nueve objetos antes del primer combate (documentacion/42, decisión 2).
 
 ## UI
 

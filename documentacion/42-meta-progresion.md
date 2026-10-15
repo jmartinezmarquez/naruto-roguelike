@@ -256,6 +256,7 @@ Kakashi fueron tres ficheros de datos; el arte ya tiene su proceso montado. Cada
 | | ✅ *Fase 1 completa.* | |
 | **2** | Pantalla de Invocación con probabilidades, garantías y duplicados; catálogo inicial (iniciales, objetos iniciales, páginas); nivel de ninja y sus recompensas | 2 sesiones |
 | | ✅ *Gacha: `engine/invocacion.js` (tiradas y garantías, puro), `data/invocacion.json` (precios, probabilidades y catálogo: 8 ninjas como inicial —Yamato, Kakashi y los seis jefes— y 9 objetos iniciales), `useAchievementsStore.invocar` (cobra, aplica duplicados, décima clave persistida) y la ventana `Summon/InvocacionScreen.jsx` desde el Home. Lo ya conseguido por un logro cuenta como repetido. Los jefes, por primera vez, se pueden elegir como inicial. Faltan las páginas del Bingo Book. Icono: hoja 43 del documento 41.* | |
+| | ✅ *Objeto inicial: uno al azar entre los desbloqueados (logros + gacha), anunciado en el toast del mapa.* | |
 | **3** | Primera tanda de personajes nuevos (3-4 héroes) con su arte | 1 sesión + arte |
 | **4** | Actos variables (campaña por actos) y el primer arco nuevo con sus villanos | 2 sesiones + arte |
 | **5** | Desafío diario y retos opcionales | 1 sesión |
