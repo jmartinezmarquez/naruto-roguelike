@@ -256,3 +256,15 @@ Los logros: ganar con Shikamaru, Hinata, Rock Lee, Ino, Chōji o Sai de líder; 
 a Gaara con Rock Lee, a Kabuto y a Pain con Naruto; ganar sin tiendas, sin consumibles, solo con comunes,
 y tumbar a un jefe final sin relevos. Todos dan pergaminos. Los que dependen del nivel de ninja, del
 gacha o del desafío diario llegan con su fase (documentacion/42).
+
+## Logros de la meta-progresión (2026-10-15) — de 42 a 48
+
+Tres condiciones nuevas, que como `ascensionMinima` **completa `evaluarLogros` desde lo guardado**:
+`nivelNinjaMinimo` (el nivel de ninja más alto del roster), `invocacionMinima` (`campo`: `tiradas` o
+`legendarios` del gacha) y `coleccionInvocacion` (`tipoPremio`: `pagina`, `personaje`, `objeto` o `todo`,
+contando lo que se tiene por un logro). Seis logros: ninja a nivel 5 y 10, 50 tiradas, 10 legendarios, el
+Bingo Book completo y la colección entera del gacha.
+
+⚠️ **No tienen combate que los dispare.** Hasta ahora todo logro se evaluaba al ganar un combate (o al
+terminar la run); estos cambian en el Home. `invocar` y `sumarXpMaestria` llaman a
+`_evaluarLogrosDeMeta`, que además **los encola para el toast él mismo**: nadie más lo iba a hacer.

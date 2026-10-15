@@ -567,6 +567,86 @@
         "tipo": "pergaminos",
         "cantidad": 3
       }
+    },
+    {
+      "id": "maestria_5",
+      "nombre": "Rising Shinobi",
+      "descripcion": "Raise any ninja to Ninja Lv.5.",
+      "condicion": {
+        "tipo": "nivelNinjaMinimo",
+        "nivel": 5
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "maestria_10",
+      "nombre": "Living Legend",
+      "descripcion": "Raise any ninja to Ninja Lv.10.",
+      "condicion": {
+        "tipo": "nivelNinjaMinimo",
+        "nivel": 10
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 5
+      }
+    },
+    {
+      "id": "invocaciones_50",
+      "nombre": "Summoner",
+      "descripcion": "Summon 50 times.",
+      "condicion": {
+        "tipo": "invocacionMinima",
+        "campo": "tiradas",
+        "cantidad": 50
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "legendarios_10",
+      "nombre": "Contract of Legends",
+      "descripcion": "Summon 10 legendaries.",
+      "condicion": {
+        "tipo": "invocacionMinima",
+        "campo": "legendarios",
+        "cantidad": 10
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 5
+      }
+    },
+    {
+      "id": "bingo_book_completo",
+      "nombre": "Every Page Turned",
+      "descripcion": "Collect every Bingo Book page.",
+      "condicion": {
+        "tipo": "coleccionInvocacion",
+        "tipoPremio": "pagina"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 5
+      }
+    },
+    {
+      "id": "coleccion_completa",
+      "nombre": "Master of Summoning",
+      "descripcion": "Complete the whole Summon collection.",
+      "condicion": {
+        "tipo": "coleccionInvocacion",
+        "tipoPremio": "todo"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 5
+      }
     }
   ],
   "_pendienteDeImplementar": {

@@ -181,6 +181,7 @@ export const useAchievementsStore = create((set, get) => ({
     if (resultado.length === 0) return [];
     set({ maestria: siguiente });
     localStorage.setItem(CLAVE_MAESTRIA, JSON.stringify(siguiente));
+    get()._evaluarLogrosDeMeta();
     return resultado;
   },
 
@@ -242,7 +243,33 @@ export const useAchievementsStore = create((set, get) => ({
     localStorage.setItem(CLAVE_PERGAMINOS, JSON.stringify(saldo));
     localStorage.setItem(CLAVE_INVOCACION, JSON.stringify(estado));
     get().sumarXpMaestria(xpGanada);
+    get()._evaluarLogrosDeMeta();
     return conEfecto;
+  },
+
+  /**
+   * Interno: qué partes de la colección del gacha están completas, contando también
+   * lo que se tiene por un logro (es lo mismo que la pantalla llama "tener").
+   */
+  _coleccionInvocacionCompleta() {
+    const listas = {
+      personaje: get().personajesInicialesExtra(),
+      objeto: get().objetosInicialesDesbloqueados(),
+      pagina: get().invocacion.paginas ?? [],
+    };
+    const tiene = (e) => listas[e.tipo].includes(e.id);
+    const catalogo = invocacionData.catalogo;
+    const completa = (tipo) => catalogo.filter((e) => e.tipo === tipo).every(tiene);
+    return { personaje: completa('personaje'), objeto: completa('objeto'), pagina: completa('pagina'), todo: catalogo.every(tiene) };
+  },
+
+  /**
+   * Interno: los logros de la meta-progresión no tienen un combate que los dispare.
+   * Se evalúan después de tirar del gacha y de sumar maestría, y se encolan para el
+   * toast desde aquí mismo — nadie más va a hacerlo.
+   */
+  _evaluarLogrosDeMeta() {
+    get().notificar(get().evaluarLogros({}));
   },
 
   /** Elige el aspecto de un ninja (0 o null = el de siempre). Quien llama comprueba que lo tiene. */
@@ -407,9 +434,14 @@ export const useAchievementsStore = create((set, get) => ({
    * ningún logro que no fuera "derrota a X" tenía dónde dispararse.
    */
   evaluarLogros(contexto = {}) {
-    const { logrosDesbloqueados, contadores, vistos, ascensionesGanadas } = get();
+    const { logrosDesbloqueados, contadores, vistos, ascensionesGanadas, maestria, invocacion } = get();
     const ascensionMaximaGanada = Math.max(-1, ...Object.values(ascensionesGanadas));
-    const contextoCompleto = { ...contexto, contadores, vistos, ascensionMaximaGanada };
+    const reglasMaestria = configGlobal.maestria;
+    const nivelNinjaMaximo = Math.max(1, ...Object.values(maestria).map((xp) => nivelDeMaestria(xp, reglasMaestria).nivel));
+    const contextoCompleto = {
+      ...contexto, contadores, vistos, ascensionMaximaGanada,
+      nivelNinjaMaximo, invocacion, coleccionInvocacionCompleta: get()._coleccionInvocacionCompleta(),
+    };
     const nuevos = evaluarLogrosDesbloqueables(achievementsData.logros, logrosDesbloqueados, contextoCompleto);
     if (nuevos.length === 0) return [];
 

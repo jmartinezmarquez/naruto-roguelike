@@ -255,8 +255,10 @@ Kakashi fueron tres ficheros de datos; el arte ya tiene su proceso montado. Cada
 | | ✅ *Pergaminos por run: hechos (`engine/pergaminos.js`, `config.pergaminos`, saldo en `useAchievementsStore.pergaminos`, desglose en el Game Over, saldo en el Home).* | |
 | | ✅ *Fase 1 completa.* | |
 | **2** | Pantalla de Invocación con probabilidades, garantías y duplicados; catálogo inicial (iniciales, objetos iniciales, páginas); nivel de ninja y sus recompensas | 2 sesiones |
-| | ✅ *Gacha: `engine/invocacion.js` (tiradas y garantías, puro), `data/invocacion.json` (precios, probabilidades y catálogo: 8 ninjas como inicial —Yamato, Kakashi y los seis jefes— y 9 objetos iniciales), `useAchievementsStore.invocar` (cobra, aplica duplicados, décima clave persistida) y la ventana `Summon/InvocacionScreen.jsx` desde el Home. Lo ya conseguido por un logro cuenta como repetido. Los jefes, por primera vez, se pueden elegir como inicial. Faltan las páginas del Bingo Book. Icono: hoja 43 del documento 41.* | |
+| | ✅ *Gacha: `engine/invocacion.js` (tiradas y garantías, puro), `data/invocacion.json` (precios, probabilidades y catálogo: 8 ninjas como inicial —Yamato, Kakashi y los seis jefes— y 9 objetos iniciales), `useAchievementsStore.invocar` (cobra, aplica duplicados, décima clave persistida) y la ventana `Summon/InvocacionScreen.jsx` desde el Home. Lo ya conseguido por un logro cuenta como repetido. Los jefes, por primera vez, se pueden elegir como inicial. Icono: hoja 43 del documento 41.* | |
 | | ✅ *Objeto inicial: uno al azar entre los desbloqueados (logros + gacha), anunciado en el toast del mapa.* | |
+| | ✅ *Páginas del Bingo Book: 21 historias (`data/bingo-book-pages.json`) como premio común; se leen en la ficha del ninja.* | |
+| | ✅ *Logros de maestría y gacha (6): nivel de ninja 5 y 10, 50 tiradas, 10 legendarios, Bingo Book completo, colección completa. **Fase 2 completa**, salvo el arte (hojas 36-43).* | |
 | **3** | Primera tanda de personajes nuevos (3-4 héroes) con su arte | 1 sesión + arte |
 | **4** | Actos variables (campaña por actos) y el primer arco nuevo con sus villanos | 2 sesiones + arte |
 | **5** | Desafío diario y retos opcionales | 1 sesión |

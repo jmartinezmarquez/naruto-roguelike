@@ -17,6 +17,9 @@ export const TIPOS_DE_CONDICION = [
   'coleccionMinima',
   'ascensionMinima',
   'ganarRun',
+  'nivelNinjaMinimo',
+  'invocacionMinima',
+  'coleccionInvocacion',
 ];
 
 export const TIPOS_DE_RECOMPENSA = [
@@ -81,6 +84,16 @@ function cumpleCondicion(condicion, contexto) {
     // si pasara, el logro de A2 tiene que saltar igual.
     case 'ascensionMinima':
       return (contexto.ascensionMaximaGanada ?? -1) >= condicion.nivel;
+    // Las tres de la meta-progresión (documentacion/42) también las completa
+    // `evaluarLogros` desde lo guardado: el nivel de ninja más alto del roster, las
+    // tiradas o legendarios del gacha, y si una parte de su colección está completa
+    // (`tipoPremio`: 'pagina', 'personaje', 'objeto' o 'todo').
+    case 'nivelNinjaMinimo':
+      return (contexto.nivelNinjaMaximo ?? 1) >= condicion.nivel;
+    case 'invocacionMinima':
+      return (contexto.invocacion?.[condicion.campo] ?? 0) >= condicion.cantidad;
+    case 'coleccionInvocacion':
+      return Boolean(contexto.coleccionInvocacionCompleta?.[condicion.tipoPremio]);
     default:
       return false;
   }

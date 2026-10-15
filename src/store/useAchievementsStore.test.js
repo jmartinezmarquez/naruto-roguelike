@@ -500,6 +500,7 @@ describe('invocación (gacha)', () => {
     expect(premios.map((p) => p.efecto)).toEqual(['nuevo', 'nivel', 'nivel']);
     expect(premios[2].nivel).toBe(3);
     useAchievementsStore.setState({ maestria: { kakashi: 1e6 } });
+    s().evaluarLogros({}); // los logros de nivel de ninja pagan aparte: que no se cuelen en la cuenta
     const saldoAntes = s().pergaminos.saldo;
     const [alMaximo] = s().invocar(1, () => 0.05);
     expect(alMaximo).toMatchObject({ efecto: 'pergaminos', cantidad: invocacionData.reembolsoDuplicado });
@@ -513,5 +514,32 @@ describe('invocación (gacha)', () => {
     s().reiniciarLogros();
     expect(s().invocacion).toEqual(ESTADO_INVOCACION_VACIO);
     expect(localStorage.getItem('naruto-roguelike-invocacion')).toBeNull();
+  });
+});
+
+describe('logros de la meta-progresión', () => {
+  const s = () => useAchievementsStore.getState();
+
+  it('subir un ninja a nivel 5 desbloquea "maestria_5" y lo avisa', () => {
+    s().sumarXpMaestria({ naruto: 1e4 });
+    expect(s().estaDesbloqueado('maestria_5')).toBe(true);
+    expect(s().notificacionesPendientes.map((l) => l.id)).toContain('maestria_5');
+  });
+
+  it('las tiradas del gacha cuentan para "invocaciones_50"', () => {
+    useAchievementsStore.setState({ pergaminos: { ...PERGAMINOS_VACIOS, saldo: 500 } });
+    for (let i = 0; i < 5; i++) s().invocar(10);
+    expect(s().estaDesbloqueado('invocaciones_50')).toBe(true);
+  });
+
+  it('tener todas las páginas desbloquea "bingo_book_completo", y no antes', () => {
+    const paginas = invocacionData.catalogo.filter((e) => e.tipo === 'pagina').map((e) => e.id);
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, paginas: paginas.slice(1) } });
+    s().evaluarLogros({});
+    expect(s().estaDesbloqueado('bingo_book_completo')).toBe(false);
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, paginas } });
+    s().evaluarLogros({});
+    expect(s().estaDesbloqueado('bingo_book_completo')).toBe(true);
+    expect(s().estaDesbloqueado('coleccion_completa')).toBe(false);
   });
 });
