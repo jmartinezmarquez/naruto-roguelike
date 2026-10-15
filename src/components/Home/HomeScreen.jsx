@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useGameStore, fechaDeHoy } from '../../store/useGameStore';
-import { useAchievementsStore } from '../../store/useAchievementsStore';
+import { useAchievementsStore, LOGROS_VISIBLES } from '../../store/useAchievementsStore';
 import campaignsData from '../../data/campaigns.json';
-import achievementsData from '../../data/achievements.json';
 import charactersData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import commonEnemiesData from '../../data/common-enemies.json';
@@ -62,7 +61,7 @@ const TOTAL_NINJAS = charactersData.personajes.filter((p) => !p.pendienteDeArte)
 const TOTAL_ENEMIGOS = [
   ...enemiesData.jefes, ...commonEnemiesData.plantillasGenericas, ...commonEnemiesData.enemigosNombrados,
 ].filter((e) => !e.pendienteDeArte).length;
-const TOTAL_LOGROS = achievementsData.logros.length;
+const TOTAL_LOGROS = LOGROS_VISIBLES.length;
 
 /** Una línea del marcador: etiqueta a la izquierda, cifra a la derecha, como en la referencia. */
 function FilaMarcador({ etiqueta, valor }) {

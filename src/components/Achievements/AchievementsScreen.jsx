@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { useAchievementsStore } from '../../store/useAchievementsStore';
-import achievementsData from '../../data/achievements.json';
+import { useAchievementsStore, LOGROS_VISIBLES } from '../../store/useAchievementsStore';
 import campaignsData from '../../data/campaigns.json';
 import { ARCOS } from '../../data/arcs';
 import { actosDeCampana } from '../../engine/campanas';
 import { progresoDeLogro } from '../../engine/achievements';
-import { nombrePersonaje as nombrePersonajeOJefe, nombreObjeto } from '../common/nombres';
 import { spriteDeLuchador } from '../common/characterSprites';
-import { SPRITE_OBJETO } from '../Inventory/itemSprites';
 import { PanelMarco, VentanaModal, FilaPestanas, IconoEnmarcado } from '../common/PiezasUI';
 
 /**
@@ -62,53 +59,19 @@ const PESTANAS_BASE = [
 ];
 
 function textoRecompensa(recompensa) {
-  if (recompensa.tipo === 'desbloquearPersonajeReclutable') {
-    return `Unlocks ${nombrePersonajeOJefe(recompensa.personajeId)} as recruitable.`;
-  }
-  if (recompensa.tipo === 'desbloquearPersonajeInicial') {
-    return `Unlocks ${nombrePersonajeOJefe(recompensa.personajeId)} as a starting pick.`;
-  }
-  if (recompensa.tipo === 'desbloquearObjetoInicial') {
-    return `You start any future run with ${nombreObjeto(recompensa.objetoId)}.`;
-  }
-  // ⚠️ **Un logro puede no dar nada, y se dice.** Solo hay tres tipos de premio y
-  // los tres son desbloqueos; quedan pocos ninjas y pocos objetos por desbloquear,
-  // así que la alternativa era inventar recompensas numéricas (+% oro, +% XP) que
-  // mueven la curva de niveles de toda la run — descartadas en el punto 5b. Un
-  // juego de runs cortas no quiere meta-progresión que cambie números. Lo que se
-  // devuelve NO es cadena vacía: un hueco no dice "esto es una marca de honor",
-  // dice "aquí falta algo".
-  //
-  // Tres palabras y no ocho: esta línea sale en 13 de las 23 filas, y desde que
-  // existe el **rango S** al lado, "no reward beyond the telling" repetía por escrito
-  // lo que el icono ya dice. Una frase que se repite trece veces en una pantalla se
-  // paga trece veces.
-  if (recompensa.tipo === 'pergaminos') return `+${recompensa.cantidad} summoning scrolls.`;
-  if (recompensa.tipo === 'ninguna') return 'A mark of honour.';
-  return '';
+  // Todo logro paga en pergaminos de invocación (documentacion/42): el premio de
+  // verdad es la tirada del gacha que pagan.
+  return `+${recompensa.cantidad} summoning scrolls.`;
 }
 
 /**
- * El icono de un logro sale de su RECOMPENSA, no de un dibujo propio.
- *
- * La maqueta pide un sprite por logro (el espejo roto de Haku, la máscara de
- * Zabuza) y ese arte no existe. Pero un logro que desbloquea a Haku puede
- * enseñar a Haku, y uno que da un objeto puede enseñar el objeto: se lee igual
- * de bien, no inventa nada y además dice el premio sin leer. Cuando haya arte
- * propio, se cambia solo esta función.
+ * El icono de un logro: el jefe que pide derrotar, si pide uno. Desde que todos pagan
+ * en pergaminos, la recompensa ya no tiene sprite que enseñar; el jefe sí, y dice de
+ * un vistazo de qué va la misión. Los demás llevan el **rango S** (ver `RANGO_S`).
  */
 function iconoDeLogro(logro) {
-  const { recompensa } = logro;
-  if (recompensa.tipo === 'desbloquearPersonajeReclutable' || recompensa.tipo === 'desbloquearPersonajeInicial') {
-    return spriteDeLuchador(recompensa.personajeId);
-  }
-  if (recompensa.tipo === 'desbloquearObjetoInicial') {
-    return SPRITE_OBJETO[recompensa.objetoId] ?? null;
-  }
-  // Los que no dan nada no tienen de dónde sacar sprite. No se quedan con el marco
-  // vacío: llevan el **rango S** de las misiones ninja (ver `RANGO_S`), que dice
-  // algo — "esto no da objeto, da rango" — en vez de parecer un icono que falta.
-  return null;
+  const jefe = logro.condicion.jefeId;
+  return jefe ? spriteDeLuchador(jefe) : null;
 }
 
 /**
@@ -163,7 +126,7 @@ function FilaLogro({ logro, desbloqueado, progreso }) {
       <div className="flex items-start gap-3">
         <IconoEnmarcado
           src={iconoDeLogro(logro)}
-          glifo={['ninguna', 'pergaminos'].includes(logro.recompensa.tipo) ? RANGO_S : null}
+          glifo={RANGO_S}
           bloqueado={!desbloqueado}
           colorMarco={desbloqueado ? 'border-oro/50' : 'border-marco'}
           tamano="w-14 h-14"
@@ -200,7 +163,8 @@ export default function AchievementsScreen() {
   const vistos = useAchievementsStore((s) => s.vistos);
   const [pestanaId, setPestanaId] = useState('todos');
 
-  const logros = achievementsData.logros;
+  // Sin los de contenido que aún espera su arte (ver LOGROS_VISIBLES).
+  const logros = LOGROS_VISIBLES;
   const conArco = useMemo(
     () => logros.map((logro) => ({ logro, arcoId: arcoDelLogro(logro) })),
     [logros],

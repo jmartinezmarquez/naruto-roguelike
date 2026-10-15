@@ -11,14 +11,12 @@ import eventosData from '../data/events.json';
 import itemsData from '../data/items.json';
 import enemiesData from '../data/enemies.json';
 import commonEnemiesData from '../data/common-enemies.json';
-import achievementsData from '../data/achievements.json';
 import campaignsData from '../data/campaigns.json';
 import ascensionsData from '../data/ascensions.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp, obtenerModoActivo, factorXpPorVentaja } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
-import { obtenerPersonajesReclutablesDesbloqueados } from '../engine/achievements';
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
 import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/ascension';
 import { pergaminosDeLaRun } from '../engine/pergaminos';
@@ -290,16 +288,11 @@ const RAREZAS_POR_PERGAMINO = {
  * arco no se sostiene ni jugando ni en la ficción.
  */
 function candidatosReclutables(equipoActual, arcoActualDatos) {
-  const idsDesbloqueadosPorLogro = obtenerPersonajesReclutablesDesbloqueados(
-    achievementsData.logros,
-    useAchievementsStore.getState().logrosDesbloqueados,
-  );
   const idsInicialesNoElegidos = personajesData.personajes
     .filter((p) => p.rareza === 'inicial')
     .map((p) => p.id);
   const idsReclutablesTotal = [
     ...(arcoActualDatos.personajesReclutablesIds ?? []),
-    ...idsDesbloqueadosPorLogro,
     ...idsInicialesNoElegidos,
     // Lo conseguido en el gacha también se recluta, en cualquier arco (documentacion/42).
     ...useAchievementsStore.getState().invocacion.personajes,

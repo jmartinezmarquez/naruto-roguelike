@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   evaluarLogrosDesbloqueables,
-  obtenerPersonajesReclutablesDesbloqueados,
-  obtenerObjetosInicialesDesbloqueados,
-  obtenerPersonajesInicialesDesbloqueados,
   progresoDeLogro,
   rosterInicial,
   pergaminosPorCobrar,
@@ -69,37 +66,6 @@ describe('evaluarLogrosDesbloqueables', () => {
       arcoCompletadoSinDerrotas: false,
     });
     expect(resultado).toHaveLength(0);
-  });
-});
-
-describe('obtenerPersonajesReclutablesDesbloqueados', () => {
-  it('devuelve el personaje de los logros de tipo desbloquearPersonajeReclutable ya conseguidos', () => {
-    const resultado = obtenerPersonajesReclutablesDesbloqueados(logrosDePrueba, ['derrotar_haku']);
-    expect(resultado).toEqual(['haku']);
-  });
-
-  it('ignora logros no desbloqueados o de otro tipo de recompensa', () => {
-    const resultado = obtenerPersonajesReclutablesDesbloqueados(logrosDePrueba, ['run_sin_bajas']);
-    expect(resultado).toEqual([]);
-  });
-});
-
-describe('obtenerObjetosInicialesDesbloqueados', () => {
-  it('devuelve el objeto de los logros de tipo desbloquearObjetoInicial ya conseguidos', () => {
-    const resultado = obtenerObjetosInicialesDesbloqueados(logrosDePrueba, ['run_sin_bajas']);
-    expect(resultado).toEqual(['sello_chakra']);
-  });
-});
-
-describe('obtenerPersonajesInicialesDesbloqueados', () => {
-  it('devuelve el personaje de los logros de tipo desbloquearPersonajeInicial ya conseguidos', () => {
-    const resultado = obtenerPersonajesInicialesDesbloqueados(logrosDePrueba, ['completar_run']);
-    expect(resultado).toEqual(['pain_camino_deva']);
-  });
-
-  it('ignora logros no desbloqueados o de otro tipo de recompensa', () => {
-    const resultado = obtenerPersonajesInicialesDesbloqueados(logrosDePrueba, ['derrotar_haku']);
-    expect(resultado).toEqual([]);
   });
 });
 

@@ -10,8 +10,8 @@
         "jefeId": "haku"
       },
       "recompensa": {
-        "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "haku"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -23,8 +23,8 @@
         "jefeId": "zabuza"
       },
       "recompensa": {
-        "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "zabuza"
+        "tipo": "pergaminos",
+        "cantidad": 4
       }
     },
     {
@@ -36,8 +36,8 @@
         "jefeId": "kabuto"
       },
       "recompensa": {
-        "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "kabuto"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -49,8 +49,8 @@
         "jefeId": "gaara"
       },
       "recompensa": {
-        "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "gaara"
+        "tipo": "pergaminos",
+        "cantidad": 4
       }
     },
     {
@@ -62,8 +62,8 @@
         "jefeId": "camino_animal_pain"
       },
       "recompensa": {
-        "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "camino_animal_pain"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -75,8 +75,8 @@
         "jefeId": "pain_camino_deva"
       },
       "recompensa": {
-        "tipo": "desbloquearPersonajeReclutable",
-        "personajeId": "pain_camino_deva"
+        "tipo": "pergaminos",
+        "cantidad": 6
       }
     },
     {
@@ -88,8 +88,8 @@
         "arcoId": "pais_de_las_olas"
       },
       "recompensa": {
-        "tipo": "desbloquearObjetoInicial",
-        "objetoId": "sello_chakra"
+        "tipo": "pergaminos",
+        "cantidad": 4
       }
     },
     {
@@ -101,8 +101,8 @@
         "arcoId": "examen_chunin"
       },
       "recompensa": {
-        "tipo": "desbloquearObjetoInicial",
-        "objetoId": "pergamino_reserva"
+        "tipo": "pergaminos",
+        "cantidad": 4
       }
     },
     {
@@ -114,8 +114,8 @@
         "arcoId": "invasion_de_pain"
       },
       "recompensa": {
-        "tipo": "desbloquearObjetoInicial",
-        "objetoId": "semilla_sabio"
+        "tipo": "pergaminos",
+        "cantidad": 5
       }
     },
     {
@@ -240,8 +240,8 @@
         "cantidad": 3
       },
       "recompensa": {
-        "tipo": "desbloquearPersonajeInicial",
-        "personajeId": "yamato"
+        "tipo": "pergaminos",
+        "cantidad": 4
       }
     },
     {
@@ -642,6 +642,123 @@
       "condicion": {
         "tipo": "coleccionInvocacion",
         "tipoPremio": "todo"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 5
+      }
+    },
+    {
+      "id": "derrotar_jirobo",
+      "nombre": "Dome Breaker",
+      "descripcion": "Defeat Jirobo.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "jirobo"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "derrotar_kimimaro",
+      "nombre": "Last of the Kaguya",
+      "descripcion": "Defeat Kimimaro.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "kimimaro"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "derrotar_sasori",
+      "nombre": "Strings Cut",
+      "descripcion": "Defeat Sasori.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "sasori"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "derrotar_deidara",
+      "nombre": "Art Is Not an Explosion",
+      "descripcion": "Defeat Deidara.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "deidara"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 6
+      }
+    },
+    {
+      "id": "derrotar_hidan",
+      "nombre": "Buried Alive",
+      "descripcion": "Defeat Hidan.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "hidan"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "derrotar_kakuzu",
+      "nombre": "Five Hearts Stopped",
+      "descripcion": "Defeat Kakuzu.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "kakuzu"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 6
+      }
+    },
+    {
+      "id": "persecucion_de_sasuke_sin_bajas",
+      "nombre": "Nobody Left Behind",
+      "descripcion": "Complete Sasuke Retrieval without losing a single battle.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "persecucion_de_sasuke"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "rescate_de_gaara_sin_bajas",
+      "nombre": "The Sand Owes You One",
+      "descripcion": "Complete Kazekage Rescue without losing a single battle.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "rescate_de_gaara"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 5
+      }
+    },
+    {
+      "id": "hidan_y_kakuzu_sin_bajas",
+      "nombre": "Mortal After All",
+      "descripcion": "Complete The Immortal Duo without losing a single battle.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "hidan_y_kakuzu"
       },
       "recompensa": {
         "tipo": "pergaminos",

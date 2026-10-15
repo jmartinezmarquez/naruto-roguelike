@@ -9,7 +9,6 @@ import configGlobal from '../data/config.json';
 import { TIPOS_DE_CONDICION, TIPOS_DE_RECOMPENSA } from '../engine/achievements';
 import charactersData from '../data/characters.json';
 import enemiesData from '../data/enemies.json';
-import itemsData from '../data/items.json';
 
 beforeEach(() => {
   localStorage.clear();
@@ -293,7 +292,12 @@ describe('invariantes de achievements.json', () => {
     ...charactersData.personajes.map((p) => p.id),
     ...enemiesData.jefes.map((j) => j.id),
   ];
-  const idsObjeto = itemsData.objetos.map((o) => o.id);
+
+  it('todo jefe o ninja que nombra un logro existe', () => {
+    const rotos = logros.filter(({ condicion: c }) => [c.jefeId, c.conPersonajeId, c.liderId]
+      .some((id) => id && !idsPersonaje.includes(id)));
+    expect(rotos.map((l) => l.id)).toEqual([]);
+  });
 
   it('ningún id de logro está repetido', () => {
     expect(new Set(logros.map((l) => l.id)).size).toBe(logros.length);
@@ -323,15 +327,6 @@ describe('invariantes de achievements.json', () => {
     expect(rotos.map((l) => l.id)).toEqual([]);
   });
 
-  it('toda recompensa de desbloqueo apunta a un personaje o un objeto que existe', () => {
-    const rotos = logros.filter((l) => {
-      const { recompensa } = l;
-      if (recompensa.tipo === 'desbloquearObjetoInicial') return !idsObjeto.includes(recompensa.objetoId);
-      if (recompensa.tipo.startsWith('desbloquearPersonaje')) return !idsPersonaje.includes(recompensa.personajeId);
-      return false;
-    });
-    expect(rotos.map((l) => l.id)).toEqual([]);
-  });
 });
 
 describe('registrarMarca (hasta dónde se llegó)', () => {

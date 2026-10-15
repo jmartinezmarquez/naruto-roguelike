@@ -22,13 +22,10 @@ export const TIPOS_DE_CONDICION = [
   'coleccionInvocacion',
 ];
 
-export const TIPOS_DE_RECOMPENSA = [
-  'desbloquearPersonajeReclutable',
-  'desbloquearPersonajeInicial',
-  'desbloquearObjetoInicial',
-  'pergaminos',
-  'ninguna',
-];
+// ⚠️ Desde el 2026-10-16 todo logro paga en pergaminos de invocación: lo que antes
+// desbloqueaban (jefes reclutables, iniciales, objetos iniciales) sale del gacha, que
+// es la mecánica principal de la meta-progresión (documentacion/42).
+export const TIPOS_DE_RECOMPENSA = ['pergaminos'];
 
 /**
  * ¿La condición de un logro se cumple con este contexto?
@@ -127,37 +124,16 @@ export function evaluarLogrosDesbloqueables(logros, idsYaDesbloqueados, contexto
   );
 }
 
-/** Ids de personaje desbloqueados como reclutables (recompensa desbloquearPersonajeReclutable) entre los logros ya conseguidos. */
-export function obtenerPersonajesReclutablesDesbloqueados(logros, idsDesbloqueados) {
-  return logros
-    .filter((l) => idsDesbloqueados.includes(l.id) && l.recompensa.tipo === 'desbloquearPersonajeReclutable')
-    .map((l) => l.recompensa.personajeId);
-}
-
-/** Ids de objeto desbloqueados como parte del inventario inicial (recompensa desbloquearObjetoInicial) entre los logros ya conseguidos. */
-export function obtenerObjetosInicialesDesbloqueados(logros, idsDesbloqueados) {
-  return logros
-    .filter((l) => idsDesbloqueados.includes(l.id) && l.recompensa.tipo === 'desbloquearObjetoInicial')
-    .map((l) => l.recompensa.objetoId);
-}
-
-/** Ids de personaje desbloqueados como opción de equipo inicial (recompensa desbloquearPersonajeInicial) entre los logros ya conseguidos. */
-export function obtenerPersonajesInicialesDesbloqueados(logros, idsDesbloqueados) {
-  return logros
-    .filter((l) => idsDesbloqueados.includes(l.id) && l.recompensa.tipo === 'desbloquearPersonajeInicial')
-    .map((l) => l.recompensa.personajeId);
-}
-
 /**
  * Las rarezas de "una estrella": las que se pueden elegir como inicial en cuanto
- * se han tenido en el equipo alguna vez. Raros y legendarios no — esos se ganan
- * con un logro, o el reto de conseguirlos (el pergamino dorado) dejaría de existir.
+ * se han tenido en el equipo alguna vez. Raros y legendarios no — esos salen del
+ * gacha, o el reto de conseguirlos (el pergamino dorado) dejaría de existir.
  */
 export const RAREZAS_DE_UNA_ESTRELLA = ['inicial', 'comun'];
 
 /**
- * El roster de la pantalla de selección: los "inicial" de siempre, los que haya
- * desbloqueado un logro (`desbloquearPersonajeInicial`) y **los de una estrella
+ * El roster de la pantalla de selección: los "inicial" de siempre, los conseguidos
+ * en el gacha y **los de una estrella
  * que ya hayan estado en tu equipo en alguna run** (`idsVistos`, el registro de
  * ninjas del Bingo Book). Reclutar a alguien es lo que lo desbloquea.
  *
@@ -165,9 +141,9 @@ export const RAREZAS_DE_UNA_ESTRELLA = ['inicial', 'comun'];
  * la calibración de la primera run (documentacion/11, "v5") no se mueve.
  * Conserva el orden de `personajes`, que es el del JSON.
  */
-export function rosterInicial(personajes, idsDesbloqueadosPorLogro, idsVistos) {
+export function rosterInicial(personajes, idsDelGacha, idsVistos) {
   return personajes.filter((p) => p.rareza === 'inicial'
-    || idsDesbloqueadosPorLogro.includes(p.id)
+    || idsDelGacha.includes(p.id)
     || (RAREZAS_DE_UNA_ESTRELLA.includes(p.rareza) && idsVistos.includes(p.id)));
 }
 
@@ -184,4 +160,14 @@ export function pergaminosPorCobrar(logros, idsDesbloqueados, idsCobrados) {
     total: pendientes.reduce((acc, l) => acc + l.recompensa.cantidad, 0),
     ids: pendientes.map((l) => l.id),
   };
+}
+
+/**
+ * Los logros que se pueden conseguir hoy: fuera los que nombran un jefe, un arco o un
+ * ninja que aún espera su arte (`pendienteDeArte`), porque Missions estaría pidiendo
+ * algo imposible. Se cuentan solos el día que llega el dibujo.
+ */
+export function logrosDisponibles(logros, idsPendientesDeArte) {
+  const pendientes = new Set(idsPendientesDeArte);
+  return logros.filter(({ condicion: c }) => ![c.jefeId, c.arcoId, c.conPersonajeId, c.liderId].some((id) => id && pendientes.has(id)));
 }

@@ -8,19 +8,27 @@ import { create } from 'zustand';
 
 import achievementsData from '../data/achievements.json';
 import {
-  evaluarLogrosDesbloqueables, pergaminosPorCobrar,
-  obtenerPersonajesInicialesDesbloqueados, obtenerObjetosInicialesDesbloqueados,
+  evaluarLogrosDesbloqueables, pergaminosPorCobrar, logrosDisponibles,
 } from '../engine/achievements';
 import { nivelDeMaestria, xpParaSubirUnNivel } from '../engine/maestria';
 import { ESTADO_INVOCACION_VACIO, invocar as invocarEnMotor, catalogoDisponible } from '../engine/invocacion';
 import invocacionData from '../data/invocacion.json';
 import charactersData from '../data/characters.json';
 import enemiesData from '../data/enemies.json';
+import { ARCOS } from '../data/arcs';
+
+// Todo lo que aún espera su dibujo: personajes, jefes, entrenadores y arcos.
+const IDS_PENDIENTES_DE_ARTE = [
+  ...charactersData.personajes, ...enemiesData.jefes, ...ARCOS,
+].filter((x) => x.pendienteDeArte).map((x) => x.id);
+
+/** Los logros que se pueden conseguir hoy (sin los de contenido a la espera de arte). */
+export const LOGROS_VISIBLES = logrosDisponibles(achievementsData.logros, IDS_PENDIENTES_DE_ARTE);
 
 // El catálogo del gacha sin los ninjas que aún esperan su dibujo (ver catalogoDisponible).
 export const CATALOGO_INVOCACION = catalogoDisponible(
   invocacionData.catalogo,
-  [...charactersData.personajes, ...enemiesData.jefes].filter((p) => p.pendienteDeArte).map((p) => p.id),
+  IDS_PENDIENTES_DE_ARTE,
 );
 import configGlobal from '../data/config.json';
 
@@ -202,18 +210,15 @@ export const useAchievementsStore = create((set, get) => ({
   },
 
   /**
-   * Los ninjas que se pueden elegir como inicial sin ser de una estrella: los de un
-   * logro (`desbloquearPersonajeInicial`) y los del gacha.
+   * Los ninjas que se pueden elegir como inicial sin ser de una estrella: los del gacha.
    */
   personajesInicialesExtra() {
-    const porLogro = obtenerPersonajesInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
-    return [...new Set([...porLogro, ...get().invocacion.personajes])];
+    return get().invocacion.personajes;
   },
 
-  /** El pool de objetos iniciales: los de un logro y los del gacha. */
+  /** El pool de objetos iniciales: los del gacha. */
   objetosInicialesDesbloqueados() {
-    const porLogro = obtenerObjetosInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
-    return [...new Set([...porLogro, ...get().invocacion.objetos])];
+    return get().invocacion.objetos;
   },
 
   /**
@@ -228,12 +233,7 @@ export const useAchievementsStore = create((set, get) => ({
     const { pergaminos } = get();
     if (pergaminos.saldo < precio) return null;
 
-    // Lo que ya se tenía por un logro también cuenta como repetido.
-    const inicialesPorLogro = obtenerPersonajesInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
-    const objetosPorLogro = obtenerObjetosInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
-    const porLogro = { personaje: inicialesPorLogro, objeto: objetosPorLogro, pagina: [] };
-    const yaLoTiene = (e) => porLogro[e.tipo].includes(e.id);
-    const { estado, premios } = invocarEnMotor(get().invocacion, CATALOGO_INVOCACION, reglas, numero, azar, yaLoTiene);
+    const { estado, premios } = invocarEnMotor(get().invocacion, CATALOGO_INVOCACION, reglas, numero, azar);
 
     const reglasMaestria = configGlobal.maestria;
     const xpGanada = {};

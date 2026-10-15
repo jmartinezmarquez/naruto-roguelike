@@ -18,7 +18,7 @@ import { render, screen } from '../../test-dom';
 import AchievementsScreen from './AchievementsScreen';
 import { useGameStore } from '../../store/useGameStore';
 import {
-  useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA,
+  useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, LOGROS_VISIBLES,
 } from '../../store/useAchievementsStore';
 import { progresoDeLogro } from '../../engine/achievements';
 import achievementsData from '../../data/achievements.json';
@@ -77,7 +77,8 @@ describe('lo que ve el jugador de partida', () => {
   it('sin nada hecho, todos salen bloqueados', () => {
     render(<AchievementsScreen />);
     expect(screen.queryAllByText('Unlocked')).toHaveLength(0);
-    expect(screen.getAllByText('Locked')).toHaveLength(achievementsData.logros.length);
+    // Los de contenido que aún espera su arte no salen (ver LOGROS_VISIBLES).
+    expect(screen.getAllByText('Locked')).toHaveLength(LOGROS_VISIBLES.length);
   });
 
   it('un logro desbloqueado sale como conseguido y sin barra', () => {
@@ -90,5 +91,20 @@ describe('lo que ve el jugador de partida', () => {
     // desaparece al conseguirlo — es una decisión de diseño, no un descuido.
     const fila = screen.getByText(logro.nombre).closest('div.flex-1');
     expect(fila.textContent).not.toContain(`/ ${logro.condicion.cantidad}`);
+  });
+});
+
+describe('logros de contenido a la espera de arte', () => {
+  it('no salen en Missions mientras su jefe o su arco no tengan dibujo', () => {
+    render(<AchievementsScreen />);
+    expect(screen.queryByText('Last of the Kaguya')).toBeNull();
+    expect(LOGROS_VISIBLES.length).toBeLessThan(achievementsData.logros.length);
+  });
+
+  it('todo logro paga en pergaminos de invocación', () => {
+    for (const l of achievementsData.logros) {
+      expect(l.recompensa.tipo, l.id).toBe('pergaminos');
+      expect(l.recompensa.cantidad, l.id).toBeGreaterThan(0);
+    }
   });
 });

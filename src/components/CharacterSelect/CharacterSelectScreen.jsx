@@ -39,7 +39,7 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
 /**
  * Pantalla de arranque real: elige `numeroPersonajesInicialesAElegir` (hoy 1)
  * personaje del roster desbloqueado — los "inicial" de characters.json, los
- * que haya desbloqueado algún logro (desbloquearPersonajeInicial) y los de una
+ * que hayas conseguido en el gacha y los de una
  * estrella que ya hayas reclutado alguna vez (`rosterInicial`). El
  * resto del equipo (hasta tamanoMaximo) se rellena reclutando durante la
  * run, no aquí — ver documentacion/19-seleccion-de-personaje.md.

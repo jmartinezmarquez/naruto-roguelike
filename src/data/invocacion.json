@@ -38,6 +38,7 @@
     { "tipo": "objeto", "id": "cuchillas_de_asuma", "rareza": "comun" },
     { "tipo": "objeto", "id": "sello_chakra", "rareza": "comun" },
     { "tipo": "objeto", "id": "pergamino_reserva", "rareza": "comun" },
+    { "tipo": "objeto", "id": "semilla_sabio", "rareza": "comun" },
     { "tipo": "pagina", "id": "naruto", "rareza": "comun" },
     { "tipo": "pagina", "id": "sasuke", "rareza": "comun" },
     { "tipo": "pagina", "id": "sakura", "rareza": "comun" },

@@ -281,4 +281,7 @@ lo mantienen vivo.
 2. **El objeto inicial sale AL AZAR** entre los desbloqueados, sin elegir.
 3. **Los villanos reclutables también tienen aspecto alternativo**, no solo los héroes.
 
+4. **Todo logro paga en pergaminos** (2026-10-16): el gacha es la mecánica principal. Lo que los logros
+   desbloqueaban (jefes, Yamato, objetos iniciales) sale ahora del gacha. Ver documentacion/18.
+
 El arte que va haciendo falta se pide en documentacion/41, como hojas numeradas.

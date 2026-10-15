@@ -1,3 +1,4 @@
+import achievementsData from '../data/achievements.json';
 import { ARCOS as ARCOS_REGISTRADOS } from '../data/arcs';
 import campaignsData from '../data/campaigns.json';
 import { ESTADO_INVOCACION_VACIO } from '../engine/invocacion';
@@ -899,12 +900,12 @@ describe('logros (a través de jugarCombate)', () => {
     expect(useAchievementsStore.getState().estaDesbloqueado('run_sin_bajas')).toBe(false);
   });
 
-  it('un personaje raro desbloqueado por logro aparece en el pergamino VERDE', () => {
+  it('un personaje raro conseguido en el gacha aparece en el pergamino VERDE', () => {
     // Kabuto es `raro` y es el mini-jefe del arco 2, no del que se está jugando
     // aquí: se puede ofrecer sin chocar con la regla de "en su propio arco, no".
     // Los raros comparten pergamino con comunes e iniciales — lo que separa los
     // dos pergaminos es cómo se consigue al ninja, no lo bueno que sea.
-    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'kabuto' });
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['kabuto'] } });
 
     useGameStore.setState({
       mapa: {
@@ -965,12 +966,8 @@ describe('logros (a través de jugarCombate)', () => {
     expect(ids).toEqual(['sakura', 'sasuke']);
   });
 
-  it('un objeto inicial desbloqueado por logro aparece en el inventario al empezar una run nueva', () => {
-    useAchievementsStore.getState().evaluarLogros({
-      jefeDerrotadoId: 'zabuza',
-      arcoCompletadoId: 'pais_de_las_olas',
-      arcoCompletadoSinDerrotas: true,
-    });
+  it('un objeto inicial conseguido en el gacha aparece en el inventario al empezar una run nueva', () => {
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, objetos: ['sello_chakra'] } });
 
     useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
     expect(useGameStore.getState().inventario).toContain('sello_chakra');
@@ -1126,7 +1123,7 @@ describe('desafío legendario (pergamino dorado)', () => {
     // Con Kakashi en la pool del arco hay DOS legendarios elegibles, así que el
     // test no puede exigir un id concreto sin volverse aleatorio: lo que garantiza
     // el nodo es que sale **uno solo** y que ese uno es legendario.
-    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['gaara'] } });
     entrarEnNodoDorado();
 
     const { reclutarActual } = useGameStore.getState();
@@ -1165,7 +1162,7 @@ describe('desafío legendario (pergamino dorado)', () => {
   });
 
   it('iniciarDesafioLegendario pelea contra el legendario al nivel FIJO del arco', () => {
-    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['gaara'] } });
     entrarEnNodoDorado();
     // Quien sale del sorteo se lee de la oferta, no se escribe a mano: hay dos
     // legendarios elegibles y lo que se comprueba es que se pelea contra el que se
@@ -1195,7 +1192,7 @@ describe('desafío legendario (pergamino dorado)', () => {
     // prueba.
     const arcoDesafioImposible = { ...arcoSinLegendarioPropio, nivelDesafioLegendario: 30 };
     useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDesafioImposible);
-    useAchievementsStore.getState().evaluarLogros({ jefeDerrotadoId: 'gaara' });
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['gaara'] } });
     entrarEnNodoDorado();
     useGameStore.getState().iniciarDesafioLegendario();
 
@@ -1251,7 +1248,10 @@ describe('pergaminos de invocación al acabar la run', () => {
     expect(useGameStore.getState().runTerminada).toBe(true);
     const esperado = reglas.porMiniJefe + reglas.primeraVezPorJefe;
     expect(useGameStore.getState().pergaminosDeLaRun.total).toBe(esperado);
-    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(esperado);
+    // El saldo lleva además lo del logro de derrotar a ese mini-jefe: todo logro paga.
+    const logro = achievementsData.logros.find((l) => l.condicion.tipo === 'derrotarJefe'
+      && l.condicion.jefeId === arcoDePrueba.miniJefeId && Object.keys(l.condicion).length === 2);
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(esperado + (logro?.recompensa.cantidad ?? 0));
     expect(useAchievementsStore.getState().pergaminos.jefesDerrotados).toEqual([arcoDePrueba.miniJefeId]);
   });
 

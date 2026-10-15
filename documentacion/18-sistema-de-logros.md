@@ -268,3 +268,16 @@ Bingo Book completo y la colección entera del gacha.
 ⚠️ **No tienen combate que los dispare.** Hasta ahora todo logro se evaluaba al ganar un combate (o al
 terminar la run); estos cambian en el Home. `invocar` y `sumarXpMaestria` llaman a
 `_evaluarLogrosDeMeta`, que además **los encola para el toast él mismo**: nadie más lo iba a hacer.
+
+## Todo logro paga en pergaminos (2026-10-16) — 57 logros, 212 pergaminos
+
+Decisión de diseño: **el gacha es la mecánica principal de la meta-progresión**, así que los diez logros que
+aún desbloqueaban algo (seis jefes como reclutables, Yamato como inicial y tres objetos iniciales) pasan a dar
+pergaminos, y lo que desbloqueaban sale del gacha (la Semilla del Sabio se añadió a su catálogo). Los tipos de
+recompensa `desbloquear*` y `ninguna` **ya no existen** (`TIPOS_DE_RECOMPENSA = ['pergaminos']`), ni las
+funciones que los leían; un test exige que todo logro pague. No hay migración: no hay partidas guardadas.
+
+Nueve logros nuevos: derrotar a cada uno de los seis jefes de los arcos nuevos y completar sin derrotas cada
+uno de los tres arcos. **Missions solo enseña los que se pueden conseguir** (`LOGROS_VISIBLES`,
+`logrosDisponibles`): un logro que nombra un jefe, un arco o un ninja con `pendienteDeArte` se oculta, y
+aparece solo el día que llega su dibujo. El icono de un logro es ahora el jefe que pide derrotar, si pide uno.

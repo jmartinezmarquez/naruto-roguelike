@@ -12,12 +12,12 @@
 // **El roster.** Es "inicial" + lo que hayan desbloqueado los logros, y esa suma vive
 // entre dos stores. Si el enlace se corta, la pantalla no falla: enseña menos gente.
 
+import { ESTADO_INVOCACION_VACIO } from '../../engine/invocacion';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '../../test-dom';
 import CharacterSelectScreen from './CharacterSelectScreen';
 import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } from '../../store/useAchievementsStore';
-import achievementsData from '../../data/achievements.json';
 
 beforeEach(() => {
   localStorage.clear();
@@ -52,17 +52,14 @@ describe('el roster', () => {
     }
   });
 
-  it('crece con los personajes que desbloquea un logro', () => {
-    const logro = achievementsData.logros.find((l) => l.recompensa.tipo === 'desbloquearPersonajeInicial');
-    expect(logro, 'no hay ningún logro que desbloquee un personaje inicial').toBeTruthy();
-
+  it('crece con los ninjas conseguidos en el gacha, jefes incluidos', () => {
     const { unmount } = render(<CharacterSelectScreen onConfirmar={() => {}} />);
-    const sinLogro = screen.getAllByRole('button').length;
+    const antes = screen.getAllByRole('button').length;
     unmount();
 
-    useAchievementsStore.setState({ logrosDesbloqueados: [logro.id] });
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['yamato', 'gaara'] } });
     render(<CharacterSelectScreen onConfirmar={() => {}} />);
-    expect(screen.getAllByRole('button').length).toBe(sinLogro + 1);
+    expect(screen.getAllByRole('button').length).toBe(antes + 2);
   });
 });
 

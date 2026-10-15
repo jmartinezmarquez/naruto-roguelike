@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **643 tests**: 458 de lógica (`engine/*.test.js`, `store/*.test.js`) y 185 de
+- [x] Testing con Vitest — **640 tests**: 455 de lógica (`engine/*.test.js`, `store/*.test.js`) y 185 de
   componente (las 14 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -485,7 +485,9 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   con títulos, marco y **aspectos** (`assets/aspects/`, se eligen en el Bingo Book; sin dibujo no se ofrecen),
   el **gacha "Summon"** (`engine/invocacion.js`, `data/invocacion.json`, `Summon/InvocacionScreen.jsx`: ninjas
   como inicial —jefes incluidos—, objetos iniciales y páginas del Bingo Book), **un** objeto inicial al azar
-  por run y 6 logros de meta (48 en total). ⚠️ `reiniciarLogros` borra ya **once** claves. ⚠️ Los logros
+  por run y 6 logros de meta. ⚠️ **Todo logro paga en pergaminos** (57, 212 en total): los jefes, Yamato y los
+  objetos iniciales salen del gacha, no de un logro; Missions oculta los logros de contenido con `pendienteDeArte`
+  (`LOGROS_VISIBLES`). ⚠️ `reiniciarLogros` borra ya **once** claves. ⚠️ Los logros
   de meta no tienen combate que los dispare: los evalúa y avisa `_evaluarLogrosDeMeta` al tirar y al sumar
   maestría. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no. Arte pendiente:
   hojas 36-70 del documento 41. Fase 3: los ocho héroes (Gai, Jiraiya, Asuma, Kurenai, Tsunade, Temari, Kankuro, Konohamaru) en datos con **`pendienteDeArte`**
