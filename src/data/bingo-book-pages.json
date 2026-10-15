@@ -1,0 +1,26 @@
+{
+  "_comentario": "Las páginas del Bingo Book (documentacion/42 §2): la historia de cada ninja, que sale en el gacha como premio común y se lee en su ficha del Bingo Book. La clave es el id del personaje o del jefe. Un id que no exista en characters.json ni entre los jefes desbloqueables lo detecta un test.",
+  "paginas": {
+    "naruto": "Shunned by the village for the fox sealed inside him, Naruto answered every cold stare with a prank and a louder promise: one day, he would be Hokage. He never learned to give up, and that turned out to be a jutsu of its own.",
+    "sasuke": "The last of the Uchiha, Sasuke trains with a single purpose carved into him the night his clan fell. Team 7 is the first thing in years that has made him hesitate.",
+    "sakura": "Top of her class in theory and dismissed in every fight, Sakura decided to stop being the one who watches from behind. Her chakra control is the finest in her generation, and her fist is catching up.",
+    "rock_lee": "Unable to mould chakra for ninjutsu or genjutsu, Lee bet everything on taijutsu and hard work. His sensei taught him that a genius can be beaten, and he has the bruises to prove he believes it.",
+    "neji": "Born to the Hyuga branch house and marked by its seal, Neji once believed destiny decides everything. A loss in the Chunin Exams cracked that certainty, and he has been choosing his own path since.",
+    "tenten": "Tenten can make a hundred weapons rain from a single scroll and never miss a target. She dreams of being as strong as the Fifth Hokage, and trains with the two loudest geniuses of the Leaf to get there.",
+    "shikamaru": "Shikamaru finds almost everything a drag, clouds excepted. His IQ is over 200, and when his friends are in danger he stops yawning and starts playing several moves ahead of everyone.",
+    "ino": "Heir to the Yamanaka clan's mind techniques, Ino can borrow a body for a few seconds that decide a fight. She runs the family flower shop and knows the meaning of every bloom in it.",
+    "choji": "Choji eats for strength, for comfort and because the Akimichi techniques burn through calories like fire. Call him fat and you will learn how big a ninja can get.",
+    "kiba": "Kiba and his partner Akamaru fight as one, tracking by scent and striking as a spinning pair of fangs. He is loud, reckless and absolutely sure he is the next Hokage.",
+    "hinata": "Heiress of the Hyuga, Hinata was judged too gentle for her clan's fighting style. She has spent years watching one loud boy refuse to quit, and has quietly decided to never quit either.",
+    "shino": "Shino carries a hive of chakra-eating insects inside his body and speaks only when he has reason to. His logic is flawless; his friends forgetting him on missions is a recurring wound.",
+    "sai": "Raised by the secret Root division to feel nothing, Sai paints ink beasts that leap off the page. Team 7 is teaching him words like friendship, which he studies from books with great seriousness.",
+    "yamato": "The only survivor of a cruel experiment, Yamato inherited the First Hokage's Wood Style. He builds houses with a hand sign and keeps a certain nine-tailed temper in check with a stare.",
+    "kakashi": "The Copy Ninja has borrowed over a thousand jutsu with the Sharingan a fallen friend gave him. He is always late, always reading, and always there when his students truly need him.",
+    "haku": "An orphan of the Bloodline Purges, Haku was saved from the snow by Zabuza and swore to be his weapon. His ice mirrors are a prison, but his heart was always kinder than his master's.",
+    "zabuza": "The Demon of the Hidden Mist slaughtered his way out of the academy and then out of his own village. A wanted rogue with a giant blade, he protects one thing he would never admit to loving.",
+    "kabuto": "Spy, medic and right hand of Orochimaru, Kabuto has worn so many faces he no longer remembers which one is his. His glasses hide eyes that are always taking notes.",
+    "gaara": "A jinchuriki of the Sand, Gaara grew up feared, alone and loved by no one but the sand that shields him. A boy from the Leaf showed him another way to be strong, and he never forgot it.",
+    "camino_animal_pain": "One of the Six Paths of Pain, a body controlled from afar that summons giant beasts into battle. Each creature it calls has its own appetite for destruction.",
+    "pain_camino_deva": "The Deva Path calls himself a god and speaks of peace through shared pain. Once a hopeful orphan of the Rain, he now carries a sorrow that wants the whole world to feel it."
+  }
+}

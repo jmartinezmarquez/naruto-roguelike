@@ -214,7 +214,8 @@ export const useAchievementsStore = create((set, get) => ({
     // Lo que ya se tenía por un logro también cuenta como repetido.
     const inicialesPorLogro = obtenerPersonajesInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
     const objetosPorLogro = obtenerObjetosInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
-    const yaLoTiene = (e) => (e.tipo === 'personaje' ? inicialesPorLogro : objetosPorLogro).includes(e.id);
+    const porLogro = { personaje: inicialesPorLogro, objeto: objetosPorLogro, pagina: [] };
+    const yaLoTiene = (e) => porLogro[e.tipo].includes(e.id);
     const { estado, premios } = invocarEnMotor(get().invocacion, reglas.catalogo, reglas, numero, azar, yaLoTiene);
 
     const reglasMaestria = configGlobal.maestria;

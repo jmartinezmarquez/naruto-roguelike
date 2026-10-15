@@ -4,6 +4,7 @@ import invocacionData from '../data/invocacion.json';
 import charactersData from '../data/characters.json';
 import enemiesData from '../data/enemies.json';
 import itemsData from '../data/items.json';
+import paginasData from '../data/bingo-book-pages.json';
 
 const reglas = invocacionData;
 const fijo = (v) => () => v;
@@ -66,7 +67,8 @@ describe('invariantes de invocacion.json', () => {
 
   it('todo premio existe, y de las tres rarezas hay alguno', () => {
     for (const e of reglas.catalogo) {
-      expect(e.tipo === 'personaje' ? personajes.has(e.id) : objetos.has(e.id), e.id).toBe(true);
+      const existe = { personaje: personajes.has(e.id), objeto: objetos.has(e.id), pagina: Boolean(paginasData.paginas[e.id]) };
+      expect(existe[e.tipo], `${e.tipo} ${e.id}`).toBe(true);
     }
     for (const r of ['comun', 'raro', 'legendario']) {
       expect(reglas.catalogo.some((e) => e.rareza === r), r).toBe(true);
@@ -84,5 +86,29 @@ describe('invariantes de invocacion.json', () => {
     const { comun, raro, legendario } = reglas.probabilidades;
     expect(comun + raro + legendario).toBeCloseTo(1);
     expect(reglas.precioDiez).toBeLessThan(10 * reglas.precioTirada);
+  });
+});
+
+describe('invariantes de bingo-book-pages.json', () => {
+  const ids = new Set([...charactersData.personajes.map((p) => p.id),
+    ...enemiesData.jefes.filter((j) => j.desbloqueablePorLogro).map((j) => j.id)]);
+
+  it('toda página es de un ninja que existe, y todo ninja jugable tiene la suya', () => {
+    for (const id of Object.keys(paginasData.paginas).filter((k) => !k.startsWith('_'))) {
+      expect(ids.has(id), id).toBe(true);
+    }
+    for (const id of ids) expect(paginasData.paginas[id], id).toBeTruthy();
+  });
+
+  it('las páginas salen en el gacha como comunes', () => {
+    const enCatalogo = reglas.catalogo.filter((e) => e.tipo === 'pagina').map((e) => e.id);
+    expect(new Set(enCatalogo)).toEqual(new Set(Object.keys(paginasData.paginas)));
+  });
+
+  it('una página repetida es duplicado como cualquier otro premio', () => {
+    const soloPaginas = reglas.catalogo.filter((e) => e.tipo === 'pagina').slice(0, 1);
+    const { premios, estado } = invocar(ESTADO_INVOCACION_VACIO, soloPaginas, reglas, 2, () => 0.9);
+    expect(premios.map((p) => p.duplicado)).toEqual([false, true]);
+    expect(estado.paginas).toEqual([soloPaginas[0].id]);
   });
 });

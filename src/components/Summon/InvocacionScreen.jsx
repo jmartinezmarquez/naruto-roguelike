@@ -22,11 +22,24 @@ import { PanelMarco, VentanaModal, TituloBloque } from '../common/PiezasUI';
 const NOMBRE_OBJETO = Object.fromEntries(itemsData.objetos.map((o) => [o.id, o.nombre]));
 
 function spriteDePremio(premio) {
-  return premio.tipo === 'personaje' ? spriteDeLuchador(premio.id) : SPRITE_OBJETO[premio.id];
+  return premio.tipo === 'objeto' ? SPRITE_OBJETO[premio.id] : spriteDeLuchador(premio.id);
 }
 
 function nombreDePremio(premio) {
-  return premio.tipo === 'personaje' ? nombrePersonaje(premio.id) : NOMBRE_OBJETO[premio.id] ?? premio.id;
+  if (premio.tipo === 'objeto') return NOMBRE_OBJETO[premio.id] ?? premio.id;
+  if (premio.tipo === 'pagina') return `Page: ${nombrePersonaje(premio.id)}`;
+  return nombrePersonaje(premio.id);
+}
+
+const QUE_ES_NUEVO = { personaje: 'Starter', objeto: 'Starting item', pagina: 'Bingo Book page' };
+
+/**
+ * Una página se dibuja con el sprite del ninja **sobre un papel**: con el sprite solo
+ * no se distinguía de ese mismo ninja como inicial, y en la colección hay los dos.
+ */
+function FondoDePremio({ premio, children }) {
+  if (premio.tipo !== 'pagina') return children;
+  return <div className="w-full h-full flex items-center justify-center rounded-sm bg-[#e8d9b0]/85 border border-[#8a6d3b]">{children}</div>;
 }
 
 function porcentaje(p) {
@@ -35,7 +48,7 @@ function porcentaje(p) {
 
 function TextoEfecto({ premio }) {
   if (premio.efecto === 'nuevo') {
-    return <p className="font-display text-[8px] text-oro">NEW! {premio.tipo === 'personaje' ? 'Starter' : 'Starting item'}</p>;
+    return <p className="font-display text-[8px] text-oro">NEW! {QUE_ES_NUEVO[premio.tipo]}</p>;
   }
   if (premio.efecto === 'nivel') return <p className="font-display text-[8px] text-exito">Ninja Lv.{premio.nivel}</p>;
   return <p className="font-display text-[8px] text-pergamino-200/70">+{premio.cantidad} scrolls</p>;
@@ -46,7 +59,9 @@ function TarjetaPremio({ premio }) {
   return (
     <div className={`flex flex-col items-center gap-1 p-2 border-2 rounded-sm bg-tinta-950/40 ${BORDE_RAREZA[premio.rareza]}`}>
       <div className="w-14 h-14 flex items-center justify-center">
-        {sprite && <img src={sprite} alt="" className="max-w-full max-h-full" style={{ imageRendering: 'pixelated' }} />}
+        <FondoDePremio premio={premio}>
+          {sprite && <img src={sprite} alt="" className="max-w-full max-h-full" style={{ imageRendering: 'pixelated' }} />}
+        </FondoDePremio>
       </div>
       <p className="font-display text-[8px] text-pergamino-100 text-center leading-tight">{nombreDePremio(premio)}</p>
       <p className={`font-display text-[7px] ${COLOR_RAREZA[premio.rareza]}`}>{ETIQUETA_RAREZA[premio.rareza]}</p>
@@ -85,7 +100,8 @@ export default function InvocacionScreen() {
   const garantia = tiradasParaGarantia(estado, reglas);
   const personajes = useAchievementsStore.getState().personajesInicialesExtra();
   const objetos = useAchievementsStore.getState().objetosInicialesDesbloqueados();
-  const tiene = (e) => (e.tipo === 'personaje' ? personajes : objetos).includes(e.id);
+  const listas = { personaje: personajes, objeto: objetos, pagina: estado.paginas ?? [] };
+  const tiene = (e) => listas[e.tipo].includes(e.id);
   const conseguidos = reglas.catalogo.filter(tiene).length;
 
   function invocar(numero) {
@@ -112,7 +128,7 @@ export default function InvocacionScreen() {
             Rare or better guaranteed within <span className="text-pergamino-100">{garantia.raro}</span> summons ·
             Legendary within <span className="text-pergamino-100">{garantia.legendario}</span>.
             <br />
-            A repeated ninja gains +1 Ninja Lv. A repeated item gives back {reglas.reembolsoDuplicado} scrolls.
+            A repeated ninja gains +1 Ninja Lv. A repeated item or page gives back {reglas.reembolsoDuplicado} scrolls.
           </p>
         </PanelMarco>
 
@@ -137,14 +153,16 @@ export default function InvocacionScreen() {
                   title={abierto ? nombreDePremio(entrada) : `??? (${ETIQUETA_RAREZA[entrada.rareza]})`}
                   className={`aspect-square flex items-center justify-center border rounded-sm ${BORDE_RAREZA[entrada.rareza]}`}
                 >
-                  {sprite && (
-                    <img
-                      src={sprite}
-                      alt={abierto ? nombreDePremio(entrada) : '???'}
-                      className={`max-w-[85%] max-h-[85%] ${abierto ? '' : 'brightness-0 opacity-60'}`}
-                      style={{ imageRendering: 'pixelated' }}
-                    />
-                  )}
+                  <FondoDePremio premio={entrada}>
+                    {sprite && (
+                      <img
+                        src={sprite}
+                        alt={abierto ? nombreDePremio(entrada) : '???'}
+                        className={`max-w-[85%] max-h-[85%] ${abierto ? '' : 'brightness-0 opacity-60'}`}
+                        style={{ imageRendering: 'pixelated' }}
+                      />
+                    )}
+                  </FondoDePremio>
                 </div>
               );
             })}

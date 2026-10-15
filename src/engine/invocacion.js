@@ -11,8 +11,12 @@ export const ESTADO_INVOCACION_VACIO = {
   // Lo conseguido en el gacha, por tipo de premio.
   personajes: [],
   objetos: [],
+  paginas: [],
   legendarios: 0,
 };
+
+// En qué lista del estado se apunta cada tipo de premio.
+const LISTA_POR_TIPO = { personaje: 'personajes', objeto: 'objetos', pagina: 'paginas' };
 
 const ORDEN_RAREZAS = ['comun', 'raro', 'legendario'];
 
@@ -60,13 +64,14 @@ export function invocar(estado, catalogo, reglas, numero, azar, yaLoTiene = () =
     ...estado,
     personajes: [...estado.personajes],
     objetos: [...estado.objetos],
+    paginas: [...(estado.paginas ?? [])],
   };
   const premios = [];
   for (let n = 0; n < numero; n++) {
     const rareza = rarezaDeTirada(siguiente, reglas, azar);
     const entradas = entradasDeRareza(catalogo, rareza);
     const entrada = entradas[Math.floor(azar() * entradas.length)];
-    const lista = entrada.tipo === 'personaje' ? siguiente.personajes : siguiente.objetos;
+    const lista = siguiente[LISTA_POR_TIPO[entrada.tipo]];
     const duplicado = lista.includes(entrada.id) || yaLoTiene(entrada);
     if (!lista.includes(entrada.id)) lista.push(entrada.id);
     // Las garantías miran la rareza que ha SALIDO, no la que se pidió: con un

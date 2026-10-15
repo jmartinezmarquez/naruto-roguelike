@@ -1,5 +1,5 @@
 {
-  "_comentario": "El gacha de meta-progresión, 'Summon' (documentacion/42 §2). Se paga con pergaminos de invocación. Regla de oro: el catálogo reparte cosas NUEVAS y nunca encierra lo que ya está abierto (los comunes se reclutan desde la primera run, y por eso no están aquí). personaje = se puede elegir como inicial; objeto = entra en el pool de objetos iniciales. Un personaje repetido sube +1 su nivel de ninja (o devuelve pergaminos si ya está al máximo); un objeto repetido devuelve 'reembolsoDuplicado'. Garantías: un raro o mejor como mínimo cada 'garantiaRaro' tiradas y un legendario como mínimo cada 'garantiaLegendario'.",
+  "_comentario": "El gacha de meta-progresión, 'Summon' (documentacion/42 §2). Se paga con pergaminos de invocación. Regla de oro: el catálogo reparte cosas NUEVAS y nunca encierra lo que ya está abierto (los comunes se reclutan desde la primera run, y por eso no están aquí). personaje = se puede elegir como inicial; objeto = entra en el pool de objetos iniciales; pagina = la historia de ese ninja en su ficha del Bingo Book (data/bingo-book-pages.json). Un personaje repetido sube +1 su nivel de ninja (o devuelve pergaminos si ya está al máximo); un objeto o una página repetidos devuelven 'reembolsoDuplicado'. Garantías: un raro o mejor como mínimo cada 'garantiaRaro' tiradas y un legendario como mínimo cada 'garantiaLegendario'.",
   "precioTirada": 5,
   "precioDiez": 45,
   "probabilidades": { "comun": 0.6, "raro": 0.3, "legendario": 0.1 },
@@ -23,6 +23,27 @@
     { "tipo": "objeto", "id": "pesas_de_lee", "rareza": "comun" },
     { "tipo": "objeto", "id": "cuchillas_de_asuma", "rareza": "comun" },
     { "tipo": "objeto", "id": "sello_chakra", "rareza": "comun" },
-    { "tipo": "objeto", "id": "pergamino_reserva", "rareza": "comun" }
+    { "tipo": "objeto", "id": "pergamino_reserva", "rareza": "comun" },
+    { "tipo": "pagina", "id": "naruto", "rareza": "comun" },
+    { "tipo": "pagina", "id": "sasuke", "rareza": "comun" },
+    { "tipo": "pagina", "id": "sakura", "rareza": "comun" },
+    { "tipo": "pagina", "id": "rock_lee", "rareza": "comun" },
+    { "tipo": "pagina", "id": "neji", "rareza": "comun" },
+    { "tipo": "pagina", "id": "tenten", "rareza": "comun" },
+    { "tipo": "pagina", "id": "shikamaru", "rareza": "comun" },
+    { "tipo": "pagina", "id": "ino", "rareza": "comun" },
+    { "tipo": "pagina", "id": "choji", "rareza": "comun" },
+    { "tipo": "pagina", "id": "kiba", "rareza": "comun" },
+    { "tipo": "pagina", "id": "hinata", "rareza": "comun" },
+    { "tipo": "pagina", "id": "shino", "rareza": "comun" },
+    { "tipo": "pagina", "id": "sai", "rareza": "comun" },
+    { "tipo": "pagina", "id": "yamato", "rareza": "comun" },
+    { "tipo": "pagina", "id": "kakashi", "rareza": "comun" },
+    { "tipo": "pagina", "id": "haku", "rareza": "comun" },
+    { "tipo": "pagina", "id": "zabuza", "rareza": "comun" },
+    { "tipo": "pagina", "id": "kabuto", "rareza": "comun" },
+    { "tipo": "pagina", "id": "gaara", "rareza": "comun" },
+    { "tipo": "pagina", "id": "camino_animal_pain", "rareza": "comun" },
+    { "tipo": "pagina", "id": "pain_camino_deva", "rareza": "comun" }
   ]
 }

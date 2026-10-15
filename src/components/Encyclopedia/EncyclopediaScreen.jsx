@@ -9,6 +9,7 @@ import typesData from '../../data/types.json';
 import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import { normalizarPasivas, describirPasiva, nombrePasiva } from '../../engine/passives';
 import { InsigniaMaestria, SelectorAspecto } from '../common/Maestria';
+import paginasData from '../../data/bingo-book-pages.json';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { spriteDeLuchador } from '../common/characterSprites';
 import { spriteDeModo } from '../common/transformationSprites';
@@ -278,6 +279,27 @@ function FichaLuchador({ id, base, modosVistos }) {
       <SelectorAspecto id={id} />
       <BloqueJutsu base={base} />
       <BloqueTransformaciones id={id} base={base} modosVistos={modosVistos} />
+      <BloqueHistoria id={id} />
+    </div>
+  );
+}
+
+/**
+ * La página del Bingo Book con la historia del ninja, que se consigue en el gacha.
+ * Sin ella se dice dónde está: un hueco sin explicación parecería un fallo.
+ */
+function BloqueHistoria({ id }) {
+  const tiene = useAchievementsStore((s) => (s.invocacion.paginas ?? []).includes(id));
+  const texto = paginasData.paginas[id];
+  if (!texto) return null;
+  return (
+    <div className="border-t border-marco pt-2">
+      <p className="font-display text-[9px] text-pergamino-200/70 mb-1">Story</p>
+      {tiene ? (
+        <p className="text-[10px] text-pergamino-100/90 leading-relaxed">{texto}</p>
+      ) : (
+        <p className="text-[10px] text-pergamino-200/50 italic">This page is missing. It can be found by summoning.</p>
+      )}
     </div>
   );
 }
