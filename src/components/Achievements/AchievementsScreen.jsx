@@ -80,6 +80,7 @@ function textoRecompensa(recompensa) {
   // existe el **rango S** al lado, "no reward beyond the telling" repetía por escrito
   // lo que el icono ya dice. Una frase que se repite trece veces en una pantalla se
   // paga trece veces.
+  if (recompensa.tipo === 'pergaminos') return `+${recompensa.cantidad} summoning scrolls.`;
   if (recompensa.tipo === 'ninguna') return 'A mark of honour.';
   return '';
 }
@@ -159,7 +160,7 @@ function FilaLogro({ logro, desbloqueado, progreso }) {
       <div className="flex items-start gap-3">
         <IconoEnmarcado
           src={iconoDeLogro(logro)}
-          glifo={logro.recompensa.tipo === 'ninguna' ? RANGO_S : null}
+          glifo={['ninguna', 'pergaminos'].includes(logro.recompensa.tipo) ? RANGO_S : null}
           bloqueado={!desbloqueado}
           colorMarco={desbloqueado ? 'border-oro/50' : 'border-marco'}
           tamano="w-14 h-14"

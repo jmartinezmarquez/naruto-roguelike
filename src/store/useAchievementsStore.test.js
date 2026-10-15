@@ -401,10 +401,33 @@ describe('pergaminos de invocación', () => {
   it('suman al saldo y al total, apuntan los jefes sin repetir y sobreviven a recargar', () => {
     useAchievementsStore.getState().sumarPergaminos(5, ['haku']);
     useAchievementsStore.getState().sumarPergaminos(3, ['haku', 'zabuza']);
-    expect(useAchievementsStore.getState().pergaminos).toEqual({ saldo: 8, ganadosEnTotal: 8, jefesDerrotados: ['haku', 'zabuza'] });
+    expect(useAchievementsStore.getState().pergaminos).toEqual({
+      saldo: 8, ganadosEnTotal: 8, jefesDerrotados: ['haku', 'zabuza'], logrosCobrados: [],
+    });
     useAchievementsStore.setState({ pergaminos: PERGAMINOS_VACIOS });
     useAchievementsStore.getState().cargarLogros();
     expect(useAchievementsStore.getState().pergaminos.saldo).toBe(8);
+  });
+
+  it('un logro con recompensa de pergaminos paga al desbloquearse, y una sola vez', () => {
+    const logro = achievementsData.logros.find((l) => l.id === 'reclutas_5');
+    expect(logro.recompensa.tipo).toBe('pergaminos');
+    useAchievementsStore.getState().sumarContadores({ reclutas: 5 });
+    useAchievementsStore.getState().evaluarLogros({});
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(logro.recompensa.cantidad);
+    useAchievementsStore.getState().evaluarLogros({});
+    useAchievementsStore.getState()._cobrarLogros();
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(logro.recompensa.cantidad);
+  });
+
+  it('los logros conseguidos antes de que dieran pergaminos se cobran al cargar', () => {
+    // Una partida guardada de antes: el logro desbloqueado y sin rastro de pergaminos.
+    localStorage.setItem('naruto-roguelike-logros', JSON.stringify(['combates_10']));
+    useAchievementsStore.getState().cargarLogros();
+    const cantidad = achievementsData.logros.find((l) => l.id === 'combates_10').recompensa.cantidad;
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(cantidad);
+    useAchievementsStore.getState().cargarLogros();
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(cantidad);
   });
 
   it('reiniciarLogros los borra con todo lo demás', () => {

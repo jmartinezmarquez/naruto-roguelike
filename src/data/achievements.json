@@ -128,7 +128,8 @@
         "cantidad": 10
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 2
       }
     },
     {
@@ -141,7 +142,8 @@
         "cantidad": 50
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -154,7 +156,8 @@
         "cantidad": 150
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 5
       }
     },
     {
@@ -167,7 +170,8 @@
         "cantidad": 5
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 2
       }
     },
     {
@@ -180,7 +184,8 @@
         "cantidad": 1000
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 2
       }
     },
     {
@@ -193,7 +198,8 @@
         "cantidad": 5000
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 4
       }
     },
     {
@@ -206,7 +212,8 @@
         "cantidad": 10
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 2
       }
     },
     {
@@ -219,7 +226,8 @@
         "cantidad": 20
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -246,7 +254,8 @@
         "cantidad": 7
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -259,7 +268,8 @@
         "cantidad": 8
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 2
       }
     },
     {
@@ -272,7 +282,8 @@
         "cantidad": 10
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 2
       }
     },
     {
@@ -285,7 +296,8 @@
         "cantidad": 10
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -298,7 +310,8 @@
         "cantidad": 8
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 2
       }
     },
     {
@@ -310,7 +323,8 @@
         "nivel": 1
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -322,7 +336,8 @@
         "nivel": 2
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 3
       }
     },
     {
@@ -334,7 +349,8 @@
         "nivel": 3
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 4
       }
     },
     {
@@ -346,7 +362,8 @@
         "nivel": 4
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 4
       }
     },
     {
@@ -358,7 +375,8 @@
         "nivel": 5
       },
       "recompensa": {
-        "tipo": "ninguna"
+        "tipo": "pergaminos",
+        "cantidad": 5
       }
     }
   ],

@@ -6,6 +6,7 @@ import {
   obtenerPersonajesInicialesDesbloqueados,
   progresoDeLogro,
   rosterInicial,
+  pergaminosPorCobrar,
 } from './achievements';
 
 const logrosDePrueba = [
@@ -186,5 +187,17 @@ describe('rosterInicial', () => {
   it('raros y legendarios no se desbloquean por haberlos tenido: solo por logro', () => {
     expect(rosterInicial(personajes, [], ['d', 'e']).map((p) => p.id)).toEqual(['a']);
     expect(rosterInicial(personajes, ['d'], ['e']).map((p) => p.id)).toEqual(['a', 'd']);
+  });
+});
+
+describe('pergaminosPorCobrar', () => {
+  const logros = [
+    { id: 'a', recompensa: { tipo: 'pergaminos', cantidad: 3 } },
+    { id: 'b', recompensa: { tipo: 'pergaminos', cantidad: 5 } },
+    { id: 'c', recompensa: { tipo: 'ninguna' } },
+  ];
+  it('suma solo los desbloqueados y no cobrados que dan pergaminos', () => {
+    expect(pergaminosPorCobrar(logros, ['a', 'b', 'c'], ['a'])).toEqual({ total: 5, ids: ['b'] });
+    expect(pergaminosPorCobrar(logros, ['a'], ['a'])).toEqual({ total: 0, ids: [] });
   });
 });

@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 
 import achievementsData from '../data/achievements.json';
-import { evaluarLogrosDesbloqueables } from '../engine/achievements';
+import { evaluarLogrosDesbloqueables, pergaminosPorCobrar } from '../engine/achievements';
 
 const CLAVE_STORAGE = 'naruto-roguelike-logros';
 const CLAVE_VISTOS = 'naruto-roguelike-vistos';
@@ -79,7 +79,7 @@ export const MARCA_VACIA = { arcoId: null, orden: -1, piso: 0 };
  * ALGUNA vez, que es lo que decide el extra de "primera vez". Es meta-progresión: un
  * game over no lo toca.
  */
-export const PERGAMINOS_VACIOS = { saldo: 0, ganadosEnTotal: 0, jefesDerrotados: [] };
+export const PERGAMINOS_VACIOS = { saldo: 0, ganadosEnTotal: 0, jefesDerrotados: [], logrosCobrados: [] };
 
 export const useAchievementsStore = create((set, get) => ({
   logrosDesbloqueados: [], // array de ids de logros — cargarLogros() los rellena desde localStorage
@@ -130,6 +130,26 @@ export const useAchievementsStore = create((set, get) => ({
     if (ascensionGuardada) set({ ascensionesGanadas: JSON.parse(ascensionGuardada) });
     const pergaminosGuardados = localStorage.getItem(CLAVE_PERGAMINOS);
     if (pergaminosGuardados) set({ pergaminos: { ...PERGAMINOS_VACIOS, ...JSON.parse(pergaminosGuardados) } });
+    // Los logros conseguidos antes de que dieran pergaminos se cobran aquí, una vez.
+    get()._cobrarLogros();
+  },
+
+  /**
+   * Interno: cobra los pergaminos de los logros conseguidos y aún no cobrados. Se
+   * llama al desbloquear y al cargar; es idempotente, porque apunta qué ha cobrado.
+   */
+  _cobrarLogros() {
+    const actual = get().pergaminos;
+    const { total, ids } = pergaminosPorCobrar(achievementsData.logros, get().logrosDesbloqueados, actual.logrosCobrados);
+    if (ids.length === 0) return;
+    const siguiente = {
+      ...actual,
+      saldo: actual.saldo + total,
+      ganadosEnTotal: actual.ganadosEnTotal + total,
+      logrosCobrados: [...actual.logrosCobrados, ...ids],
+    };
+    set({ pergaminos: siguiente });
+    localStorage.setItem(CLAVE_PERGAMINOS, JSON.stringify(siguiente));
   },
 
   /**
@@ -139,6 +159,7 @@ export const useAchievementsStore = create((set, get) => ({
   sumarPergaminos(cantidad, jefesDerrotados = []) {
     const actual = get().pergaminos;
     const siguiente = {
+      ...actual,
       saldo: actual.saldo + cantidad,
       ganadosEnTotal: actual.ganadosEnTotal + cantidad,
       jefesDerrotados: [...new Set([...actual.jefesDerrotados, ...jefesDerrotados])],
@@ -276,6 +297,7 @@ export const useAchievementsStore = create((set, get) => ({
     const actualizados = [...logrosDesbloqueados, ...nuevos.map((l) => l.id)];
     set({ logrosDesbloqueados: actualizados });
     localStorage.setItem(CLAVE_STORAGE, JSON.stringify(actualizados));
+    get()._cobrarLogros();
     return nuevos;
   },
 

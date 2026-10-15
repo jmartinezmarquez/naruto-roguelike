@@ -223,3 +223,12 @@ Por eso `evaluarLogros` (motor de desbloqueo) y `notificar` (encolar el toast) e
   `environment: 'node'` (sin jsdom) y Node no expone `localStorage` por defecto. Esto también deja
   testeable, si hiciera falta en el futuro, `guardarRun`/`cargarRun` de `useGameStore`, que ya
   usaban `localStorage` sin tests propios.
+
+## Recompensa `pergaminos` (2026-10-15)
+
+Los 18 logros que eran "de honor" (`recompensa: ninguna`) dan ahora **pergaminos de invocación**, de 2 a 5
+según su dificultad (`{ tipo: 'pergaminos', cantidad }`), la moneda del gacha (documentacion/42). Se
+cobran al desbloquearse, **una sola vez**: `useAchievementsStore.pergaminos.logrosCobrados` apunta los ya
+pagados, y `_cobrarLogros` (que se llama al desbloquear y al cargar) cobra los pendientes. Eso hace que
+los logros conseguidos **antes** de que existiera esta recompensa se paguen la primera vez que se carga la
+partida, sin tener que tratar a nadie aparte. `ninguna` sigue siendo un tipo válido.

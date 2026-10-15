@@ -22,6 +22,7 @@ export const TIPOS_DE_RECOMPENSA = [
   'desbloquearPersonajeReclutable',
   'desbloquearPersonajeInicial',
   'desbloquearObjetoInicial',
+  'pergaminos',
   'ninguna',
 ];
 
@@ -132,4 +133,19 @@ export function rosterInicial(personajes, idsDesbloqueadosPorLogro, idsVistos) {
   return personajes.filter((p) => p.rareza === 'inicial'
     || idsDesbloqueadosPorLogro.includes(p.id)
     || (RAREZAS_DE_UNA_ESTRELLA.includes(p.rareza) && idsVistos.includes(p.id)));
+}
+
+/**
+ * Los pergaminos que deben los logros conseguidos y aún no cobrados (recompensa
+ * `pergaminos`). Devuelve el total y los ids, para apuntarlos como cobrados: así
+ * cada logro paga UNA vez, y los conseguidos antes de que existiera esta recompensa
+ * se cobran la primera vez que se carga la partida.
+ */
+export function pergaminosPorCobrar(logros, idsDesbloqueados, idsCobrados) {
+  const pendientes = logros.filter((l) => l.recompensa.tipo === 'pergaminos'
+    && idsDesbloqueados.includes(l.id) && !idsCobrados.includes(l.id));
+  return {
+    total: pendientes.reduce((acc, l) => acc + l.recompensa.cantidad, 0),
+    ids: pendientes.map((l) => l.id),
+  };
 }
