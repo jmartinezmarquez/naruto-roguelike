@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { nivelDeMaestria, xpTotalParaNivel, xpParaSubirUnNivel, tituloDeMaestria } from './maestria';
+import { nivelDeMaestria, xpTotalParaNivel, xpParaSubirUnNivel, tituloDeMaestria, aspectosDesbloqueados } from './maestria';
+import maestriaData from '../data/maestria.json';
 import configGlobal from '../data/config.json';
 
 const reglas = configGlobal.maestria;
@@ -44,5 +45,19 @@ describe('tituloDeMaestria', () => {
     expect(tituloDeMaestria('naruto', 10, datos)).toBe('Hokage');
     expect(tituloDeMaestria('sakura', 10, datos)).toBe('Master');
     expect(tituloDeMaestria('naruto', 6, datos)).toBe('Chunin');
+  });
+});
+
+describe('aspectosDesbloqueados', () => {
+  it('se abren con el nivel de ninja, en orden', () => {
+    const datos = { aspectos: { 1: 4, 2: 10 } };
+    expect(aspectosDesbloqueados(3, datos)).toEqual([]);
+    expect(aspectosDesbloqueados(4, datos)).toEqual([1]);
+    expect(aspectosDesbloqueados(10, datos)).toEqual([1, 2]);
+  });
+  it('todo aspecto se puede abrir antes del nivel máximo de maestría', () => {
+    for (const nivel of Object.values(maestriaData.aspectos)) {
+      expect(nivel).toBeLessThanOrEqual(configGlobal.maestria.nivelMaximo);
+    }
   });
 });

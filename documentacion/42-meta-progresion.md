@@ -140,6 +140,14 @@ propios de algunos ninjas en el 10: "Copy Ninja", "Handsome Green Beast"…; `ni
 el marco dorado en la tarjeta de selección. ⚠️ Las funciones van en `common/nivelDeNinja.js` y no en un
 `maestria.js` junto a `Maestria.jsx`: en Windows serían el mismo fichero y el import se cruzaba.*
 
+✅ *Hecho (aspectos, código): `aspectos` en `maestria.json` (nivel 4 y 10), `aspectosDesbloqueados` en
+el motor, el aspecto elegido de cada ninja en `useAchievementsStore.aspectosElegidos` (novena clave
+persistida, la borra `reiniciarLogros`) y `SelectorAspecto` en la ficha del Bingo Book. `spriteDeLuchador`
+devuelve el aspecto elegido en TODAS las pantallas, combate incluido; las transformaciones no cambian.
+Los dibujos se buscan con `import.meta.glob` en `assets/aspects/`: **un aspecto sin dibujo no se
+ofrece**, y un ninja sin ninguno no enseña selector. ⏳ Arte: hojas 36-42 del documento 41 (21 ninjas ×
+2, villanos incluidos).*
+
 ### Qué da
 
 | Nivel | Recompensa |

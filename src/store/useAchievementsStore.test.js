@@ -14,7 +14,7 @@ beforeEach(() => {
   useAchievementsStore.setState({
     logrosDesbloqueados: [], notificacionesPendientes: [], vistos: VISTOS_VACIO,
     contadores: CONTADORES_VACIO, marca: MARCA_VACIA, salonDeLaFama: [], ascensionesGanadas: {},
-    pergaminos: PERGAMINOS_VACIOS, maestria: {},
+    pergaminos: PERGAMINOS_VACIOS, maestria: {}, aspectosElegidos: {},
   });
 });
 
@@ -453,5 +453,20 @@ describe('maestría', () => {
     useAchievementsStore.getState().reiniciarLogros();
     expect(useAchievementsStore.getState().maestria).toEqual({});
     expect(localStorage.getItem('naruto-roguelike-maestria')).toBeNull();
+  });
+});
+
+describe('aspectos', () => {
+  it('se elige, sobrevive a recargar, 0 vuelve al de siempre y se borra al reiniciar', () => {
+    const s = () => useAchievementsStore.getState();
+    s().elegirAspecto('naruto', 2);
+    s().elegirAspecto('sakura', 1);
+    s().elegirAspecto('sakura', 0);
+    useAchievementsStore.setState({ aspectosElegidos: {} });
+    s().cargarLogros();
+    expect(s().aspectosElegidos).toEqual({ naruto: 2 });
+    s().reiniciarLogros();
+    expect(s().aspectosElegidos).toEqual({});
+    expect(localStorage.getItem('naruto-roguelike-aspectos')).toBeNull();
   });
 });

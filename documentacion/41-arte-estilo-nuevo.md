@@ -540,3 +540,126 @@ A single pixel art app icon in the exact style of the attached reference images:
 
 Si se hace esta hoja, **no volver a correr `generar-favicon.py`**: pisaría el favicon nuevo con el recorte
 del fondo.
+
+## Tanda 5 — aspectos alternativos (hojas 36-42)
+
+⏳ **PENDIENTES.** Son los aspectos del nivel de ninja (`documentacion/42-meta-progresion.md`): cada
+ninja —también los seis villanos reclutables— tiene **dos aspectos**, que se abren con el nivel de ninja 4
+y 10 (`aspectos` en `data/maestria.json`) y se eligen en su ficha del Bingo Book. El código ya está: un
+aspecto sin dibujo **no se ofrece**, así que las hojas pueden ir llegando de una en una sin romper nada.
+`generar-sprites-estilo-nuevo.py` las deja en `assets/aspects/<id>_<n>.png`, colocadas como un personaje
+(lienzo de 96, misma escala).
+
+**Reglas de estas hojas**, además de las generales:
+- **Tres ninjas por hoja, cada uno con sus dos aspectos seguidos** (seis dibujos). Cambia la ropa y el
+  peinado, **nunca la cara, el tamaño ni las proporciones**: un aspecto es el mismo personaje vestido de
+  otra forma, y tiene que reconocerse de un vistazo.
+- **Adjuntar como referencia el sprite actual de los tres** (`src/assets/characters/<id>.png`), además de
+  una hoja del estilo nuevo. Es lo que mantiene la cara.
+- Sin aura ni brillo: el aura es lo que distingue una **transformación**, y un aspecto no lo es.
+
+## Bloque de estilo — aspectos
+
+Va delante de los prompts de las hojas 36-42 (en lugar del de personajes).
+
+```
+Pixel art game sprites in the exact style of the attached reference images: chibi proportions (big head, ~2.5 heads tall), front-facing, standing idle pose, thick 1-pixel black outline, flat colors with simple 2-3 tone shading, crisp pixels, no blur. Transparent background (real alpha, NOT a checkerboard pattern). No text, no labels, no frames, no ground shadows. All characters at the same scale, in a single horizontal row, evenly spaced, in the exact order listed. These are ALTERNATIVE OUTFITS of the characters in the attached sprites: keep exactly the same face, eyes, body size and proportions as the attached sprite of that character; only the clothes, accessories and hairstyle change. No glowing aura.
+```
+
+### Hoja 36 → `sprite-estilo-nuevo-36.png` (Naruto Uzumaki, Sasuke Uchiha, Sakura Haruno)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Naruto Uzumaki – Shippuden outfit: spiky blond hair, orange and black jacket and orange pants, black-cloth Konoha forehead protector.
+2. Naruto Uzumaki – Hokage cloak: white Hokage cloak with a red flame pattern at the hem worn over his orange and black outfit, black-cloth forehead protector.
+3. Sasuke Uchiha – Shippuden outfit: open white high-collar shirt, dark blue pants, thick purple rope belt tied in a bow, sword on his back.
+4. Sasuke Uchiha – Wanderer: long dark grey poncho cloak with a high collar, longer hair covering one eye, sword at the hip.
+5. Sakura Haruno – Shippuden outfit: short pink hair, red sleeveless zip top, black gloves, dark shorts under a short pink apron skirt, forehead protector as a headband.
+6. Sakura Haruno – Summer festival: pink hair tied up with a flower pin, light pink yukata with a cherry blossom pattern and a red obi sash, holding a small paper fan.
+```
+
+### Hoja 37 → `sprite-estilo-nuevo-37.png` (Rock Lee, Neji Hyuga, Tenten)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Rock Lee – Jonin vest: the same green jumpsuit and orange leg warmers with a green Konoha flak jacket on top.
+2. Rock Lee – Drunken Fist: red cheeks, swaying pose, green jumpsuit slightly rumpled, holding a small sake cup.
+3. Neji Hyuga – Shippuden outfit: long dark hair, white and beige Hyuga robe with wide sleeves and dark shorts, forehead protector.
+4. Neji Hyuga – Hyuga ceremonial: dark navy formal kimono with the Hyuga clan symbol, long hair loose, calm stance.
+5. Tenten – Shippuden outfit: two hair buns, white high-collar qipao-style top with red trim, dark pants, a big scroll on her back.
+6. Tenten – Weapon master: same buns, red sleeveless qipao, several kunai and a short sword strapped to her belt and thighs.
+```
+
+### Hoja 38 → `sprite-estilo-nuevo-38.png` (Shikamaru Nara, Ino Yamanaka, Choji Akimichi)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Shikamaru Nara – Jonin vest: spiky ponytail, green Konoha flak jacket over a mesh shirt, hands in pockets.
+2. Shikamaru Nara – Deer guardian: dark clan robe with a deer antler motif, a small antler charm at the belt.
+3. Ino Yamanaka – Shippuden outfit: long blonde ponytail covering one eye, purple crop top and skirt with a mesh underlayer, purple arm warmers.
+4. Ino Yamanaka – Flower shop: blonde ponytail, light green apron with a flower pattern over a casual outfit, holding a small bouquet.
+5. Choji Akimichi – Shippuden outfit: red samurai-style armor plates over a dark suit, long spiky orange-brown hair, Konoha headband.
+6. Choji Akimichi – Barbecue night: casual yellow shirt with a swirl symbol, holding a skewer of grilled meat.
+```
+
+### Hoja 39 → `sprite-estilo-nuevo-39.png` (Kiba Inuzuka, Hinata Hyuga, Shino Aburame)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Kiba Inuzuka – Shippuden outfit: grey hooded jacket with fur trim and dark pants, red fang marks on his cheeks, a bigger white Akamaru beside him.
+2. Kiba Inuzuka – Wild tracker: black sleeveless vest, feral messy hair, Akamaru wearing a small red scarf.
+3. Hinata Hyuga – Shippuden outfit: long dark blue hair, lavender and white zipped hoodie jacket, dark navy pants.
+4. Hinata Hyuga – New Year kimono: hair in a neat bun with a flower ornament, lilac kimono with a white obi, hands together politely.
+5. Shino Aburame – Shippuden outfit: long grey coat with a tall collar covering the mouth, hood up, round black sunglasses.
+6. Shino Aburame – Insect keeper: dark green cloak with the hood down, round sunglasses, a few tiny glowing beetles floating around him.
+```
+
+### Hoja 40 → `sprite-estilo-nuevo-40.png` (Sai, Yamato, Kakashi Hatake)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Sai – Root operative: black Root ANBU outfit with a white porcelain mask pushed to the side of his head, ink scroll on his back.
+2. Sai – Painter: long dark smock stained with ink, holding a big brush and a small blank scroll.
+3. Yamato – ANBU: grey ANBU vest and arm guard, white cat-like ANBU mask held at his side, short dark hair.
+4. Yamato – Carpenter: rolled-up sleeves, simple dark work clothes, a small wooden hammer and a wooden plank under his arm.
+5. Kakashi Hatake – ANBU: grey ANBU armor over a black sleeveless suit, red spiral tattoo on the upper arm, white dog-like ANBU mask held at his side.
+6. Kakashi Hatake – Sixth Hokage: white Hokage cloak with a flame pattern hem over the jonin outfit, the same mask over his mouth.
+```
+
+### Hoja 41 → `sprite-estilo-nuevo-41.png` (Haku, Zabuza Momochi, Kabuto Yakushi)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Haku – Flower picker: long dark hair loose, pink kimono with a light obi, a small basket of herbs in hand.
+2. Haku – Ice hunter: white fur-lined snow cloak with the hood up, hunter-nin mask in hand, a few ice crystals around.
+3. Zabuza Momochi – Seven Swordsmen: dark Hidden Mist uniform with a flak vest, mouth bandages, the huge cleaver sword on his back.
+4. Zabuza Momochi – Unmasked: no bandages, sharp shark-like teeth in a grin, dark cloak over the shoulders, huge sword on his back.
+5. Kabuto Yakushi – Sound ninja: long purple-grey cloak with the hood down, round glasses, Sound forehead protector.
+6. Kabuto Yakushi – Medic: white medical coat over his outfit, round glasses, glowing green chakra in one hand.
+```
+
+### Hoja 42 → `sprite-estilo-nuevo-42.png` (Gaara, Pain, Animal Path, Pain, Deva Path)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Gaara – Kazekage robes: white and blue Kazekage robe and hat, the gourd still on his back.
+2. Gaara – Shippuden coat: long dark red coat with a grey vest and belt, gourd on his back.
+3. Pain, Animal Path – Rain disguise: dark straw hat with hanging paper strips and a grey cloak, piercings visible on the face.
+4. Pain, Animal Path – Hidden Rain: plain dark Hidden Rain outfit with a rebreather mask, wet hair, black chakra rods at the belt.
+5. Pain, Deva Path – Straw hat: wide straw hat with hanging paper strips worn over the black cloak with red clouds.
+6. Pain, Deva Path – Young rebel: spiky orange hair, simple dark Hidden Rain outfit with a grey flak vest, no piercings, determined smile.
+```

@@ -133,10 +133,34 @@ HOJAS = [
     # El favicon. Antes se recortaba de la torre de agua del fondo claro
     # (generar-favicon.py, borrado al llegar esta hoja).
     ('sprite-estilo-nuevo-35.png', ['favicon/favicon']),
+
+    # --- Tanda 5 (meta-progresión): aspectos alternativos, 2 por ninja (documentacion/42).
+    ('sprite-estilo-nuevo-36.png',
+     ['aspects/naruto_1', 'aspects/naruto_2', 'aspects/sasuke_1',
+      'aspects/sasuke_2', 'aspects/sakura_1', 'aspects/sakura_2']),
+    ('sprite-estilo-nuevo-37.png',
+     ['aspects/rock_lee_1', 'aspects/rock_lee_2', 'aspects/neji_1',
+      'aspects/neji_2', 'aspects/tenten_1', 'aspects/tenten_2']),
+    ('sprite-estilo-nuevo-38.png',
+     ['aspects/shikamaru_1', 'aspects/shikamaru_2', 'aspects/ino_1',
+      'aspects/ino_2', 'aspects/choji_1', 'aspects/choji_2']),
+    ('sprite-estilo-nuevo-39.png',
+     ['aspects/kiba_1', 'aspects/kiba_2', 'aspects/hinata_1',
+      'aspects/hinata_2', 'aspects/shino_1', 'aspects/shino_2']),
+    ('sprite-estilo-nuevo-40.png',
+     ['aspects/sai_1', 'aspects/sai_2', 'aspects/yamato_1',
+      'aspects/yamato_2', 'aspects/kakashi_1', 'aspects/kakashi_2']),
+    ('sprite-estilo-nuevo-41.png',
+     ['aspects/haku_1', 'aspects/haku_2', 'aspects/zabuza_1',
+      'aspects/zabuza_2', 'aspects/kabuto_1', 'aspects/kabuto_2']),
+    ('sprite-estilo-nuevo-42.png',
+     ['aspects/gaara_1', 'aspects/gaara_2', 'aspects/camino_animal_pain_1',
+      'aspects/camino_animal_pain_2', 'aspects/pain_camino_deva_1', 'aspects/pain_camino_deva_2']),
 ]
 
 TIPO_POR_CARPETA = {
     'characters': 'personaje',
+    'aspects': 'personaje',
     'transformations': 'transformacion',
     'projectiles': 'proyectil',
     'items': 'objeto',
@@ -465,6 +489,7 @@ if __name__ == '__main__':
         carpeta, ident = primera.split('/')
         tipo = TIPO_POR_CARPETA[carpeta]
         destino = DESTINOS.get(carpeta, os.path.join(ASSETS, carpeta))
+        os.makedirs(destino, exist_ok=True)  # aspects/ nace vacía
         # Sin alfa y no siendo un fondo: trae el damero pintado y hay que borrarlo.
         sin_alfa = 'A' not in original.getbands()
         hoja = quitar_damero_pintado(original) if sin_alfa and tipo != 'fondo' else original.convert('RGBA')

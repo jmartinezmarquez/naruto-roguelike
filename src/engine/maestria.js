@@ -42,3 +42,11 @@ export function tituloDeMaestria(id, nivel, datos) {
   if (niveles.length === 0) return null;
   return propios[niveles[0]] ?? datos.titulos[niveles[0]] ?? null;
 }
+
+/** Los aspectos (1, 2…) que tiene desbloqueados un ninja a un nivel de maestría. */
+export function aspectosDesbloqueados(nivel, datos) {
+  return Object.entries(datos.aspectos ?? {})
+    .filter(([, nivelNecesario]) => nivel >= nivelNecesario)
+    .map(([n]) => Number(n))
+    .sort((a, b) => a - b);
+}

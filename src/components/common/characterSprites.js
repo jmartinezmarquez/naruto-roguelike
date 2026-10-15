@@ -6,6 +6,7 @@
 //
 // Un id sin sprite devuelve `null` y quien lo pinte tiene que aguantarlo.
 
+import { useAchievementsStore } from '../../store/useAchievementsStore';
 import naruto from '../../assets/characters/naruto.png';
 import sasuke from '../../assets/characters/sasuke.png';
 import sakura from '../../assets/characters/sakura.png';
@@ -74,6 +75,42 @@ export const SPRITE_LUCHADOR = {
   kin,
 };
 
-export function spriteDeLuchador(id) {
+/**
+ * Los aspectos alternativos (nivel de ninja, documentacion/42), con
+ * `<id>_<n>.png` como nombre. `import.meta.glob` y no `import` para que la carpeta
+ * pueda estar a medias: un aspecto sin dibujo simplemente no se ofrece.
+ */
+const SPRITE_ASPECTO = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('../../assets/aspects/*.png', { eager: true, query: '?url', import: 'default' }),
+  ).map(([ruta, url]) => [ruta.split('/').pop().replace(/\.png$/, ''), url]),
+);
+
+/** Los aspectos (1, 2…) de un ninja que tienen dibujo. */
+export function aspectosDibujados(id) {
+  return Object.keys(SPRITE_ASPECTO)
+    .filter((clave) => clave.startsWith(`${id}_`))
+    .map((clave) => Number(clave.slice(id.length + 1)))
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
+}
+
+/** El sprite de siempre, sin aspecto: el selector enseña cada opción tal cual. */
+export function spriteBaseDeLuchador(id) {
   return SPRITE_LUCHADOR[id] ?? null;
+}
+
+export function spriteDeAspecto(id, n) {
+  return SPRITE_ASPECTO[`${id}_${n}`] ?? null;
+}
+
+/**
+ * El sprite base de un luchador, con el aspecto que el jugador haya elegido para él
+ * si lo tiene dibujado. Se lee el store sin suscribirse (no es un hook): las
+ * pantallas que dejan cambiar el aspecto ya se repintan por su cuenta, y las demás
+ * lo leen al montarse. Las transformaciones no cambian con el aspecto.
+ */
+export function spriteDeLuchador(id) {
+  const elegido = useAchievementsStore.getState().aspectosElegidos?.[id];
+  return (elegido && SPRITE_ASPECTO[`${id}_${elegido}`]) || SPRITE_LUCHADOR[id] || null;
 }

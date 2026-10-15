@@ -8,7 +8,7 @@ import itemsData from '../../data/items.json';
 import typesData from '../../data/types.json';
 import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import { normalizarPasivas, describirPasiva, nombrePasiva } from '../../engine/passives';
-import { InsigniaMaestria } from '../common/Maestria';
+import { InsigniaMaestria, SelectorAspecto } from '../common/Maestria';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { spriteDeLuchador } from '../common/characterSprites';
 import { spriteDeModo } from '../common/transformationSprites';
@@ -265,6 +265,9 @@ function BloqueTransformaciones({ id, base, modosVistos }) {
 
 /** Ficha de un ninja o de un enemigo ya visto. */
 function FichaLuchador({ id, base, modosVistos }) {
+  // Suscrito al aspecto elegido para que la ficha se repinte al cambiarlo:
+  // `spriteDeLuchador` lee el store sin suscribirse.
+  useAchievementsStore((s) => s.aspectosElegidos[id]);
   return (
     <div className="flex flex-col gap-3">
       {/* Nivel 1 a propósito: `FichaPersonaje` pinta el sprite del modo activo a
@@ -272,6 +275,7 @@ function FichaLuchador({ id, base, modosVistos }) {
           su transformación desde la rejilla, que es lo que esta pantalla evita. */}
       <FichaPersonaje id={id} nivel={1} className="p-3" />
       <InsigniaMaestria id={id} />
+      <SelectorAspecto id={id} />
       <BloqueJutsu base={base} />
       <BloqueTransformaciones id={id} base={base} modosVistos={modosVistos} />
     </div>
