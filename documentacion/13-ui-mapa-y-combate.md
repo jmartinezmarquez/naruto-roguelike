@@ -3,7 +3,12 @@
 ## Dirección visual (tokens en `src/index.css` → `@theme`)
 
 - **Paleta**: fondo tinta casi negra (`tinta-950` `#151210`), paneles pergamino (`pergamino-100` `#EDE3CC`), acento sello rojo (`sello-600` `#B23A2E`) reservado para el nodo actual y elementos de foco. Colores propios por naturaleza de chakra: `katon`, `fuuton`, `raiton`, `doton`, `suiton`.
-- **Tipografía**: `Shippori Mincho` (serif japonesa) para títulos, `Zen Kaku Gothic New` para UI/datos. Cargadas vía Google Fonts en `index.css`.
+- **Tipografía**: `PressStart2P` (pixel) para UI y datos, y `NJNaruto` para los títulos (`font-naruto`), las dos
+  desde ficheros locales con `@font-face` en `index.css`. ⚠️ Hasta el 2026-10-15 quedaba además un
+  `@import` de Google Fonts (Shippori Mincho y Zen Kaku Gothic New, de la dirección visual anterior) que
+  ninguna regla usaba: en desarrollo descargaba dos fuentes para nada, y en producción el optimizador de
+  CSS lo **tiraba** —un `@import` detrás de otras reglas no es válido, y Tailwind pone las suyas delante—,
+  que era el aviso del build. Se borró.
 - **Motivo evitado a propósito**: nada de fondo crema + serif + acento terracota (paleta por defecto de IA), ni negro con acento neón — se ancla en estética de tinta/pergamino ninja en su lugar.
 
 ## Navegación entre pantallas

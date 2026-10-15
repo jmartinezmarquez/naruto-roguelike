@@ -9,7 +9,6 @@
    puede llegar a ver. */
 @source not "**/*.test.{js,jsx}";
 @source not "./test-dom.js";
-@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 
 @font-face {
   font-family: 'NJNaruto';
