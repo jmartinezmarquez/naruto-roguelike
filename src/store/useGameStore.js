@@ -21,7 +21,7 @@ import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp, obtenerModoActivo, factorXpPorVentaja } from '../engine/leveling';
 import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
-import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
+import { obtenerPersonajesReclutablesDesbloqueados } from '../engine/achievements';
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
 import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/ascension';
 import { pergaminosDeLaRun } from '../engine/pergaminos';
@@ -421,10 +421,8 @@ export const useGameStore = create((set, get) => ({
       .slice(0, tamanoMaximo)
       .map((id) => crearInstanciaPersonaje(id));
 
-    const inventarioInicial = obtenerObjetosInicialesDesbloqueados(
-      achievementsData.logros,
-      useAchievementsStore.getState().logrosDesbloqueados,
-    );
+    // Los de un logro y los del gacha.
+    const inventarioInicial = useAchievementsStore.getState().objetosInicialesDesbloqueados();
     const mapaInicial = generarMapa(arco, {
       rarezasReclutarDisponibles: rarezasReclutarDisponibles(equipoInicial, arco),
     });
@@ -1100,6 +1098,11 @@ export const useGameStore = create((set, get) => ({
    */
   abrirSalonDeLaFama() {
     set({ pantalla: 'salonFama' });
+  },
+
+  /** Abre el gacha ("Summon", documentacion/42). Solo desde el Home, como el Salón. */
+  abrirInvocacion() {
+    set({ pantalla: 'invocacion' });
   },
 
   /** El arco que viene después del actual en la campaña en curso, o null si no hay. */

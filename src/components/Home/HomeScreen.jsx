@@ -16,6 +16,7 @@ import iconoLogros from '../../assets/menu/logros.png';
 import iconoEnciclopedia from '../../assets/menu/enciclopedia.png';
 import iconoAjustes from '../../assets/menu/ajustes.png';
 import iconoSalon from '../../assets/menu/salon.png';
+import { SPRITE_INVOCACION } from '../common/iconosMenu';
 
 /**
  * Home: la puerta del juego y el selector de campañas (punto 18 del roadmap).
@@ -197,6 +198,7 @@ export default function HomeScreen() {
   const abrirEnciclopedia = useGameStore((s) => s.abrirEnciclopedia);
   const abrirAjustes = useGameStore((s) => s.abrirAjustes);
   const abrirSalonDeLaFama = useGameStore((s) => s.abrirSalonDeLaFama);
+  const abrirInvocacion = useGameStore((s) => s.abrirInvocacion);
   const logrosDesbloqueados = useAchievementsStore((s) => s.logrosDesbloqueados);
   const contadores = useAchievementsStore((s) => s.contadores);
   const vistos = useAchievementsStore((s) => s.vistos);
@@ -235,6 +237,7 @@ export default function HomeScreen() {
     { etiqueta: 'Bingo Book', icono: iconoEnciclopedia, onClick: abrirEnciclopedia },
     // Solo desde el Home: es lo que se mira entre partidas, no durante.
     { etiqueta: 'Hall of Fame', icono: iconoSalon, onClick: abrirSalonDeLaFama },
+    { etiqueta: 'Summon', icono: SPRITE_INVOCACION, onClick: abrirInvocacion },
     { etiqueta: 'Settings', icono: iconoAjustes, onClick: abrirAjustes },
   ];
 

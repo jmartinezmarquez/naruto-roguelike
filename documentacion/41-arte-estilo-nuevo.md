@@ -663,3 +663,15 @@ Left to right:
 5. Pain, Deva Path – Straw hat: wide straw hat with hanging paper strips worn over the black cloak with red clouds.
 6. Pain, Deva Path – Young rebel: spiky orange hair, simple dark Hidden Rain outfit with a grey flak vest, no piercings, determined smile.
 ```
+
+## Hoja 43 → `sprite-estilo-nuevo-43.png` (icono del gacha) → `assets/menu/invocacion.png`
+
+⏳ **PENDIENTE.** El atajo "Summon" del Home. Mientras no exista se pinta el sprite del Reserve Scroll
+(`common/iconosMenu.js`), así que puede llegar cuando sea. Adjuntar de referencia la hoja 18 (los iconos
+del menú) para que salga a juego con ellos.
+
+```
+[UI ICON STYLE BLOCK]
+
+One menu icon: a summoning scroll unrolled on the ground with a glowing red summoning circle drawn on it and a small puff of white smoke rising from the center.
+```

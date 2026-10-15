@@ -1,0 +1,48 @@
+// @vitest-environment jsdom
+//
+// El gacha tiene que no dejar tirar sin saldo, enseñar lo que ha salido con lo que
+// significa (nuevo, nivel de ninja o pergaminos devueltos) y tener las reglas a la vista.
+
+import { describe, it, expect, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '../../test-dom';
+import InvocacionScreen from './InvocacionScreen';
+import { useAchievementsStore, PERGAMINOS_VACIOS } from '../../store/useAchievementsStore';
+import { ESTADO_INVOCACION_VACIO } from '../../engine/invocacion';
+import invocacionData from '../../data/invocacion.json';
+
+function conSaldo(saldo) {
+  useAchievementsStore.setState({
+    pergaminos: { ...PERGAMINOS_VACIOS, saldo },
+    invocacion: ESTADO_INVOCACION_VACIO,
+    logrosDesbloqueados: [],
+    maestria: {},
+  });
+}
+
+beforeEach(() => localStorage.clear());
+
+describe('InvocacionScreen', () => {
+  it('sin saldo, los dos botones están apagados', () => {
+    conSaldo(0);
+    render(<InvocacionScreen />);
+    expect(screen.getByRole('button', { name: /Summon ×1 ·/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Summon ×10/ })).toBeDisabled();
+  });
+
+  it('enseña las probabilidades y cuántas tiradas faltan para cada garantía', () => {
+    conSaldo(0);
+    render(<InvocacionScreen />);
+    expect(screen.getByText(/Legendary 10%/)).toBeInTheDocument();
+    expect(screen.getByText(String(invocacionData.garantiaRaro))).toBeInTheDocument();
+    expect(screen.getByText(String(invocacionData.garantiaLegendario))).toBeInTheDocument();
+  });
+
+  it('una tirada cobra, enseña el premio y lo apunta en la colección', () => {
+    conSaldo(invocacionData.precioTirada);
+    render(<InvocacionScreen />);
+    fireEvent.click(screen.getByRole('button', { name: /Summon ×1 ·/ }));
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(0);
+    expect(screen.getByText('Summoned')).toBeInTheDocument();
+    expect(screen.getByText(/^Collection 1\//)).toBeInTheDocument();
+  });
+});

@@ -7,8 +7,13 @@
 import { create } from 'zustand';
 
 import achievementsData from '../data/achievements.json';
-import { evaluarLogrosDesbloqueables, pergaminosPorCobrar } from '../engine/achievements';
-import { nivelDeMaestria } from '../engine/maestria';
+import {
+  evaluarLogrosDesbloqueables, pergaminosPorCobrar,
+  obtenerPersonajesInicialesDesbloqueados, obtenerObjetosInicialesDesbloqueados,
+} from '../engine/achievements';
+import { nivelDeMaestria, xpParaSubirUnNivel } from '../engine/maestria';
+import { ESTADO_INVOCACION_VACIO, invocar as invocarEnMotor } from '../engine/invocacion';
+import invocacionData from '../data/invocacion.json';
 import configGlobal from '../data/config.json';
 
 const CLAVE_STORAGE = 'naruto-roguelike-logros';
@@ -20,6 +25,7 @@ const CLAVE_ASCENSION = 'naruto-roguelike-ascension';
 const CLAVE_PERGAMINOS = 'naruto-roguelike-pergaminos';
 const CLAVE_MAESTRIA = 'naruto-roguelike-maestria';
 const CLAVE_ASPECTOS = 'naruto-roguelike-aspectos';
+const CLAVE_INVOCACION = 'naruto-roguelike-invocacion';
 
 // Cuántas runs ganadas guarda el Salón de la Fama. Las más recientes primero; con un
 // tope para que `localStorage` no crezca sin fin en quien juega mucho.
@@ -113,6 +119,8 @@ export const useAchievementsStore = create((set, get) => ({
   maestria: {},
   // El aspecto elegido de cada ninja ({ [id]: n }); sin entrada, el de siempre.
   aspectosElegidos: {},
+  // El gacha: garantías y lo conseguido en él (ver engine/invocacion.js).
+  invocacion: ESTADO_INVOCACION_VACIO,
 
   /** Carga los logros ya desbloqueados en sesiones anteriores. Llamar una vez al arrancar la app. */
   cargarLogros() {
@@ -143,6 +151,8 @@ export const useAchievementsStore = create((set, get) => ({
     if (maestriaGuardada) set({ maestria: JSON.parse(maestriaGuardada) });
     const aspectosGuardados = localStorage.getItem(CLAVE_ASPECTOS);
     if (aspectosGuardados) set({ aspectosElegidos: JSON.parse(aspectosGuardados) });
+    const invocacionGuardada = localStorage.getItem(CLAVE_INVOCACION);
+    if (invocacionGuardada) set({ invocacion: { ...ESTADO_INVOCACION_VACIO, ...JSON.parse(invocacionGuardada) } });
     // Los logros conseguidos antes de que dieran pergaminos se cobran aquí, una vez.
     get()._cobrarLogros();
   },
@@ -172,6 +182,66 @@ export const useAchievementsStore = create((set, get) => ({
     set({ maestria: siguiente });
     localStorage.setItem(CLAVE_MAESTRIA, JSON.stringify(siguiente));
     return resultado;
+  },
+
+  /**
+   * Los ninjas que se pueden elegir como inicial sin ser de una estrella: los de un
+   * logro (`desbloquearPersonajeInicial`) y los del gacha.
+   */
+  personajesInicialesExtra() {
+    const porLogro = obtenerPersonajesInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
+    return [...new Set([...porLogro, ...get().invocacion.personajes])];
+  },
+
+  /** El pool de objetos iniciales: los de un logro y los del gacha. */
+  objetosInicialesDesbloqueados() {
+    const porLogro = obtenerObjetosInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
+    return [...new Set([...porLogro, ...get().invocacion.objetos])];
+  },
+
+  /**
+   * Una tirada (o diez) del gacha. Cobra, tira y aplica los duplicados: un ninja
+   * repetido sube +1 su nivel de ninja (si ya está al máximo, devuelve pergaminos
+   * como un objeto repetido). Devuelve cada premio con `efecto`
+   * ('nuevo' | 'nivel' | 'pergaminos'), o null si no llega el saldo.
+   */
+  invocar(numero, azar = Math.random) {
+    const reglas = invocacionData;
+    const precio = numero === 10 ? reglas.precioDiez : reglas.precioTirada * numero;
+    const { pergaminos } = get();
+    if (pergaminos.saldo < precio) return null;
+
+    // Lo que ya se tenía por un logro también cuenta como repetido.
+    const inicialesPorLogro = obtenerPersonajesInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
+    const objetosPorLogro = obtenerObjetosInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
+    const yaLoTiene = (e) => (e.tipo === 'personaje' ? inicialesPorLogro : objetosPorLogro).includes(e.id);
+    const { estado, premios } = invocarEnMotor(get().invocacion, reglas.catalogo, reglas, numero, azar, yaLoTiene);
+
+    const reglasMaestria = configGlobal.maestria;
+    const xpGanada = {};
+    let reembolso = 0;
+    const conEfecto = premios.map((premio) => {
+      if (!premio.duplicado) return { ...premio, efecto: 'nuevo' };
+      if (premio.tipo === 'personaje') {
+        // Con la XP ya sumada en esta misma tanda: dos Kakashi repetidos, dos niveles.
+        const xpActual = (get().maestria[premio.id] ?? 0) + (xpGanada[premio.id] ?? 0);
+        const falta = xpParaSubirUnNivel(xpActual, reglasMaestria);
+        if (falta > 0) {
+          xpGanada[premio.id] = (xpGanada[premio.id] ?? 0) + falta;
+          return { ...premio, efecto: 'nivel', nivel: nivelDeMaestria(xpActual + falta, reglasMaestria).nivel };
+        }
+      }
+      reembolso += reglas.reembolsoDuplicado;
+      return { ...premio, efecto: 'pergaminos', cantidad: reglas.reembolsoDuplicado };
+    });
+
+    // El reembolso no cuenta como "ganado": es parte de lo que se acaba de gastar.
+    const saldo = { ...pergaminos, saldo: pergaminos.saldo - precio + reembolso };
+    set({ pergaminos: saldo, invocacion: estado });
+    localStorage.setItem(CLAVE_PERGAMINOS, JSON.stringify(saldo));
+    localStorage.setItem(CLAVE_INVOCACION, JSON.stringify(estado));
+    get().sumarXpMaestria(xpGanada);
+    return conEfecto;
   },
 
   /** Elige el aspecto de un ninja (0 o null = el de siempre). Quien llama comprueba que lo tiene. */
@@ -368,15 +438,15 @@ export const useAchievementsStore = create((set, get) => ({
    * El "empezar de cero" de toda la meta-progresión, que es una opción de verdad
    * en Ajustes (ver documentacion/34-ajustes.md).
    *
-   * ⚠️ **Borra las NUEVE claves.** Dejar los contadores llenos mientras los logros
+   * ⚠️ **Borra las DIEZ claves.** Dejar los contadores llenos mientras los logros
    * vuelven a cero es peor que no reiniciar: los de contador se volverían a
    * desbloquear en el acto, en el primer combate, y el jugador vería su reinicio
    * deshacerse solo. Lo mismo con los vistos y la enciclopedia, y con la marca — que
    * es lo primero que se mira en el Home. Y con el Salón de la Fama: reiniciar y seguir
    * viendo tus victorias de antes sería un reinicio a medias.
    *
-   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van nueve
-   * (la última, el aspecto elegido de cada ninja):
+   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van diez
+   * (las dos últimas, el aspecto elegido de cada ninja y el gacha):
    * las tres últimas, las ascensiones ganadas, los pergaminos y la maestría — reiniciar
    * y seguir pudiendo jugar en A5, con el saldo intacto o con los ninjas a nivel 10
    * sería otro reinicio a medias.
@@ -393,6 +463,7 @@ export const useAchievementsStore = create((set, get) => ({
       pergaminos: PERGAMINOS_VACIOS,
       maestria: {},
       aspectosElegidos: {},
+      invocacion: ESTADO_INVOCACION_VACIO,
     });
     localStorage.removeItem(CLAVE_STORAGE);
     localStorage.removeItem(CLAVE_VISTOS);
@@ -403,5 +474,6 @@ export const useAchievementsStore = create((set, get) => ({
     localStorage.removeItem(CLAVE_PERGAMINOS);
     localStorage.removeItem(CLAVE_MAESTRIA);
     localStorage.removeItem(CLAVE_ASPECTOS);
+    localStorage.removeItem(CLAVE_INVOCACION);
   },
 }));

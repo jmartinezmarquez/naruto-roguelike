@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import personajesData from '../../data/characters.json';
-import achievementsData from '../../data/achievements.json';
+import enemiesData from '../../data/enemies.json';
 import configGlobal from '../../data/config.json';
-import { obtenerPersonajesInicialesDesbloqueados, rosterInicial } from '../../engine/achievements';
+import { rosterInicial } from '../../engine/achievements';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { InsigniaMaestria } from '../common/Maestria';
 import { useMaestria, CLASE_MARCO_MAESTRIA } from '../common/nivelDeNinja';
@@ -52,17 +52,19 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
  */
 export default function CharacterSelectScreen({ onConfirmar }) {
   const irAlHome = useGameStore((s) => s.irAlHome);
-  const logrosDesbloqueados = useAchievementsStore((s) => s.logrosDesbloqueados);
+  useAchievementsStore((s) => s.logrosDesbloqueados);
   const personajesVistos = useAchievementsStore((s) => s.vistos.personajes);
+  useAchievementsStore((s) => s.invocacion);
   const [seleccionados, setSeleccionados] = useState([]);
 
   const numeroAElegir = configGlobal.equipo.numeroPersonajesInicialesAElegir;
 
-  const idsDesbloqueadosPorLogro = obtenerPersonajesInicialesDesbloqueados(
-    achievementsData.logros,
-    logrosDesbloqueados,
-  );
-  const roster = rosterInicial(personajesData.personajes, idsDesbloqueadosPorLogro, personajesVistos ?? []);
+  // Los de un logro y los del gacha. `logrosDesbloqueados` y `invocacion` se leen
+  // arriba para que la pantalla se repinte si cambian.
+  const idsExtra = useAchievementsStore.getState().personajesInicialesExtra();
+  // Los jefes también: el gacha los da como iniciales (documentacion/42).
+  const candidatos = [...personajesData.personajes, ...enemiesData.jefes.filter((j) => j.desbloqueablePorLogro)];
+  const roster = rosterInicial(candidatos, idsExtra, personajesVistos ?? []);
 
   function elegir(id) {
     if (numeroAElegir === 1) {

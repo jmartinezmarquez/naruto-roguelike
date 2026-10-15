@@ -1,3 +1,5 @@
+import { ESTADO_INVOCACION_VACIO } from '../engine/invocacion';
+import invocacionData from '../data/invocacion.json';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, MAXIMO_SALON_DE_LA_FAMA, PERGAMINOS_VACIOS,
@@ -14,7 +16,7 @@ beforeEach(() => {
   useAchievementsStore.setState({
     logrosDesbloqueados: [], notificacionesPendientes: [], vistos: VISTOS_VACIO,
     contadores: CONTADORES_VACIO, marca: MARCA_VACIA, salonDeLaFama: [], ascensionesGanadas: {},
-    pergaminos: PERGAMINOS_VACIOS, maestria: {}, aspectosElegidos: {},
+    pergaminos: PERGAMINOS_VACIOS, maestria: {}, aspectosElegidos: {}, invocacion: ESTADO_INVOCACION_VACIO,
   });
 });
 
@@ -468,5 +470,48 @@ describe('aspectos', () => {
     s().reiniciarLogros();
     expect(s().aspectosElegidos).toEqual({});
     expect(localStorage.getItem('naruto-roguelike-aspectos')).toBeNull();
+  });
+});
+
+describe('invocación (gacha)', () => {
+  const s = () => useAchievementsStore.getState();
+  const conSaldo = (saldo) => useAchievementsStore.setState({ pergaminos: { ...PERGAMINOS_VACIOS, saldo } });
+
+  it('sin saldo no tira ni cobra', () => {
+    conSaldo(invocacionData.precioTirada - 1);
+    expect(s().invocar(1)).toBeNull();
+    expect(s().pergaminos.saldo).toBe(invocacionData.precioTirada - 1);
+  });
+
+  it('cobra, apunta lo nuevo como inicial y sobrevive a recargar', () => {
+    conSaldo(20);
+    const [premio] = s().invocar(1, () => 0.05); // legendario: el primero del catálogo
+    expect(premio).toMatchObject({ id: 'kakashi', efecto: 'nuevo' });
+    expect(s().pergaminos.saldo).toBe(20 - invocacionData.precioTirada);
+    expect(s().personajesInicialesExtra()).toContain('kakashi');
+    useAchievementsStore.setState({ invocacion: ESTADO_INVOCACION_VACIO });
+    s().cargarLogros();
+    expect(s().invocacion.personajes).toEqual(['kakashi']);
+  });
+
+  it('un ninja repetido sube un nivel de ninja; uno al máximo devuelve pergaminos', () => {
+    conSaldo(100);
+    const premios = s().invocar(3, () => 0.05);
+    expect(premios.map((p) => p.efecto)).toEqual(['nuevo', 'nivel', 'nivel']);
+    expect(premios[2].nivel).toBe(3);
+    useAchievementsStore.setState({ maestria: { kakashi: 1e6 } });
+    const saldoAntes = s().pergaminos.saldo;
+    const [alMaximo] = s().invocar(1, () => 0.05);
+    expect(alMaximo).toMatchObject({ efecto: 'pergaminos', cantidad: invocacionData.reembolsoDuplicado });
+    expect(s().pergaminos.saldo).toBe(saldoAntes - invocacionData.precioTirada + invocacionData.reembolsoDuplicado);
+  });
+
+  it('diez tiradas cuestan el precio de diez, y reiniciar lo borra', () => {
+    conSaldo(invocacionData.precioDiez);
+    expect(s().invocar(10)).toHaveLength(10);
+    expect(s().pergaminos.saldo).toBeGreaterThanOrEqual(0);
+    s().reiniciarLogros();
+    expect(s().invocacion).toEqual(ESTADO_INVOCACION_VACIO);
+    expect(localStorage.getItem('naruto-roguelike-invocacion')).toBeNull();
   });
 });

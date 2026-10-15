@@ -1,0 +1,28 @@
+{
+  "_comentario": "El gacha de meta-progresión, 'Summon' (documentacion/42 §2). Se paga con pergaminos de invocación. Regla de oro: el catálogo reparte cosas NUEVAS y nunca encierra lo que ya está abierto (los comunes se reclutan desde la primera run, y por eso no están aquí). personaje = se puede elegir como inicial; objeto = entra en el pool de objetos iniciales. Un personaje repetido sube +1 su nivel de ninja (o devuelve pergaminos si ya está al máximo); un objeto repetido devuelve 'reembolsoDuplicado'. Garantías: un raro o mejor como mínimo cada 'garantiaRaro' tiradas y un legendario como mínimo cada 'garantiaLegendario'.",
+  "precioTirada": 5,
+  "precioDiez": 45,
+  "probabilidades": { "comun": 0.6, "raro": 0.3, "legendario": 0.1 },
+  "garantiaRaro": 10,
+  "garantiaLegendario": 30,
+  "reembolsoDuplicado": 2,
+  "catalogo": [
+    { "tipo": "personaje", "id": "yamato", "rareza": "raro" },
+    { "tipo": "personaje", "id": "haku", "rareza": "raro" },
+    { "tipo": "personaje", "id": "kabuto", "rareza": "raro" },
+    { "tipo": "personaje", "id": "camino_animal_pain", "rareza": "raro" },
+    { "tipo": "personaje", "id": "kakashi", "rareza": "legendario" },
+    { "tipo": "personaje", "id": "zabuza", "rareza": "legendario" },
+    { "tipo": "personaje", "id": "gaara", "rareza": "legendario" },
+    { "tipo": "personaje", "id": "pain_camino_deva", "rareza": "legendario" },
+    { "tipo": "objeto", "id": "pildora_soldado", "rareza": "comun" },
+    { "tipo": "objeto", "id": "unguento_curativo", "rareza": "comun" },
+    { "tipo": "objeto", "id": "pergamino_entrenamiento_ataque", "rareza": "comun" },
+    { "tipo": "objeto", "id": "pergamino_entrenamiento_defensa", "rareza": "comun" },
+    { "tipo": "objeto", "id": "pergamino_entrenamiento_velocidad", "rareza": "comun" },
+    { "tipo": "objeto", "id": "pesas_de_lee", "rareza": "comun" },
+    { "tipo": "objeto", "id": "cuchillas_de_asuma", "rareza": "comun" },
+    { "tipo": "objeto", "id": "sello_chakra", "rareza": "comun" },
+    { "tipo": "objeto", "id": "pergamino_reserva", "rareza": "comun" }
+  ]
+}

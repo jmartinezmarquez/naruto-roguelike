@@ -156,6 +156,8 @@ HOJAS = [
     ('sprite-estilo-nuevo-42.png',
      ['aspects/gaara_1', 'aspects/gaara_2', 'aspects/camino_animal_pain_1',
       'aspects/camino_animal_pain_2', 'aspects/pain_camino_deva_1', 'aspects/pain_camino_deva_2']),
+    # El icono del gacha en el Home (hasta que llegue, un pergamino de objeto).
+    ('sprite-estilo-nuevo-43.png', ['menu/invocacion']),
 ]
 
 TIPO_POR_CARPETA = {

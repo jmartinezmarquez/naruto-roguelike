@@ -12,6 +12,7 @@ import AchievementsScreen from './components/Achievements/AchievementsScreen';
 import EncyclopediaScreen from './components/Encyclopedia/EncyclopediaScreen';
 import SettingsScreen from './components/Settings/SettingsScreen';
 import SalonDeLaFamaScreen from './components/HallOfFame/SalonDeLaFamaScreen';
+import InvocacionScreen from './components/Summon/InvocacionScreen';
 import InventoryScreen from './components/Inventory/InventoryScreen';
 import LogroToast from './components/Achievements/LogroToast';
 import AvisoToast from './components/Map/AvisoToast';
@@ -123,6 +124,7 @@ export default function App() {
           {pantalla === 'enciclopedia' && <EncyclopediaScreen />}
           {pantalla === 'ajustes' && <SettingsScreen />}
           {pantalla === 'salonFama' && <SalonDeLaFamaScreen />}
+          {pantalla === 'invocacion' && <InvocacionScreen />}
           <LogroToast />
         </>
       ) : (
