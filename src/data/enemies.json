@@ -540,6 +540,95 @@
       },
       "pendienteDeArte": true,
       "desbloqueablePorLogro": true
+    },
+    {
+      "id": "hidan",
+      "nombre": "Hidan",
+      "tipo": "fuuton",
+      "statsBase": {
+        "hp": 62,
+        "ataque": 11,
+        "defensa": 7,
+        "velocidad": 9
+      },
+      "jutsu": {
+        "nombre": "Jashin Ritual",
+        "descripcion": "Draws his symbol in blood and turns every wound on his own body into one on yours.",
+        "danoBase": 2.6,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 22,
+          "alRecibirDano": 18,
+          "inicial": 0
+        }
+      },
+      "modos": [],
+      "recompensa": {
+        "xp": 160
+      },
+      "rareza": "raro",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 19,
+        "crecimiento": 1.015
+      },
+      "pendienteDeArte": true,
+      "desbloqueablePorLogro": true
+    },
+    {
+      "id": "kakuzu",
+      "nombre": "Kakuzu",
+      "tipo": "doton",
+      "statsBase": {
+        "hp": 58,
+        "ataque": 9,
+        "defensa": 8,
+        "velocidad": 8
+      },
+      "jutsu": {
+        "nombre": "Pressure Damage",
+        "descripcion": "Three masked hearts breathe fire, wind and lightning in a single blast.",
+        "danoBase": 3.8,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 18,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Earth Grudge Fear",
+          "nivelDesbloqueo": 40,
+          "multiplicadores": {
+            "ataque": 1.16,
+            "defensa": 1.2,
+            "velocidad": 1.06,
+            "hp": 1.18
+          },
+          "pasivas": [
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.2
+            },
+            {
+              "id": "low_hp_reduction",
+              "cantidad": 0.4
+            }
+          ]
+        }
+      ],
+      "recompensa": {
+        "xp": 300,
+        "objetoGarantizado": "chaleco_chunin",
+        "finDeLaRun": true
+      },
+      "rareza": "legendario",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 25,
+        "crecimiento": 1.015
+      },
+      "pendienteDeArte": true,
+      "desbloqueablePorLogro": true
     }
   ]
 }

@@ -10,7 +10,8 @@ import examenChunin from './examen-chunin.json';
 import invasionDePain from './invasion-de-pain.json';
 import persecucionDeSasuke from './persecucion-de-sasuke.json';
 import rescateDeGaara from './rescate-de-gaara.json';
+import hidanYKakuzu from './hidan-y-kakuzu.json';
 
-export const ARCOS = [paisDeLasOlas, examenChunin, invasionDePain, persecucionDeSasuke, rescateDeGaara];
+export const ARCOS = [paisDeLasOlas, examenChunin, invasionDePain, persecucionDeSasuke, rescateDeGaara, hidanYKakuzu];
 
 export const ARCOS_POR_ID = Object.fromEntries(ARCOS.map((arco) => [arco.id, arco]));

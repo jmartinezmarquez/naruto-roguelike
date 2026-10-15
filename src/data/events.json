@@ -815,6 +815,161 @@
         }
       ],
       "arcoId": "rescate_de_gaara"
+    },
+    {
+      "id": "recompensa_por_cabezas",
+      "titulo": "A Bounty Board",
+      "descripcion": "The faces of wanted ninja are pinned to a board, some of them crossed out in blood. One of the bounties is almost reachable.",
+      "elecciones": [
+        {
+          "texto": "Hunt the easy bounty",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.6,
+            "exito": {
+              "tipo": "ganarOro",
+              "cantidad": 60
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.18
+            }
+          }
+        },
+        {
+          "texto": "Sell what you know about it",
+          "efecto": {
+            "tipo": "ganarOro",
+            "cantidad": 20
+          }
+        }
+      ],
+      "arcoId": "hidan_y_kakuzu"
+    },
+    {
+      "id": "templo_de_fuego",
+      "titulo": "The Fire Temple in Mourning",
+      "descripcion": "Monks bury a friend of theirs. They offer prayers for your squad, or a bitter lesson about immortal men.",
+      "elecciones": [
+        {
+          "texto": "Accept the prayers",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.25
+          }
+        },
+        {
+          "texto": "Hear the lesson and train",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 50
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.15
+              }
+            ]
+          }
+        }
+      ],
+      "arcoId": "hidan_y_kakuzu"
+    },
+    {
+      "id": "trampa_de_sombras",
+      "titulo": "A Shadow Trap",
+      "descripcion": "Deep in the Nara forest you find the lines of a shadow trap prepared in advance. Someone planned for this fight.",
+      "elecciones": [
+        {
+          "texto": "Study the plan",
+          "efecto": {
+            "tipo": "buffTemporalEquipo",
+            "stat": "ataque",
+            "multiplicador": 1.2,
+            "combates": 2
+          }
+        },
+        {
+          "texto": "Leave it untouched for its owner",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 25
+          }
+        }
+      ],
+      "arcoId": "hidan_y_kakuzu"
+    },
+    {
+      "id": "corazones_robados",
+      "titulo": "Stolen Hearts",
+      "descripcion": "A ninja crawls out of the bushes clutching his chest. He swears a stitched man took something from him, and he wants it back.",
+      "elecciones": [
+        {
+          "texto": "Follow his trail",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.5,
+            "exito": {
+              "tipo": "varios",
+              "efectos": [
+                {
+                  "tipo": "ganarXpEquipo",
+                  "cantidad": 45
+                },
+                {
+                  "tipo": "ganarOro",
+                  "cantidad": 35
+                }
+              ]
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.2
+            }
+          }
+        },
+        {
+          "texto": "Patch him up and send him home",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 20
+          }
+        }
+      ],
+      "arcoId": "hidan_y_kakuzu"
+    },
+    {
+      "id": "ciervos_de_nara",
+      "titulo": "The Nara Deer",
+      "descripcion": "The sacred deer of the Nara clan watch you from the trees. Their antlers are a famous healing ingredient.",
+      "elecciones": [
+        {
+          "texto": "Ask the clan for medicine",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "curarEquipoPorcentaje",
+                "cantidad": 0.35
+              },
+              {
+                "tipo": "perderOro",
+                "cantidad": 25
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Leave them in peace",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 20
+          }
+        }
+      ],
+      "arcoId": "hidan_y_kakuzu"
     }
   ]
 }

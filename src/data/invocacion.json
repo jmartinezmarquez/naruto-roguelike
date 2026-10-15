@@ -23,6 +23,8 @@
     { "tipo": "personaje", "id": "kimimaro", "rareza": "legendario" },
     { "tipo": "personaje", "id": "sasori", "rareza": "raro" },
     { "tipo": "personaje", "id": "deidara", "rareza": "legendario" },
+    { "tipo": "personaje", "id": "hidan", "rareza": "raro" },
+    { "tipo": "personaje", "id": "kakuzu", "rareza": "legendario" },
     { "tipo": "objeto", "id": "pildora_soldado", "rareza": "comun" },
     { "tipo": "objeto", "id": "unguento_curativo", "rareza": "comun" },
     { "tipo": "objeto", "id": "pergamino_entrenamiento_ataque", "rareza": "comun" },
@@ -60,6 +62,8 @@
     { "tipo": "pagina", "id": "jirobo", "rareza": "comun" },
     { "tipo": "pagina", "id": "kimimaro", "rareza": "comun" },
     { "tipo": "pagina", "id": "sasori", "rareza": "comun" },
-    { "tipo": "pagina", "id": "deidara", "rareza": "comun" }
+    { "tipo": "pagina", "id": "deidara", "rareza": "comun" },
+    { "tipo": "pagina", "id": "hidan", "rareza": "comun" },
+    { "tipo": "pagina", "id": "kakuzu", "rareza": "comun" }
   ]
 }

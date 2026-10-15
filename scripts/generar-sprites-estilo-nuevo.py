@@ -189,6 +189,12 @@ HOJAS = [
     ('sprite-estilo-nuevo-58.png', ['medals/rescate_de_gaara']),
     ('sprite-estilo-nuevo-59.png', ['map-columns/rescate_de_gaara']),
     ('sprite-estilo-nuevo-60.png', ['aspects/sasori_1', 'aspects/sasori_2', 'aspects/deidara_1', 'aspects/deidara_2']),
+    # --- The Immortal Duo (fase 4), a la espera de arte.
+    ('sprite-estilo-nuevo-61.png', ['characters/hidan', 'characters/kakuzu', 'transformations/kakuzu_0']),
+    ('sprite-estilo-nuevo-62.png', ['projectiles/hidan', 'projectiles/kakuzu']),
+    ('sprite-estilo-nuevo-63.png', ['medals/hidan_y_kakuzu']),
+    ('sprite-estilo-nuevo-64.png', ['map-columns/hidan_y_kakuzu']),
+    ('sprite-estilo-nuevo-65.png', ['aspects/hidan_1', 'aspects/hidan_2', 'aspects/kakuzu_1', 'aspects/kakuzu_2']),
 ]
 
 TIPO_POR_CARPETA = {

@@ -894,3 +894,60 @@ Left to right:
 3. Deidara – Stone bomber: Deidara in a Hidden Stone outfit with a red scarf, no cloak.
 4. Deidara – Straw hat: Akatsuki straw hat with hanging paper strips over his cloak.
 ```
+
+## Tanda 9 — arco The Immortal Duo (hojas 61-65)
+
+⏳ **PENDIENTES.** Hidan y Kakuzu, el otro arco alternativo del acto 3. Igual que las tandas 7 y 8: en datos
+con `pendienteDeArte`, fuera de la campaña hasta que llegue su arte; al llegar, correr el script, quitar las
+marcas y añadir `hidan_y_kakuzu` al acto 3 de `campaigns.json`. Este arco no tiene entrenadores propios (salen
+los genéricos). Bloques: 61 personajes, 62 proyectiles, 63 iconos (adjuntar la hoja 19), 64 fondo de mapa y 65
+aspectos.
+
+### Hoja 61 → `sprite-estilo-nuevo-61.png` (Hidan y Kakuzu)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Hidan: slicked-back silver hair, purple eyes, open black Akatsuki cloak with red clouds showing his chest, a Jashin pendant, a huge red three-bladed scythe on a cable.
+2. Kakuzu (normal): tall man with a dark hood and a mask covering everything but his green-and-red eyes, black Akatsuki cloak with red clouds, black threads stitched across his arms.
+3. Kakuzu – "Earth Grudge Fear": same Kakuzu with his cloak off, black threads bursting from his body and three masked beasts (white porcelain masks) attached to his back, dark aura.
+```
+
+### Hoja 62 → `sprite-estilo-nuevo-62.png` (proyectiles)
+
+```
+[PROJECTILE STYLE BLOCK]
+
+Left to right:
+1. Hidan's "Jashin Ritual": a red three-bladed scythe spinning, with a trail of red blood-colored chakra.
+2. Kakuzu's "Pressure Damage": a combined blast of red fire, pale wind and yellow lightning swirling together.
+```
+
+### Hoja 63 → `sprite-estilo-nuevo-63.png` (medalla → `assets/medals/hidan_y_kakuzu.png`)
+
+```
+[UI ICON STYLE BLOCK]
+
+One arc medal, like a Pokémon gym badge, matching the shape language of the attached medals: Scythe Crest (The Immortal Duo), a dark red circular badge with a silver triangle-in-a-circle symbol and a tiny three-bladed scythe.
+```
+
+### Hoja 64 → `sprite-estilo-nuevo-64.png` (columna → `assets/map-columns/hidan_y_kakuzu.png`)
+
+```
+[MAP BACKGROUND STYLE BLOCK]
+
+The Immortal Duo: the flat center is a shaded dirt path through a forest. Left and right borders: tall dark Nara forest trees, sacred deer half hidden among the trunks, ferns and moss, and near the top a clearing with a large circular symbol drawn on the ground.
+```
+
+### Hoja 65 → `sprite-estilo-nuevo-65.png` (aspectos: Hidan y Kakuzu)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Hidan – Ritual form: black skin with white skeleton markings painted on, scythe planted in the ground.
+2. Hidan – Hot Spring ninja: plain grey Hidden Hot Spring outfit, no cloak, a towel over his shoulder.
+3. Kakuzu – Waterfall elite: younger Kakuzu in a Hidden Waterfall outfit with a flak vest, mask down.
+4. Kakuzu – Bounty collector: grey travelling cloak with a straw hat, a heavy money pouch at his belt.
+```
