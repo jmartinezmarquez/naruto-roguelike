@@ -41,7 +41,7 @@ function encontrarBase(id) {
  * está mirando. Los multiplicadores no: no son un dato comparable, son material
  * de enciclopedia.
  */
-export default function TransformationScreen({ personajeId, indiceModo, onContinuar }) {
+export default function TransformationScreen({ personajeId, indiceModo, indiceModoAnterior = null, onContinuar }) {
   const [fase, setFase] = useState('carga'); // carga → estallido → listo
   const factorAnimacion = useFactorAnimacion();
 
@@ -83,7 +83,12 @@ export default function TransformationScreen({ personajeId, indiceModo, onContin
   }, [faltaElModo]);
   if (faltaElModo) return null;
 
-  const spriteNormal = spriteDeLuchador(personajeId);
+  // El "antes" es la forma de la que viene, no siempre la base: de la fase 2 a la 3
+  // tiene que parpadear el sprite de la fase 2. Sin modo anterior, la base.
+  const spriteBase = spriteDeLuchador(personajeId);
+  const spriteNormal = indiceModoAnterior != null
+    ? spriteDeModo(personajeId, indiceModoAnterior) ?? spriteBase
+    : spriteBase;
   const spriteTransformado = spriteDeModo(personajeId, indiceModo) ?? spriteNormal;
   const enCarga = fase === 'carga';
   const pasivas = normalizarPasivas(modo.pasivas ?? []);

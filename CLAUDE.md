@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **560 tests**: 397 de lógica (`engine/*.test.js`, `store/*.test.js`) y 163 de
+- [x] Testing con Vitest — **563 tests**: 398 de lógica (`engine/*.test.js`, `store/*.test.js`) y 165 de
   componente (las 13 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.

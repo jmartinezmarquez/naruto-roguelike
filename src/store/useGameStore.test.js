@@ -4,6 +4,7 @@ import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } fro
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
 import configGlobal from '../data/config.json';
 import eventosData from '../data/events.json';
+import charactersData from '../data/characters.json';
 
 const enemigoHakuDePrueba = {
   // Mismo id que el mini-jefe real del arco de prueba (miniJefeId: 'haku'),
@@ -462,6 +463,26 @@ describe('jugarCombate — transformaciones desbloqueadas', () => {
     const deNaruto = resumen.transformacionesDesbloqueadas.find((t) => t.personajeId === 'naruto');
     expect(deNaruto).toBeDefined();
     expect(deNaruto.indiceModo).toBe(0);
+  });
+
+  it('dice de qué forma viene: null desde la base, el primer modo al pasar al segundo', () => {
+    // Sin esto la pantalla de transformación parpadeaba el sprite BASE al pasar de la
+    // fase 2 a la 3, en vez del de la fase 2.
+    const desdeBase = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 500 } }, 1,
+    ).transformacionesDesbloqueadas.find((t) => t.personajeId === 'naruto');
+    expect(desdeBase.indiceModoAnterior).toBeNull();
+
+    // Justo por debajo de su segundo modo, ya con el primero puesto.
+    const umbral = charactersData.personajes.find((p) => p.id === 'naruto').modos[1].nivelDesbloqueo;
+    useGameStore.setState((estado) => ({
+      equipo: estado.equipo.map((p) => (p.id === 'naruto' ? { ...p, nivel: umbral - 1, xpActual: 0 } : p)),
+    }));
+    const deFase2 = useGameStore.getState().jugarCombate(
+      { ...enemigoDebilDePrueba, recompensa: { xp: 5000 } }, 1,
+    ).transformacionesDesbloqueadas.find((t) => t.personajeId === 'naruto');
+    expect(deFase2.indiceModo).toBe(1);
+    expect(deFase2.indiceModoAnterior).toBe(0);
   });
 
   it('no la vuelve a anunciar en el combate siguiente', () => {

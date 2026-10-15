@@ -1083,6 +1083,7 @@ export default function CombatScreen() {
           key={`${transformacionEnPantalla.personajeId}-${transformacionEnPantalla.indiceModo}`}
           personajeId={transformacionEnPantalla.personajeId}
           indiceModo={transformacionEnPantalla.indiceModo}
+          indiceModoAnterior={transformacionEnPantalla.indiceModoAnterior ?? null}
           onContinuar={() => setTransformacionesVistas((n) => n + 1)}
         />
       )}

@@ -1444,6 +1444,11 @@ export const useGameStore = create((set, get) => ({
         transformaciones.push({
           personajeId: p.id,
           indiceModo: base.modos.indexOf(modoDespues),
+          // De qué forma viene: null si de la base. La pantalla de transformación lo
+          // necesita para el sprite del "antes" —de la fase 2 a la 3 parpadeaba el
+          // sprite BASE—, y no vale "el modo anterior de la lista": subiendo varios
+          // niveles de golpe se puede saltar de la base a la fase 3 directamente.
+          indiceModoAnterior: modoAntes ? base.modos.indexOf(modoAntes) : null,
           nivel: conXp.nivel,
         });
       }
