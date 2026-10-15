@@ -13,66 +13,18 @@
 // ven del juego, porque los genin son la mayoría de los combates.
 
 import kunai from '../../assets/projectiles/kunai.png';
-import naruto from '../../assets/projectiles/naruto.png';
-import sasuke from '../../assets/projectiles/sasuke.png';
-import sakura from '../../assets/projectiles/sakura.png';
-import tenten from '../../assets/projectiles/tenten.png';
-import ino from '../../assets/projectiles/ino.png';
-import choji from '../../assets/projectiles/choji.png';
-import hinata from '../../assets/projectiles/hinata.png';
-import shino from '../../assets/projectiles/shino.png';
-import haku from '../../assets/projectiles/haku.png';
-import zabuza from '../../assets/projectiles/zabuza.png';
-import kabuto from '../../assets/projectiles/kabuto.png';
-import gaara from '../../assets/projectiles/gaara.png';
-import caminoAnimalPain from '../../assets/projectiles/camino_animal_pain.png';
 // Estilo nuevo (2026-10-14), de `scripts/generar-sprites-estilo-nuevo.py`.
-import nejiJutsu from '../../assets/projectiles/neji.png';
-import shikamaruJutsu from '../../assets/projectiles/shikamaru.png';
-import kibaJutsu from '../../assets/projectiles/kiba.png';
-import saiJutsu from '../../assets/projectiles/sai.png';
-import yamatoJutsu from '../../assets/projectiles/yamato.png';
-import painCaminoDeva from '../../assets/projectiles/pain_camino_deva.png';
-import zaku from '../../assets/projectiles/zaku.png';
-import dosu from '../../assets/projectiles/dosu.png';
-import kin from '../../assets/projectiles/kin.png';
-import geninKaton from '../../assets/projectiles/genin_rival_katon.png';
-import geninFuuton from '../../assets/projectiles/genin_rival_fuuton.png';
-import geninRaiton from '../../assets/projectiles/genin_rival_raiton.png';
-import geninDoton from '../../assets/projectiles/genin_rival_doton.png';
-import geninSuiton from '../../assets/projectiles/genin_rival_suiton.png';
 
 export const SPRITE_KUNAI = kunai;
 
-const SPRITE_JUTSU = {
-  naruto,
-  sasuke,
-  sakura,
-  tenten,
-  ino,
-  choji,
-  hinata,
-  shino,
-  haku,
-  zabuza,
-  kabuto,
-  gaara,
-  camino_animal_pain: caminoAnimalPain,
-  neji: nejiJutsu,
-  shikamaru: shikamaruJutsu,
-  kiba: kibaJutsu,
-  sai: saiJutsu,
-  yamato: yamatoJutsu,
-  pain_camino_deva: painCaminoDeva,
-  zaku,
-  dosu,
-  kin,
-  genin_rival_katon: geninKaton,
-  genin_rival_fuuton: geninFuuton,
-  genin_rival_raiton: geninRaiton,
-  genin_rival_doton: geninDoton,
-  genin_rival_suiton: geninSuiton,
-};
+// ⚠️ Con `import.meta.glob` y no un `import` por fichero (2026-10-15): la clave es
+// el nombre del PNG, que es el id, así que un dibujo nuevo entra en el juego solo con
+// dejarlo en la carpeta — y un personaje cuyo arte aún no ha llegado no rompe el build.
+const SPRITE_JUTSU = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('../../assets/projectiles/*.png', { eager: true, query: '?url', import: 'default' }),
+  ).map(([ruta, url]) => [ruta.split('/').pop().replace(/\.png$/, ''), url]).filter(([clave]) => clave !== 'kunai'),
+);
 
 /** El proyectil de un golpe: el jutsu propio si lo tiene, y si no el kunai de siempre. */
 export function spriteDeProyectil(id, esJutsu) {

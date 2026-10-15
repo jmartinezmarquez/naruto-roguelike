@@ -7,73 +7,15 @@
 // Un id sin sprite devuelve `null` y quien lo pinte tiene que aguantarlo.
 
 import { useAchievementsStore } from '../../store/useAchievementsStore';
-import naruto from '../../assets/characters/naruto.png';
-import sasuke from '../../assets/characters/sasuke.png';
-import sakura from '../../assets/characters/sakura.png';
-import rockLee from '../../assets/characters/rock_lee.png';
-import neji from '../../assets/characters/neji.png';
-import tenten from '../../assets/characters/tenten.png';
-import shikamaru from '../../assets/characters/shikamaru.png';
-import ino from '../../assets/characters/ino.png';
-import choji from '../../assets/characters/choji.png';
-import kiba from '../../assets/characters/kiba.png';
-import hinata from '../../assets/characters/hinata.png';
-import shino from '../../assets/characters/shino.png';
-import sai from '../../assets/characters/sai.png';
-import yamato from '../../assets/characters/yamato.png';
-import kakashi from '../../assets/characters/kakashi.png';
-import haku from '../../assets/characters/haku.png';
-import zabuza from '../../assets/characters/zabuza.png';
-import kabuto from '../../assets/characters/kabuto.png';
-import gaara from '../../assets/characters/gaara.png';
-import caminoAnimalPain from '../../assets/characters/camino_animal_pain.png';
-import painCaminoDeva from '../../assets/characters/pain_camino_deva.png';
-import geninKaton from '../../assets/characters/genin_rival_katon.png';
-import geninFuuton from '../../assets/characters/genin_rival_fuuton.png';
-import geninRaiton from '../../assets/characters/genin_rival_raiton.png';
-import geninDoton from '../../assets/characters/genin_rival_doton.png';
-import geninSuiton from '../../assets/characters/genin_rival_suiton.png';
-import zaku from '../../assets/characters/zaku.png';
-import dosu from '../../assets/characters/dosu.png';
-import kin from '../../assets/characters/kin.png';
 
-export const SPRITE_LUCHADOR = {
-  naruto,
-  sasuke,
-  sakura,
-  rock_lee: rockLee,
-  neji,
-  tenten,
-  shikamaru,
-  ino,
-  choji,
-  kiba,
-  hinata,
-  shino,
-  // Sai y Yamato llevaron de placeholder un genin hasta el estilo nuevo (2026-10-14).
-  sai,
-  yamato,
-  // Kakashi tampoco está en la hoja, y como es legendario y se pelea contra él en
-  // el pergamino dorado, una copia exacta del genin raiton habría hecho que el
-  // desafío pareciera un combate común. Lleva el mismo sprite con el pelo
-  // recoloreado a plata — ver RECOLOREADOS en el script.
-  kakashi,
-  haku,
-  zabuza,
-  kabuto,
-  gaara,
-  // Camino Animal comparte sprite con Camino Deva, que es el único Pain de la hoja.
-  camino_animal_pain: caminoAnimalPain,
-  pain_camino_deva: painCaminoDeva,
-  genin_rival_katon: geninKaton,
-  genin_rival_fuuton: geninFuuton,
-  genin_rival_raiton: geninRaiton,
-  genin_rival_doton: geninDoton,
-  genin_rival_suiton: geninSuiton,
-  zaku,
-  dosu,
-  kin,
-};
+// ⚠️ Con `import.meta.glob` y no un `import` por fichero (2026-10-15): la clave es
+// el nombre del PNG, que es el id, así que un dibujo nuevo entra en el juego solo con
+// dejarlo en la carpeta — y un personaje cuyo arte aún no ha llegado no rompe el build.
+export const SPRITE_LUCHADOR = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('../../assets/characters/*.png', { eager: true, query: '?url', import: 'default' }),
+  ).map(([ruta, url]) => [ruta.split('/').pop().replace(/\.png$/, ''), url]),
+);
 
 /**
  * Los aspectos alternativos (nivel de ninja, documentacion/42), con
