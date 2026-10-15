@@ -2,7 +2,7 @@ import { ARCOS as ARCOS_REGISTRADOS } from '../data/arcs';
 import campaignsData from '../data/campaigns.json';
 import { ESTADO_INVOCACION_VACIO } from '../engine/invocacion';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useGameStore } from './useGameStore';
+import { useGameStore, fechaDeHoy } from './useGameStore';
 import {
   useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, PERGAMINOS_VACIOS,
 } from './useAchievementsStore';
@@ -75,7 +75,7 @@ beforeEach(() => {
   // La ascensión elegida vive en el store de la run y sobrevive a iniciarRun (es lo
   // que hace que "reiniciar" repita la misma): sin esto, un test que elige A3 deja a
   // todos los siguientes jugando en A3.
-  useGameStore.setState({ ascensionElegida: 0, retosElegidos: [] });
+  useGameStore.setState({ ascensionElegida: 0, retosElegidos: [], diarioElegido: false });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -2021,5 +2021,43 @@ describe('retos opcionales', () => {
     expect(useGameStore.getState().reclutarPersonaje('sasuke', 1)).toBe(true);
     expect(useGameStore.getState().reclutarPersonaje('sakura', 1)).toBe(false);
     expect(useGameStore.getState().equipo).toHaveLength(2);
+  });
+});
+
+describe('desafío diario', () => {
+  const forma = () => {
+    const { mapa } = useGameStore.getState();
+    return mapa.pisos.map((ids) => ids.map((id) => mapa.nodos[id].tipo).join(',')).join('|');
+  };
+
+  it('dos runs del mismo día salen con el mismo mapa, sin ascensión ni retos', () => {
+    useGameStore.setState({ ascensionElegida: 3, retosElegidos: ['duo'] });
+    useGameStore.getState().elegirDesafioDiario();
+    useGameStore.getState().iniciarRun(['naruto']);
+    const primera = forma();
+    expect(useGameStore.getState().desafioDiario.fecha).toBe(fechaDeHoy());
+    expect(useGameStore.getState().ascension).toBe(0);
+    expect(useGameStore.getState().retos).toEqual([]);
+    useGameStore.getState().iniciarRun(['sasuke']);
+    expect(forma()).toBe(primera);
+  });
+
+  it('elegir una campaña normal lo apaga', () => {
+    useGameStore.getState().elegirDesafioDiario();
+    useGameStore.getState().elegirCampana('camino_ninja', 0);
+    useGameStore.getState().iniciarRun(['naruto']);
+    expect(useGameStore.getState().desafioDiario).toBeNull();
+  });
+
+  it('su premio se cobra una vez al día, y el récord solo mejora', () => {
+    const meta = useAchievementsStore.getState();
+    expect(meta.cobrarPremioDiario('2026-10-16')).toBe(true);
+    expect(useAchievementsStore.getState().cobrarPremioDiario('2026-10-16')).toBe(false);
+    expect(useAchievementsStore.getState().cobrarPremioDiario('2026-10-17')).toBe(true);
+    const s = () => useAchievementsStore.getState();
+    s().registrarDiario('2026-10-17', { arcoId: 'examen_chunin', orden: 1, piso: 3 });
+    s().registrarDiario('2026-10-17', { arcoId: 'pais_de_las_olas', orden: 0, piso: 7 });
+    expect(s().diario.mejor).toEqual({ arcoId: 'examen_chunin', orden: 1, piso: 3 });
+    expect(s().diario.premioCobrado).toBe(true);
   });
 });

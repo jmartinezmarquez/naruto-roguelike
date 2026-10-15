@@ -34,6 +34,10 @@ const CLAVE_PERGAMINOS = 'naruto-roguelike-pergaminos';
 const CLAVE_MAESTRIA = 'naruto-roguelike-maestria';
 const CLAVE_ASPECTOS = 'naruto-roguelike-aspectos';
 const CLAVE_INVOCACION = 'naruto-roguelike-invocacion';
+const CLAVE_DIARIO = 'naruto-roguelike-diario';
+
+/** El desafío diario de HOY: su fecha, hasta dónde se ha llegado y si ya se cobró su premio. */
+export const DIARIO_VACIO = { fecha: null, mejor: null, ganado: false, premioCobrado: false };
 
 // Cuántas runs ganadas guarda el Salón de la Fama. Las más recientes primero; con un
 // tope para que `localStorage` no crezca sin fin en quien juega mucho.
@@ -129,6 +133,8 @@ export const useAchievementsStore = create((set, get) => ({
   aspectosElegidos: {},
   // El gacha: garantías y lo conseguido en él (ver engine/invocacion.js).
   invocacion: ESTADO_INVOCACION_VACIO,
+  // Ver DIARIO_VACIO. Solo guarda el día en curso: otro día empieza de cero.
+  diario: DIARIO_VACIO,
 
   /** Carga los logros ya desbloqueados en sesiones anteriores. Llamar una vez al arrancar la app. */
   cargarLogros() {
@@ -161,6 +167,8 @@ export const useAchievementsStore = create((set, get) => ({
     if (aspectosGuardados) set({ aspectosElegidos: JSON.parse(aspectosGuardados) });
     const invocacionGuardada = localStorage.getItem(CLAVE_INVOCACION);
     if (invocacionGuardada) set({ invocacion: { ...ESTADO_INVOCACION_VACIO, ...JSON.parse(invocacionGuardada) } });
+    const diarioGuardado = localStorage.getItem(CLAVE_DIARIO);
+    if (diarioGuardado) set({ diario: { ...DIARIO_VACIO, ...JSON.parse(diarioGuardado) } });
     // Los logros conseguidos antes de que dieran pergaminos se cobran aquí, una vez.
     get()._cobrarLogros();
   },
@@ -278,6 +286,40 @@ export const useAchievementsStore = create((set, get) => ({
    */
   _evaluarLogrosDeMeta() {
     get().notificar(get().evaluarLogros({}));
+  },
+
+  /** Interno: el diario de una fecha (si lo guardado es de otro día, uno vacío). */
+  _diarioDe(fecha) {
+    const actual = get().diario;
+    return actual.fecha === fecha ? actual : { ...DIARIO_VACIO, fecha };
+  },
+
+  _guardarDiario(siguiente) {
+    set({ diario: siguiente });
+    localStorage.setItem(CLAVE_DIARIO, JSON.stringify(siguiente));
+  },
+
+  /**
+   * Apunta hasta dónde se ha llegado hoy en el desafío diario (solo si mejora), o que
+   * se ha ganado (`{ ganada: true }`).
+   */
+  registrarDiario(fecha, { arcoId, orden, piso, ganada }) {
+    const actual = get()._diarioDe(fecha);
+    if (ganada) {
+      if (!actual.ganado) get()._guardarDiario({ ...actual, ganado: true });
+      return;
+    }
+    const mejor = actual.mejor;
+    const mejora = !mejor || orden > mejor.orden || (orden === mejor.orden && piso > mejor.piso);
+    if (mejora || actual.fecha !== get().diario.fecha) get()._guardarDiario({ ...actual, mejor: mejora ? { arcoId, orden, piso } : mejor });
+  },
+
+  /** Marca cobrado el premio del día; devuelve true solo la primera vez de esa fecha. */
+  cobrarPremioDiario(fecha) {
+    const actual = get()._diarioDe(fecha);
+    if (actual.premioCobrado) return false;
+    get()._guardarDiario({ ...actual, premioCobrado: true });
+    return true;
   },
 
   /** Elige el aspecto de un ninja (0 o null = el de siempre). Quien llama comprueba que lo tiene. */
@@ -479,15 +521,15 @@ export const useAchievementsStore = create((set, get) => ({
    * El "empezar de cero" de toda la meta-progresión, que es una opción de verdad
    * en Ajustes (ver documentacion/34-ajustes.md).
    *
-   * ⚠️ **Borra las DIEZ claves.** Dejar los contadores llenos mientras los logros
+   * ⚠️ **Borra las ONCE claves.** Dejar los contadores llenos mientras los logros
    * vuelven a cero es peor que no reiniciar: los de contador se volverían a
    * desbloquear en el acto, en el primer combate, y el jugador vería su reinicio
    * deshacerse solo. Lo mismo con los vistos y la enciclopedia, y con la marca — que
    * es lo primero que se mira en el Home. Y con el Salón de la Fama: reiniciar y seguir
    * viendo tus victorias de antes sería un reinicio a medias.
    *
-   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van diez
-   * (las dos últimas, el aspecto elegido de cada ninja y el gacha):
+   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van once
+   * (las tres últimas, el aspecto elegido de cada ninja, el gacha y el desafío diario):
    * las tres últimas, las ascensiones ganadas, los pergaminos y la maestría — reiniciar
    * y seguir pudiendo jugar en A5, con el saldo intacto o con los ninjas a nivel 10
    * sería otro reinicio a medias.
@@ -505,6 +547,7 @@ export const useAchievementsStore = create((set, get) => ({
       maestria: {},
       aspectosElegidos: {},
       invocacion: ESTADO_INVOCACION_VACIO,
+      diario: DIARIO_VACIO,
     });
     localStorage.removeItem(CLAVE_STORAGE);
     localStorage.removeItem(CLAVE_VISTOS);
@@ -516,5 +559,6 @@ export const useAchievementsStore = create((set, get) => ({
     localStorage.removeItem(CLAVE_MAESTRIA);
     localStorage.removeItem(CLAVE_ASPECTOS);
     localStorage.removeItem(CLAVE_INVOCACION);
+    localStorage.removeItem(CLAVE_DIARIO);
   },
 }));

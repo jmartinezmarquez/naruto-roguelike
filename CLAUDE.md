@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **621 tests**: 436 de lógica (`engine/*.test.js`, `store/*.test.js`) y 185 de
+- [x] Testing con Vitest — **643 tests**: 458 de lógica (`engine/*.test.js`, `store/*.test.js`) y 185 de
   componente (las 14 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -485,10 +485,19 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   con títulos, marco y **aspectos** (`assets/aspects/`, se eligen en el Bingo Book; sin dibujo no se ofrecen),
   el **gacha "Summon"** (`engine/invocacion.js`, `data/invocacion.json`, `Summon/InvocacionScreen.jsx`: ninjas
   como inicial —jefes incluidos—, objetos iniciales y páginas del Bingo Book), **un** objeto inicial al azar
-  por run y 6 logros de meta (48 en total). ⚠️ `reiniciarLogros` borra ya **diez** claves. ⚠️ Los logros
+  por run y 6 logros de meta (48 en total). ⚠️ `reiniciarLogros` borra ya **once** claves. ⚠️ Los logros
   de meta no tienen combate que los dispare: los evalúa y avisa `_evaluarLogrosDeMeta` al tirar y al sumar
   maestría. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no. Arte pendiente:
-  hojas 36-43 del documento 41.
+  hojas 36-54 del documento 41. Fase 3: Gai, Jiraiya, Asuma y Kurenai en datos con **`pendienteDeArte`**
+  (esconde un personaje, jefe, entrenador o arco hasta que llega su PNG; `characterSprites.test.js` ata la
+  marca a que falte el fichero). Fase 4: la campaña es una lista de **actos** con un pool de arcos
+  (`engine/campanas.js`, sorteo al empezar; los arcos de un acto comparten niveles por test), **registro
+  único de arcos** en `src/data/arcs/index.js`, y el arco **Sasuke Retrieval** (acto 2) en datos, fuera de
+  la campaña hasta que llegue su arte; `node scripts/simular-combates.mjs <idDeArco>` mide un arco en lugar
+  del de su acto. Fase 5: **retos opcionales** (`engine/retos.js`, se multiplican con la ascensión) y
+  **desafío diario** (`engine/azar.js`; ⚠️ todo lo que sortea algo en la run pasa por `azarDeLaRun` del
+  store, no por `Math.random`). Los sprites de personaje, modo, jutsu, columna y aspecto se cargan con
+  `import.meta.glob`: un PNG nuevo entra solo con dejarlo en su carpeta.
 
 ## Bugs ya resueltos (para no repetirlos)
 

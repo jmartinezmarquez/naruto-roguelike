@@ -24,6 +24,7 @@ import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/as
 import { pergaminosDeLaRun } from '../engine/pergaminos';
 import { modificadoresDeRetos, combinarModificadores, tamanoEquipoConRetos } from '../engine/retos';
 import retosData from '../data/retos.json';
+import { semillaDeTexto, generadorConSemilla } from '../engine/azar';
 import { ARCOS_POR_ID } from '../data/arcs';
 import { sortearArcosDeLaRun, primerosArcosDeCampana } from '../engine/campanas';
 import { useAchievementsStore } from './useAchievementsStore';
@@ -189,12 +190,26 @@ export function combinarMultiplicadoresTemporales(buffsTemporales) {
   return combinado;
 }
 
+/**
+ * El azar de la run en curso. `Math.random` en una run normal; en el desafío diario,
+ * un generador con la fecha como semilla (engine/azar.js), para que el mapa, los
+ * eventos, las ofertas y los combates salgan iguales para todos ese día. Se fija en
+ * `iniciarRun` y todo lo que sortea algo en la run pasa por aquí.
+ */
+let azarDeLaRun = Math.random;
+
+/** La fecha local de hoy, "AAAA-MM-DD": el día del desafío diario. */
+export function fechaDeHoy(ahora = new Date()) {
+  const dos = (n) => String(n).padStart(2, '0');
+  return `${ahora.getFullYear()}-${dos(ahora.getMonth() + 1)}-${dos(ahora.getDate())}`;
+}
+
 /** Elige n elementos distintos al azar de un array, sin repetir. */
 function elegirVariosAlAzar(array, n) {
   const copia = [...array];
   const elegidos = [];
   while (copia.length > 0 && elegidos.length < n) {
-    const indice = Math.floor(Math.random() * copia.length);
+    const indice = Math.floor(azarDeLaRun() * copia.length);
     elegidos.push(copia.splice(indice, 1)[0]);
   }
   return elegidos;
@@ -412,6 +427,10 @@ export const useGameStore = create((set, get) => ({
   // iniciarRun, como la ascensión; `retos` son los de la run en curso.
   retosElegidos: [],
   retos: [],
+  // El desafío diario: `diarioElegido` lo pone el Home y sobrevive a iniciarRun (para
+  // que "reintentar" repita el del día); `desafioDiario` es el de la run en curso.
+  diarioElegido: false,
+  desafioDiario: null,
 
   // ---------- ACCIONES ----------
 
@@ -423,12 +442,17 @@ export const useGameStore = create((set, get) => ({
    * concreto, que es lo que hacen los tests.
    */
   iniciarRun(personajesInicialesIds, arcoForzado = null) {
+    // El desafío diario: la fecha como semilla, sin ascensión y sin retos — tiene que
+    // ser la MISMA partida para todos (documentacion/42 §6).
+    const esDiario = get().diarioElegido;
+    const desafioDiario = esDiario ? { fecha: fechaDeHoy() } : null;
+    azarDeLaRun = esDiario ? generadorConSemilla(semillaDeTexto(`diario-${desafioDiario.fecha}`)) : Math.random;
     // Un arco por acto, sorteado ahora (documentacion/42 §5). Los tests pueden forzar
     // el primero; el resto sigue saliendo del sorteo.
-    const arcosDeLaRunIds = sortearArcosDeLaRun(campanaPorId(get().campanaActualId), Math.random);
+    const arcosDeLaRunIds = sortearArcosDeLaRun(campanaPorId(get().campanaActualId), azarDeLaRun);
     const arco = arcoForzado ?? ARCOS_POR_ID[arcosDeLaRunIds[0]];
-    const ascension = get().ascensionElegida;
-    const retos = [...get().retosElegidos];
+    const ascension = esDiario ? 0 : get().ascensionElegida;
+    const retos = esDiario ? [] : [...get().retosElegidos];
     const tamanoMaximo = tamanoEquipoConRetos(retosData.retos, retos, configGlobal.equipo.tamanoMaximo);
     const equipoInicial = personajesInicialesIds
       .slice(0, tamanoMaximo)
@@ -438,9 +462,10 @@ export const useGameStore = create((set, get) => ({
     // (documentacion/42). Todos a la vez hacían cada run más fácil con cada
     // desbloqueo, y con el gacha serían nueve objetos antes del primer combate.
     const poolInicial = useAchievementsStore.getState().objetosInicialesDesbloqueados();
-    const objetoInicial = poolInicial.length > 0 ? poolInicial[Math.floor(Math.random() * poolInicial.length)] : null;
+    const objetoInicial = poolInicial.length > 0 ? poolInicial[Math.floor(azarDeLaRun() * poolInicial.length)] : null;
     const inventarioInicial = objetoInicial ? [objetoInicial] : [];
     const mapaInicial = generarMapa(arco, {
+      azar: azarDeLaRun,
       rarezasReclutarDisponibles: rarezasReclutarDisponibles(equipoInicial, arco),
     });
 
@@ -474,6 +499,7 @@ export const useGameStore = create((set, get) => ({
       medallas: [],
       ascension,
       retos,
+      desafioDiario,
       arcosDeLaRunIds,
       // Los jefes derrotados en ESTA run ({ id, final }), para los pergaminos del
       // final, y lo que dieron (null hasta que la run termina; ver `_cerrarRun`).
@@ -525,8 +551,14 @@ export const useGameStore = create((set, get) => ({
         piso: nodo.piso,
       });
     }
+    const { desafioDiario } = get();
+    if (desafioDiario && ordenDelArco !== -1) {
+      useAchievementsStore.getState().registrarDiario(desafioDiario.fecha, {
+        arcoId: arcoActualDatos.id, orden: ordenDelArco, piso: nodo.piso,
+      });
+    }
 
-    const infoEnemigo = resolverEnemigoDeNodo(nodo, arcoActualDatos);
+    const infoEnemigo = resolverEnemigoDeNodo(nodo, arcoActualDatos, azarDeLaRun);
     if (infoEnemigo) {
       let resultado;
       if (infoEnemigo.enemigoBase.esEntrenador) {
@@ -544,7 +576,7 @@ export const useGameStore = create((set, get) => ({
     if (nodo.tipo === 'evento') {
       const eventosDelArco = eventosData.eventos.filter((e) => e.arcoId === arcoActualDatos.id);
       const pool = eventosDelArco.length > 0 ? eventosDelArco : eventosData.eventos;
-      const eventoElegido = pool[Math.floor(Math.random() * pool.length)];
+      const eventoElegido = pool[Math.floor(azarDeLaRun() * pool.length)];
       set({ eventoActual: eventoElegido, pantalla: 'evento' });
       return null;
     }
@@ -842,7 +874,7 @@ export const useGameStore = create((set, get) => ({
       const cargaInicialJugador = luchadorJugador.cargaJutsu;
       const cargaInicialEnemigo = luchadorEnemigo.cargaJutsu;
 
-      const resultado = resolverCombateCompleto(luchadorJugador, luchadorEnemigo);
+      const resultado = resolverCombateCompleto(luchadorJugador, luchadorEnemigo, azarDeLaRun);
       // ⚠️ **Por posición y no por id.** El jugador entra como `luchador1`, así que
       // `ganadorEsPrimero` es su victoria. Comparar `ganadorId === luchadorJugador.id`
       // daba `true` SIEMPRE cuando los dos luchadores compartían id — y eso pasa de
@@ -1085,6 +1117,7 @@ export const useGameStore = create((set, get) => ({
     if (!siguienteArco) return false;
 
     const mapaSiguiente = generarMapa(siguienteArco, {
+      azar: azarDeLaRun,
       rarezasReclutarDisponibles: rarezasReclutarDisponibles(get().equipo, siguienteArco),
     });
     set({
@@ -1184,7 +1217,12 @@ export const useGameStore = create((set, get) => ({
    * el primero.
    */
   elegirCampana(campanaId, ascension = 0) {
-    set({ campanaActualId: campanaId, ascensionElegida: ascension, pantalla: 'seleccionPersonaje' });
+    set({ campanaActualId: campanaId, ascensionElegida: ascension, diarioElegido: false, pantalla: 'seleccionPersonaje' });
+  },
+
+  /** El desafío diario: la primera campaña con la fecha de hoy como semilla. */
+  elegirDesafioDiario() {
+    set({ campanaActualId: CAMPANA_POR_DEFECTO, diarioElegido: true, pantalla: 'seleccionPersonaje' });
   },
 
   /**
@@ -1206,6 +1244,16 @@ export const useGameStore = create((set, get) => ({
       retos: (get().retos ?? []).length,
       primerasVeces: nuevos.length,
     }, configGlobal.pergaminos);
+    // El desafío diario paga un extra, una vez al día (gane o pierda), y apunta si se ganó.
+    const { desafioDiario } = get();
+    if (desafioDiario) {
+      if (ganada) useAchievementsStore.getState().registrarDiario(desafioDiario.fecha, { ganada: true });
+      if (useAchievementsStore.getState().cobrarPremioDiario(desafioDiario.fecha)) {
+        const extra = configGlobal.pergaminos.porDesafioDiario;
+        resultado.total += extra;
+        resultado.desglose.diario = extra;
+      }
+    }
     useAchievementsStore.getState().sumarPergaminos(resultado.total, jefes.map((j) => j.id));
     set({ pergaminosDeLaRun: resultado });
 
@@ -1781,7 +1829,7 @@ export const useGameStore = create((set, get) => ({
     let tirada = null;
     let efectoQueSeAplica = efecto;
     if (efecto.tipo === 'azar') {
-      const salioBien = Math.random() < efecto.probabilidad;
+      const salioBien = azarDeLaRun() < efecto.probabilidad;
       tirada = { salioBien, probabilidad: efecto.probabilidad };
       efectoQueSeAplica = salioBien ? efecto.exito : efecto.fallo;
     }
@@ -1900,7 +1948,7 @@ export const useGameStore = create((set, get) => ({
       case 'comprarObjetoAleatorio': {
         if (oro < efecto.coste) return { tipo: 'sinOro', coste: efecto.coste };
         const comprables = itemsData.objetos.filter((o) => o.precioTienda !== null);
-        const objeto = comprables[Math.floor(Math.random() * comprables.length)];
+        const objeto = comprables[Math.floor(azarDeLaRun() * comprables.length)];
         set({ oro: oro - efecto.coste, inventario: [...inventario, objeto.id] });
         get()._registrarVistosDeLaRun();
         return { tipo: efecto.tipo, objetoId: objeto.id, coste: efecto.coste };
@@ -1909,9 +1957,9 @@ export const useGameStore = create((set, get) => ({
       case 'mejoraPermanenteAleatoria': {
         const vivos = equipo.filter((p) => !p.derrotado);
         if (vivos.length === 0) return { tipo: 'ninguno' };
-        const elegido = vivos[Math.floor(Math.random() * vivos.length)];
+        const elegido = vivos[Math.floor(azarDeLaRun() * vivos.length)];
         const stats = ['ataque', 'defensa', 'velocidad', 'hp'];
-        const stat = stats[Math.floor(Math.random() * stats.length)];
+        const stat = stats[Math.floor(azarDeLaRun() * stats.length)];
         const equipoActualizado = equipo.map((p) => {
           if (p.id !== elegido.id) return p;
           const bonificaciones = { ...p.bonificaciones, [stat]: p.bonificaciones[stat] + 2 };

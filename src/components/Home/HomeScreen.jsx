@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGameStore } from '../../store/useGameStore';
+import { useGameStore, fechaDeHoy } from '../../store/useGameStore';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import campaignsData from '../../data/campaigns.json';
 import achievementsData from '../../data/achievements.json';
@@ -236,6 +236,41 @@ function SelectorRetos({ abiertos }) {
   );
 }
 
+/**
+ * El desafío diario (documentacion/42 §6): la misma run para todos ese día, sin
+ * ascensión ni retos, con su premio una vez al día y su récord. El récord y el premio
+ * son del día en curso: mañana empiezan de cero.
+ */
+function PanelDiario() {
+  const elegirDesafioDiario = useGameStore((s) => s.elegirDesafioDiario);
+  const diario = useAchievementsStore((s) => s.diario);
+  const hoy = fechaDeHoy();
+  const deHoy = diario.fecha === hoy ? diario : null;
+  const mejor = deHoy?.mejor;
+  const arco = mejor ? ARCOS_POR_ID[mejor.arcoId] : null;
+  return (
+    <button type="button" onClick={elegirDesafioDiario} className="elevar-hover w-full text-left">
+      <PanelMarco esquinas={false} className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <p className="font-display text-[11px] text-pergamino-100">Daily challenge · {hoy}</p>
+          <p className="text-[9px] text-pergamino-200/70 mt-1">
+            The same road for everyone today: same map, same offers, no ascension.
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[9px] text-pergamino-200/80">
+            {deHoy?.ganado ? <span className="text-oro">Won today!</span>
+              : arco ? `Today's best: ${arco.nombre} · Floor ${mejor.piso}` : 'Not played yet today'}
+          </p>
+          <p className="text-[9px] text-pergamino-200/60 mt-1">
+            {deHoy?.premioCobrado ? 'Bonus collected' : `+${configGlobal.pergaminos.porDesafioDiario} scrolls the first time today`}
+          </p>
+        </div>
+      </PanelMarco>
+    </button>
+  );
+}
+
 export default function HomeScreen() {
   const elegirCampana = useGameStore((s) => s.elegirCampana);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
@@ -324,6 +359,10 @@ export default function HomeScreen() {
             </div>
           );
         })}
+      </div>
+
+      <div className="w-full max-w-3xl">
+        <PanelDiario />
       </div>
 
       <PanelMarco tono="hueco" className="p-3 w-full max-w-3xl">

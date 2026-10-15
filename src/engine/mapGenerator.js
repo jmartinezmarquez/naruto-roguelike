@@ -5,14 +5,19 @@
 import commonEnemiesData from '../data/common-enemies.json';
 import enemiesData from '../data/enemies.json';
 
+// El azar del mapa: `Math.random` salvo que quien llama pase otro (el desafío diario
+// pasa uno con la fecha como semilla, engine/azar.js). Se fija al empezar cada
+// llamada pública, así que nunca se arrastra de un mapa al siguiente.
+let aleatorio = Math.random;
+
 function numeroAleatorioEntre(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(aleatorio() * (max - min + 1)) + min;
 }
 
 /** Elige un tipo de nodo al azar según los pesos de arco.poolTiposNodo. */
 function elegirTipoPorPeso(poolTiposNodo) {
   const total = poolTiposNodo.reduce((acc, item) => acc + item.peso, 0);
-  let r = Math.random() * total;
+  let r = aleatorio() * total;
   for (const item of poolTiposNodo) {
     if (r < item.peso) return item.tipo;
     r -= item.peso;
@@ -67,7 +72,7 @@ function elegirRarezaReclutar(arco, rarezasDisponibles) {
   if (pool.length === 0) return 'comun';
 
   const total = pool.reduce((acc, r) => acc + r.peso, 0);
-  let tirada = Math.random() * total;
+  let tirada = aleatorio() * total;
   for (const { rareza, peso } of pool) {
     if (tirada < peso) return rareza;
     tirada -= peso;
@@ -160,7 +165,8 @@ export function entrenadoresDelArco(arco) {
  * información no promete pergaminos raros ni dorados que luego no puede cumplir.
  */
 export function generarMapa(arco, opciones = {}) {
-  const { rarezasReclutarDisponibles = ['comun'] } = opciones;
+  const { rarezasReclutarDisponibles = ['comun'], azar = Math.random } = opciones;
+  aleatorio = azar;
   contadorId = 0;
   const nodos = {};
   const pisos = [];
@@ -183,7 +189,7 @@ export function generarMapa(arco, opciones = {}) {
     for (let i = 0; i < numNodos; i++) {
       const id = generarIdNodo();
       const tipo = esPisoInicio ? 'inicio' : esUltimoPiso ? 'jefe' : elegirTipoPorPeso(poolDeEstePiso);
-      const subtipo = tipo === 'combate' ? (Math.random() < 0.2 ? 'entrenador' : 'aleatorio') : undefined;
+      const subtipo = tipo === 'combate' ? (aleatorio() < 0.2 ? 'entrenador' : 'aleatorio') : undefined;
       nodos[id] = {
         id,
         piso,
@@ -337,7 +343,7 @@ function colocarNodosDeReclutar(nodos, pisos, arco) {
   }
   if (pisosJugables.length === 0) return;
 
-  const cuantos = Math.random() < (arco.probabilidadSegundoNodoReclutar ?? 0) ? 2 : 1;
+  const cuantos = aleatorio() < (arco.probabilidadSegundoNodoReclutar ?? 0) ? 2 : 1;
   // Un piso como mucho aporta un pergamino: dos en el mismo piso son la misma
   // decisión repetida, y encima el jugador solo puede tomar uno de los dos.
   const pisosElegidos = [];
@@ -378,7 +384,8 @@ export function calcularNivelPorPiso(piso, arco) {
  * normales: 20% / 80%, fija por ahora — candidato a mover a config.json si
  * hace falta ajustarla en el playtest.
  */
-export function resolverEnemigoDeNodo(nodo, arco) {
+export function resolverEnemigoDeNodo(nodo, arco, azar = Math.random) {
+  aleatorio = azar;
   if (nodo.tipo === 'jefe') {
     const jefe = enemiesData.jefes.find((j) => j.id === arco.jefeFinalId);
     return { enemigoBase: jefe, nivel: arco.nivelJefeFinal };
