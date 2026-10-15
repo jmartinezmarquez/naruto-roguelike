@@ -488,12 +488,13 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   por run y 6 logros de meta (48 en total). ⚠️ `reiniciarLogros` borra ya **once** claves. ⚠️ Los logros
   de meta no tienen combate que los dispare: los evalúa y avisa `_evaluarLogrosDeMeta` al tirar y al sumar
   maestría. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no. Arte pendiente:
-  hojas 36-54 del documento 41. Fase 3: Gai, Jiraiya, Asuma y Kurenai en datos con **`pendienteDeArte`**
+  hojas 36-70 del documento 41. Fase 3: los ocho héroes (Gai, Jiraiya, Asuma, Kurenai, Tsunade, Temari, Kankuro, Konohamaru) en datos con **`pendienteDeArte`**
   (esconde un personaje, jefe, entrenador o arco hasta que llega su PNG; `characterSprites.test.js` ata la
   marca a que falte el fichero). Fase 4: la campaña es una lista de **actos** con un pool de arcos
   (`engine/campanas.js`, sorteo al empezar; los arcos de un acto comparten niveles por test), **registro
-  único de arcos** en `src/data/arcs/index.js`, y el arco **Sasuke Retrieval** (acto 2) en datos, fuera de
-  la campaña hasta que llegue su arte; `node scripts/simular-combates.mjs <idDeArco>` mide un arco en lugar
+  único de arcos** en `src/data/arcs/index.js`, y tres arcos alternativos en datos —**Sasuke Retrieval** (acto 2), **Kazekage Rescue** y **The Immortal
+  Duo** (acto 3)—, fuera de la campaña hasta que llegue su arte (al llegar: quitar `pendienteDeArte` y añadir
+  el arco a su acto en `campaigns.json`). Los entrenadores pueden ser de un solo arco (`arcoId`); `node scripts/simular-combates.mjs <idDeArco>` mide un arco en lugar
   del de su acto. Fase 5: **retos opcionales** (`engine/retos.js`, se multiplican con la ascensión) y
   **desafío diario** (`engine/azar.js`; ⚠️ todo lo que sortea algo en la run pasa por `azarDeLaRun` del
   store, no por `Math.random`). Los sprites de personaje, modo, jutsu, columna y aspecto se cargan con
