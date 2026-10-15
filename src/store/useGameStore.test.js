@@ -864,7 +864,8 @@ describe('logros (a través de jugarCombate)', () => {
 
   it('el resumen de combate incluye el logro recién desbloqueado, pero NO lo notifica todavía', () => {
     const resumen = useGameStore.getState().jugarCombate(enemigoHakuDePrueba, 1);
-    expect(resumen.logrosDesbloqueados.map((l) => l.id)).toEqual(['derrotar_haku']);
+    // Con Sasuke en el equipo salta también "The Bridge" (derrotar a Haku con él).
+    expect(resumen.logrosDesbloqueados.map((l) => l.id)).toContain('derrotar_haku');
     // La notificación (toast) es responsabilidad de CombatScreen, solo tras
     // terminar la animación — jugarCombate no debe encolarla por su cuenta.
     expect(useAchievementsStore.getState().notificacionesPendientes).toEqual([]);
@@ -1206,6 +1207,8 @@ describe('pergaminos de invocación al acabar la run', () => {
   const perderLaRun = () => useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 50);
 
   it('perder también suma: el mini-jefe derrotado cuenta, con su extra de primera vez', () => {
+    // Sin Sasuke: con él, derrotar a Haku suelta un logro que también da pergaminos.
+    useGameStore.getState().iniciarRun(['naruto', 'sakura'], arcoDePrueba);
     useGameStore.getState().jugarCombate(miniJefe(), 1);
     perderLaRun();
     expect(useGameStore.getState().runTerminada).toBe(true);
@@ -1234,6 +1237,27 @@ describe('pergaminos de invocación al acabar la run', () => {
   it('un desafío legendario no cuenta como jefe del arco', () => {
     useGameStore.getState().jugarCombate({ ...enemigoDebilDePrueba, id: 'gaara', recompensa: { xp: 1 } }, 1);
     expect(useGameStore.getState().jefesDerrotadosEnRun).toEqual([]);
+  });
+});
+
+describe('estadísticas de la run, para los logros de reto', () => {
+  it('cuenta las tiendas visitadas y los consumibles usados, y se reinician con la run', () => {
+    useGameStore.setState({
+      mapa: { nodos: { t: { tipo: 'tienda', piso: 3, conexiones: [], visitado: false } }, nodosIniciales: ['t'] },
+      nodoActualId: null,
+      inventario: ['pergamino_entrenamiento_ataque'],
+    });
+    useGameStore.getState().avanzarANodo('t');
+    useGameStore.getState().usarConsumible('pergamino_entrenamiento_ataque');
+    expect(useGameStore.getState().estadisticasRun).toEqual({ tiendasVisitadas: 1, consumiblesUsados: 1 });
+    useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+    expect(useGameStore.getState().estadisticasRun).toEqual({ tiendasVisitadas: 0, consumiblesUsados: 0 });
+  });
+
+  it('un consumible que no se puede usar no cuenta', () => {
+    useGameStore.setState({ inventario: [] });
+    useGameStore.getState().usarConsumible('pildora_soldado', 'naruto');
+    expect(useGameStore.getState().estadisticasRun.consumiblesUsados).toBe(0);
   });
 });
 

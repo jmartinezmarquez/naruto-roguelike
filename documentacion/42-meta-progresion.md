@@ -230,6 +230,7 @@ Kakashi fueron tres ficheros de datos; el arte ya tiene su proceso montado. Cada
 | Fase | Qué | Tamaño |
 |---|---|---|
 | **1** | Pergaminos (fuentes y tabla de §1), recompensa al acabar la run, logros con recompensa y ~20 nuevos con sus 3 condiciones | 1-2 sesiones |
+| | ✅ *14 logros nuevos (por personaje y de reto) con `derrotarJefe` ampliado y el tipo nuevo `ganarRun`. Los de maestría, gacha y diario, con su fase.* | |
 | | ✅ *Los 18 logros de honor dan pergaminos (2-5), cobrados una vez, retroactivos al cargar.* | |
 | | ✅ *Pergaminos por run: hechos (`engine/pergaminos.js`, `config.pergaminos`, saldo en `useAchievementsStore.pergaminos`, desglose en el Game Over, saldo en el Home).* | |
 | **2** | Pantalla de Invocación con probabilidades, garantías y duplicados; catálogo inicial (iniciales, objetos iniciales, páginas); nivel de ninja y sus recompensas | 2 sesiones |

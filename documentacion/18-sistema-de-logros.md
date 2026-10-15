@@ -232,3 +232,25 @@ cobran al desbloquearse, **una sola vez**: `useAchievementsStore.pergaminos.logr
 pagados, y `_cobrarLogros` (que se llama al desbloquear y al cargar) cobra los pendientes. Eso hace que
 los logros conseguidos **antes** de que existiera esta recompensa se paguen la primera vez que se carga la
 partida, sin tener que tratar a nadie aparte. `ninguna` sigue siendo un tipo válido.
+
+## Logros por personaje y de reto (2026-10-15)
+
+14 logros nuevos (42 en total), con **filtros opcionales** en vez de un tipo por logro, para que añadir
+otro siga siendo solo datos:
+
+- **`derrotarJefe`** acepta ahora `conPersonajeId` (alguien concreto en el equipo), `sinRelevos` (lo ganó
+  el primero que entró, en una ronda), `soloJefeFinal`, y `jefeId` pasa a ser opcional ("cualquier jefe").
+  ⚠️ Desde aquí solo cuentan como "jefe derrotado" el mini-jefe y el jefe final **del arco**: el desafío
+  legendario también pelea contra un jefe, y sin esto derrotar a Gaara en un pergamino dorado del arco 1
+  habría contado como derrotar a Gaara.
+- **`ganarRun`** (nuevo): `conPersonajeId`, `liderId` (en la posición 1 **al ganar**), `soloRarezas`
+  (todo el equipo), `sinTiendas`, `sinConsumibles`.
+
+Los dos últimos leen `estadisticasRun` (tiendas visitadas y consumibles usados), que la run lleva desde
+que empieza: se suman en el único sitio donde ocurre cada cosa (`avanzarANodo` de una tienda, y cada
+camino de `usarConsumible` que gasta algo).
+
+Los logros: ganar con Shikamaru, Hinata, Rock Lee, Ino, Chōji o Sai de líder; derrotar a Haku con Sasuke,
+a Gaara con Rock Lee, a Kabuto y a Pain con Naruto; ganar sin tiendas, sin consumibles, solo con comunes,
+y tumbar a un jefe final sin relevos. Todos dan pergaminos. Los que dependen del nivel de ninja, del
+gacha o del desafío diario llegan con su fase (documentacion/42).

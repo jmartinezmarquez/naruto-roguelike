@@ -459,6 +459,8 @@ export const useGameStore = create((set, get) => ({
       // final, y lo que dieron (null hasta que la run termina; ver `_cerrarRun`).
       jefesDerrotadosEnRun: [],
       pergaminosDeLaRun: null,
+      // Lo que algunos logros de reto necesitan saber de la run entera.
+      estadisticasRun: { tiendasVisitadas: 0, consumiblesUsados: 0 },
     });
 
     // La enciclopedia arranca con lo que traes puesto: el personaje elegido y los
@@ -538,6 +540,7 @@ export const useGameStore = create((set, get) => ({
 
     if (nodo.tipo === 'tienda') {
       set({ tiendaActual: generarOfertaTienda(), pantalla: 'tienda' });
+      get()._sumarEstadistica('tiendasVisitadas');
       return null;
     }
 
@@ -682,6 +685,7 @@ export const useGameStore = create((set, get) => ({
           { multiplicadores: { [item.efecto.stat]: item.efecto.multiplicador }, combatesRestantes: item.efecto.combates },
         ],
       });
+      get()._sumarEstadistica('consumiblesUsados');
       return true;
     }
 
@@ -693,6 +697,7 @@ export const useGameStore = create((set, get) => ({
         inventario: [...inventario.slice(0, posicion), ...inventario.slice(posicion + 1)],
         equipo: equipo.map((p) => (p.derrotado ? p : aplicarXpYActualizarHp(p, item.efecto.cantidad))),
       });
+      get()._sumarEstadistica('consumiblesUsados');
       return true;
     }
 
@@ -716,6 +721,7 @@ export const useGameStore = create((set, get) => ({
     ];
 
     set({ equipo: equipoActualizado, inventario: inventarioActualizado });
+    get()._sumarEstadistica('consumiblesUsados');
     return true;
   },
 
@@ -930,7 +936,7 @@ export const useGameStore = create((set, get) => ({
         // Se desbloquean ya (persisten y afectan a tienda/inventario desde
         // ya), pero NO se notifican todavía — eso lo dispara CombatScreen
         // cuando termine la animación, para no arruinar el suspense.
-        logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase);
+        logrosDesbloqueados = get()._evaluarLogrosPorVictoria(enemigoBase, rondas.length);
 
         jugadorGanoFinal = true;
         break;
@@ -1581,14 +1587,29 @@ export const useGameStore = create((set, get) => ({
     return nuevos;
   },
 
-  _evaluarLogrosPorVictoria(enemigoBase) {
-    const { arcoActualDatos, huboDerrotaEnEsteArco } = get();
+  _evaluarLogrosPorVictoria(enemigoBase, numeroDeRondas = 1) {
+    const { arcoActualDatos, huboDerrotaEnEsteArco, equipo, runGanada, estadisticasRun } = get();
     const esJefeFinalDelArco = enemigoBase.id === arcoActualDatos?.jefeFinalId;
+    const esJefeDelArco = esJefeFinalDelArco || enemigoBase.id === arcoActualDatos?.miniJefeId;
     return useAchievementsStore.getState().evaluarLogros({
-      jefeDerrotadoId: enemigoBase.id,
+      // Solo los jefes del arco cuentan como "jefe derrotado": un desafío legendario
+      // también pelea contra uno, pero no es el del arco.
+      jefeDerrotadoId: esJefeDelArco ? enemigoBase.id : null,
       arcoCompletadoId: esJefeFinalDelArco ? arcoActualDatos.id : null,
       arcoCompletadoSinDerrotas: esJefeFinalDelArco && !huboDerrotaEnEsteArco,
+      equipoIds: equipo.map((p) => p.id),
+      // Sin relevos = lo ganó el primero que entró, en una sola ronda.
+      sinRelevos: numeroDeRondas === 1,
+      runGanada,
+      equipo: equipo.map((p) => ({ id: p.id, rareza: encontrarPersonajeBase(p.id)?.rareza })),
+      estadisticasRun,
     });
+  },
+
+  /** Interno: suma 1 a una de las estadísticas de la run (ver `estadisticasRun`). */
+  _sumarEstadistica(clave) {
+    const actual = get().estadisticasRun ?? { tiendasVisitadas: 0, consumiblesUsados: 0 };
+    set({ estadisticasRun: { ...actual, [clave]: (actual[clave] ?? 0) + 1 } });
   },
 
   /**

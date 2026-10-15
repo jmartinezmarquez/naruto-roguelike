@@ -16,6 +16,7 @@ export const TIPOS_DE_CONDICION = [
   'contadorMinimo',
   'coleccionMinima',
   'ascensionMinima',
+  'ganarRun',
 ];
 
 export const TIPOS_DE_RECOMPENSA = [
@@ -36,8 +37,30 @@ export const TIPOS_DE_RECOMPENSA = [
  */
 function cumpleCondicion(condicion, contexto) {
   switch (condicion.tipo) {
+    // Con filtros opcionales, para que "derrota a Gaara con Rock Lee en el equipo" o
+    // "derrota a un jefe final sin relevos" sigan siendo solo datos:
+    //   jefeId (si falta, vale cualquier jefe) · soloJefeFinal · conPersonajeId · sinRelevos
     case 'derrotarJefe':
-      return contexto.jefeDerrotadoId === condicion.jefeId;
+      if (!contexto.jefeDerrotadoId) return false;
+      if (condicion.jefeId && contexto.jefeDerrotadoId !== condicion.jefeId) return false;
+      if (condicion.soloJefeFinal && !contexto.arcoCompletadoId) return false;
+      if (condicion.conPersonajeId && !(contexto.equipoIds ?? []).includes(condicion.conPersonajeId)) return false;
+      if (condicion.sinRelevos && !contexto.sinRelevos) return false;
+      return true;
+    // Ganar una run, con filtros opcionales (todos los que vengan tienen que cumplirse):
+    //   conPersonajeId · liderId (en la posición 1 al ganar) · soloRarezas (todo el
+    //   equipo) · sinTiendas · sinConsumibles
+    case 'ganarRun': {
+      if (!contexto.runGanada) return false;
+      const equipo = contexto.equipo ?? [];
+      if (condicion.conPersonajeId && !equipo.some((p) => p.id === condicion.conPersonajeId)) return false;
+      if (condicion.liderId && equipo[0]?.id !== condicion.liderId) return false;
+      if (condicion.soloRarezas && !equipo.every((p) => condicion.soloRarezas.includes(p.rareza))) return false;
+      const estadisticas = contexto.estadisticasRun ?? {};
+      if (condicion.sinTiendas && estadisticas.tiendasVisitadas > 0) return false;
+      if (condicion.sinConsumibles && estadisticas.consumiblesUsados > 0) return false;
+      return true;
+    }
     case 'completarArcoSinDerrotas':
       return contexto.arcoCompletadoId === condicion.arcoId && contexto.arcoCompletadoSinDerrotas === true;
     // Genérica a propósito: `{ contador, cantidad }` en vez de un tipo por

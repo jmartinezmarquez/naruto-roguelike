@@ -201,3 +201,33 @@ describe('pergaminosPorCobrar', () => {
     expect(pergaminosPorCobrar(logros, ['a'], ['a'])).toEqual({ total: 0, ids: [] });
   });
 });
+
+describe('condiciones con filtros (logros por personaje y de reto)', () => {
+  const evalua = (condicion, contexto) => evaluarLogrosDesbloqueables(
+    [{ id: 'x', condicion, recompensa: { tipo: 'ninguna' } }], [], contexto,
+  ).length === 1;
+
+  it('derrotarJefe con un personaje en el equipo', () => {
+    const c = { tipo: 'derrotarJefe', jefeId: 'gaara', conPersonajeId: 'rock_lee' };
+    expect(evalua(c, { jefeDerrotadoId: 'gaara', equipoIds: ['naruto', 'rock_lee'] })).toBe(true);
+    expect(evalua(c, { jefeDerrotadoId: 'gaara', equipoIds: ['naruto'] })).toBe(false);
+  });
+
+  it('derrotarJefe sin relevos y solo jefe final, sin jefe concreto', () => {
+    const c = { tipo: 'derrotarJefe', soloJefeFinal: true, sinRelevos: true };
+    expect(evalua(c, { jefeDerrotadoId: 'zabuza', arcoCompletadoId: 'olas', sinRelevos: true })).toBe(true);
+    expect(evalua(c, { jefeDerrotadoId: 'haku', arcoCompletadoId: null, sinRelevos: true })).toBe(false);
+    expect(evalua(c, { jefeDerrotadoId: 'zabuza', arcoCompletadoId: 'olas', sinRelevos: false })).toBe(false);
+  });
+
+  it('ganarRun con líder, solo comunes, sin tiendas y sin consumibles', () => {
+    const equipo = [{ id: 'shikamaru', rareza: 'comun' }, { id: 'ino', rareza: 'comun' }];
+    const ganada = { runGanada: true, equipo, estadisticasRun: { tiendasVisitadas: 0, consumiblesUsados: 2 } };
+    expect(evalua({ tipo: 'ganarRun', liderId: 'shikamaru' }, ganada)).toBe(true);
+    expect(evalua({ tipo: 'ganarRun', liderId: 'ino' }, ganada)).toBe(false);
+    expect(evalua({ tipo: 'ganarRun', soloRarezas: ['comun'] }, ganada)).toBe(true);
+    expect(evalua({ tipo: 'ganarRun', sinTiendas: true }, ganada)).toBe(true);
+    expect(evalua({ tipo: 'ganarRun', sinConsumibles: true }, ganada)).toBe(false);
+    expect(evalua({ tipo: 'ganarRun', liderId: 'shikamaru' }, { ...ganada, runGanada: false })).toBe(false);
+  });
+});

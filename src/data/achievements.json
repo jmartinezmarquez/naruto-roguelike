@@ -378,6 +378,195 @@
         "tipo": "pergaminos",
         "cantidad": 5
       }
+    },
+    {
+      "id": "lider_shikamaru",
+      "nombre": "What a Drag",
+      "descripcion": "Win a run with Shikamaru leading the squad.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "liderId": "shikamaru"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "lider_hinata",
+      "nombre": "Never Go Back on My Word",
+      "descripcion": "Win a run with Hinata leading the squad.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "liderId": "hinata"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "lider_rock_lee",
+      "nombre": "The Power of Hard Work",
+      "descripcion": "Win a run with Rock Lee leading the squad.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "liderId": "rock_lee"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "lider_ino",
+      "nombre": "Flower Shop Kunoichi",
+      "descripcion": "Win a run with Ino leading the squad.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "liderId": "ino"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "lider_choji",
+      "nombre": "Big Bones",
+      "descripcion": "Win a run with Choji leading the squad.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "liderId": "choji"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "lider_sai",
+      "nombre": "Ink and Bonds",
+      "descripcion": "Win a run with Sai leading the squad.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "liderId": "sai"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "puente_sasuke",
+      "nombre": "The Bridge",
+      "descripcion": "Defeat Haku with Sasuke in your squad.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "haku",
+        "conPersonajeId": "sasuke"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "arena_lee",
+      "nombre": "Lotus Against Sand",
+      "descripcion": "Defeat Gaara with Rock Lee in your squad.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "gaara",
+        "conPersonajeId": "rock_lee"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "kabuto_naruto",
+      "nombre": "Rasengan Promise",
+      "descripcion": "Defeat Kabuto with Naruto in your squad.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "kabuto",
+        "conPersonajeId": "naruto"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "pain_naruto",
+      "nombre": "Hero of the Leaf",
+      "descripcion": "Defeat Pain with Naruto in your squad.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "pain_camino_deva",
+        "conPersonajeId": "naruto"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "sin_tiendas",
+      "nombre": "Living Off the Land",
+      "descripcion": "Win a run without entering a single shop.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "sinTiendas": true
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 5
+      }
+    },
+    {
+      "id": "sin_consumibles",
+      "nombre": "No Pills Needed",
+      "descripcion": "Win a run without using any consumable.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "sinConsumibles": true
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "solo_comunes",
+      "nombre": "Ordinary Shinobi",
+      "descripcion": "Win a run with a squad of common ninja only.",
+      "condicion": {
+        "tipo": "ganarRun",
+        "soloRarezas": [
+          "comun"
+        ]
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 5
+      }
+    },
+    {
+      "id": "jefe_sin_relevos",
+      "nombre": "One-Man Army",
+      "descripcion": "Defeat an arc's final boss with your first ninja, no swaps.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "soloJefeFinal": true,
+        "sinRelevos": true
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
     }
   ],
   "_pendienteDeImplementar": {
