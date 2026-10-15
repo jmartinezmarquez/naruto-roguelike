@@ -25,6 +25,7 @@ import { obtenerPersonajesReclutablesDesbloqueados } from '../engine/achievement
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
 import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/ascension';
 import { pergaminosDeLaRun } from '../engine/pergaminos';
+import { sortearArcosDeLaRun, primerosArcosDeCampana } from '../engine/campanas';
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
@@ -41,15 +42,17 @@ const ARCOS_POR_ID = Object.fromEntries(
   [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain].map((arco) => [arco.id, arco]),
 );
 
-/** Los arcos de una campaña, en su orden, ya resueltos a los JSON. */
-function arcosDeCampana(campanaId) {
-  const campana = campaignsData.campanas.find((c) => c.id === campanaId);
-  if (!campana) return [];
-  return campana.arcoIds.map((id) => {
+/** Unos ids de arco, ya resueltos a los JSON. */
+function resolverArcos(ids) {
+  return ids.map((id) => {
     const arco = ARCOS_POR_ID[id];
-    if (!arco) throw new Error(`La campaña ${campanaId} declara un arco que no existe: ${id}`);
+    if (!arco) throw new Error(`Arco que no existe: ${id}`);
     return arco;
   });
+}
+
+function campanaPorId(campanaId) {
+  return campaignsData.campanas.find((c) => c.id === campanaId) ?? null;
 }
 
 /** La campaña por defecto: la primera del fichero. Con una sola, es esa. */
@@ -401,6 +404,8 @@ export const useGameStore = create((set, get) => ({
   // La campaña elegida en el Home. Decide QUÉ arcos se juegan y en qué orden, así que
   // `avanzarSiguienteArco` la lee para saber cuál viene después.
   campanaActualId: CAMPANA_POR_DEFECTO,
+  // Los arcos que salieron en el sorteo de la run en curso, uno por acto (ver iniciarRun).
+  arcosDeLaRunIds: [],
   // La ascensión que se ha elegido en el Home para la PRÓXIMA run, y la de la run en
   // curso. Son dos porque "reiniciar" vuelve a empezar con la misma, y la de la run
   // tiene que quedarse fija aunque alguien toque el selector a mitad de partida.
@@ -416,7 +421,11 @@ export const useGameStore = create((set, get) => ({
    * es lo que hace que elegir campaña en el Home signifique algo. Se puede pasar uno
    * concreto, que es lo que hacen los tests.
    */
-  iniciarRun(personajesInicialesIds, arco = arcosDeCampana(get().campanaActualId)[0]) {
+  iniciarRun(personajesInicialesIds, arcoForzado = null) {
+    // Un arco por acto, sorteado ahora (documentacion/42 §5). Los tests pueden forzar
+    // el primero; el resto sigue saliendo del sorteo.
+    const arcosDeLaRunIds = sortearArcosDeLaRun(campanaPorId(get().campanaActualId), Math.random);
+    const arco = arcoForzado ?? ARCOS_POR_ID[arcosDeLaRunIds[0]];
     const ascension = get().ascensionElegida;
     const tamanoMaximo = configGlobal.equipo.tamanoMaximo;
     const equipoInicial = personajesInicialesIds
@@ -462,6 +471,7 @@ export const useGameStore = create((set, get) => ({
       huboDerrotaEnEsteArco: false,
       medallas: [],
       ascension,
+      arcosDeLaRunIds,
       // Los jefes derrotados en ESTA run ({ id, final }), para los pergaminos del
       // final, y lo que dieron (null hasta que la run termina; ver `_cerrarRun`).
       jefesDerrotadosEnRun: [],
@@ -503,7 +513,7 @@ export const useGameStore = create((set, get) => ({
     // Sale gratis porque `registrarMarca` solo escribe cuando MEJORA el récord: en una
     // run normal son unas pocas escrituras, y ninguna a partir de la segunda partida
     // hasta que se pasa del punto anterior.
-    const ordenDelArco = arcosDeCampana(get().campanaActualId)
+    const ordenDelArco = get().obtenerArcosDeLaCampana()
       .findIndex((a) => a.id === arcoActualDatos?.id);
     if (ordenDelArco !== -1) {
       useAchievementsStore.getState().registrarMarca({
@@ -932,6 +942,8 @@ export const useGameStore = create((set, get) => ({
           useAchievementsStore.getState().registrarEnSalonDeLaFama({
             fecha: new Date().toISOString().slice(0, 10),
             campanaId: campanaActualId,
+            // Qué arcos salieron en el sorteo: la fila de medallas los necesita.
+            arcoIds: get().obtenerArcosDeLaCampana().map((a) => a.id),
             equipo: equipo.map((p) => ({ id: p.id, nivel: p.nivel })),
             medallas,
             ascension,
@@ -1096,9 +1108,14 @@ export const useGameStore = create((set, get) => ({
     return true;
   },
 
-  /** Los arcos de la campaña en curso, en orden: la fila de medallas tiene un hueco por cada uno. */
+  /**
+   * Los arcos de la run en curso, en orden: uno por acto, los que salieron en el
+   * sorteo. La fila de medallas tiene un hueco por cada uno. Sin sorteo (no hay run),
+   * el primero de cada acto.
+   */
   obtenerArcosDeLaCampana() {
-    return arcosDeCampana(get().campanaActualId);
+    const ids = get().arcosDeLaRunIds;
+    return resolverArcos(ids?.length ? ids : primerosArcosDeCampana(campanaPorId(get().campanaActualId)));
   },
 
   /**
@@ -1116,8 +1133,8 @@ export const useGameStore = create((set, get) => ({
 
   /** El arco que viene después del actual en la campaña en curso, o null si no hay. */
   obtenerSiguienteArco() {
-    const { arcoActualId, campanaActualId } = get();
-    const arcos = arcosDeCampana(campanaActualId);
+    const { arcoActualId } = get();
+    const arcos = get().obtenerArcosDeLaCampana();
     const indiceActual = arcos.findIndex((a) => a.id === arcoActualId);
     return indiceActual === -1 ? null : arcos[indiceActual + 1] ?? null;
   },

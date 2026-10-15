@@ -119,3 +119,17 @@ de dónde venir.
 Es la lección de método: **meter una pantalla delante convierte a la siguiente en un paso, y todo paso
 necesita marcha atrás.** Ahora lleva un `← Back` arriba a la izquierda, como la referencia — y sin
 preguntar, porque todavía no hay run que perder.
+
+## Campañas por actos (2026-10-15)
+
+`campaigns.json` ya no lista arcos sino **actos**, y cada acto es un pool de arcos (`actos[].arcoIds`). Al
+empezar la run se sortea uno por acto (`engine/campanas.js`, `sortearArcosDeLaRun`) y la run los guarda en
+`arcosDeLaRunIds`: el arco siguiente, la fila de medallas y la marca de "hasta dónde llegaste" salen de ahí,
+no de la campaña. El Salón de la Fama guarda también qué arcos salieron (`arcoIds` en la entrada; las de
+antes no lo traen y se leen como el primero de cada acto, que era el único). La tarjeta del Home pinta un
+acto con varios arcos como "A / B".
+
+⚠️ **Los arcos de un mismo acto se pelean a los mismos niveles** (mini-jefe, jefe final y número de pisos):
+lo exige un test, porque sortear uno u otro movería la curva de niveles de la run entera. Hoy cada acto
+tiene un solo arco: el cambio no mueve nada hasta que llegue el primer arco nuevo. Ver
+documentacion/42 §5.

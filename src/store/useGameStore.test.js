@@ -1,3 +1,4 @@
+import campaignsData from '../data/campaigns.json';
 import { ESTADO_INVOCACION_VACIO } from '../engine/invocacion';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
@@ -78,6 +79,16 @@ beforeEach(() => {
 });
 
 describe('iniciarRun', () => {
+  it('sortea un arco por acto de la campaña y la run los sigue en ese orden', () => {
+    useGameStore.getState().iniciarRun(['naruto']);
+    const campana = campaignsData.campanas.find((c) => c.id === useGameStore.getState().campanaActualId);
+    const ids = useGameStore.getState().arcosDeLaRunIds;
+    expect(ids).toHaveLength(campana.actos.length);
+    ids.forEach((id, i) => expect(campana.actos[i].arcoIds).toContain(id));
+    expect(useGameStore.getState().arcoActualId).toBe(ids[0]);
+    expect(useGameStore.getState().obtenerArcosDeLaCampana().map((a) => a.id)).toEqual(ids);
+  });
+
   it('crea el equipo con los personajes indicados, en ese orden', () => {
     const { equipo } = useGameStore.getState();
     expect(equipo.map((p) => p.id)).toEqual(['naruto', 'sasuke', 'sakura']);

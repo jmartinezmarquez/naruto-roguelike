@@ -262,6 +262,7 @@ Kakashi fueron tres ficheros de datos; el arte ya tiene su proceso montado. Cada
 | **3** | Primera tanda de personajes nuevos (3-4 héroes) con su arte | 1 sesión + arte |
 | | ✅ *Datos de Might Guy y Jiraiya (legendarios) y Asuma y Kurenai (raros), calibrados en el bloque 5 del simulador (Gai 0,82 y Jiraiya 0,83 frente a Kakashi 0,80; Asuma 0,66 y Kurenai 0,62 frente a Yamato 0,68), con su página del Bingo Book. Solo salen del gacha y, una vez conseguidos, se reclutan en cualquier arco. ⏳ Arte: hojas 44-48 del documento 41; hasta entonces llevan `pendienteDeArte` y el juego no los enseña.* | |
 | **4** | Actos variables (campaña por actos) y el primer arco nuevo con sus villanos | 2 sesiones + arte |
+| | ✅ *Campaña por actos: `actos[].arcoIds` en `campaigns.json`, sorteo de un arco por acto al empezar la run (`engine/campanas.js`), con test de que los arcos de un acto comparten niveles. Falta el primer arco nuevo.* | |
 | **5** | Desafío diario y retos opcionales | 1 sesión |
 
 Cada fase se juega sola: la 1 ya da progreso; la 2 ya engancha con lo que hay; la 3 y la 4 son las que

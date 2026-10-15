@@ -11,6 +11,7 @@ import enemiesData from '../../data/enemies.json';
 import commonEnemiesData from '../../data/common-enemies.json';
 import ascensionsData from '../../data/ascensions.json';
 import { ascensionMaximaDisponible } from '../../engine/ascension';
+import { actosDeCampana } from '../../engine/campanas';
 import { PanelMarco, TituloBloque, BotonSecundario } from '../common/PiezasUI';
 import iconoLogros from '../../assets/menu/logros.png';
 import iconoEnciclopedia from '../../assets/menu/enciclopedia.png';
@@ -84,10 +85,11 @@ function TarjetaCampana({ campana, marcador, logros, onElegir }) {
   // ⚠️ **Los nombres de los arcos, que son la promesa concreta de la campaña.** La
   // primera versión de esta pantalla los listaba y la segunda los perdió al copiar la
   // forma de la referencia: allí "KANTO · GEN 1" ya le dice todo a quien la lee, y
-  // "The Ninja Road" no dice nada. Salen de `arcoIds`, o sea que reordenar la campaña
+  // "The Ninja Road" no dice nada. Salen de sus actos, o sea que reordenar la campaña
   // en el JSON reordena también esta línea.
-  const nombresDeArcos = campana.arcoIds
-    .map((id) => ARCOS_POR_ID[id]?.nombre)
+  // Por actos: un acto con varios arcos posibles se lee "A / B" (sale uno al azar).
+  const nombresDeArcos = actosDeCampana(campana)
+    .map((acto) => acto.arcoIds.map((id) => ARCOS_POR_ID[id]?.nombre).filter(Boolean).join(' / '))
     .filter(Boolean)
     .join(' · ');
 

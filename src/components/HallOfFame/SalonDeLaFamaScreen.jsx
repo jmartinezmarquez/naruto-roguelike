@@ -5,6 +5,7 @@ import { nombreCorto } from '../common/nombres';
 import { FilaMedallas } from '../common/Medallas';
 import { PanelMarco, VentanaModal } from '../common/PiezasUI';
 import campaignsData from '../../data/campaigns.json';
+import { primerosArcosDeCampana } from '../../engine/campanas';
 import arcoOlas from '../../data/arcs/pais-de-las-olas.json';
 import arcoChunin from '../../data/arcs/examen-chunin.json';
 import arcoPain from '../../data/arcs/invasion-de-pain.json';
@@ -24,9 +25,12 @@ import arcoPain from '../../data/arcs/invasion-de-pain.json';
 
 const ARCOS_POR_ID = Object.fromEntries([arcoOlas, arcoChunin, arcoPain].map((a) => [a.id, a]));
 
-function arcosDeLaCampana(campanaId) {
-  const campana = campaignsData.campanas.find((c) => c.id === campanaId) ?? campaignsData.campanas[0];
-  return (campana?.arcoIds ?? []).map((id) => ARCOS_POR_ID[id]).filter(Boolean);
+// Los arcos que salieron en esa run. Las entradas de antes de los actos no los traen:
+// entonces cada acto tenía un solo arco, así que el primero de cada uno es el que fue.
+function arcosDeLaEntrada(entrada) {
+  const campana = campaignsData.campanas.find((c) => c.id === entrada.campanaId) ?? campaignsData.campanas[0];
+  const ids = entrada.arcoIds ?? primerosArcosDeCampana(campana);
+  return ids.map((id) => ARCOS_POR_ID[id]).filter(Boolean);
 }
 
 function EntradaDelSalon({ entrada, numero }) {
@@ -62,7 +66,7 @@ function EntradaDelSalon({ entrada, numero }) {
             );
           })}
         </div>
-        <FilaMedallas arcos={arcosDeLaCampana(entrada.campanaId)} ganadas={entrada.medallas ?? []} conHover={false} />
+        <FilaMedallas arcos={arcosDeLaEntrada(entrada)} ganadas={entrada.medallas ?? []} conHover={false} />
       </div>
     </PanelMarco>
   );

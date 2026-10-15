@@ -48,7 +48,7 @@ describe('invariante: toda medalla está dibujada', () => {
     const raiz = path.resolve(__dirname, '../../');
     const arcos = fs.readdirSync(path.join(raiz, 'data/arcs'))
       .map((f) => JSON.parse(fs.readFileSync(path.join(raiz, 'data/arcs', f), 'utf8')));
-    const enCampana = new Set(campaignsData.campanas.flatMap((c) => c.arcoIds));
+    const enCampana = new Set(campaignsData.campanas.flatMap((c) => c.actos.flatMap((a) => a.arcoIds)));
     arcos.filter((a) => enCampana.has(a.id)).forEach((arco) => {
       expect(arco.medalla?.nombre, `${arco.id} sin medalla`).toBeTruthy();
       expect(fs.existsSync(path.join(raiz, 'assets/medals', `${arco.id}.png`)), `${arco.id}.png`).toBe(true);
