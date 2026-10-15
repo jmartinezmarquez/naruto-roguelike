@@ -475,6 +475,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   MISMA escala en todos los fotogramas, o la explosión deja de crecer. Tests nuevos: todo modo
   tiene sprite y todo luchador a distancia, proyectil.
 
+- [x] **Los comunes flojos (2026-10-15)** — `documentacion/11`, "v7": Shikamaru perdía 1 de cada 5 contra genin
+  comunes e Ino no ganaba ni un 1 vs 1. Subidos ellos, Sai, Hinata, Shino y un poco Tenten; los de arriba sin
+  tocar. ⚠️ **El resto del simulador promedia el roster y eso esconde a los flojos**: el bloque nuevo "Fuerza
+  de cada personaje" los mide uno a uno. Los jefes de los arcos 2-3 se ganan algo más (Gaara 84 → 96%).
+
 ## Bugs ya resueltos (para no repetirlos)
 
 - ⚠️ **Distinguir bandos por `id` en un combate donde los dos pueden ser el MISMO personaje.** Los

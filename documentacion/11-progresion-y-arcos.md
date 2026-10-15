@@ -410,3 +410,37 @@ margen existe porque el camino normal ya va 2-4 por encima tras el mini-jefe. Ef
 normal no cambia (±1 nivel); el que lo pelea TODO llega a Gaara +2 y a Pain +2 (antes +4 y +5). **Ni
 peleándolo todo se llegaba a diez por encima** —se pisa un nodo por piso—: esos diez del playtest venían
 de reclutar al nivel del más fuerte y de la "inmunidad" de tipo, los dos ya arreglados arriba.
+
+## v7 — Los comunes flojos (2026-10-15)
+
+**Síntoma:** "Shikamaru tiene stats bastante bajos". Medido personaje a personaje (bloque nuevo **"Fuerza
+de cada personaje"** del simulador: liga 1 vs 1 contra todo el roster, daño a los jefes y HP tras los
+comunes, al nivel del jefe final de cada arco), no era solo él: el resto del informe **promedia el
+roster**, y eso escondía a los flojos.
+
+| | Antes | Después |
+|---|---|---|
+| Shikamaru | nota 0,26 — liga 7%, **perdía 1 de cada 5 contra genin comunes** (HP final 52%) | 0,55 — gana siempre a los comunes (HP 78-91%) |
+| Ino | 0,21 — liga **0%**, jutsu más débil del juego (1,25) | 0,50 — liga ~30% |
+| Sai | 0,44 | 0,54 |
+| Hinata | 0,48 | 0,59 |
+| Shino | 0,50 | 0,63 |
+| Chōji (el común más fuerte, sin tocar) | 0,86 | 0,84 |
+
+**Cambios** (stats hp/atk/def/spd, jutsu, carga al atacar):
+- Shikamaru 34/6/7/6 → **42/8/8/7**, jutsu 1,65 → **2,2**, carga 18 → **28**, primer modo con ataque y vida ×1,12.
+- Ino 33/7/6/7 → **40/9/7/8**, jutsu 1,25 → **2,2**, carga 28 → **34**, primer modo ataque ×1,16 y vida ×1,12.
+- Sai 37/8/6/8 → **42/9/7/9**, jutsu 2,35 → **2,5**.
+- Hinata 36/8/8/7 → **40/9/9/8**, jutsu 1,55 → **2,1**.
+- Shino 35/8/8/6 → **41/9/9/6**, jutsu 1,7 → **2,1**, carga 24 → **28**.
+- Tenten 36/9/6/8 → **38/9/7/8** (bajaba al subir los demás: la liga es de suma cero).
+
+**Lo que no se tocó, a propósito**: los de arriba (Naruto, Chōji, Neji, Sasuke). Cerrar más la brecha
+exigiría bajarlos, y dos son iniciales —la calibración de la primera run (v5) depende de ellos—. Queda
+una banda de 0,50 a 0,84 entre comunes; lo que importa jugando ya está: los cinco ganan a los comunes
+con holgura y le quitan a un jefe lo que cualquier otro. El daño bajo de Ino, Hinata y Sakura contra los
+jefes del arco 2 es de tipo (suiton contra tres doton), no de stats.
+
+**Efecto en los jefes**, porque el equipo medio es más fuerte: en cadena con el roster entero, Kabuto
+85 → 92%, Gaara 84 → 96% y Pain 87 → 93%; en primera run, los equipos que se atascaban contra Kabuto
+bajan de 7 a 3 de 27. El arco 1 no cambia (solo iniciales).

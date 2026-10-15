@@ -328,9 +328,9 @@
       "tipo": "fuuton",
       "rareza": "comun",
       "statsBase": {
-        "hp": 36,
+        "hp": 38,
         "ataque": 9,
-        "defensa": 6,
+        "defensa": 7,
         "velocidad": 8
       },
       "curvaXp": {
@@ -393,10 +393,10 @@
       "tipo": "doton",
       "rareza": "comun",
       "statsBase": {
-        "hp": 34,
-        "ataque": 6,
-        "defensa": 7,
-        "velocidad": 6
+        "hp": 42,
+        "ataque": 8,
+        "defensa": 8,
+        "velocidad": 7
       },
       "curvaXp": {
         "xpParaSiguienteNivel": 21,
@@ -405,10 +405,10 @@
       "jutsu": {
         "nombre": "Shadow Possession Jutsu",
         "descripcion": "Immobilizes the opponent, drastically reducing their speed.",
-        "danoBase": 1.65,
+        "danoBase": 2.2,
         "efectoEstado": null,
         "carga": {
-          "alAtacar": 18,
+          "alAtacar": 28,
           "alRecibirDano": 12,
           "inicial": 0
         }
@@ -418,10 +418,10 @@
           "nombre": "Extended Shadow",
           "nivelDesbloqueo": 8,
           "multiplicadores": {
-            "ataque": 1.04,
+            "ataque": 1.12,
             "defensa": 1.08,
             "velocidad": 1.0,
-            "hp": 1.08
+            "hp": 1.12
           },
           "pasivas": [
             {
@@ -455,10 +455,10 @@
       "tipo": "suiton",
       "rareza": "comun",
       "statsBase": {
-        "hp": 33,
-        "ataque": 7,
-        "defensa": 6,
-        "velocidad": 7
+        "hp": 40,
+        "ataque": 9,
+        "defensa": 7,
+        "velocidad": 8
       },
       "curvaXp": {
         "xpParaSiguienteNivel": 21,
@@ -467,10 +467,10 @@
       "jutsu": {
         "nombre": "Mind Transfer Jutsu",
         "descripcion": "Takes momentary control of the opponent, weakening their attack.",
-        "danoBase": 1.25,
+        "danoBase": 2.2,
         "efectoEstado": null,
         "carga": {
-          "alAtacar": 28,
+          "alAtacar": 34,
           "alRecibirDano": 14,
           "inicial": 0
         }
@@ -480,10 +480,10 @@
           "nombre": "Reinforced Mind Link",
           "nivelDesbloqueo": 7,
           "multiplicadores": {
-            "ataque": 1.08,
+            "ataque": 1.16,
             "defensa": 1.04,
             "velocidad": 1.08,
-            "hp": 1.04
+            "hp": 1.12
           },
           "pasivas": [
             {
@@ -647,10 +647,10 @@
       "tipo": "suiton",
       "rareza": "comun",
       "statsBase": {
-        "hp": 36,
-        "ataque": 8,
-        "defensa": 8,
-        "velocidad": 7
+        "hp": 40,
+        "ataque": 9,
+        "defensa": 9,
+        "velocidad": 8
       },
       "curvaXp": {
         "xpParaSiguienteNivel": 21,
@@ -659,7 +659,7 @@
       "jutsu": {
         "nombre": "Eight Trigrams: Two Palms",
         "descripcion": "Precise strike to the tenketsu that reinforces her own defense through concentration.",
-        "danoBase": 1.55,
+        "danoBase": 2.1,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 46,
@@ -714,9 +714,9 @@
       "tipo": "doton",
       "rareza": "comun",
       "statsBase": {
-        "hp": 35,
-        "ataque": 8,
-        "defensa": 8,
+        "hp": 41,
+        "ataque": 9,
+        "defensa": 9,
         "velocidad": 6
       },
       "curvaXp": {
@@ -726,10 +726,10 @@
       "jutsu": {
         "nombre": "Destruction Bug Swarm",
         "descripcion": "His insects drain chakra from the opponent, gradually weakening their attack.",
-        "danoBase": 1.7,
+        "danoBase": 2.1,
         "efectoEstado": null,
         "carga": {
-          "alAtacar": 24,
+          "alAtacar": 28,
           "alRecibirDano": 16,
           "inicial": 0
         }
@@ -779,10 +779,10 @@
       "tipo": "fuuton",
       "rareza": "comun",
       "statsBase": {
-        "hp": 37,
-        "ataque": 8,
-        "defensa": 6,
-        "velocidad": 8
+        "hp": 42,
+        "ataque": 9,
+        "defensa": 7,
+        "velocidad": 9
       },
       "curvaXp": {
         "xpParaSiguienteNivel": 17,
@@ -791,7 +791,7 @@
       "jutsu": {
         "nombre": "Super Beast Imitation Drawing",
         "descripcion": "Summons a giant ink beast that attacks and disorients the opponent.",
-        "danoBase": 2.35,
+        "danoBase": 2.5,
         "efectoEstado": null,
         "carga": {
           "alAtacar": 34,

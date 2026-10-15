@@ -1017,3 +1017,76 @@ console.log(
     'multiplica cada una (sobre logaritmos, porque se componen multiplicando). El objetivo del\n' +
     'doc 27 es 30% niveles / 30% transformación / 40% objetos.\n',
 );
+
+// ---------------------------------------------------------------------------
+// 5. Fuerza de cada personaje (2026-10-15)
+// ---------------------------------------------------------------------------
+
+/**
+ * Cada personaje medido por separado, al nivel del jefe final de cada arco: contra
+ * los genin del piso anterior al jefe (victorias y HP con el que acaba), en una
+ * LIGA contra todos los demás (1 vs 1, tipos incluidos) y cuánta vida le quita a
+ * cada jefe del arco antes de caer —que es lo que aporta en la cadena de relevos—.
+ *
+ * Existe porque el resto del informe promedia el roster y eso escondía a los
+ * flojos: Shikamaru perdía uno de cada cinco combates contra genin comunes, Ino no
+ * ganaba ni un 1 vs 1 a nadie, y Chōji valía tres veces lo que ellos. La nota pesa
+ * liga 40% + daño a jefes 40% + HP tras comunes 20%. ⚠️ La liga es de suma cero:
+ * subir a uno baja un poco a los que tenía cerca.
+ */
+{
+  console.log('\n\n=== Fuerza de cada personaje (al nivel del jefe final de cada arco) ===');
+  console.log('  personaje    comunes HP (1,2,3)   liga 1v1 (1,2,3)   daño a jefes (1,2,3)   nota\n');
+  const azar = azarConSemilla(SEMILLA);
+  const REP = 10;
+  const todos = personajesData.personajes;
+  const filas = todos.map((p) => {
+    const hpComunes = [];
+    const liga = [];
+    const jefes = [];
+    for (const arco of ARCOS) {
+      const nivel = arco.nivelJefeFinal;
+      const nivelComun = calcularNivelPorPiso(arco.pisoJefeFinal - 1, arco);
+      const hp = [];
+      for (const e of comunesData.plantillasGenericas) for (let r = 0; r < REP; r += 1) {
+        const j = crearLuchador(p, nivel - 3);
+        resolverCombateCompleto(j, crearLuchador(e, nivelComun), azar);
+        hp.push(j.hpActual / j.hpMaximo);
+      }
+      hpComunes.push(media(hp));
+      let ganadas = 0;
+      let total = 0;
+      for (const q of todos) {
+        if (q.id === p.id) continue;
+        for (let r = 0; r < REP / 2; r += 1) {
+          const res = resolverCombateCompleto(crearLuchador(p, nivel), crearLuchador(q, nivel), azar);
+          if (res.ganadorEsPrimero) ganadas += 1;
+          total += 1;
+        }
+      }
+      liga.push(ganadas / total);
+      const dano = [];
+      for (const [, id, nivelJefe] of jefesDelArco(arco)) {
+        const base = enemigosData.jefes.find((j) => j.id === id);
+        for (let r = 0; r < REP; r += 1) {
+          const jefe = crearLuchador(base, nivelJefe);
+          resolverCombateCompleto(crearLuchador(p, nivelJefe), jefe, azar);
+          dano.push(1 - jefe.hpActual / jefe.hpMaximo);
+        }
+      }
+      jefes.push(media(dano));
+    }
+    const nota = media(liga) * 0.4 + media(jefes) * 0.4 + media(hpComunes) * 0.2;
+    return { p, hpComunes, liga, jefes, nota };
+  });
+  filas.sort((a, b) => b.nota - a.nota);
+  for (const f of filas) {
+    console.log(
+      `  ${f.p.id.padEnd(11)}  ${f.hpComunes.map((x) => porcentaje(x).padStart(4)).join(' ')}       `
+        + `${f.liga.map((x) => porcentaje(x).padStart(4)).join(' ')}     ${f.jefes.map((x) => porcentaje(x).padStart(4)).join(' ')}        `
+        + `${f.nota.toFixed(2)}${f.p.rareza === 'legendario' || f.p.rareza === 'raro' ? `  (${f.p.rareza})` : ''}`,
+    );
+  }
+  console.log('\n  Objetivo: los comunes, dentro de una banda (hoy ~0,49-0,84). Uno muy por debajo es una trampa');
+  console.log('  en el pergamino verde; los de abajo tienen que ganar a los genin comunes con holgura.');
+}
