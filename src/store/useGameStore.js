@@ -22,6 +22,8 @@ import { obtenerPersonajesReclutablesDesbloqueados } from '../engine/achievement
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
 import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/ascension';
 import { pergaminosDeLaRun } from '../engine/pergaminos';
+import { modificadoresDeRetos, combinarModificadores, tamanoEquipoConRetos } from '../engine/retos';
+import retosData from '../data/retos.json';
 import { ARCOS_POR_ID } from '../data/arcs';
 import { sortearArcosDeLaRun, primerosArcosDeCampana } from '../engine/campanas';
 import { useAchievementsStore } from './useAchievementsStore';
@@ -406,6 +408,10 @@ export const useGameStore = create((set, get) => ({
   // tiene que quedarse fija aunque alguien toque el selector a mitad de partida.
   ascensionElegida: 0,
   ascension: 0,
+  // Retos opcionales (documentacion/42 §6): los elegidos en el Home sobreviven a
+  // iniciarRun, como la ascensión; `retos` son los de la run en curso.
+  retosElegidos: [],
+  retos: [],
 
   // ---------- ACCIONES ----------
 
@@ -422,7 +428,8 @@ export const useGameStore = create((set, get) => ({
     const arcosDeLaRunIds = sortearArcosDeLaRun(campanaPorId(get().campanaActualId), Math.random);
     const arco = arcoForzado ?? ARCOS_POR_ID[arcosDeLaRunIds[0]];
     const ascension = get().ascensionElegida;
-    const tamanoMaximo = configGlobal.equipo.tamanoMaximo;
+    const retos = [...get().retosElegidos];
+    const tamanoMaximo = tamanoEquipoConRetos(retosData.retos, retos, configGlobal.equipo.tamanoMaximo);
     const equipoInicial = personajesInicialesIds
       .slice(0, tamanoMaximo)
       .map((id) => crearInstanciaPersonaje(id));
@@ -466,6 +473,7 @@ export const useGameStore = create((set, get) => ({
       huboDerrotaEnEsteArco: false,
       medallas: [],
       ascension,
+      retos,
       arcosDeLaRunIds,
       // Los jefes derrotados en ESTA run ({ id, final }), para los pergaminos del
       // final, y lo que dieron (null hasta que la run termina; ver `_cerrarRun`).
@@ -594,7 +602,7 @@ export const useGameStore = create((set, get) => ({
     const { equipo, inventario } = get();
     if (equipo.some((p) => p.id === id)) return false; // ya está en el equipo
 
-    if (equipo.length < configGlobal.equipo.tamanoMaximo) {
+    if (equipo.length < get().obtenerTamanoEquipo()) {
       set({ equipo: [...equipo, crearInstanciaPersonaje(id, nivelInicial)] });
       get()._registrarVistosDeLaRun();
       get()._registrarProgreso({ reclutas: 1 });
@@ -1195,6 +1203,7 @@ export const useGameStore = create((set, get) => ({
       jefesFinales: jefes.filter((j) => j.final).length,
       ganada,
       ascension: get().ascension,
+      retos: (get().retos ?? []).length,
       primerasVeces: nuevos.length,
     }, configGlobal.pergaminos);
     useAchievementsStore.getState().sumarPergaminos(resultado.total, jefes.map((j) => j.id));
@@ -1212,9 +1221,26 @@ export const useGameStore = create((set, get) => ({
     set({ xpMaestriaDeLaRun: actual });
   },
 
-  /** Los modificadores de la ascensión de la run en curso (ver engine/ascension.js). */
+  /**
+   * Los modificadores de la run en curso: los de su ascensión por los de sus retos
+   * (engine/ascension.js y engine/retos.js). Todo lo que lee la ascensión lee esto.
+   */
   _modificadoresDeAscension() {
-    return modificadoresDeAscension(ascensionsData.niveles, get().ascension);
+    return combinarModificadores(
+      modificadoresDeAscension(ascensionsData.niveles, get().ascension),
+      modificadoresDeRetos(retosData.retos, get().retos ?? []),
+    );
+  },
+
+  /** El tamaño máximo del equipo en la run en curso (un reto puede bajarlo). */
+  obtenerTamanoEquipo() {
+    return tamanoEquipoConRetos(retosData.retos, get().retos ?? [], configGlobal.equipo.tamanoMaximo);
+  },
+
+  /** Activa o quita un reto para la próxima run (desde el Home). */
+  alternarReto(id) {
+    const actuales = get().retosElegidos;
+    set({ retosElegidos: actuales.includes(id) ? actuales.filter((r) => r !== id) : [...actuales, id] });
   },
 
   /** Abre la pantalla de Logros (accesible desde el mapa). volverAlMapa() la cierra. */

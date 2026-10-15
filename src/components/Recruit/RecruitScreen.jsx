@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { reproducir } from '../common/efectosDeSonido';
 import { useGameStore } from '../../store/useGameStore';
-import configGlobal from '../../data/config.json';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import { nombrePersonaje, nombreCorto } from '../common/nombres';
@@ -116,7 +115,8 @@ export default function RecruitScreen() {
     );
   }
 
-  const equipoLleno = equipo.length >= configGlobal.equipo.tamanoMaximo;
+  // Un reto puede bajar el tamaño del equipo ("Two-Man Cell").
+  const equipoLleno = equipo.length >= useGameStore.getState().obtenerTamanoEquipo();
   const cabecera = CABECERA_POR_RAREZA[oferta.rareza] ?? CABECERA_POR_RAREZA.comun;
   // Tres estados de la misma pantalla: la elección de siempre, el desafío
   // legendario antes de pelear, y el mismo desafío ya ganado (el ninja se ha

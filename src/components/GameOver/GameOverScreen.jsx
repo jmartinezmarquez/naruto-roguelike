@@ -48,6 +48,7 @@ function PanelPergaminos({ resultado, saldo }) {
     ['Bosses defeated', desglose.jefes],
     ['Run won', desglose.victoria],
     ['Ascension bonus', desglose.ascension],
+    ['Challenges bonus', desglose.retos ?? 0],
     ['First-time bosses', desglose.primerasVeces],
   ].filter(([, n]) => n > 0);
   return (

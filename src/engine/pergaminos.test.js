@@ -36,3 +36,11 @@ describe('pergaminosDeLaRun', () => {
     expect(pergaminosDeLaRun(run({}), reglas).total).toBe(0);
   });
 });
+
+describe('retos opcionales', () => {
+  it('cada reto activo suma un 25% a lo jugado', () => {
+    const r = pergaminosDeLaRun(run({ miniJefes: 3, jefesFinales: 3, ganada: true, retos: 2 }), reglas);
+    expect(r.total).toBe(Math.ceil(12 * (1 + 2 * reglas.multiplicadorPorReto)));
+    expect(r.desglose.retos).toBe(r.total - 12);
+  });
+});

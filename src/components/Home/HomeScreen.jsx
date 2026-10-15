@@ -7,6 +7,8 @@ import charactersData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import commonEnemiesData from '../../data/common-enemies.json';
 import ascensionsData from '../../data/ascensions.json';
+import retosData from '../../data/retos.json';
+import configGlobal from '../../data/config.json';
 import { ascensionMaximaDisponible } from '../../engine/ascension';
 import { actosDeCampana } from '../../engine/campanas';
 import { ARCOS_POR_ID } from '../../data/arcs';
@@ -190,6 +192,50 @@ function SelectorAscension({ elegida, maxima, onElegir }) {
   );
 }
 
+/**
+ * Los retos opcionales (documentacion/42 §6): pastillas que se encienden y apagan, se
+ * combinan entre sí y con la ascensión, y cada una da +25% de pergaminos. Se abren
+ * a la vez que la ascensión —ganando una run—: a quien acaba de llegar no le hace
+ * falta otra fila de opciones.
+ */
+function SelectorRetos({ abiertos }) {
+  const elegidos = useGameStore((s) => s.retosElegidos);
+  const alternarReto = useGameStore((s) => s.alternarReto);
+  if (!abiertos) return null;
+  const porcentaje = Math.round(configGlobal.pergaminos.multiplicadorPorReto * 100);
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <p className="text-[9px] text-pergamino-200/70">Optional challenges · each one +{porcentaje}% scrolls</p>
+      <div className="flex items-center gap-1 flex-wrap justify-center">
+        {retosData.retos.map((reto) => {
+          const activo = elegidos.includes(reto.id);
+          return (
+            <button
+              key={reto.id}
+              type="button"
+              aria-pressed={activo}
+              title={reto.descripcion}
+              onClick={() => alternarReto(reto.id)}
+              className={[
+                'font-display text-[9px] px-2 py-1 rounded-sm border transition-colors',
+                activo ? 'bg-sello-600 text-sobre-sello border-sello-500'
+                  : 'bg-tinta-900 text-pergamino-100 border-marco hover:bg-tinta-800',
+              ].join(' ')}
+            >
+              {reto.nombre}
+            </button>
+          );
+        })}
+      </div>
+      {elegidos.length > 0 && (
+        <p className="text-[9px] text-pergamino-200/70 text-center leading-relaxed">
+          {retosData.retos.filter((r) => elegidos.includes(r.id)).map((r) => r.descripcion).join(' ')}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function HomeScreen() {
   const elegirCampana = useGameStore((s) => s.elegirCampana);
   const abrirLogros = useGameStore((s) => s.abrirLogros);
@@ -274,6 +320,7 @@ export default function HomeScreen() {
                 maxima={maxima}
                 onElegir={(nivel) => setAscensionTocada((t) => ({ ...t, [campana.id]: nivel }))}
               />
+              <SelectorRetos abiertos={maxima > 0} />
             </div>
           );
         })}

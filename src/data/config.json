@@ -70,7 +70,8 @@
     "porJefeFinal": 2,
     "porRunGanada": 3,
     "multiplicadorPorAscension": 0.2,
-    "primeraVezPorJefe": 2
+    "primeraVezPorJefe": 2,
+    "multiplicadorPorReto": 0.25
   },
   "maestria": {
     "_comentario": "Nivel de ninja (maestría): cada personaje acumula XP entre runs (documentacion/42). Por run: xpPorCombate por cada combate ganado con él en el equipo, xpPorJefe por cada jefe del arco derrotado y xpPorRunGanada si se gana. Pasar del nivel n al n+1 cuesta costePorNivel × n; tope nivelMaximo. NO da poder: solo aspectos, títulos y marcos.",

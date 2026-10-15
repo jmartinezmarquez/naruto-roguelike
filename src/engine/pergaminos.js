@@ -20,13 +20,18 @@ export function pergaminosDeLaRun(run, reglas) {
   const base = porJefes + porVictoria;
   const multiplicador = 1 + reglas.multiplicadorPorAscension * (run.ascension ?? 0);
   const conAscension = base > 0 ? Math.ceil(base * multiplicador) : 0;
+  // Los retos opcionales suman al mismo multiplicador (no se multiplican entre sí).
+  const conRetos = base > 0
+    ? Math.ceil(base * (multiplicador + (reglas.multiplicadorPorReto ?? 0) * (run.retos ?? 0)))
+    : 0;
   const porPrimerasVeces = (run.primerasVeces ?? 0) * reglas.primeraVezPorJefe;
   return {
-    total: conAscension + porPrimerasVeces,
+    total: conRetos + porPrimerasVeces,
     desglose: {
       jefes: porJefes,
       victoria: porVictoria,
       ascension: conAscension - base,
+      retos: conRetos - conAscension,
       primerasVeces: porPrimerasVeces,
     },
   };

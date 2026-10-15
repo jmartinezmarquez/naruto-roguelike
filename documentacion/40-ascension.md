@@ -67,3 +67,12 @@ un **suelo** para el descanso (supone que el equipo llega por debajo del 80%); y
 - ~~Un aviso en la pantalla de transición cuando el fin de arco no cura del todo~~ — **HECHO el
   2026-10-14**: bajo "The team recovers" sale *"No Respite (A5): only up to 50% of max HP."*, sacado de
   `ascensions.json` (nombre, nivel y porcentaje), sin nada escrito a mano.
+
+## Retos opcionales (2026-10-16)
+
+Lo que la ascensión no es: **elecciones** que se encienden y apagan al empezar, y que se combinan con ella
+(`data/retos.json`, `engine/retos.js`, documentacion/42 §6). Usan las mismas claves de modificador y se
+**multiplican** con las de la ascensión en `_modificadoresDeAscension`, así que todo lo que ya leía la
+ascensión (descanso, oro, stats de enemigo) los respeta sin tocarlo. El único modificador nuevo es
+`tamanoEquipo` ("Two-Man Cell"), que no es multiplicativo: manda el menor. Cada reto activo suma +25% al
+multiplicador de pergaminos de la run.

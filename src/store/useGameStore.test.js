@@ -75,7 +75,7 @@ beforeEach(() => {
   // La ascensión elegida vive en el store de la run y sobrevive a iniciarRun (es lo
   // que hace que "reiniciar" repita la misma): sin esto, un test que elige A3 deja a
   // todos los siguientes jugando en A3.
-  useGameStore.setState({ ascensionElegida: 0 });
+  useGameStore.setState({ ascensionElegida: 0, retosElegidos: [] });
   useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
 });
 
@@ -2000,5 +2000,26 @@ describe('salidas del game over', () => {
     expect(useGameStore.getState().pantalla).toBe('home');
     expect(useGameStore.getState().mapa).toBeNull();
     expect(useGameStore.getState().runTerminada).toBe(true); // lo limpia iniciarRun, no salir
+  });
+});
+
+describe('retos opcionales', () => {
+  it('se eligen antes de la run, la acompañan y endurecen lo mismo que la ascensión', () => {
+    useGameStore.getState().alternarReto('enemigos_duros');
+    useGameStore.getState().alternarReto('duo');
+    useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+    expect(useGameStore.getState().retos).toEqual(['enemigos_duros', 'duo']);
+    expect(useGameStore.getState()._modificadoresDeAscension().statsComunes).toBeCloseTo(1.2);
+    expect(useGameStore.getState().obtenerTamanoEquipo()).toBe(2);
+    useGameStore.getState().alternarReto('duo');
+    expect(useGameStore.getState().retosElegidos).toEqual(['enemigos_duros']);
+  });
+
+  it('con el dúo no se recluta a un tercero sin reemplazar', () => {
+    useGameStore.getState().alternarReto('duo');
+    useGameStore.getState().iniciarRun(['naruto'], arcoDePrueba);
+    expect(useGameStore.getState().reclutarPersonaje('sasuke', 1)).toBe(true);
+    expect(useGameStore.getState().reclutarPersonaje('sakura', 1)).toBe(false);
+    expect(useGameStore.getState().equipo).toHaveLength(2);
   });
 });

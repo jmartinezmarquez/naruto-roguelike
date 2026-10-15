@@ -1,0 +1,29 @@
+{
+  "_comentario": "Retos opcionales (documentacion/42 §6): elecciones al empezar la run, que se combinan entre sí y con la ascensión. La ascensión es una escalera; esto son elecciones. Cada reto activo da +25% de pergaminos (config.pergaminos.multiplicadorPorReto). 'modificadores' usa las MISMAS claves que la ascensión (engine/ascension.js) y se multiplica con ella; 'tamanoEquipo' es el tamaño máximo del equipo durante la run (si dos retos lo tocan, manda el menor).",
+  "retos": [
+    {
+      "id": "enemigos_duros",
+      "nombre": "Hardened Foes",
+      "descripcion": "Common enemies are 20% stronger, bosses 10%.",
+      "modificadores": { "statsComunes": 1.2, "statsJefes": 1.1 }
+    },
+    {
+      "id": "sueno_ligero",
+      "nombre": "Light Sleepers",
+      "descripcion": "Rest nodes only heal up to 50% of max HP.",
+      "modificadores": { "curacionDescanso": 0.5 }
+    },
+    {
+      "id": "bolsillos_vacios",
+      "nombre": "Empty Pockets",
+      "descripcion": "Battles pay half the gold.",
+      "modificadores": { "multiplicadorOro": 0.5 }
+    },
+    {
+      "id": "duo",
+      "nombre": "Two-Man Cell",
+      "descripcion": "Your squad can never be more than two ninja.",
+      "tamanoEquipo": 2
+    }
+  ]
+}
