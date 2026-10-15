@@ -485,3 +485,54 @@ recortados**. Lo que hay que saber:
 - Los diez **scripts viejos están retirados** y se niegan a correr siempre. Antes se negaban solo si
   existía su hoja nueva, así que borrar las hojas los habría reactivado — y correrlos habría pisado
   todo el arte nuevo con el viejo. Se cambió precisamente para poder borrarlas.
+
+---
+
+## Tanda 4 — lo último (hojas 32-35)
+
+Lo que queda tras la limpieza. **Solo la 32 es imprescindible**: la tarjeta de campaña del Home nunca
+ha tenido ilustración (`assets/campaigns/` estaba vacía y salía un fondo liso). Los fondos del Home
+(33-34) ya eran pixel art detallado y no chirrían con el estilo nuevo: rehacerlos es opcional. El
+favicon (35) solo hace falta si cambia el fondo claro.
+
+`generar-sprites-estilo-nuevo.py` ya las conoce. Adjuntar como referencia, en las cuatro, una hoja del
+estilo nuevo **y** el fondo actual del Home que corresponda (`src/assets/game-background-*.jpg`).
+
+### Hoja 32 → `sprite-estilo-nuevo-32.png` (ilustración de campaña) → `assets/campaigns/camino_ninja.png`
+
+La tarjeta pinta el nombre de la campaña **abajo a la izquierda**, sobre un degradado oscuro, y la recorta
+con `cover`: en escritorio sale casi cuadrada y en móvil, una franja muy apaisada. Por eso el motivo va en
+el centro y la franja de abajo, tranquila.
+
+```
+A wide 16:9 pixel art illustration in the exact style of the attached reference images, for the cover of a Naruto campaign called "The Ninja Road" (from the bridge builder's escort in the Land of Waves to Pain's attack on Konoha). A long dirt road seen from behind three young ninja walking away from the viewer toward the horizon: at the start of the road, a misty unfinished bridge over the sea; in the far distance, the Hidden Leaf village with the Hokage faces carved in the cliff, and a dark storm cloud gathering above it. The main subject is in the CENTER; the bottom quarter is calm ground with little detail (a title will be written over it). Crisp pixels, no blur. No text, no letters, no logo, no UI, no frame.
+```
+
+### Hoja 33 → `sprite-estilo-nuevo-33.png` (fondo del Home, tema oscuro) → `game-background-dark-theme.jpg`
+
+```
+A wide 16:9 pixel art background in the exact style of the attached reference images: the Hidden Leaf village at night, seen from a grassy hill, with a full moon, the Hokage faces carved in the cliff, warm lit windows and the round Hokage building in the middle; trees framing the left and right edges. Keep the composition of the attached background. The CENTER must stay fairly calm and not too bright, because game menus and panels are drawn on top of it. Crisp pixels, no blur. No characters in the foreground, no text, no UI.
+```
+
+### Hoja 34 → `sprite-estilo-nuevo-34.png` (fondo del Home, tema claro) → `game-background-light-theme.jpg`
+
+```
+A wide 16:9 pixel art background in the exact style of the attached reference images: the Hidden Leaf village on a sunny day, seen from a dirt clearing at the edge of the forest, with the Hokage faces carved in the cliff on the left, the round Hokage building, blue roofs, and a round orange water tower with the Konoha leaf symbol on a white plate in the right foreground. Keep the composition of the attached background. The CENTER must stay fairly calm, because game menus and panels are drawn on top of it. Crisp pixels, no blur. No characters in the foreground, no text, no UI.
+```
+
+⚠️ **El favicon sale de este fondo**: `generar-favicon.py` recorta la placa de la torre de agua en una
+posición medida a mano (`CAJA`). Si se cambia el fondo claro, esa posición deja de apuntar a la torre:
+o se mide de nuevo sobre el fondo nuevo, o se hace la hoja 35.
+
+### Hoja 35 → `sprite-estilo-nuevo-35.png` (favicon) → `public/favicon.png`
+
+**Un favicon se ve a 16 px**: ahí no se lee un dibujo, se lee una silueta y dos colores (ver el
+docstring de `generar-favicon.py`). Un mosaico sólido se distingue en barras claras y oscuras; un
+símbolo flotante no.
+
+```
+A single pixel art app icon in the exact style of the attached reference images: the Konoha leaf swirl symbol, bold and simple, drawn in white on a solid square orange tile with a thick dark outline. Very high contrast and very few details, so it still reads at 16x16 pixels. Transparent background around the tile (real alpha, NOT a checkerboard). No text.
+```
+
+Si se hace esta hoja, **no volver a correr `generar-favicon.py`**: pisaría el favicon nuevo con el recorte
+del fondo.

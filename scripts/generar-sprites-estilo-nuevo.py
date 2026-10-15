@@ -123,6 +123,16 @@ HOJAS = [
     ('sprite-estilo-nuevo-29.png', ['map-columns/pais_de_las_olas']),
     ('sprite-estilo-nuevo-30.png', ['map-columns/examen_chunin']),
     ('sprite-estilo-nuevo-31.png', ['map-columns/invasion_de_pain']),
+
+    # --- Tanda 4: lo último ---
+    # La ilustración de la tarjeta de campaña del Home (no existía: la tarjeta salía lisa).
+    ('sprite-estilo-nuevo-32.png', ['campaigns/camino_ninja']),
+    # Fondos de página del Home, OPCIONALES: los de antes ya eran pixel art detallado.
+    ('sprite-estilo-nuevo-33.png', ['home/game-background-dark-theme']),
+    ('sprite-estilo-nuevo-34.png', ['home/game-background-light-theme']),
+    # El favicon: solo hace falta si cambia el fondo claro, de donde lo recorta
+    # generar-favicon.py (ver su docstring).
+    ('sprite-estilo-nuevo-35.png', ['favicon/favicon']),
 ]
 
 TIPO_POR_CARPETA = {
@@ -136,6 +146,16 @@ TIPO_POR_CARPETA = {
     'medals': 'icono',
     'effects': 'tira',
     'map-columns': 'fondo',
+    'campaigns': 'fondo',
+    'home': 'fondo',
+    'favicon': 'favicon',
+}
+
+# Dónde va cada "carpeta" lógica, si no es la suya dentro de src/assets. Los fondos del
+# Home viven sueltos en src/assets (los importa App.jsx) y el favicon en public/.
+DESTINOS = {
+    'home': os.path.join(RAIZ, 'src', 'assets'),
+    'favicon': os.path.join(RAIZ, 'public'),
 }
 
 # Iconos: lienzo cuadrado y margen, por carpeta. Los nodos y el menú van a 128 como
@@ -165,7 +185,19 @@ TIRAS = {
 
 # Fondos de columna del mapa: el tamaño de los que había. Se recorta para CUBRIR, no
 # para caber: un fondo con bandas vacías se vería roto.
-FONDOS = {'map-columns': (520, 832)}
+FONDOS = {
+    'map-columns': (520, 832, 'png'),
+    # La celda de la tarjeta es apaisada y cambia con el ancho (en móvil, una franja de
+    # 128 px de alto a todo el ancho); se pinta con background-size: cover, así que vale
+    # un 16:9 con el motivo en el centro.
+    'campaigns': (1024, 576, 'png'),
+    # El tamaño de los que había. En JPEG: son las dos imágenes más pesadas de la primera
+    # carga (ver documentacion/37-publicacion-web.md) y el PNG pesaba el triple.
+    'home': (1672, 941, 'jpg'),
+}
+
+# El favicon: un icono cuadrado ampliado a múltiplo entero, como el que había.
+FAVICON_LADO = 160
 
 # Medido sobre los sprites que ya había (mediana de cada carpeta):
 #   personajes      lienzo 96, 62 px de alto, pies en y=78
@@ -432,7 +464,7 @@ if __name__ == '__main__':
         primera = next(c for c in celdas if c)
         carpeta, ident = primera.split('/')
         tipo = TIPO_POR_CARPETA[carpeta]
-        destino = os.path.join(ASSETS, carpeta)
+        destino = DESTINOS.get(carpeta, os.path.join(ASSETS, carpeta))
         # Sin alfa y no siendo un fondo: trae el damero pintado y hay que borrarlo.
         sin_alfa = 'A' not in original.getbands()
         hoja = quitar_damero_pintado(original) if sin_alfa and tipo != 'fondo' else original.convert('RGBA')
@@ -443,8 +475,23 @@ if __name__ == '__main__':
             print('ok', primera, f'{fotogramas} fotogramas de {lado}')
             continue
         if tipo == 'fondo':
-            fondo(hoja, *FONDOS[carpeta]).save(os.path.join(destino, f'{ident}.png'))
-            print('ok', primera, FONDOS[carpeta])
+            ancho, alto, ext = FONDOS[carpeta]
+            imagen = fondo(hoja, ancho, alto)
+            ruta_salida = os.path.join(destino, f'{ident}.{ext}')
+            if ext == 'jpg':
+                imagen.save(ruta_salida, quality=88, optimize=True, progressive=True)
+            else:
+                imagen.save(ruta_salida)
+            print('ok', primera, (ancho, alto, ext))
+            continue
+        if tipo == 'favicon':
+            dibujo = limpio(hoja)
+            lado = max(dibujo.size)
+            lienzo = Image.new('RGBA', (lado, lado), (0, 0, 0, 0))
+            lienzo.alpha_composite(dibujo, ((lado - dibujo.width) // 2, (lado - dibujo.height) // 2))
+            lienzo.resize((FAVICON_LADO, FAVICON_LADO), Image.Resampling.LANCZOS).save(
+                os.path.join(destino, f'{ident}.png'))
+            print('ok', primera, FAVICON_LADO)
             continue
 
         for (x0, x1), celda in zip(cortes(hoja, len(celdas)), celdas):
