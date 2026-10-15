@@ -1,6 +1,6 @@
 # Meta-progresión: pergaminos, gacha, maestría y actos variables (diseño)
 
-> **Estado: DISEÑO, sin implementar** (2026-10-15). Recoge lo acordado con el usuario tras el
+> **Estado: en marcha** (2026-10-15), fase a fase y un cambio por commit. Recoge lo acordado con el usuario tras el
 > playtest: *"el juego se siente bien, pero falta un gancho que te haga volver a jugar"*. Los números
 > son un punto de partida calculado sobre la estructura actual de la run; se ajustan midiendo, como el
 > resto del balance.
@@ -138,8 +138,7 @@ Nivel *n* → *n+1* cuesta 40 × *n* XP. Tope: nivel 10.
 | 8 | Marco de tarjeta especial en el Bingo Book y en la selección |
 | 10 | **Segundo aspecto** (versión de élite) y título de maestro |
 
-⚠️ **Decisión pendiente: ¿la maestría da poder?** La propuesta es que **no**: solo aspectos, títulos y
-marcos. El juego está calibrado contra niveles de enemigo fijos (documentacion/11), y un ninja que se
+✅ **Decidido: la maestría NO da poder**, solo aspectos, títulos y marcos. El juego está calibrado contra niveles de enemigo fijos (documentacion/11), y un ninja que se
 hace más fuerte entre runs rompe esa calibración y vacía de sentido la ascensión. Si se quiere algo de
 poder, el límite razonable sería **elegir un objeto inicial propio** del personaje al nivel 8, medido con
 el simulador antes de darlo por bueno.
@@ -239,9 +238,11 @@ Kakashi fueron tres ficheros de datos; el arte ya tiene su proceso montado. Cada
 Cada fase se juega sola: la 1 ya da progreso; la 2 ya engancha con lo que hay; la 3 y la 4 son las que
 lo mantienen vivo.
 
-## Decisiones pendientes
+## Decisiones (tomadas el 2026-10-15)
 
-1. **¿La maestría da algo de poder?** Propuesta: no (ver §3).
-2. **¿El objeto inicial se elige o sale al azar** entre los desbloqueados? Propuesta: se elige uno de tres
-   al azar, como las cartas de Slay the Spire: hay decisión y no es siempre el mismo.
-3. **¿Los aspectos alternativos son solo de héroes** o también de villanos reclutables?
+1. **La maestría NO da poder**: solo aspectos, títulos y marcos. Protege la calibración de niveles fijos
+   y el sentido de la ascensión.
+2. **El objeto inicial sale AL AZAR** entre los desbloqueados, sin elegir.
+3. **Los villanos reclutables también tienen aspecto alternativo**, no solo los héroes.
+
+El arte que va haciendo falta se pide en documentacion/41, como hojas numeradas.
