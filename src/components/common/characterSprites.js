@@ -1,5 +1,5 @@
-// Sprite de cada luchador, recortado de `assets/map-sprites-idle-all-characters.png`
-// con `scripts/generar-sprites-personajes.py` (fondo transparente, lienzo cuadrado).
+// Sprite de cada luchador, recortado por `scripts/generar-sprites-estilo-nuevo.py`
+// (estilo nuevo, documentacion/41; fondo transparente, lienzo común de 96×96).
 // La clave es el id de `data/characters.json`, `data/enemies.json` o
 // `data/common-enemies.json` — los tres comparten espacio de nombres aquí, porque
 // un jefe puede acabar en tu equipo por logro y un personaje puede ser el enemigo.
@@ -49,9 +49,7 @@ export const SPRITE_LUCHADOR = {
   kiba,
   hinata,
   shino,
-  // Sai y Yamato no están en la hoja del artista: llevan de placeholder el genin
-  // de su naturaleza de chakra (fuuton y doton). Declarado en el script, no un
-  // descuido — ver PLACEHOLDERS en `scripts/generar-sprites-personajes.py`.
+  // Sai y Yamato llevaron de placeholder un genin hasta el estilo nuevo (2026-10-14).
   sai,
   yamato,
   // Kakashi tampoco está en la hoja, y como es legendario y se pelea contra él en

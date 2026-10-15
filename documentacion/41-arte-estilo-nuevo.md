@@ -454,9 +454,24 @@ Con la hoja 31 ya no queda arte del estilo viejo en el juego, salvo los fondos d
 `generar-sprites-nodo-reclutar.py`) **se niegan a correr** en cuanto existe la hoja nueva de lo que
 generan: si no, pisarían el arte nuevo con el viejo.
 
-## ¿Se pueden borrar las hojas `sprite-estilo-nuevo-*.png`?
+## Limpieza (2026-10-15): hojas y scripts viejos, BORRADOS
 
-**Sí** (2026-10-15). Ocupan 42 MB, ningún fichero del juego las importa y no van en el build: solo las
+Se borró todo lo que ya no usaba nada: las 31 hojas del estilo nuevo, las de las tandas anteriores
+(`sprite-pendientes-*`, objetos nuevos, pesas, pergaminos), las hojas originales del arte viejo
+(personajes, transformaciones, proyectiles, objetos, nodos, iconos, columnas y sus paisajes
+originales), las hojas de animación que nunca se usaron, los restos de la plantilla de Vite, el
+`reclutar-raro.png` (el mapa solo pinta verde y dorado) y un `pain_camino_deva_1.png` huérfano.
+`src/assets/` pasó de **95 MB a 15 MB**. Y los once scripts que leían de esas hojas: ver
+`git log` para recuperarlos. Las menciones a ellos en documentos anteriores son historia.
+
+**Se quedaron a propósito**: `OFL.txt` (la licencia de PressStart2P obliga a acompañar la fuente),
+`originales/game-background-*.png` (el original de los fondos del Home, que siguen siendo del estilo
+viejo y de los que sale el favicon) y `generar-sprites-objetos.py` (retirado, pero `generar-favicon.py`
+usa su lector de PNG).
+
+### Lo que había que saber antes de borrarlas
+
+**Se podía** (2026-10-15). Ocupan 42 MB, ningún fichero del juego las importa y no van en el build: solo las
 lee `generar-sprites-estilo-nuevo.py`, que se salta las que faltan **sin tocar los sprites ya
 recortados**. Lo que hay que saber:
 

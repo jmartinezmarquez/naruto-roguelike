@@ -1,5 +1,5 @@
-// Sprite de cada transformación, recortado de `assets/sprites-transformaciones.png`
-// con `scripts/generar-sprites-transformaciones.py`. La clave es
+// Sprite de cada transformación, recortado por `scripts/generar-sprites-estilo-nuevo.py`
+// (estilo nuevo, documentacion/41). La clave es
 // `<personajeId>_<indice del modo en su array `modos`>`.
 //
 // Los que la hoja original no traía —los tier 2 de los comunes, Kakashi, Sai, Yamato

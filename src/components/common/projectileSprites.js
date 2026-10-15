@@ -1,5 +1,5 @@
-// Proyectil de jutsu de cada luchador, recortado de `assets/projectile-sprites.png`
-// con `scripts/generar-sprites-proyectiles.py`. La clave es el id del luchador.
+// Proyectil de jutsu de cada luchador, recortado por `scripts/generar-sprites-estilo-nuevo.py`
+// (estilo nuevo, documentacion/41). La clave es el id del luchador.
 //
 // El ataque BÁSICO es un kunai para todos (así está el juego: un único
 // `ataqueBasicoPorDefecto` en config.json, ver documentacion/29), así que solo
@@ -9,10 +9,8 @@
 // y Kakashi (Raikiri) son cuerpo a cuerpo a propósito. Neji, Shikamaru, Kiba, Sai y
 // Yamato, que faltaban en la hoja del artista, llegaron con el estilo nuevo.
 //
-// Los cinco genin rivales sí lo están, pero en la OTRA hoja
-// (`map-sprites-idle-all-characters.png`, al final de su tira de ataque), así que
-// su archivo lo genera el mismo script leyendo las dos. Son los proyectiles que
-// más se ven del juego: los genin son la mayoría de los combates.
+// Los cinco genin rivales tienen el suyo (hoja 12): son los proyectiles que más se
+// ven del juego, porque los genin son la mayoría de los combates.
 
 import kunai from '../../assets/projectiles/kunai.png';
 import naruto from '../../assets/projectiles/naruto.png';

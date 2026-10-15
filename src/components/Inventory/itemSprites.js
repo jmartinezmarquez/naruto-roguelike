@@ -1,5 +1,5 @@
-// Sprite de cada objeto, recortado de `assets/sprite-objetos-iniciales.png`
-// con `scripts/generar-sprites-objetos.py` (fondo transparente, lienzo cuadrado).
+// Sprite de cada objeto, recortado por `scripts/generar-sprites-estilo-nuevo.py`
+// (estilo nuevo, documentacion/41; fondo transparente, lienzo cuadrado).
 // La clave es el id de `data/items.json`. Un objeto sin sprite cae al
 // emoji/marco vacío en la UI, no rompe nada.
 
@@ -18,13 +18,12 @@ import anilloRinneganFragmento from '../../assets/items/anillo_rinnegan_fragment
 // (`scripts/generar-sprites-estilo-nuevo.py`).
 import cascabeles from '../../assets/items/cascabeles.png';
 // Los pergaminos de entrenamiento tienen su propia hoja
-// (`assets/sprite-pergaminos-entrenamiento.png`), que recorta
-// `scripts/generar-sprites-pergaminos.py`.
+// (ya borrada; está en el historial de git).
 import pergaminoEntrenamientoAtaque from '../../assets/items/pergamino_entrenamiento_ataque.png';
 import pergaminoEntrenamientoDefensa from '../../assets/items/pergamino_entrenamiento_defensa.png';
 import pergaminoEntrenamientoVelocidad from '../../assets/items/pergamino_entrenamiento_velocidad.png';
-// Los 8 objetos del 2026-10-14, recortados por `scripts/generar-sprites-objetos-nuevos.py`:
-// siete de `assets/sprite-objetos-nuevos.png` y las pesas de Lee de su propia imagen.
+// Los 8 objetos del 2026-10-14 tenían su propia hoja (ya borrada; está en el
+// historial de git).
 import unguentoCurativo from '../../assets/items/unguento_curativo.png';
 import kitNinjaMedico from '../../assets/items/kit_ninja_medico.png';
 import manualJonin from '../../assets/items/manual_jonin.png';

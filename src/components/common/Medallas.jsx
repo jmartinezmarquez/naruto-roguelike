@@ -3,7 +3,7 @@ import { EtiquetaFlotante } from './PiezasUI';
 
 /**
  * Las medallas de arco, como las de gimnasio de Pokémon: una por jefe final derrotado
- * en la run. Dibujadas por `scripts/generar-sprites-medallas.py` en
+ * en la run. Recortadas por `scripts/generar-sprites-estilo-nuevo.py` (estilo nuevo, documentacion/41) en
  * `assets/medals/<arcoId>.png`.
  *
  * `import.meta.glob` y no `import`, por lo mismo que la música: **un arco sin medalla

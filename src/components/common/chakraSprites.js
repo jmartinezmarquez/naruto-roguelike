@@ -4,7 +4,7 @@
 // estaba dibujado** y que además se veían siempre al lado de sprites que sí lo
 // están. Salió del playtest del 2026-08-14 y es la tanda 1 del punto 15 del roadmap.
 //
-// Los PNG los recorta `scripts/generar-sprites-iconos.py` de la hoja del artista.
+// Los PNG los recorta `scripts/generar-sprites-estilo-nuevo.py` (estilo nuevo, documentacion/41).
 // ⚠️ **No editar los PNG a mano**: se pisan al regenerar.
 
 import katon from '../../assets/chakra/katon.png';

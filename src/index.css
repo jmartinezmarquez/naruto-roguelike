@@ -524,7 +524,7 @@ img {
 .onda-impacto-grande { --onda-final: 110px; }
 
 /* --- Sprites de efecto (humo, tajo, estrella, explosión) -----------------------
-   Tiras horizontales de fotogramas (`scripts/generar-sprites-efectos.py`) reproducidas
+   Tiras horizontales de fotogramas (`scripts/generar-sprites-estilo-nuevo.py`) reproducidas
    desplazando el fondo a saltos: `steps(N)` enseña los fotogramas 0..N-1 y el salto
    final cae FUERA de la tira, así que con `forwards` el efecto se queda en blanco solo
    al terminar. Las medidas las pone `EfectoSprite` en variables. */

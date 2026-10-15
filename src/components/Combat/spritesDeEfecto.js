@@ -1,5 +1,5 @@
 // Los sprites de efecto del combate (tiras de fotogramas en `assets/effects/`,
-// dibujadas por `scripts/generar-sprites-efectos.py`) y cuál toca en cada golpe.
+// recortadas por `scripts/generar-sprites-estilo-nuevo.py` (estilo nuevo, documentacion/41)) y cuál toca en cada golpe.
 //
 // ⚠️ `lado` y `fotogramas` tienen que coincidir con lo que dibuja el script: la tira
 // se reproduce desplazando el fondo a saltos de `lado` píxeles, y con un número mal

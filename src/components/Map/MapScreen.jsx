@@ -37,9 +37,8 @@ import { FONDO_COLUMNA } from '../common/fondosDeArco';
 import { FilaMedallas } from '../common/Medallas';
 import ascensionsData from '../../data/ascensions.json';
 
-// Sprite por tipo de nodo, recortado de `assets/sprite-nodos-mapa.png` (la hoja
-// original del artista trae los 5 iconos juntos; los recortes viven en
-// `assets/nodes/*.png` a media resolución, 100 px para pintarse a 48).
+// Sprite por tipo de nodo, recortado por `scripts/generar-sprites-estilo-nuevo.py`
+// (estilo nuevo, documentacion/41) en `assets/nodes/*.png`.
 // El mini-jefe, el jefe final y el entrenador pintan el sprite del PERSONAJE que
 // hay dentro (`spriteDeLuchador`, ver `components/common/characterSprites.js`); el
 // sprite de combate genérico es solo su respaldo. El entrenador puede desde que
@@ -143,7 +142,7 @@ const SEPARACION_PANELES = 16;
 // Bajado de 120 a 104; con los nodos a 56 px de lienzo quedan 48 px de aire entre
 // filas, que es lo que impide que se toquen.
 //
-// ⚠️ Va emparejado con `scripts/generar-columnas-mapa.py`: el fondo se genera a
+// ⚠️ Va emparejado con `FONDOS` de `scripts/generar-sprites-estilo-nuevo.py`: el fondo se genera a
 // 520 × (ALTO_POR_PISO × 8) y se pinta con `100% 100%`, así que cambiar uno sin el
 // otro DEFORMA el dibujo en vez de recortarlo. El script lleva el mismo aviso.
 const ALTO_POR_PISO = 104;
@@ -974,7 +973,7 @@ function RuedaChakra() {
  * 3. La confirmación de reiniciar era un `window.confirm`.
  *
  * Lo que lo desbloqueó fue el arte: los cuatro iconos ya existen sueltos
- * (`assets/menu/*.png`, recortados por `scripts/generar-sprites-iconos.py`), así que
+ * (`assets/menu/*.png`, recortados por `scripts/generar-sprites-estilo-nuevo.py` (estilo nuevo, documentacion/41)), así que
  * el marco pasa a ser un panel normal y cada icono, su propio `<img>`.
  */
 function MenuVertical({ abrirLogros, abrirEnciclopedia, abrirAjustes, reiniciarRun, irAlHome }) {
@@ -1269,7 +1268,7 @@ export default function MapScreen() {
               // `100% 100%` y no `cover`: las columnas se generan a 520×960,
               // que es exactamente el lienzo (ANCHO × ALTO_POR_PISO × 8 pisos),
               // así que encajan sin recortar ni deformar. Si algún arco dejara
-              // de tener 8 pisos habría que regenerarlas (scripts/generar-columnas-mapa.py).
+              // de tener 8 pisos habría que regenerarlas (FONDOS en generar-sprites-estilo-nuevo.py).
               backgroundImage: fondoColumna ? `url(${fondoColumna})` : undefined,
               backgroundSize: '100% 100%',
             }}

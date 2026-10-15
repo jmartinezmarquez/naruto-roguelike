@@ -467,8 +467,10 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   sin alfa (damero pintado) las limpia el script solo. ⚠️ El
   corte de las hojas minimiza un coste (columna llena + desviación del ancho medio); "partes iguales" y
   "huecos primero" fallaron cada uno en una hoja real. ⚠️ **Los diez scripts viejos de sprites están
-  RETIRADOS** y se niegan a correr siempre (pisarían el arte nuevo). Las hojas `sprite-estilo-nuevo-*` se
-  pueden borrar de la carpeta: nada del juego las usa y siguen en el historial de git. ⚠️ Las tiras de efecto se reducen con la
+  RETIRADOS** y se niegan a correr siempre (pisarían el arte nuevo). **El 2026-10-15 se
+  BORRARON** las hojas (todas) y los once scripts viejos de sprites: `src/assets` pasó de 95 a 15 MB. Están
+  en el historial de git. Las menciones a esos scripts en este fichero y en `documentacion/` son historia;
+  el único script de sprites vivo es `generar-sprites-estilo-nuevo.py` (más `generar-favicon.py`). ⚠️ Las tiras de efecto se reducen con la
   MISMA escala en todos los fotogramas, o la explosión deja de crecer. Tests nuevos: todo modo
   tiene sprite y todo luchador a distancia, proyectil.
 

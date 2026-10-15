@@ -102,7 +102,7 @@ HOJAS = [
     ('sprite-estilo-nuevo-15.png',
      ['nodes/combate', 'nodes/evento', 'nodes/descanso', 'nodes/tienda']),
     ('sprite-estilo-nuevo-16.png',
-     ['nodes/reclutar-comun', 'nodes/reclutar-raro', 'nodes/reclutar-legendario']),
+     ['nodes/reclutar-comun', None, 'nodes/reclutar-legendario']),
     ('sprite-estilo-nuevo-17.png',
      ['chakra/katon', 'chakra/fuuton', 'chakra/raiton', 'chakra/doton', 'chakra/suiton']),
     ('sprite-estilo-nuevo-18.png',
