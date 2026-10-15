@@ -453,3 +453,20 @@ Con la hoja 31 ya no queda arte del estilo viejo en el juego, salvo los fondos d
 `generar-sprites-efectos.py`, `generar-sprites-iconos.py`, `generar-sprites-medallas.py`,
 `generar-sprites-nodo-reclutar.py`) **se niegan a correr** en cuanto existe la hoja nueva de lo que
 generan: si no, pisarían el arte nuevo con el viejo.
+
+## ¿Se pueden borrar las hojas `sprite-estilo-nuevo-*.png`?
+
+**Sí** (2026-10-15). Ocupan 42 MB, ningún fichero del juego las importa y no van en el build: solo las
+lee `generar-sprites-estilo-nuevo.py`, que se salta las que faltan **sin tocar los sprites ya
+recortados**. Lo que hay que saber:
+
+- **No hacen falta para jugar ni para publicar.** Los sprites recortados (`characters/`, `items/`…) son
+  lo único que usa el juego.
+- **Siguen en el historial de git**: borrarlas libera los 42 MB de la carpeta de trabajo, pero el
+  repositorio (`.git`) no adelgaza. Para recuperar una: `git checkout 4790a87 -- src/assets/sprite-estilo-nuevo-15.png`
+  (las 01-14 están en el commit `a7acda3`).
+- **Hacen falta para RE-recortar**: si se cambia el script (otro tamaño, otra colocación), hay que
+  recuperarlas antes.
+- Los diez **scripts viejos están retirados** y se niegan a correr siempre. Antes se negaban solo si
+  existía su hoja nueva, así que borrar las hojas los habría reactivado — y correrlos habría pisado
+  todo el arte nuevo con el viejo. Se cambió precisamente para poder borrarlas.

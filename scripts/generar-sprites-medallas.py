@@ -201,15 +201,14 @@ MEDALLAS = {
 }
 
 if __name__ == '__main__':
-    # ⚠️ Este arte se está rehaciendo en el estilo nuevo (documentacion/41). Si ya ha
-    # llegado su hoja, correr esto PISARÍA el arte nuevo con el viejo: se para.
-    import os as _os
+    # ⚠️ **Script retirado (2026-10-15).** Todo el arte que generaba está rehecho en el
+    # estilo nuevo (documentacion/41) y lo recorta scripts/generar-sprites-estilo-nuevo.py.
+    # Correr esto PISARÍA ese arte con el viejo, así que se para siempre. Ya no depende de
+    # que existan las hojas nuevas: se pueden borrar de la carpeta sin que esto se
+    # reactive. Se conserva como referencia de cómo se sacó el arte original.
     import sys as _sys
-    _assets = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), 'src', 'assets')
-    _nuevas = [h for h in ('sprite-estilo-nuevo-18.png', 'sprite-estilo-nuevo-19.png',) if _os.path.exists(_os.path.join(_assets, h))]
-    if _nuevas:
-        _sys.exit(f'No se ejecuta: ya existe {_nuevas} del estilo nuevo, y esto pisaría su arte. '
-                  'Usa scripts/generar-sprites-estilo-nuevo.py.')
+    _sys.exit('Script retirado: el arte que generaba está rehecho en el estilo nuevo '
+              '(documentacion/41-arte-estilo-nuevo.md). Correrlo pisaría ese arte.')
     os.makedirs(DESTINO_MEDALLAS, exist_ok=True)
     for arco_id, dibujar in MEDALLAS.items():
         guardar(dibujar(), os.path.join(DESTINO_MEDALLAS, f'{arco_id}.png'))

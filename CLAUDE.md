@@ -466,8 +466,9 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   hechas el 2026-10-15**: ya no queda arte del estilo viejo salvo los fondos de página del Home. Las hojas
   sin alfa (damero pintado) las limpia el script solo. ⚠️ El
   corte de las hojas minimiza un coste (columna llena + desviación del ancho medio); "partes iguales" y
-  "huecos primero" fallaron cada uno en una hoja real. ⚠️ **Todos los scripts viejos de sprites se niegan
-  a correr** si ya existe la hoja nueva de lo suyo: pisarían el arte nuevo. ⚠️ Las tiras de efecto se reducen con la
+  "huecos primero" fallaron cada uno en una hoja real. ⚠️ **Los diez scripts viejos de sprites están
+  RETIRADOS** y se niegan a correr siempre (pisarían el arte nuevo). Las hojas `sprite-estilo-nuevo-*` se
+  pueden borrar de la carpeta: nada del juego las usa y siguen en el historial de git. ⚠️ Las tiras de efecto se reducen con la
   MISMA escala en todos los fotogramas, o la explosión deja de crecer. Tests nuevos: todo modo
   tiene sprite y todo luchador a distancia, proyectil.
 
