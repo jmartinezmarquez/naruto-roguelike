@@ -951,3 +951,69 @@ Left to right:
 3. Kakuzu – Waterfall elite: younger Kakuzu in a Hidden Waterfall outfit with a flak vest, mask down.
 4. Kakuzu – Bounty collector: grey travelling cloak with a straw hat, a heavy money pouch at his belt.
 ```
+
+## Tanda 10 — segunda tanda de héroes (hojas 66-70)
+
+⏳ **PENDIENTES.** Tsunade (legendaria), Temari, Kankuro y Konohamaru (raros), en los datos con
+`pendienteDeArte`. Como la tanda 6: correr el script y quitar las marcas. Tsunade no lleva proyectil: es
+cuerpo a cuerpo. Bloques: 66-67 personajes, 68 proyectiles, 69-70 aspectos.
+
+### Hoja 66 → `sprite-estilo-nuevo-66.png` (Tsunade y Temari)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Tsunade (normal): blond hair in two low pigtails, a purple diamond mark on her forehead, grey sleeveless kimono top with a dark sash, a long green haori, dark pants, heeled sandals.
+2. Tsunade – "Strength of a Hundred Seal": same Tsunade with black seal markings spreading across her face and arms from the forehead diamond, green healing aura.
+3. Tsunade – "Creation Rebirth": same Tsunade glowing with bright green chakra, her wounds closing, the seal markings blazing.
+4. Temari (normal): sandy blond hair in four short spiky ponytails, black kimono-style dress with a red sash, a giant folded iron fan on her back, Sand forehead protector around her neck.
+5. Temari – "Summoning: Kamatari": same Temari with her fan fully open, a small one-eyed weasel holding a sickle riding a whirlwind beside her, wind aura.
+```
+
+### Hoja 67 → `sprite-estilo-nuevo-67.png` (Kankuro y Konohamaru)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Kankuro (normal): black cat-eared hood, purple face paint, black bodysuit, a bandage-wrapped puppet on his back, Sand forehead protector on the hood.
+2. Kankuro – "Three Puppet Formation": same Kankuro with three puppets (Crow, Black Ant, Salamander) hanging around him from blue chakra strings.
+3. Konohamaru (normal): young boy with spiky brown hair, a long blue scarf, a grey-green shirt, a Konoha forehead protector a bit too big for him.
+4. Konohamaru – "Big Ball Rasengan": same Konohamaru holding a huge blue spinning Rasengan above his head with both hands, wind aura.
+```
+
+### Hoja 68 → `sprite-estilo-nuevo-68.png` (proyectiles)
+
+```
+[PROJECTILE STYLE BLOCK]
+
+Left to right:
+1. Temari's "Cutting Whirlwind": a pale green tornado full of sharp wind blades.
+2. Kankuro's "Black Ant: Puppet Prison": a black wooden puppet's open torso with blades sticking out.
+3. Konohamaru's "Rasengan": a bright blue spinning sphere of chakra.
+```
+
+### Hoja 69 → `sprite-estilo-nuevo-69.png` (aspectos: Tsunade, Temari, Kankuro)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Tsunade – Fifth Hokage: white Hokage robe and hat with the red Fire emblem.
+2. Tsunade – Young Sannin: younger Tsunade with long pigtails, a red-and-white ninja outfit, a green Konoha flak vest.
+3. Temari – Sand jonin: grey Hidden Sand vest over a dark outfit, fan on her back.
+4. Temari – Chunin exam proctor: dark blue kimono with a red sash, fan held closed in one hand.
+5. Kankuro – Puppet master: no hood, short brown hair, new purple face paint, long dark coat.
+6. Kankuro – Desert travel: beige desert cloak and wrapping, face paint visible.
+```
+
+### Hoja 70 → `sprite-estilo-nuevo-70.png` (aspectos: Konohamaru)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Konohamaru – Genin: slightly older Konohamaru in a long scarf and a dark jacket, goggles on his forehead.
+2. Konohamaru – Academy days: younger Konohamaru in a yellow shirt and grey shorts, a long blue scarf and a helmet with goggles.
+```

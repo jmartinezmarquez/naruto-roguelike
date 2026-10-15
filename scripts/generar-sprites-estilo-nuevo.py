@@ -195,6 +195,12 @@ HOJAS = [
     ('sprite-estilo-nuevo-63.png', ['medals/hidan_y_kakuzu']),
     ('sprite-estilo-nuevo-64.png', ['map-columns/hidan_y_kakuzu']),
     ('sprite-estilo-nuevo-65.png', ['aspects/hidan_1', 'aspects/hidan_2', 'aspects/kakuzu_1', 'aspects/kakuzu_2']),
+    # --- Fase 3, segunda tanda de héroes: solo salen del gacha.
+    ('sprite-estilo-nuevo-66.png', ['characters/tsunade', 'transformations/tsunade_0', 'transformations/tsunade_1', 'characters/temari', 'transformations/temari_0']),
+    ('sprite-estilo-nuevo-67.png', ['characters/kankuro', 'transformations/kankuro_0', 'characters/konohamaru', 'transformations/konohamaru_0']),
+    ('sprite-estilo-nuevo-68.png', ['projectiles/temari', 'projectiles/kankuro', 'projectiles/konohamaru']),
+    ('sprite-estilo-nuevo-69.png', ['aspects/tsunade_1', 'aspects/tsunade_2', 'aspects/temari_1', 'aspects/temari_2', 'aspects/kankuro_1', 'aspects/kankuro_2']),
+    ('sprite-estilo-nuevo-70.png', ['aspects/konohamaru_1', 'aspects/konohamaru_2']),
 ]
 
 TIPO_POR_CARPETA = {
