@@ -490,8 +490,12 @@ recortados**. Lo que hay que saber:
 
 ## Tanda 4 — lo último (hojas 32-35)
 
-Lo que queda tras la limpieza. **Solo la 32 es imprescindible**: la tarjeta de campaña del Home nunca
-ha tenido ilustración (`assets/campaigns/` estaba vacía y salía un fondo liso). Los fondos del Home
+✅ **HECHAS el 2026-10-15**: con ellas ya no queda arte del estilo viejo en el juego. ⚠️ Corrección: se
+dijo que la tarjeta de campaña no tenía ilustración y **sí la tenía** (`camino_ninja.jpeg`); el inventario
+solo buscaba `.png` y `.jpg`. La nueva la sustituye, en JPEG (183 KB frente a 1 MB en PNG). El favicon
+ya no se recorta del fondo: `generar-favicon.py` y los PNG de `originales/` se borraron.
+
+Lo que quedaba tras la limpieza. Los fondos del Home
 (33-34) ya eran pixel art detallado y no chirrían con el estilo nuevo: rehacerlos es opcional. El
 favicon (35) solo hace falta si cambia el fondo claro.
 

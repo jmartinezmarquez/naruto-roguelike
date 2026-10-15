@@ -130,8 +130,8 @@ HOJAS = [
     # Fondos de página del Home, OPCIONALES: los de antes ya eran pixel art detallado.
     ('sprite-estilo-nuevo-33.png', ['home/game-background-dark-theme']),
     ('sprite-estilo-nuevo-34.png', ['home/game-background-light-theme']),
-    # El favicon: solo hace falta si cambia el fondo claro, de donde lo recorta
-    # generar-favicon.py (ver su docstring).
+    # El favicon. Antes se recortaba de la torre de agua del fondo claro
+    # (generar-favicon.py, borrado al llegar esta hoja).
     ('sprite-estilo-nuevo-35.png', ['favicon/favicon']),
 ]
 
@@ -190,7 +190,7 @@ FONDOS = {
     # La celda de la tarjeta es apaisada y cambia con el ancho (en móvil, una franja de
     # 128 px de alto a todo el ancho); se pinta con background-size: cover, así que vale
     # un 16:9 con el motivo en el centro.
-    'campaigns': (1024, 576, 'png'),
+    'campaigns': (1024, 576, 'jpg'),
     # El tamaño de los que había. En JPEG: son las dos imágenes más pesadas de la primera
     # carga (ver documentacion/37-publicacion-web.md) y el PNG pesaba el triple.
     'home': (1672, 941, 'jpg'),

@@ -312,7 +312,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   sitio cuelga de `/naruto-roguelike/`, las rutas salen absolutas y **la página queda en blanco sin
   ningún error**. Relativo y no con el nombre del repo, para que siga valiendo en otro hosting. Y ⚠️ el
   peso de la primera carga son **dos archivos, no los 86 sprites** (que solo se descargan al pintarse):
-  el fondo, ya en JPEG con el PNG guardado en `src/assets/originales/`, y la música con `preload="none"`
+  el fondo, en JPEG (el PNG original se borró el 2026-10-15 al rehacerlo en el estilo nuevo), y la música con `preload="none"`
   — con `auto` se bajaban 3 MB **antes de que el navegador pudiera reproducirlos**, porque el autoplay
   está bloqueado hasta el primer gesto.
 - [x] **Los 9 iconos que faltaban** (5 naturalezas de chakra + 4 del menú) y **el menú vertical de CSS**
@@ -470,7 +470,8 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   RETIRADOS** y se niegan a correr siempre (pisarían el arte nuevo). **El 2026-10-15 se
   BORRARON** las hojas (todas) y los once scripts viejos de sprites: `src/assets` pasó de 95 a 15 MB. Están
   en el historial de git. Las menciones a esos scripts en este fichero y en `documentacion/` son historia;
-  el único script de sprites vivo es `generar-sprites-estilo-nuevo.py` (más `generar-favicon.py`). ⚠️ Las tiras de efecto se reducen con la
+  el único script de sprites vivo es `generar-sprites-estilo-nuevo.py`, que también hace los fondos del
+  Home, la ilustración de campaña y el favicon (hojas 32-35): **ya no queda arte del estilo viejo**. ⚠️ Las tiras de efecto se reducen con la
   MISMA escala en todos los fotogramas, o la explosión deja de crecer. Tests nuevos: todo modo
   tiene sprite y todo luchador a distancia, proyectil.
 
