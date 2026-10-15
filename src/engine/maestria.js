@@ -28,3 +28,17 @@ export function xpParaSubirUnNivel(xp, reglas) {
   const { xpEnNivel, xpParaSiguiente } = nivelDeMaestria(xp, reglas);
   return xpParaSiguiente === 0 ? 0 : xpParaSiguiente - xpEnNivel;
 }
+
+/**
+ * El título de un ninja a un nivel de maestría: el del nivel más alto que haya
+ * alcanzado, con el propio del personaje si lo tiene. null si aún no tiene ninguno.
+ */
+export function tituloDeMaestria(id, nivel, datos) {
+  const propios = datos.porPersonaje?.[id] ?? {};
+  const niveles = [...new Set([...Object.keys(datos.titulos), ...Object.keys(propios)])]
+    .map(Number)
+    .filter((n) => n <= nivel)
+    .sort((a, b) => b - a);
+  if (niveles.length === 0) return null;
+  return propios[niveles[0]] ?? datos.titulos[niveles[0]] ?? null;
+}

@@ -134,6 +134,12 @@ el panel "Ninja mastery" del Game Over. Una run ganada lleva a un ninja hacia el
 30 runs ganadas con él, menos con duplicados. Un duplicado da exactamente la XP que falta para subir un
 nivel (`xpParaSubirUnNivel`), así no hay un segundo contador que pueda discrepar.*
 
+✅ *Hecho (títulos y marco): `src/data/maestria.json` (títulos genéricos en los niveles 2, 6 y 10, y
+propios de algunos ninjas en el 10: "Copy Ninja", "Handsome Green Beast"…; `nivelMarco: 8`),
+`tituloDeMaestria` en el motor, la insignia "Ninja Lv.N · título" en la selección y en el Bingo Book, y
+el marco dorado en la tarjeta de selección. ⚠️ Las funciones van en `common/nivelDeNinja.js` y no en un
+`maestria.js` junto a `Maestria.jsx`: en Windows serían el mismo fichero y el import se cruzaba.*
+
 ### Qué da
 
 | Nivel | Recompensa |

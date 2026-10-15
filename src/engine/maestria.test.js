@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { nivelDeMaestria, xpTotalParaNivel, xpParaSubirUnNivel } from './maestria';
+import { nivelDeMaestria, xpTotalParaNivel, xpParaSubirUnNivel, tituloDeMaestria } from './maestria';
 import configGlobal from '../data/config.json';
 
 const reglas = configGlobal.maestria;
@@ -30,5 +30,19 @@ describe('nivel de ninja (maestría)', () => {
     // ~12 combates, 6 jefes y la victoria: la primera run tiene que notarse, sin regalar niveles.
     const xp = 12 * reglas.xpPorCombate + 6 * reglas.xpPorJefe + reglas.xpPorRunGanada;
     expect(nivelDeMaestria(xp, reglas).nivel).toBe(2);
+  });
+});
+
+describe('tituloDeMaestria', () => {
+  const datos = { titulos: { 2: 'Genin', 6: 'Chunin', 10: 'Master' }, porPersonaje: { naruto: { 10: 'Hokage' } } };
+  it('sin nivel suficiente no hay título, y luego se queda el último alcanzado', () => {
+    expect(tituloDeMaestria('sakura', 1, datos)).toBeNull();
+    expect(tituloDeMaestria('sakura', 2, datos)).toBe('Genin');
+    expect(tituloDeMaestria('sakura', 7, datos)).toBe('Chunin');
+  });
+  it('el propio del personaje sustituye al genérico en su nivel', () => {
+    expect(tituloDeMaestria('naruto', 10, datos)).toBe('Hokage');
+    expect(tituloDeMaestria('sakura', 10, datos)).toBe('Master');
+    expect(tituloDeMaestria('naruto', 6, datos)).toBe('Chunin');
   });
 });

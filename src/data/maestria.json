@@ -1,0 +1,21 @@
+{
+  "_comentario": "Recompensas del nivel de ninja (documentacion/42). Los títulos genéricos salen en el nivel que los indexa y se quedan hasta el siguiente; porPersonaje los sustituye para un ninja concreto en ese nivel. nivelMarco es desde qué nivel su tarjeta lleva el marco dorado. Los aspectos van aparte, por arte (assets/aspects/).",
+  "titulos": {
+    "2": "Genin of the Leaf",
+    "6": "Elite Chunin",
+    "10": "Master Shinobi"
+  },
+  "porPersonaje": {
+    "naruto": { "10": "Child of Prophecy" },
+    "sasuke": { "10": "Last of the Uchiha" },
+    "sakura": { "10": "Strength of a Hundred" },
+    "rock_lee": { "10": "Handsome Green Beast" },
+    "neji": { "10": "Genius of the Hyuga" },
+    "shikamaru": { "10": "Strategist of the Leaf" },
+    "hinata": { "10": "Byakugan Princess" },
+    "kakashi": { "10": "Copy Ninja" },
+    "gaara": { "10": "Kazekage" },
+    "zabuza": { "10": "Demon of the Hidden Mist" }
+  },
+  "nivelMarco": 8
+}

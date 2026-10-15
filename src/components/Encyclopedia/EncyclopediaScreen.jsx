@@ -8,6 +8,7 @@ import itemsData from '../../data/items.json';
 import typesData from '../../data/types.json';
 import { crearLuchador, turnosParaCargarJutsu } from '../../engine/combat';
 import { normalizarPasivas, describirPasiva, nombrePasiva } from '../../engine/passives';
+import { InsigniaMaestria } from '../common/Maestria';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { spriteDeLuchador } from '../common/characterSprites';
 import { spriteDeModo } from '../common/transformationSprites';
@@ -270,6 +271,7 @@ function FichaLuchador({ id, base, modosVistos }) {
           ese nivel, y con el nivel real un personaje ya transformado destriparía
           su transformación desde la rejilla, que es lo que esta pantalla evita. */}
       <FichaPersonaje id={id} nivel={1} className="p-3" />
+      <InsigniaMaestria id={id} />
       <BloqueJutsu base={base} />
       <BloqueTransformaciones id={id} base={base} modosVistos={modosVistos} />
     </div>

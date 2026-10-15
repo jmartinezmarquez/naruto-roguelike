@@ -6,15 +6,20 @@ import achievementsData from '../../data/achievements.json';
 import configGlobal from '../../data/config.json';
 import { obtenerPersonajesInicialesDesbloqueados, rosterInicial } from '../../engine/achievements';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
+import { InsigniaMaestria } from '../common/Maestria';
+import { useMaestria, CLASE_MARCO_MAESTRIA } from '../common/nivelDeNinja';
 import { CabeceraPantalla, BotonSecundario } from '../common/PiezasUI';
 
 function TarjetaCandidato({ personaje, seleccionado, onClick }) {
+  // Desde el nivel de ninja 8, marco dorado: tu favorito se distingue en la rejilla.
+  const { conMarco } = useMaestria(personaje.id);
   return (
     <button
       type="button"
       onClick={onClick}
       className={[
         'elevar-hover w-full border-2 text-left',
+        conMarco ? CLASE_MARCO_MAESTRIA : '',
         seleccionado
           ? 'border-sello-500'
           : 'border-transparent hover:border-pergamino-200/40 hover:shadow-lg hover:shadow-black/40',
@@ -25,6 +30,7 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
           mismo en los dos sitios. Sin él, la fila de la rareza se quedaba coja y
           esta era la única tarjeta del juego que no decía a qué nivel entra. */}
       <FichaPersonaje id={personaje.id} nivel={1} className="p-3" />
+      <InsigniaMaestria id={personaje.id} className="pb-1" />
       {seleccionado && <p className="text-[9px] text-sello-500 text-center py-1 font-display">★ Chosen</p>}
     </button>
   );

@@ -87,3 +87,13 @@ describe('los ★ ya reclutados', () => {
     expect(screen.queryByText(/Neji/)).toBeNull();
   });
 });
+
+describe('nivel de ninja en la selección', () => {
+  it('enseña nivel y título a quien ha subido, y nada a quien sigue en el 1', () => {
+    useAchievementsStore.setState({ maestria: { naruto: 40 } }); // nivel 2
+    render(<CharacterSelectScreen onConfirmar={() => {}} />);
+    expect(screen.getByText('Ninja Lv.2')).toBeInTheDocument();
+    expect(screen.getByText(/Genin of the Leaf/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Ninja Lv\./)).toHaveLength(1);
+  });
+});
