@@ -268,6 +268,60 @@
       "modos": [],
       "esEntrenador": true,
       "geninAntes": 2
+    },
+    {
+      "id": "marionetas_de_sasori",
+      "nombre": "Puppet Brigade",
+      "tipo": "doton",
+      "statsBase": {
+        "hp": 44,
+        "ataque": 10,
+        "defensa": 7,
+        "velocidad": 6
+      },
+      "jutsu": {
+        "nombre": "Hundred Puppets",
+        "descripcion": "A swarm of wooden puppets with poisoned blades closes in from every side.",
+        "danoBase": 2.45,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "arcoId": "rescate_de_gaara",
+      "pendienteDeArte": true,
+      "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2
+    },
+    {
+      "id": "aranas_de_arcilla",
+      "nombre": "Clay Spiders",
+      "tipo": "katon",
+      "statsBase": {
+        "hp": 38,
+        "ataque": 11,
+        "defensa": 5,
+        "velocidad": 9
+      },
+      "jutsu": {
+        "nombre": "C1 Swarm",
+        "descripcion": "Dozens of tiny clay spiders scuttle forward and burst one after another.",
+        "danoBase": 2.5,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "arcoId": "rescate_de_gaara",
+      "pendienteDeArte": true,
+      "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2
     }
   ]
 }

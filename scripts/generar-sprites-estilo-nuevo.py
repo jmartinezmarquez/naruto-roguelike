@@ -182,6 +182,13 @@ HOJAS = [
     ('sprite-estilo-nuevo-53.png', ['map-columns/persecucion_de_sasuke']),
     ('sprite-estilo-nuevo-54.png',
      ['aspects/jirobo_1', 'aspects/jirobo_2', 'aspects/kimimaro_1', 'aspects/kimimaro_2']),
+    # --- Kazekage Rescue (fase 4), a la espera de arte.
+    ('sprite-estilo-nuevo-55.png', ['characters/sasori', 'characters/deidara', 'transformations/deidara_0']),
+    ('sprite-estilo-nuevo-56.png', ['characters/marionetas_de_sasori', 'characters/aranas_de_arcilla']),
+    ('sprite-estilo-nuevo-57.png', ['projectiles/sasori', 'projectiles/deidara', 'projectiles/marionetas_de_sasori', 'projectiles/aranas_de_arcilla']),
+    ('sprite-estilo-nuevo-58.png', ['medals/rescate_de_gaara']),
+    ('sprite-estilo-nuevo-59.png', ['map-columns/rescate_de_gaara']),
+    ('sprite-estilo-nuevo-60.png', ['aspects/sasori_1', 'aspects/sasori_2', 'aspects/deidara_1', 'aspects/deidara_2']),
 ]
 
 TIPO_POR_CARPETA = {

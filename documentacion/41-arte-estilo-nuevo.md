@@ -826,3 +826,71 @@ Left to right:
 3. Kimimaro – Kaguya child: younger Kimimaro in a plain white kimono with the Kaguya clan red dots on the forehead.
 4. Kimimaro – Funeral white: long flowing white robe with a black obi, a single white flower in his hand.
 ```
+
+## Tanda 8 — arco Kazekage Rescue (hojas 55-60)
+
+⏳ **PENDIENTES.** Arco alternativo del acto 3, en lugar de la Invasión de Pain. Igual que Sasuke Retrieval
+(tanda 7): está en los datos con `pendienteDeArte` y fuera de la campaña; cuando llegue, correr el script,
+quitar las marcas y añadir `rescate_de_gaara` al acto 3 de `campaigns.json`. Bloques: 55-56 personajes, 57
+proyectiles, 58 iconos (adjuntar la hoja 19), 59 fondo de mapa y 60 aspectos.
+
+### Hoja 55 → `sprite-estilo-nuevo-55.png` (Sasori y Deidara)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Sasori: young-looking man with short messy red hair and sleepy brown eyes, black Akatsuki cloak with red clouds, a puppet's wooden joints visible at his wrists, a scorpion-tail puppet cable behind him.
+2. Deidara (normal): long blond hair in a half ponytail covering his left eye, a scope over the eye, black Akatsuki cloak with red clouds, small mouths on the palms of his hands holding white clay.
+3. Deidara – "C4 Karura": same Deidara with his cloak torn open, a stitched mouth on his chest, surrounded by a cloud of tiny glowing white clay particles.
+```
+
+### Hoja 56 → `sprite-estilo-nuevo-56.png` (entrenadores)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Puppet Brigade: three wooden puppets with mismatched masks and blade arms, hanging from faint blue chakra strings, drawn as one group.
+2. Clay Spiders: a small swarm of white clay spiders, the biggest one in front, about knee-high to a ninja, drawn as one group.
+```
+
+### Hoja 57 → `sprite-estilo-nuevo-57.png` (proyectiles)
+
+```
+[PROJECTILE STYLE BLOCK]
+
+Left to right:
+1. Sasori's "Iron Sand: Drizzle": a dark cloud of iron sand spikes with a purple poison glint.
+2. Deidara's "C3": a white clay doll mid-explosion, a burst of orange and white fire.
+3. Puppet Brigade's "Hundred Puppets": a spray of poisoned wooden blades.
+4. Clay Spiders' "C1 Swarm": three small clay spiders bursting in little orange explosions.
+```
+
+### Hoja 58 → `sprite-estilo-nuevo-58.png` (medalla → `assets/medals/rescate_de_gaara.png`)
+
+```
+[UI ICON STYLE BLOCK]
+
+One arc medal, like a Pokémon gym badge, matching the shape language of the attached medals: Clay Crest (Kazekage Rescue), a sand-gold triangular badge with a white clay bird in the middle.
+```
+
+### Hoja 59 → `sprite-estilo-nuevo-59.png` (columna → `assets/map-columns/rescate_de_gaara.png`)
+
+```
+[MAP BACKGROUND STYLE BLOCK]
+
+Kazekage Rescue: the flat center is hard-packed desert sand. Left and right borders: tall wind-carved sandstone cliffs, dunes, dry desert shrubs, and near the top the entrance of a hidden cave sealed with a boulder.
+```
+
+### Hoja 60 → `sprite-estilo-nuevo-60.png` (aspectos: Sasori y Deidara)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Sasori – Hiruko: hidden inside the hunched puppet Hiruko, a masked face with a straw hat and a scorpion tail.
+2. Sasori – Sand puppeteer: young Sasori in a beige Hidden Sand outfit, holding two small puppets.
+3. Deidara – Stone bomber: Deidara in a Hidden Stone outfit with a red scarf, no cloak.
+4. Deidara – Straw hat: Akatsuki straw hat with hanging paper strips over his cloak.
+```

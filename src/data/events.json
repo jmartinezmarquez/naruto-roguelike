@@ -658,6 +658,163 @@
           }
         }
       ]
+    },
+    {
+      "id": "kazekage_capturado",
+      "titulo": "The Kazekage Is Taken",
+      "descripcion": "A messenger hawk lands on your shoulder: the Kazekage was carried off by a bird of white clay. Every hour counts.",
+      "elecciones": [
+        {
+          "texto": "Run through the night",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "buffTemporalEquipo",
+                "stat": "velocidad",
+                "multiplicador": 1.2,
+                "combates": 3
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.12
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Rest first, then hurry",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.2
+          }
+        }
+      ],
+      "arcoId": "rescate_de_gaara"
+    },
+    {
+      "id": "tormenta_de_arena",
+      "titulo": "Sandstorm",
+      "descripcion": "A wall of sand swallows the dunes. You can push through it blind or wait for it to pass.",
+      "elecciones": [
+        {
+          "texto": "Push through",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.55,
+            "exito": {
+              "tipo": "ganarXpEquipo",
+              "cantidad": 65
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.2
+            }
+          }
+        },
+        {
+          "texto": "Wait it out",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 20
+          }
+        }
+      ],
+      "arcoId": "rescate_de_gaara"
+    },
+    {
+      "id": "antidoto_de_chiyo",
+      "titulo": "Elder Chiyo's Antidote",
+      "descripcion": "An old puppeteer offers a vial of antidote for Sasori's poison. She wants something for her trouble.",
+      "elecciones": [
+        {
+          "texto": "Pay for the antidote",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "buffTemporalEquipo",
+                "stat": "defensa",
+                "multiplicador": 1.25,
+                "combates": 3
+              },
+              {
+                "tipo": "perderOro",
+                "cantidad": 35
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Ask for her advice instead",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 30
+          }
+        }
+      ],
+      "arcoId": "rescate_de_gaara"
+    },
+    {
+      "id": "taller_abandonado",
+      "titulo": "An Abandoned Workshop",
+      "descripcion": "A puppeteer's workshop in the rocks, full of half-built puppets. Some of them might still be armed.",
+      "elecciones": [
+        {
+          "texto": "Search the workbenches",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.6,
+            "exito": {
+              "tipo": "comprarObjetoAleatorio",
+              "coste": 0
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.18
+            }
+          }
+        },
+        {
+          "texto": "Take the spare parts and sell them",
+          "efecto": {
+            "tipo": "ganarOro",
+            "cantidad": 20
+          }
+        }
+      ],
+      "arcoId": "rescate_de_gaara"
+    },
+    {
+      "id": "oasis",
+      "titulo": "An Oasis",
+      "descripcion": "Palm trees and clear water in the middle of the desert. The squad has not drunk properly in a day.",
+      "elecciones": [
+        {
+          "texto": "Rest by the water",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.3
+          }
+        },
+        {
+          "texto": "Refill and train in the heat",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 50
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.15
+              }
+            ]
+          }
+        }
+      ],
+      "arcoId": "rescate_de_gaara"
     }
   ]
 }

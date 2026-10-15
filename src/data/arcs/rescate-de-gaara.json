@@ -1,0 +1,59 @@
+{
+  "_comentario": "Arco alternativo del ACTO 3 (documentacion/42 §5): sale en el sorteo en lugar de la Invasión de Pain, a sus mismos niveles, pisos y XP (test de campanas.test.js). Su jefe final acaba la run (recompensa.finDeLaRun), como Pain. pendienteDeArte: fuera de la campaña hasta que llegue su arte.",
+  "id": "rescate_de_gaara",
+  "nombre": "Kazekage Rescue",
+  "pendienteDeArte": true,
+  "medalla": {
+    "nombre": "Clay Crest"
+  },
+  "textoTienda": "A Sand merchant sells water and supplies from the back of a camel, glancing nervously at the sky.",
+  "temaVisual": "desierto_de_la_arena",
+  "numeroPisos": 8,
+  "nodosPorPiso": {
+    "min": 2,
+    "max": 5
+  },
+  "poolTiposNodo": [
+    {
+      "tipo": "combate",
+      "peso": 58
+    },
+    {
+      "tipo": "evento",
+      "peso": 15
+    },
+    {
+      "tipo": "descanso",
+      "peso": 14
+    },
+    {
+      "tipo": "tienda",
+      "peso": 13
+    }
+  ],
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 70
+    },
+    {
+      "rareza": "legendario",
+      "peso": 30
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 41,
+  "pisoMiniJefe": 4,
+  "miniJefeId": "sasori",
+  "pisoJefeFinal": 8,
+  "jefeFinalId": "deidara",
+  "personajesReclutablesIds": [
+    "sai",
+    "yamato"
+  ],
+  "nivelEnemigoBase": 33,
+  "escaladoNivelPorPiso": 1.0,
+  "nivelMiniJefe": 36,
+  "nivelJefeFinal": 44,
+  "xpCombateComun": 78
+}

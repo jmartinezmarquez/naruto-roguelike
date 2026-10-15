@@ -451,6 +451,95 @@
         "crecimiento": 1.015
       },
       "desbloqueablePorLogro": true
+    },
+    {
+      "id": "sasori",
+      "nombre": "Sasori",
+      "tipo": "suiton",
+      "statsBase": {
+        "hp": 64,
+        "ataque": 11,
+        "defensa": 8,
+        "velocidad": 9
+      },
+      "jutsu": {
+        "nombre": "Iron Sand: Drizzle",
+        "descripcion": "The Third Kazekage puppet rains poisoned iron sand from above.",
+        "danoBase": 2.7,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 26,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
+      },
+      "modos": [],
+      "recompensa": {
+        "xp": 160
+      },
+      "rareza": "raro",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 19,
+        "crecimiento": 1.015
+      },
+      "pendienteDeArte": true,
+      "desbloqueablePorLogro": true
+    },
+    {
+      "id": "deidara",
+      "nombre": "Deidara",
+      "tipo": "katon",
+      "statsBase": {
+        "hp": 61,
+        "ataque": 10,
+        "defensa": 7,
+        "velocidad": 10
+      },
+      "jutsu": {
+        "nombre": "C3",
+        "descripcion": "A giant clay sculpture dropped from the sky that explodes like a small sun.",
+        "danoBase": 4.7,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 18,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "C4 Karura",
+          "nivelDesbloqueo": 40,
+          "multiplicadores": {
+            "ataque": 1.22,
+            "defensa": 1.12,
+            "velocidad": 1.14,
+            "hp": 1.1
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.8
+            },
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.5
+            }
+          ]
+        }
+      ],
+      "recompensa": {
+        "xp": 300,
+        "objetoGarantizado": "bolsa_de_sellos_explosivos",
+        "finDeLaRun": true
+      },
+      "rareza": "legendario",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 25,
+        "crecimiento": 1.015
+      },
+      "pendienteDeArte": true,
+      "desbloqueablePorLogro": true
     }
   ]
 }
