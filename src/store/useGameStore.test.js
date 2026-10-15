@@ -1,3 +1,4 @@
+import { ARCOS as ARCOS_REGISTRADOS } from '../data/arcs';
 import campaignsData from '../data/campaigns.json';
 import { ESTADO_INVOCACION_VACIO } from '../engine/invocacion';
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -729,7 +730,7 @@ describe('eventos — invariantes de los datos', () => {
     'ganarXpEquipo', 'ganarOro', 'perderOro', 'comprarObjetoAleatorio',
     'mejoraPermanenteAleatoria', 'ninguno',
   ]);
-  const ARCOS = new Set(['pais_de_las_olas', 'examen_chunin', 'invasion_de_pain']);
+  const ARCOS = new Set(ARCOS_REGISTRADOS.map((a) => a.id));
   const todosLosEfectos = (efecto) => (
     efecto.tipo === 'varios' ? efecto.efectos.flatMap(todosLosEfectos)
       : efecto.tipo === 'azar' ? [efecto, ...todosLosEfectos(efecto.exito), ...todosLosEfectos(efecto.fallo)]

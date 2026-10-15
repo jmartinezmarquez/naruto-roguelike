@@ -15,11 +15,12 @@ import { nivelDeMaestria, xpParaSubirUnNivel } from '../engine/maestria';
 import { ESTADO_INVOCACION_VACIO, invocar as invocarEnMotor, catalogoDisponible } from '../engine/invocacion';
 import invocacionData from '../data/invocacion.json';
 import charactersData from '../data/characters.json';
+import enemiesData from '../data/enemies.json';
 
 // El catálogo del gacha sin los ninjas que aún esperan su dibujo (ver catalogoDisponible).
 export const CATALOGO_INVOCACION = catalogoDisponible(
   invocacionData.catalogo,
-  charactersData.personajes.filter((p) => p.pendienteDeArte).map((p) => p.id),
+  [...charactersData.personajes, ...enemiesData.jefes].filter((p) => p.pendienteDeArte).map((p) => p.id),
 );
 import configGlobal from '../data/config.json';
 

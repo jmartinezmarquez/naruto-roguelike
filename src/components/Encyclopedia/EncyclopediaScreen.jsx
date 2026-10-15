@@ -78,7 +78,7 @@ function entradasDeSeccion(seccionId) {
       ...enemiesData.jefes.map((j) => ({ id: j.id, base: j })),
       ...commonEnemiesData.enemigosNombrados.map((e) => ({ id: e.id, base: e })),
       ...commonEnemiesData.plantillasGenericas.map((e) => ({ id: e.id, base: e })),
-    ];
+    ].filter((entrada) => !entrada.base.pendienteDeArte);
   }
   if (seccionId === 'objetos') {
     return itemsData.objetos.map((o) => ({ id: o.id, base: o }));

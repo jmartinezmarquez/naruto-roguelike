@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generarMapa, calcularNivelPorPiso, resolverEnemigoDeNodo } from './mapGenerator';
+import { generarMapa, calcularNivelPorPiso, resolverEnemigoDeNodo, entrenadoresDelArco } from './mapGenerator';
 import commonEnemiesData from '../data/common-enemies.json';
 
 const arcoDePrueba = {
@@ -267,7 +267,7 @@ describe('resolverEnemigoDeNodo', () => {
   it('un nodo de entrenador pelea contra el entrenador que el mapa ya eligió', () => {
     // El mapa pinta el sprite de `nodo.enemigoId`: si aquí se sorteara otra vez,
     // el que sale a pelear no sería el que se veía en el nodo.
-    for (const { id } of commonEnemiesData.enemigosNombrados) {
+    for (const { id } of entrenadoresDelArco(arcoDePrueba)) {
       const nodo = { tipo: 'combate', subtipo: 'entrenador', piso: 3, enemigoId: id };
       for (let i = 0; i < 10; i++) {
         expect(resolverEnemigoDeNodo(nodo, arcoDePrueba).enemigoBase.id).toBe(id);
@@ -279,5 +279,19 @@ describe('resolverEnemigoDeNodo', () => {
     const nodoCombate = { tipo: 'combate', piso: 3 };
     const resultado = resolverEnemigoDeNodo(nodoCombate, arcoDePrueba);
     expect(resultado.nivel).toBe(calcularNivelPorPiso(3, arcoDePrueba));
+  });
+});
+
+describe('entrenadoresDelArco', () => {
+  it('los de un arco concreto solo salen en ese arco; los demás, en cualquiera', () => {
+    const conArco = commonEnemiesData.enemigosNombrados.filter((e) => e.arcoId);
+    expect(conArco.length).toBeGreaterThan(0);
+    const otro = { id: 'otro_arco' };
+    for (const e of conArco) {
+      expect(entrenadoresDelArco(otro).map((x) => x.id)).not.toContain(e.id);
+      expect(entrenadoresDelArco({ id: e.arcoId }).map((x) => x.id)).toContain(e.id);
+    }
+    const globales = commonEnemiesData.enemigosNombrados.filter((e) => !e.arcoId).map((e) => e.id);
+    expect(entrenadoresDelArco(otro).map((x) => x.id)).toEqual(globales);
   });
 });

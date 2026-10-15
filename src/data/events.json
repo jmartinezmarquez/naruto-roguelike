@@ -494,6 +494,170 @@
           }
         }
       ]
+    },
+    {
+      "id": "promesa_de_una_vida",
+      "arcoId": "persecucion_de_sasuke",
+      "titulo": "A Promise of a Lifetime",
+      "descripcion": "Before leaving the gate, someone asks you to bring Sasuke back no matter what. The squad carries the weight of that promise.",
+      "elecciones": [
+        {
+          "texto": "Swear you will",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "buffTemporalEquipo",
+                "stat": "ataque",
+                "multiplicador": 1.2,
+                "combates": 3
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Promise only to try",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "telaranas_de_kidomaru",
+      "arcoId": "persecucion_de_sasuke",
+      "titulo": "Webs Across the Path",
+      "descripcion": "Golden threads stretch between the trees, thin as hair and sharp as wire. Something is waiting at the centre of the web.",
+      "elecciones": [
+        {
+          "texto": "Cut straight through",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.6,
+            "exito": {
+              "tipo": "ganarXpEquipo",
+              "cantidad": 60
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.2
+            }
+          }
+        },
+        {
+          "texto": "Take the long way around",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "flauta_en_la_niebla",
+      "arcoId": "persecucion_de_sasuke",
+      "titulo": "A Flute in the Fog",
+      "descripcion": "A haunting melody drifts through the fog. The longer you listen, the harder it is to tell which way is forward.",
+      "elecciones": [
+        {
+          "texto": "Follow the music to its source",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.5,
+            "exito": {
+              "tipo": "varios",
+              "efectos": [
+                {
+                  "tipo": "ganarOro",
+                  "cantidad": 50
+                },
+                {
+                  "tipo": "ganarXpEquipo",
+                  "cantidad": 30
+                }
+              ]
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.18
+            }
+          }
+        },
+        {
+          "texto": "Block your ears and push on",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "refuerzos_de_la_arena",
+      "arcoId": "persecucion_de_sasuke",
+      "titulo": "Reinforcements from the Sand",
+      "descripcion": "Three Sand ninja catch up with you on the road. They offer to cover your back, for a price their village will collect later.",
+      "elecciones": [
+        {
+          "texto": "Accept their help",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "curarEquipoPorcentaje",
+                "cantidad": 0.35
+              },
+              {
+                "tipo": "perderOro",
+                "cantidad": 30
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Thank them and go on alone",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 30
+          }
+        }
+      ]
+    },
+    {
+      "id": "valle_del_fin",
+      "arcoId": "persecucion_de_sasuke",
+      "titulo": "The Valley of the End",
+      "descripcion": "Two giant stone statues face each other across a roaring waterfall. Legends say the first Hokage fought here.",
+      "elecciones": [
+        {
+          "texto": "Train under the falls",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 55
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.2
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Rest by the statues",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.25
+          }
+        }
+      ]
     }
   ]
 }

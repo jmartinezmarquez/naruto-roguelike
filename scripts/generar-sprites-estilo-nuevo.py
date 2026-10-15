@@ -170,6 +170,18 @@ HOJAS = [
      ['aspects/might_guy_1', 'aspects/might_guy_2', 'aspects/jiraiya_1',
       'aspects/jiraiya_2', 'aspects/asuma_1', 'aspects/asuma_2']),
     ('sprite-estilo-nuevo-48.png', ['aspects/kurenai_1', 'aspects/kurenai_2']),
+
+    # --- Tanda 7 (fase 4): el arco Sasuke Retrieval, alternativo al Examen Chunin en el acto 2.
+    ('sprite-estilo-nuevo-49.png',
+     ['characters/jirobo', 'transformations/jirobo_0',
+      'characters/kimimaro', 'transformations/kimimaro_0', 'transformations/kimimaro_1']),
+    ('sprite-estilo-nuevo-50.png', ['characters/kidomaru', 'characters/tayuya', 'characters/sakon']),
+    ('sprite-estilo-nuevo-51.png',
+     ['projectiles/jirobo', 'projectiles/kimimaro', 'projectiles/kidomaru', 'projectiles/tayuya', 'projectiles/sakon']),
+    ('sprite-estilo-nuevo-52.png', ['medals/persecucion_de_sasuke']),
+    ('sprite-estilo-nuevo-53.png', ['map-columns/persecucion_de_sasuke']),
+    ('sprite-estilo-nuevo-54.png',
+     ['aspects/jirobo_1', 'aspects/jirobo_2', 'aspects/kimimaro_1', 'aspects/kimimaro_2']),
 ]
 
 TIPO_POR_CARPETA = {

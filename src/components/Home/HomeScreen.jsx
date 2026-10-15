@@ -57,9 +57,9 @@ const ILUSTRACIONES = Object.fromEntries(
 // personaje o un jefe no puede dejar el contador mintiendo.
 // Sin los que esperan su dibujo (`pendienteDeArte`): aún no se pueden conocer.
 const TOTAL_NINJAS = charactersData.personajes.filter((p) => !p.pendienteDeArte).length;
-const TOTAL_ENEMIGOS = enemiesData.jefes.length
-  + commonEnemiesData.plantillasGenericas.length
-  + commonEnemiesData.enemigosNombrados.length;
+const TOTAL_ENEMIGOS = [
+  ...enemiesData.jefes, ...commonEnemiesData.plantillasGenericas, ...commonEnemiesData.enemigosNombrados,
+].filter((e) => !e.pendienteDeArte).length;
 const TOTAL_LOGROS = achievementsData.logros.length;
 
 /** Una línea del marcador: etiqueta a la izquierda, cifra a la derecha, como en la referencia. */

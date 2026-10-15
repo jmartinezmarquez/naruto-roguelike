@@ -19,6 +19,8 @@
     { "tipo": "personaje", "id": "jiraiya", "rareza": "legendario" },
     { "tipo": "personaje", "id": "asuma", "rareza": "raro" },
     { "tipo": "personaje", "id": "kurenai", "rareza": "raro" },
+    { "tipo": "personaje", "id": "jirobo", "rareza": "raro" },
+    { "tipo": "personaje", "id": "kimimaro", "rareza": "legendario" },
     { "tipo": "objeto", "id": "pildora_soldado", "rareza": "comun" },
     { "tipo": "objeto", "id": "unguento_curativo", "rareza": "comun" },
     { "tipo": "objeto", "id": "pergamino_entrenamiento_ataque", "rareza": "comun" },
@@ -52,6 +54,8 @@
     { "tipo": "pagina", "id": "might_guy", "rareza": "comun" },
     { "tipo": "pagina", "id": "jiraiya", "rareza": "comun" },
     { "tipo": "pagina", "id": "asuma", "rareza": "comun" },
-    { "tipo": "pagina", "id": "kurenai", "rareza": "comun" }
+    { "tipo": "pagina", "id": "kurenai", "rareza": "comun" },
+    { "tipo": "pagina", "id": "jirobo", "rareza": "comun" },
+    { "tipo": "pagina", "id": "kimimaro", "rareza": "comun" }
   ]
 }

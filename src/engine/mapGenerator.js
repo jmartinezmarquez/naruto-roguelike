@@ -137,6 +137,14 @@ function anchosDeLosPisos(arco, numeroPisosNormales) {
 }
 
 /**
+ * Los entrenadores que pueden salir en un arco: los suyos (`arcoId`) y los que no
+ * son de ninguno. Los Cuatro del Sonido no pintan nada en el puente de Tazuna.
+ */
+export function entrenadoresDelArco(arco) {
+  return commonEnemiesData.enemigosNombrados.filter((e) => !e.arcoId || e.arcoId === arco.id);
+}
+
+/**
  * Genera el mapa completo de un arco: nodos organizados por piso, con
  * conexiones hacia el piso siguiente.
  *
@@ -266,7 +274,7 @@ export function generarMapa(arco, opciones = {}) {
   // elegir tiene que existir antes de elegir.
   Object.values(nodos).forEach((nodo) => {
     if (nodo.tipo !== 'combate' || nodo.subtipo !== 'entrenador') return;
-    const { enemigosNombrados } = commonEnemiesData;
+    const enemigosNombrados = entrenadoresDelArco(arco);
     if (enemigosNombrados.length === 0) return;
     nodo.enemigoId = enemigosNombrados[numeroAleatorioEntre(0, enemigosNombrados.length - 1)].id;
   });
@@ -382,7 +390,8 @@ export function resolverEnemigoDeNodo(nodo, arco) {
   }
 
   if (nodo.tipo === 'combate') {
-    const { plantillasGenericas, enemigosNombrados } = commonEnemiesData;
+    const { plantillasGenericas } = commonEnemiesData;
+    const enemigosNombrados = entrenadoresDelArco(arco);
     const usarNombrado = nodo.subtipo === 'entrenador' && enemigosNombrados.length > 0;
 
     // El entrenador ya viene elegido desde `generarMapa` (`nodo.enemigoId`), porque

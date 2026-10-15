@@ -1,0 +1,66 @@
+{
+  "_comentario": "Arco alternativo del ACTO 2 (documentacion/42 §5): sale en el sorteo en lugar del Examen Chunin. Por eso se pelea EXACTAMENTE a los mismos niveles, pisos y XP que él (lo exige un test de campanas.test.js). pendienteDeArte: no está en ninguna campaña hasta que llegue su arte (hojas 49-53 del documento 41).",
+  "id": "persecucion_de_sasuke",
+  "nombre": "Sasuke Retrieval",
+  "pendienteDeArte": true,
+  "medalla": {
+    "nombre": "Bone Crest"
+  },
+  "textoTienda": "A border peddler has laid out his goods on a fallen log, eager to leave before the Sound ninja pass.",
+  "temaVisual": "valle_del_fin",
+  "numeroPisos": 8,
+  "nodosPorPiso": {
+    "min": 1,
+    "max": 4
+  },
+  "poolTiposNodo": [
+    {
+      "tipo": "combate",
+      "peso": 55
+    },
+    {
+      "tipo": "evento",
+      "peso": 17
+    },
+    {
+      "tipo": "descanso",
+      "peso": 14
+    },
+    {
+      "tipo": "tienda",
+      "peso": 14
+    }
+  ],
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 75
+    },
+    {
+      "rareza": "legendario",
+      "peso": 25
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 23,
+  "pisoMiniJefe": 4,
+  "miniJefeId": "jirobo",
+  "pisoJefeFinal": 8,
+  "jefeFinalId": "kimimaro",
+  "personajesReclutablesIds": [
+    "rock_lee",
+    "neji",
+    "tenten",
+    "shikamaru",
+    "ino",
+    "choji",
+    "kiba",
+    "hinata",
+    "shino"
+  ],
+  "nivelEnemigoBase": 17,
+  "escaladoNivelPorPiso": 1.0,
+  "nivelMiniJefe": 19,
+  "nivelJefeFinal": 27,
+  "xpCombateComun": 58
+}

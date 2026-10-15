@@ -1,5 +1,5 @@
 {
-  "_comentario": "Same schema as a playable character (statsBase, jutsu, optional mode) so it doesn't need normalization before passing to crearLuchador. plantillasGenericas fills random combat nodes scaling statsBase with calcularNivelPorPiso; enemigosNombrados are fixed, with more narrative presence.",
+  "_comentario": "Same schema as a playable character (statsBase, jutsu, optional mode) so it doesn't need normalization before passing to crearLuchador. plantillasGenericas fills random combat nodes scaling statsBase with calcularNivelPorPiso; enemigosNombrados are fixed, with more narrative presence. arcoId (opcional, en enemigosNombrados): el entrenador solo sale en ese arco; sin él, sale en cualquiera. pendienteDeArte: como en characters.json.",
   "plantillasGenericas": [
     {
       "id": "genin_rival_katon",
@@ -187,6 +187,87 @@
       "modos": [],
       "esEntrenador": true,
       "geninAntes": 1
+    },
+    {
+      "id": "kidomaru",
+      "nombre": "Kidomaru",
+      "tipo": "katon",
+      "arcoId": "persecucion_de_sasuke",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 42,
+        "ataque": 10,
+        "defensa": 6,
+        "velocidad": 8
+      },
+      "jutsu": {
+        "nombre": "Golden Arrow",
+        "descripcion": "Spins a sticky golden thread into an arrow and fires it from six arms.",
+        "danoBase": 2.45,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2
+    },
+    {
+      "id": "tayuya",
+      "nombre": "Tayuya",
+      "tipo": "fuuton",
+      "arcoId": "persecucion_de_sasuke",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 40,
+        "ataque": 10,
+        "defensa": 6,
+        "velocidad": 9
+      },
+      "jutsu": {
+        "nombre": "Demon Flute",
+        "descripcion": "A melody on her flute that commands three summoned ogres to attack.",
+        "danoBase": 2.4,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2
+    },
+    {
+      "id": "sakon",
+      "nombre": "Sakon and Ukon",
+      "tipo": "suiton",
+      "arcoId": "persecucion_de_sasuke",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 44,
+        "ataque": 10,
+        "defensa": 7,
+        "velocidad": 6
+      },
+      "jutsu": {
+        "nombre": "Parasite Demon",
+        "descripcion": "Ukon melts into the enemy's body and strikes from the inside.",
+        "danoBase": 2.45,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2
     }
   ]
 }

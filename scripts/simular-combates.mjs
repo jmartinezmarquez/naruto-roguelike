@@ -59,7 +59,20 @@ const { default: arco1 } = await import('../src/data/arcs/pais-de-las-olas.json'
 const { default: arco2 } = await import('../src/data/arcs/examen-chunin.json');
 const { default: arco3 } = await import('../src/data/arcs/invasion-de-pain.json');
 
+// `node scripts/simular-combates.mjs <idDeArco>` mide la run con ese arco en lugar del
+// de su acto (el que se pelea a sus mismos niveles): así se calibra un arco
+// alternativo (documentacion/42 §5) contra los mismos números que el que sustituye.
+const { ARCOS_POR_ID } = await import('../src/data/arcs/index.js');
 const ARCOS = [arco1, arco2, arco3];
+const ARCO_ALTERNATIVO = process.argv[2] ? ARCOS_POR_ID[process.argv[2]] : null;
+if (process.argv[2] && !ARCO_ALTERNATIVO) throw new Error(`No hay ningún arco con id ${process.argv[2]}`);
+if (ARCO_ALTERNATIVO) {
+  const i = ARCOS.findIndex((a) => a.nivelJefeFinal === ARCO_ALTERNATIVO.nivelJefeFinal);
+  if (i === -1) throw new Error(`${ARCO_ALTERNATIVO.id} no se pelea a los niveles de ningún acto`);
+  console.log(`(con ${ARCO_ALTERNATIVO.nombre} en lugar de ${ARCOS[i].nombre})
+`);
+  ARCOS[i] = ARCO_ALTERNATIVO;
+}
 const TURNOS_MAXIMOS = configGlobal.combate.turnosMaximos;
 
 // Mismo orden de preferencia que `_aplicarVictoria` en el store: lo que declare el

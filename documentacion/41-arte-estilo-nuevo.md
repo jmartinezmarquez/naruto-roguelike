@@ -749,3 +749,80 @@ Left to right:
 1. Kurenai – Jonin vest: green Konoha flak jacket over a dark outfit, hair tied back loosely.
 2. Kurenai – Formal kimono: dark red kimono with a camellia pattern and a black obi, hair pinned up.
 ```
+
+## Tanda 7 — arco Sasuke Retrieval (hojas 49-54)
+
+⏳ **PENDIENTES.** El primer arco nuevo (`documentacion/42` §5): sale en el acto 2 en lugar del Examen Chunin.
+Ya está en los datos con `pendienteDeArte` (el arco, Jirobo, Kimimaro y los tres entrenadores del Sonido), y
+**no está en la campaña** hasta que llegue todo su arte. Cuando llegue: correr el script, quitar las marcas
+`pendienteDeArte` (los tests de `characterSprites.test.js` fallan para recordarlo) y añadir
+`persecucion_de_sasuke` al acto 2 de `campaigns.json`.
+
+Bloques: 49-50 el de **personajes**, 51 el de **proyectiles**, 52 el de **iconos** (como la hoja 19), 53 el
+de **fondo de mapa** (como las 29-31) y 54 el de **aspectos**. Para la 52 adjuntar la hoja 19; para la 53,
+una de las columnas actuales.
+
+### Hoja 49 → `sprite-estilo-nuevo-49.png` (Jirobo y Kimimaro)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Jirobo (normal): huge heavy-set teenager with a shaved orange mohawk, small eyes, a beige sleeveless tunic with a thick purple rope belt tied in a bow, Sound forehead protector.
+2. Jirobo – "Curse Mark Level 1": same Jirobo covered in black triangular curse-mark patterns spreading from his neck, dark purple aura.
+3. Kimimaro (normal): pale slender teenager with long white hair parted in the middle, two red dots on his forehead, green eyes, loose white high-collared robe with a purple rope belt, a bone sword growing from his palm.
+4. Kimimaro – "Curse Mark Level 2": same Kimimaro with grey skin, black sclera, long horns of bone and a bone tail, purple aura.
+5. Kimimaro – "Dance of the Seedling Fern": same transformed Kimimaro surrounded by a field of sharp white bone spikes rising from the ground.
+```
+
+### Hoja 50 → `sprite-estilo-nuevo-50.png` (los entrenadores del Sonido)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Kidomaru: dark-skinned teenager with six arms, spiky dark hair tied in a ponytail, a third eye mark on his forehead, beige tunic with a purple rope belt, holding a golden bow.
+2. Tayuya: girl with long red hair under a black cap, a beige tunic with a purple rope belt, a flute in her hand.
+3. Sakon and Ukon: grey-haired teenager with a second identical head growing from the back of his neck, red lipstick, beige tunic with a purple rope belt, fists raised.
+```
+
+### Hoja 51 → `sprite-estilo-nuevo-51.png` (proyectiles)
+
+```
+[PROJECTILE STYLE BLOCK]
+
+Left to right:
+1. Jirobo's "Earth Prison Dome": a dome of cracked brown rock.
+2. Kimimaro's "Dance of the Clematis": a long spiraling white bone spear.
+3. Kidomaru's "Golden Arrow": a sharp golden arrow trailing sticky golden thread.
+4. Tayuya's "Demon Flute": purple musical sound waves with a ghostly ogre face.
+5. Sakon's "Parasite Demon": a grey fist emerging from a swirl of fleshy dark chakra.
+```
+
+### Hoja 52 → `sprite-estilo-nuevo-52.png` (medalla) → `assets/medals/persecucion_de_sasuke.png`
+
+```
+[UI ICON STYLE BLOCK]
+
+One arc medal, like a Pokémon gym badge, matching the shape language of the attached medals: Bone Crest (Sasuke Retrieval), a white diamond-shaped badge made of crossed bones with a purple rope tied around it.
+```
+
+### Hoja 53 → `sprite-estilo-nuevo-53.png` (columna: Sasuke Retrieval) → `assets/map-columns/persecucion_de_sasuke.png`
+
+```
+[MAP BACKGROUND STYLE BLOCK]
+
+Sasuke Retrieval: the flat center is a dark forest dirt trail. Left and right borders: tall dense border-forest trees, giant spider webs between branches, mossy rocks, and near the top a waterfall with two giant stone statue feet (the Valley of the End).
+```
+
+### Hoja 54 → `sprite-estilo-nuevo-54.png` (aspectos: Jirobo y Kimimaro)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Jirobo – Gentle giant: plain brown work clothes, eating rice balls from a bundle.
+2. Jirobo – Orochimaru's guard: long dark Sound cloak with the hood down.
+3. Kimimaro – Kaguya child: younger Kimimaro in a plain white kimono with the Kaguya clan red dots on the forehead.
+4. Kimimaro – Funeral white: long flowing white robe with a black obi, a single white flower in his hand.
+```

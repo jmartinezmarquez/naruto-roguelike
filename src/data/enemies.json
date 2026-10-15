@@ -317,6 +317,140 @@
         "crecimiento": 1.015
       },
       "desbloqueablePorLogro": true
+    },
+    {
+      "id": "jirobo",
+      "nombre": "Jirobo",
+      "tipo": "doton",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 55,
+        "ataque": 8,
+        "defensa": 8,
+        "velocidad": 7
+      },
+      "jutsu": {
+        "nombre": "Earth Prison Dome",
+        "descripcion": "Seals the enemy inside a dome of rock and drains their chakra through the walls.",
+        "danoBase": 2.5,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 24,
+          "alRecibirDano": 16,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Curse Mark Level 1",
+          "nivelDesbloqueo": 17,
+          "multiplicadores": {
+            "ataque": 1.16,
+            "defensa": 1.18,
+            "velocidad": 1.06,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.2
+            },
+            {
+              "id": "reduce_damage_taken",
+              "cantidad": 0.15
+            }
+          ]
+        }
+      ],
+      "recompensa": {
+        "xp": 125
+      },
+      "rareza": "raro",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 19,
+        "crecimiento": 1.015
+      },
+      "desbloqueablePorLogro": true
+    },
+    {
+      "id": "kimimaro",
+      "nombre": "Kimimaro",
+      "tipo": "raiton",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 63,
+        "ataque": 10,
+        "defensa": 7,
+        "velocidad": 11
+      },
+      "jutsu": {
+        "nombre": "Dance of the Clematis",
+        "descripcion": "Draws a spear of bone from his own arm and drills it through any defense.",
+        "danoBase": 2.4,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 24,
+          "alRecibirDano": 20,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Curse Mark Level 2",
+          "nivelDesbloqueo": 24,
+          "multiplicadores": {
+            "ataque": 1.14,
+            "defensa": 1.12,
+            "velocidad": 1.06,
+            "hp": 1.04
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.5
+            },
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.3
+            }
+          ]
+        },
+        {
+          "nombre": "Dance of the Seedling Fern",
+          "nivelDesbloqueo": 40,
+          "multiplicadores": {
+            "ataque": 1.3,
+            "defensa": 1.24,
+            "velocidad": 1.08,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.5
+            },
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.4
+            },
+            {
+              "id": "damage_floor",
+              "cantidad": 0.5
+            }
+          ]
+        }
+      ],
+      "recompensa": {
+        "xp": 210,
+        "objetoGarantizado": "fragmento_sello_maldito",
+        "desbloqueaSiguienteArco": true
+      },
+      "rareza": "legendario",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 24,
+        "crecimiento": 1.015
+      },
+      "desbloqueablePorLogro": true
     }
   ]
 }
