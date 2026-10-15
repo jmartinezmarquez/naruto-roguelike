@@ -7,12 +7,11 @@
 // Lo usan el mapa y la pantalla de transición entre arcos, que enseña el del arco
 // que viene: es la primera vez que el jugador ve el sitio al que va.
 
-import fondoColumnaOlas from '../../assets/map-columns/pais_de_las_olas.png';
-import fondoColumnaChunin from '../../assets/map-columns/examen_chunin.png';
-import fondoColumnaPain from '../../assets/map-columns/invasion_de_pain.png';
 
-export const FONDO_COLUMNA = {
-  pais_de_las_olas: fondoColumnaOlas,
-  examen_chunin: fondoColumnaChunin,
-  invasion_de_pain: fondoColumnaPain,
-};
+// Con `import.meta.glob`: la clave es el nombre del PNG, que es el id del arco, así que
+// el fondo de un arco nuevo entra con solo dejarlo en la carpeta.
+export const FONDO_COLUMNA = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('../../assets/map-columns/*.png', { eager: true, query: '?url', import: 'default' }),
+  ).map(([ruta, url]) => [ruta.split('/').pop().replace(/\.png$/, ''), url]),
+);

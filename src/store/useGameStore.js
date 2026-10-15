@@ -14,9 +14,6 @@ import commonEnemiesData from '../data/common-enemies.json';
 import achievementsData from '../data/achievements.json';
 import campaignsData from '../data/campaigns.json';
 import ascensionsData from '../data/ascensions.json';
-import arcoPaisDeLasOlas from '../data/arcs/pais-de-las-olas.json';
-import arcoExamenChunin from '../data/arcs/examen-chunin.json';
-import arcoInvasionDePain from '../data/arcs/invasion-de-pain.json';
 
 import { crearLuchador, resolverCombateCompleto } from '../engine/combat';
 import { ganarXp, obtenerModoActivo, factorXpPorVentaja } from '../engine/leveling';
@@ -25,6 +22,7 @@ import { obtenerPersonajesReclutablesDesbloqueados } from '../engine/achievement
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
 import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/ascension';
 import { pergaminosDeLaRun } from '../engine/pergaminos';
+import { ARCOS_POR_ID } from '../data/arcs';
 import { sortearArcosDeLaRun, primerosArcosDeCampana } from '../engine/campanas';
 import { useAchievementsStore } from './useAchievementsStore';
 
@@ -38,9 +36,6 @@ const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
 // (que arrancaba la run en el arco 1 a pelo). Sacarla a datos es lo que convierte una
 // segunda campaña en **contenido** en vez de en código — ver
 // documentacion/38-home-y-campanas.md.
-const ARCOS_POR_ID = Object.fromEntries(
-  [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain].map((arco) => [arco.id, arco]),
-);
 
 /** Unos ids de arco, ya resueltos a los JSON. */
 function resolverArcos(ids) {

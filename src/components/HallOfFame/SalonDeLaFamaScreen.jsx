@@ -5,10 +5,8 @@ import { nombreCorto } from '../common/nombres';
 import { FilaMedallas } from '../common/Medallas';
 import { PanelMarco, VentanaModal } from '../common/PiezasUI';
 import campaignsData from '../../data/campaigns.json';
+import { ARCOS_POR_ID } from '../../data/arcs';
 import { primerosArcosDeCampana } from '../../engine/campanas';
-import arcoOlas from '../../data/arcs/pais-de-las-olas.json';
-import arcoChunin from '../../data/arcs/examen-chunin.json';
-import arcoPain from '../../data/arcs/invasion-de-pain.json';
 
 /**
  * El Salón de la Fama, como el de Pokémon: **cada run ganada, con el equipo que la
@@ -22,8 +20,6 @@ import arcoPain from '../../data/arcs/invasion-de-pain.json';
  * Los datos los escribe `jugarCombate` al caer el jefe que acaba la run
  * (`registrarEnSalonDeLaFama`) y viven en `useAchievementsStore`, que sobrevive a la run.
  */
-
-const ARCOS_POR_ID = Object.fromEntries([arcoOlas, arcoChunin, arcoPain].map((a) => [a.id, a]));
 
 // Los arcos que salieron en esa run. Las entradas de antes de los actos no los traen:
 // entonces cada acto tenía un solo arco, así que el primero de cada uno es el que fue.

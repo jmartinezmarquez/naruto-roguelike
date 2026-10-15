@@ -2,7 +2,10 @@
   "_comentario": "Segundo arco de la run. El equipo ya viene formado del arco anterior. Nivel de enemigos fijo por piso, recalibrado (ver pais-de-las-olas.json para la explicación completa).",
   "id": "examen_chunin",
   "nombre": "Chunin Exams",
-  "medalla": { "nombre": "Sand Crest" },
+  "medalla": {
+    "nombre": "Sand Crest"
+  },
+  "textoTienda": "A shady trader sells his wares among the trees of the Forest of Death.",
   "temaVisual": "bosque_de_la_muerte",
   "numeroPisos": 8,
   "nodosPorPiso": {

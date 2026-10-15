@@ -4,14 +4,12 @@ import { useAchievementsStore } from '../../store/useAchievementsStore';
 import campaignsData from '../../data/campaigns.json';
 import achievementsData from '../../data/achievements.json';
 import charactersData from '../../data/characters.json';
-import arcoPaisDeLasOlas from '../../data/arcs/pais-de-las-olas.json';
-import arcoExamenChunin from '../../data/arcs/examen-chunin.json';
-import arcoInvasionDePain from '../../data/arcs/invasion-de-pain.json';
 import enemiesData from '../../data/enemies.json';
 import commonEnemiesData from '../../data/common-enemies.json';
 import ascensionsData from '../../data/ascensions.json';
 import { ascensionMaximaDisponible } from '../../engine/ascension';
 import { actosDeCampana } from '../../engine/campanas';
+import { ARCOS_POR_ID } from '../../data/arcs';
 import { PanelMarco, TituloBloque, BotonSecundario } from '../common/PiezasUI';
 import iconoLogros from '../../assets/menu/logros.png';
 import iconoEnciclopedia from '../../assets/menu/enciclopedia.png';
@@ -54,9 +52,6 @@ const ILUSTRACIONES = Object.fromEntries(
   ).map(([ruta, url]) => [ruta.split('/').pop().replace(/\.[^.]+$/, ''), url]),
 );
 
-const ARCOS_POR_ID = Object.fromEntries(
-  [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain].map((arco) => [arco.id, arco]),
-);
 
 // Los totales del marcador. Se calculan de los JSON y no se escriben a mano: añadir un
 // personaje o un jefe no puede dejar el contador mintiendo.

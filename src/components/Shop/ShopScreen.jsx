@@ -7,12 +7,6 @@ import {
   PanelMarco, CabeceraPantalla, IconoEnmarcado, BotonSecundario, TituloBloque,
 } from '../common/PiezasUI';
 
-const SHOP_FLAVOR = {
-  pais_de_las_olas: 'A traveling merchant has set up shop by the roadside.',
-  examen_chunin: 'A shady trader sells his wares among the trees of the Forest of Death.',
-  invasion_de_pain: 'Among the ruins of Konoha, a survivor is still trying to sell what little he has left.',
-};
-
 // Etiqueta de tipo de objeto. Ya no va en colores de elemento (`fuuton`/`raiton`):
 // consumible y equipable no son naturalezas de chakra, y usar esos tonos aquí era
 // parte del problema que resolvieron los colores semánticos — ver
@@ -194,7 +188,7 @@ export default function ShopScreen() {
     );
   }
 
-  const flavor = SHOP_FLAVOR[arcoActualDatos?.id] ?? 'A merchant offers their wares.';
+  const flavor = arcoActualDatos?.textoTienda ?? 'A merchant offers their wares.';
 
   return (
     // A pantalla completa y no como ventana: la tienda es una parada del camino,

@@ -8,6 +8,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { cwd } from 'node:process';
 import { render, screen } from '../../test-dom';
 import SalonDeLaFamaScreen from './SalonDeLaFamaScreen';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
@@ -45,8 +46,9 @@ describe('SalonDeLaFamaScreen', () => {
 
 describe('invariante: toda medalla está dibujada', () => {
   it('cada arco de cada campaña declara su medalla y tiene su PNG', () => {
-    const raiz = path.resolve(__dirname, '../../');
-    const arcos = fs.readdirSync(path.join(raiz, 'data/arcs'))
+    // Desde la raíz del proyecto: en jsdom, `import.meta.url` no es una ruta de fichero.
+    const raiz = path.join(cwd(), 'src');
+    const arcos = fs.readdirSync(path.join(raiz, 'data/arcs')).filter((f) => f.endsWith('.json'))
       .map((f) => JSON.parse(fs.readFileSync(path.join(raiz, 'data/arcs', f), 'utf8')));
     const enCampana = new Set(campaignsData.campanas.flatMap((c) => c.actos.flatMap((a) => a.arcoIds)));
     arcos.filter((a) => enCampana.has(a.id)).forEach((arco) => {

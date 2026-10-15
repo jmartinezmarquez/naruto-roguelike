@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
 import achievementsData from '../../data/achievements.json';
-import arcoPaisDeLasOlas from '../../data/arcs/pais-de-las-olas.json';
-import arcoExamenChunin from '../../data/arcs/examen-chunin.json';
-import arcoInvasionDePain from '../../data/arcs/invasion-de-pain.json';
+import campaignsData from '../../data/campaigns.json';
+import { ARCOS } from '../../data/arcs';
+import { actosDeCampana } from '../../engine/campanas';
 import { progresoDeLogro } from '../../engine/achievements';
 import { nombrePersonaje as nombrePersonajeOJefe, nombreObjeto } from '../common/nombres';
 import { spriteDeLuchador } from '../common/characterSprites';
@@ -27,8 +27,6 @@ import { PanelMarco, VentanaModal, FilaPestanas, IconoEnmarcado } from '../commo
  * `achievementsData.logros.length`— en vez de imitar el número de la maqueta.
  */
 
-const ARCOS = [arcoPaisDeLasOlas, arcoExamenChunin, arcoInvasionDePain];
-
 /**
  * A qué acto pertenece un logro, **calculado y no escrito en los datos**.
  *
@@ -50,11 +48,16 @@ function arcoDelLogro(logro) {
   return 'general';
 }
 
+// Una pestaña por ACTO de la campaña, con todos sus arcos posibles dentro: desde que
+// un acto puede salir de varios arcos (documentacion/42 §5), "ACT 2" ya no es un arco.
+const ACTOS = actosDeCampana(campaignsData.campanas[0]);
+const ICONO_ACTO = ['🌊', '🍃', '🌀', '🔥', '⚡'];
+const PESTANA_DE_ARCO = Object.fromEntries(
+  ACTOS.flatMap((acto, i) => acto.arcoIds.map((id) => [id, `acto_${i + 1}`])),
+);
 const PESTANAS_BASE = [
   { id: 'todos', etiqueta: 'ALL', icono: '📜' },
-  { id: 'pais_de_las_olas', etiqueta: 'ACT 1', icono: '🌊' },
-  { id: 'examen_chunin', etiqueta: 'ACT 2', icono: '🍃' },
-  { id: 'invasion_de_pain', etiqueta: 'ACT 3', icono: '🌀' },
+  ...ACTOS.map((_, i) => ({ id: `acto_${i + 1}`, etiqueta: `ACT ${i + 1}`, icono: ICONO_ACTO[i] ?? '✦' })),
   { id: 'general', etiqueta: 'GENERAL', icono: '✦' },
 ];
 
@@ -214,7 +217,7 @@ export default function AchievementsScreen() {
   const pestanas = PESTANAS_BASE.map((pestana) => {
     const suyos = pestana.id === 'todos'
       ? conArco
-      : conArco.filter((entrada) => entrada.arcoId === pestana.id);
+      : conArco.filter((entrada) => (PESTANA_DE_ARCO[entrada.arcoId] ?? 'general') === pestana.id);
     const hechos = suyos.filter((entrada) => logrosDesbloqueados.includes(entrada.logro.id)).length;
     return { ...pestana, contador: `${hechos}/${suyos.length}`, vacia: suyos.length === 0 };
   }).filter((pestana) => !pestana.vacia);
