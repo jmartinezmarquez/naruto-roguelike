@@ -112,8 +112,8 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **563 tests**: 398 de lógica (`engine/*.test.js`, `store/*.test.js`) y 165 de
-  componente (las 13 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
+- [x] Testing con Vitest — **621 tests**: 436 de lógica (`engine/*.test.js`, `store/*.test.js`) y 185 de
+  componente (las 14 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
   ⚠️ **El entorno global sigue siendo `node`**: cada test de UI declara `// @vitest-environment jsdom`
@@ -481,8 +481,14 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   de cada personaje" los mide uno a uno. Los jefes de los arcos 2-3 se ganan algo más (Gaara 84 → 96%).
 
 - [ ] **Meta-progresión** (`documentacion/42-meta-progresion.md`, en marcha por fases): ✅ fase 1 (pergaminos
-  al acabar cada run, logros que pagan, 14 logros nuevos) y ✅ nivel de ninja (`engine/maestria.js`).
-  ⚠️ `reiniciarLogros` borra ya **ocho** claves. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no.
+  al acabar cada run, logros que pagan, 14 logros nuevos) y ✅ fase 2: nivel de ninja (`engine/maestria.js`)
+  con títulos, marco y **aspectos** (`assets/aspects/`, se eligen en el Bingo Book; sin dibujo no se ofrecen),
+  el **gacha "Summon"** (`engine/invocacion.js`, `data/invocacion.json`, `Summon/InvocacionScreen.jsx`: ninjas
+  como inicial —jefes incluidos—, objetos iniciales y páginas del Bingo Book), **un** objeto inicial al azar
+  por run y 6 logros de meta (48 en total). ⚠️ `reiniciarLogros` borra ya **diez** claves. ⚠️ Los logros
+  de meta no tienen combate que los dispare: los evalúa y avisa `_evaluarLogrosDeMeta` al tirar y al sumar
+  maestría. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no. Arte pendiente:
+  hojas 36-43 del documento 41.
 
 ## Bugs ya resueltos (para no repetirlos)
 
