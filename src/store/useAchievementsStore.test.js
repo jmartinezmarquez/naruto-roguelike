@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, MAXIMO_SALON_DE_LA_FAMA,
+  useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, MAXIMO_SALON_DE_LA_FAMA, PERGAMINOS_VACIOS,
 } from './useAchievementsStore';
 import achievementsData from '../data/achievements.json';
 import { TIPOS_DE_CONDICION, TIPOS_DE_RECOMPENSA } from '../engine/achievements';
@@ -13,6 +13,7 @@ beforeEach(() => {
   useAchievementsStore.setState({
     logrosDesbloqueados: [], notificacionesPendientes: [], vistos: VISTOS_VACIO,
     contadores: CONTADORES_VACIO, marca: MARCA_VACIA, salonDeLaFama: [], ascensionesGanadas: {},
+    pergaminos: PERGAMINOS_VACIOS,
   });
 });
 
@@ -393,5 +394,23 @@ describe('ascensiones ganadas', () => {
     const nuevos = useAchievementsStore.getState().evaluarLogros({}).map((l) => l.id);
     expect(nuevos).toContain('ascension_1');
     expect(nuevos).not.toContain('ascension_2');
+  });
+});
+
+describe('pergaminos de invocación', () => {
+  it('suman al saldo y al total, apuntan los jefes sin repetir y sobreviven a recargar', () => {
+    useAchievementsStore.getState().sumarPergaminos(5, ['haku']);
+    useAchievementsStore.getState().sumarPergaminos(3, ['haku', 'zabuza']);
+    expect(useAchievementsStore.getState().pergaminos).toEqual({ saldo: 8, ganadosEnTotal: 8, jefesDerrotados: ['haku', 'zabuza'] });
+    useAchievementsStore.setState({ pergaminos: PERGAMINOS_VACIOS });
+    useAchievementsStore.getState().cargarLogros();
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(8);
+  });
+
+  it('reiniciarLogros los borra con todo lo demás', () => {
+    useAchievementsStore.getState().sumarPergaminos(5, ['haku']);
+    useAchievementsStore.getState().reiniciarLogros();
+    expect(useAchievementsStore.getState().pergaminos).toEqual(PERGAMINOS_VACIOS);
+    expect(localStorage.getItem('naruto-roguelike-pergaminos')).toBeNull();
   });
 });

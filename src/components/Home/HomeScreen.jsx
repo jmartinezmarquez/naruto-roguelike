@@ -202,6 +202,7 @@ export default function HomeScreen() {
   const vistos = useAchievementsStore((s) => s.vistos);
   const marca = useAchievementsStore((s) => s.marca);
   const ascensionesGanadas = useAchievementsStore((s) => s.ascensionesGanadas);
+  const pergaminos = useAchievementsStore((s) => s.pergaminos);
   // Lo que el jugador ha tocado en cada selector. Sin tocar, la más alta disponible:
   // quien acaba de desbloquear A2 viene a jugar A2.
   const [ascensionTocada, setAscensionTocada] = useState({});
@@ -221,6 +222,7 @@ export default function HomeScreen() {
       etiqueta: 'Furthest',
       valor: arcoDeLaMarca ? `${arcoDeLaMarca.nombre} · Floor ${marca.piso}` : '—',
     },
+    { etiqueta: 'Scrolls', valor: pergaminos.saldo },
     { etiqueta: 'Runs won', valor: contadores.runsCompletadas },
     { etiqueta: 'Runs lost', valor: contadores.runsPerdidas },
     { etiqueta: 'Battles won', valor: contadores.combatesGanados },

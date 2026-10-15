@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
-import { useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA } from './useAchievementsStore';
+import {
+  useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, PERGAMINOS_VACIOS,
+} from './useAchievementsStore';
 import arcoDePrueba from '../data/arcs/pais-de-las-olas.json';
 import configGlobal from '../data/config.json';
 import eventosData from '../data/events.json';
@@ -62,6 +64,7 @@ beforeEach(() => {
     marca: MARCA_VACIA,
     notificacionesPendientes: [],
     ascensionesGanadas: {},
+    pergaminos: PERGAMINOS_VACIOS,
   });
   // La ascensión elegida vive en el store de la run y sobrevive a iniciarRun (es lo
   // que hace que "reiniciar" repita la misma): sin esto, un test que elige A3 deja a
@@ -1194,6 +1197,43 @@ describe('desafío legendario (pergamino dorado)', () => {
 
     const { reclutarActual } = useGameStore.getState();
     expect(reclutarActual.personajes.some((p) => p.personajeId === 'zabuza')).toBe(false);
+  });
+});
+
+describe('pergaminos de invocación al acabar la run', () => {
+  const reglas = configGlobal.pergaminos;
+  const miniJefe = () => ({ ...enemigoDebilDePrueba, id: arcoDePrueba.miniJefeId, recompensa: { xp: 1 } });
+  const perderLaRun = () => useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 50);
+
+  it('perder también suma: el mini-jefe derrotado cuenta, con su extra de primera vez', () => {
+    useGameStore.getState().jugarCombate(miniJefe(), 1);
+    perderLaRun();
+    expect(useGameStore.getState().runTerminada).toBe(true);
+    const esperado = reglas.porMiniJefe + reglas.primeraVezPorJefe;
+    expect(useGameStore.getState().pergaminosDeLaRun.total).toBe(esperado);
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(esperado);
+    expect(useAchievementsStore.getState().pergaminos.jefesDerrotados).toEqual([arcoDePrueba.miniJefeId]);
+  });
+
+  it('el extra de primera vez se cobra una sola vez en toda la partida guardada', () => {
+    useGameStore.getState().jugarCombate(miniJefe(), 1);
+    perderLaRun();
+    useGameStore.getState().iniciarRun(['naruto', 'sasuke', 'sakura'], arcoDePrueba);
+    useGameStore.getState().jugarCombate(miniJefe(), 1);
+    perderLaRun();
+    expect(useGameStore.getState().pergaminosDeLaRun.total).toBe(reglas.porMiniJefe);
+  });
+
+  it('una run sin jefes derrotados no da nada, y cerrar dos veces no paga dos veces', () => {
+    perderLaRun();
+    expect(useGameStore.getState().pergaminosDeLaRun.total).toBe(0);
+    useGameStore.getState()._cerrarRun(false);
+    expect(useAchievementsStore.getState().pergaminos.saldo).toBe(0);
+  });
+
+  it('un desafío legendario no cuenta como jefe del arco', () => {
+    useGameStore.getState().jugarCombate({ ...enemigoDebilDePrueba, id: 'gaara', recompensa: { xp: 1 } }, 1);
+    expect(useGameStore.getState().jefesDerrotadosEnRun).toEqual([]);
   });
 });
 

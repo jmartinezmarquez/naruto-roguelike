@@ -15,6 +15,7 @@ const CLAVE_CONTADORES = 'naruto-roguelike-contadores';
 const CLAVE_MARCA = 'naruto-roguelike-marca';
 const CLAVE_SALON = 'naruto-roguelike-salon';
 const CLAVE_ASCENSION = 'naruto-roguelike-ascension';
+const CLAVE_PERGAMINOS = 'naruto-roguelike-pergaminos';
 
 // Cuántas runs ganadas guarda el Salón de la Fama. Las más recientes primero; con un
 // tope para que `localStorage` no crezca sin fin en quien juega mucho.
@@ -72,6 +73,14 @@ export const CONTADORES_VACIO = {
  */
 export const MARCA_VACIA = { arcoId: null, orden: -1, piso: 0 };
 
+/**
+ * Los pergaminos de invocación (documentacion/42): el saldo que se gasta en el gacha,
+ * lo ganado en total (para logros y el marcador del Home) y los jefes derrotados
+ * ALGUNA vez, que es lo que decide el extra de "primera vez". Es meta-progresión: un
+ * game over no lo toca.
+ */
+export const PERGAMINOS_VACIOS = { saldo: 0, ganadosEnTotal: 0, jefesDerrotados: [] };
+
 export const useAchievementsStore = create((set, get) => ({
   logrosDesbloqueados: [], // array de ids de logros — cargarLogros() los rellena desde localStorage
   notificacionesPendientes: [], // cola de logros (objetos completos) recién desbloqueados, para el toast — ver LogroToast
@@ -93,6 +102,8 @@ export const useAchievementsStore = create((set, get) => ({
   // La ascensión más alta GANADA en cada campaña: `{ [campanaId]: nivel }`. Sin
   // entrada = no has ganado ninguna, ni siquiera la A0. Ver `registrarAscensionGanada`.
   ascensionesGanadas: {},
+  // Ver PERGAMINOS_VACIOS.
+  pergaminos: PERGAMINOS_VACIOS,
 
   /** Carga los logros ya desbloqueados en sesiones anteriores. Llamar una vez al arrancar la app. */
   cargarLogros() {
@@ -117,6 +128,23 @@ export const useAchievementsStore = create((set, get) => ({
     if (marcaGuardada) set({ marca: { ...MARCA_VACIA, ...JSON.parse(marcaGuardada) } });
     const ascensionGuardada = localStorage.getItem(CLAVE_ASCENSION);
     if (ascensionGuardada) set({ ascensionesGanadas: JSON.parse(ascensionGuardada) });
+    const pergaminosGuardados = localStorage.getItem(CLAVE_PERGAMINOS);
+    if (pergaminosGuardados) set({ pergaminos: { ...PERGAMINOS_VACIOS, ...JSON.parse(pergaminosGuardados) } });
+  },
+
+  /**
+   * Suma pergaminos al saldo (y a lo ganado en total) y apunta como derrotados
+   * alguna vez los jefes que se pasen. Lo llama la run al terminar.
+   */
+  sumarPergaminos(cantidad, jefesDerrotados = []) {
+    const actual = get().pergaminos;
+    const siguiente = {
+      saldo: actual.saldo + cantidad,
+      ganadosEnTotal: actual.ganadosEnTotal + cantidad,
+      jefesDerrotados: [...new Set([...actual.jefesDerrotados, ...jefesDerrotados])],
+    };
+    set({ pergaminos: siguiente });
+    localStorage.setItem(CLAVE_PERGAMINOS, JSON.stringify(siguiente));
   },
 
   /**
@@ -270,16 +298,16 @@ export const useAchievementsStore = create((set, get) => ({
    * El "empezar de cero" de toda la meta-progresión, que es una opción de verdad
    * en Ajustes (ver documentacion/34-ajustes.md).
    *
-   * ⚠️ **Borra las SEIS claves.** Dejar los contadores llenos mientras los logros
+   * ⚠️ **Borra las SIETE claves.** Dejar los contadores llenos mientras los logros
    * vuelven a cero es peor que no reiniciar: los de contador se volverían a
    * desbloquear en el acto, en el primer combate, y el jugador vería su reinicio
    * deshacerse solo. Lo mismo con los vistos y la enciclopedia, y con la marca — que
    * es lo primero que se mira en el Home. Y con el Salón de la Fama: reiniciar y seguir
    * viendo tus victorias de antes sería un reinicio a medias.
    *
-   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van seis:
-   * la última, las ascensiones ganadas — reiniciar y seguir pudiendo jugar en A5 sería
-   * otro reinicio a medias.
+   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van siete:
+   * las dos últimas, las ascensiones ganadas y los pergaminos — reiniciar y seguir
+   * pudiendo jugar en A5, o con el saldo intacto, sería otro reinicio a medias.
    */
   reiniciarLogros() {
     set({
@@ -290,6 +318,7 @@ export const useAchievementsStore = create((set, get) => ({
       marca: MARCA_VACIA,
       salonDeLaFama: [],
       ascensionesGanadas: {},
+      pergaminos: PERGAMINOS_VACIOS,
     });
     localStorage.removeItem(CLAVE_STORAGE);
     localStorage.removeItem(CLAVE_VISTOS);
@@ -297,5 +326,6 @@ export const useAchievementsStore = create((set, get) => ({
     localStorage.removeItem(CLAVE_MARCA);
     localStorage.removeItem(CLAVE_SALON);
     localStorage.removeItem(CLAVE_ASCENSION);
+    localStorage.removeItem(CLAVE_PERGAMINOS);
   },
 }));

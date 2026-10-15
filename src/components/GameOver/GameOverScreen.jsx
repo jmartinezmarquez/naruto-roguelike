@@ -3,6 +3,37 @@ import { nombreCorto } from '../common/nombres';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
 import { FilaMedallas } from '../common/Medallas';
+import { useAchievementsStore } from '../../store/useAchievementsStore';
+
+/**
+ * Los pergaminos de invocación que ha dado la run, desglosados (documentacion/42).
+ * Va en la pantalla de fin porque es lo que hace que perder también sea progreso: el
+ * jugador tiene que VER que la partida le ha dejado algo, y de dónde sale.
+ */
+function PanelPergaminos({ resultado, saldo }) {
+  if (!resultado) return null;
+  const { desglose } = resultado;
+  const lineas = [
+    ['Bosses defeated', desglose.jefes],
+    ['Run won', desglose.victoria],
+    ['Ascension bonus', desglose.ascension],
+    ['First-time bosses', desglose.primerasVeces],
+  ].filter(([, n]) => n > 0);
+  return (
+    <PanelMarco className="p-4 flex flex-col items-center gap-2">
+      <TituloBloque>Summoning scrolls</TituloBloque>
+      <p className="font-display text-[16px] text-oro">+{resultado.total}</p>
+      {lineas.length > 0 ? (
+        <ul className="text-[9px] text-pergamino-200/70 leading-relaxed text-center">
+          {lineas.map(([texto, n]) => <li key={texto}>{texto}: +{n}</li>)}
+        </ul>
+      ) : (
+        <p className="text-[9px] text-pergamino-200/60 text-center">Defeat a boss to earn scrolls, even if you fall later.</p>
+      )}
+      <p className="text-[9px] text-pergamino-200/60">You now have {saldo}.</p>
+    </PanelMarco>
+  );
+}
 
 export default function GameOverScreen() {
   const equipo = useGameStore((s) => s.equipo);
@@ -17,6 +48,8 @@ export default function GameOverScreen() {
   const medallas = useGameStore((s) => s.medallas);
   const ascension = useGameStore((s) => s.ascension);
   const obtenerArcosDeLaCampana = useGameStore((s) => s.obtenerArcosDeLaCampana);
+  const pergaminosDeLaRun = useGameStore((s) => s.pergaminosDeLaRun);
+  const saldoPergaminos = useAchievementsStore((s) => s.pergaminos.saldo);
 
   const pisoAlcanzado = nodoActualId !== null ? mapa?.nodos[nodoActualId]?.piso : null;
 
@@ -89,6 +122,8 @@ export default function GameOverScreen() {
           </div>
           <p className="text-[9px] text-oro/80 mt-1">Gold accumulated: {oro}</p>
         </PanelMarco>
+
+        <PanelPergaminos resultado={pergaminosDeLaRun} saldo={saldoPergaminos} />
 
         {/* Las medallas de la run: hasta dónde llegaste, en tres iconos. Al perder es
             lo que queda de la partida; al ganar, la fila llena y la promesa de que

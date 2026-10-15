@@ -111,3 +111,19 @@ describe('la foto final de la run', () => {
     expect(screen.getAllByText('Standing')).toHaveLength(2);
   });
 });
+
+describe('pergaminos de invocación', () => {
+  it('enseña lo que ha dado la run, desglosado, y el saldo', () => {
+    useAchievementsStore.setState({ pergaminos: { saldo: 9, ganadosEnTotal: 9, jefesDerrotados: [] } });
+    useGameStore.setState({
+      runTerminada: true, runGanada: false,
+      pergaminosDeLaRun: { total: 4, desglose: { jefes: 2, victoria: 0, ascension: 0, primerasVeces: 2 } },
+    });
+    render(<GameOverScreen />);
+    expect(screen.getByText('+4')).toBeInTheDocument();
+    expect(screen.getByText('Bosses defeated: +2')).toBeInTheDocument();
+    expect(screen.getByText('First-time bosses: +2')).toBeInTheDocument();
+    expect(screen.queryByText(/Run won/)).toBeNull();
+    expect(screen.getByText('You now have 9.')).toBeInTheDocument();
+  });
+});

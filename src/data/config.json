@@ -63,5 +63,13 @@
   "guardado": {
     "claveLocalStorage": "naruto-roguelike-run-actual",
     "guardarSoloRunEnCurso": true
+  },
+  "pergaminos": {
+    "_comentario": "Pergaminos de invocación: la moneda de la meta-progresión (documentacion/42). Se ganan al acabar CADA run, también perdiendo: porMiniJefe y porJefeFinal por cada uno derrotado en la run, porRunGanada si se gana, y el total se multiplica por (1 + multiplicadorPorAscension × nivel). primeraVezPorJefe es un extra por cada jefe derrotado por primera vez en la partida guardada.",
+    "porMiniJefe": 1,
+    "porJefeFinal": 2,
+    "porRunGanada": 3,
+    "multiplicadorPorAscension": 0.2,
+    "primeraVezPorJefe": 2
   }
 }

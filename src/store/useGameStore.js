@@ -24,6 +24,7 @@ import { generarMapa, resolverEnemigoDeNodo } from '../engine/mapGenerator';
 import { obtenerPersonajesReclutablesDesbloqueados, obtenerObjetosInicialesDesbloqueados } from '../engine/achievements';
 import { normalizarPasivas, cantidadDePasiva } from '../engine/passives';
 import { modificadoresDeAscension, multiplicadoresDeEnemigo } from '../engine/ascension';
+import { pergaminosDeLaRun } from '../engine/pergaminos';
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
@@ -454,6 +455,10 @@ export const useGameStore = create((set, get) => ({
       huboDerrotaEnEsteArco: false,
       medallas: [],
       ascension,
+      // Los jefes derrotados en ESTA run ({ id, final }), para los pergaminos del
+      // final, y lo que dieron (null hasta que la run termina; ver `_cerrarRun`).
+      jefesDerrotadosEnRun: [],
+      pergaminosDeLaRun: null,
     });
 
     // La enciclopedia arranca con lo que traes puesto: el personaje elegido y los
@@ -856,6 +861,11 @@ export const useGameStore = create((set, get) => ({
         // pantalla ir tras la animación de combate.
         const arcoEnCurso = get().arcoActualDatos;
         arcoCompletado = enemigoBase.id === arcoEnCurso?.jefeFinalId;
+        // Para los pergaminos: solo cuentan el mini-jefe y el jefe final DEL ARCO. Un
+        // desafío legendario también pelea contra un jefe, pero no es el del arco.
+        if (enemigoBase.id === arcoEnCurso?.miniJefeId || arcoCompletado) {
+          set({ jefesDerrotadosEnRun: [...get().jefesDerrotadosEnRun, { id: enemigoBase.id, final: arcoCompletado }] });
+        }
         if (arcoCompletado) {
           // Estilo Slay the Spire: superar el jefe de un acto cura a todo el
           // equipo por completo (y revive a quien hubiera caído), de regalo
@@ -890,6 +900,7 @@ export const useGameStore = create((set, get) => ({
         const runGanadaAqui = arcoCompletado && enemigoBase.recompensa?.finDeLaRun;
         if (runGanadaAqui) {
           set({ runTerminada: true, runGanada: true });
+          get()._cerrarRun(true);
           // Al Salón de la Fama, con el equipo tal y como ha ganado: ya curado y con
           // los niveles de esta victoria (`_aplicarVictoria` y la curación de fin de
           // arco han corrido justo arriba).
@@ -954,6 +965,7 @@ export const useGameStore = create((set, get) => ({
     // Viaja en el resumen igual que en la victoria — `CombatScreen` notifica al
     // acabar la animación, se haya ganado o perdido.
     if (!jugadorGanoFinal && get().runTerminada) {
+      get()._cerrarRun(false);
       useAchievementsStore.getState().sumarContadores({ runsPerdidas: 1 });
       logrosDesbloqueados = useAchievementsStore.getState().evaluarLogros({});
     }
@@ -1124,6 +1136,28 @@ export const useGameStore = create((set, get) => ({
    */
   elegirCampana(campanaId, ascension = 0) {
     set({ campanaActualId: campanaId, ascensionElegida: ascension, pantalla: 'seleccionPersonaje' });
+  },
+
+  /**
+   * Interno: los pergaminos de una run que acaba de terminar, ganada o perdida
+   * (perder también suma — documentacion/42). Se apuntan en el saldo de la
+   * meta-progresión y quedan en `pergaminosDeLaRun` para que la pantalla de fin de
+   * run los enseñe desglosados. Una sola vez por run: si ya se cerró, no hace nada.
+   */
+  _cerrarRun(ganada) {
+    if (get().pergaminosDeLaRun) return;
+    const jefes = get().jefesDerrotadosEnRun;
+    const yaDerrotados = new Set(useAchievementsStore.getState().pergaminos.jefesDerrotados);
+    const nuevos = [...new Set(jefes.map((j) => j.id))].filter((id) => !yaDerrotados.has(id));
+    const resultado = pergaminosDeLaRun({
+      miniJefes: jefes.filter((j) => !j.final).length,
+      jefesFinales: jefes.filter((j) => j.final).length,
+      ganada,
+      ascension: get().ascension,
+      primerasVeces: nuevos.length,
+    }, configGlobal.pergaminos);
+    useAchievementsStore.getState().sumarPergaminos(resultado.total, jefes.map((j) => j.id));
+    set({ pergaminosDeLaRun: resultado });
   },
 
   /** Los modificadores de la ascensión de la run en curso (ver engine/ascension.js). */
