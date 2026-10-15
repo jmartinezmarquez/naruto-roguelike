@@ -462,8 +462,9 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   encargo son 31 hojas con sus prompts (01-14 personajes/transformaciones/proyectiles/objetos, 15-31 el
   resto: nodos, chakra, menú, medallas, tiras de efectos y columnas del mapa); `scripts/generar-sprites-estilo-nuevo.py` las recorta (reparto
   en partes iguales + corte por la columna más fina, porque las auras se tocan). ⚠️ **Cada personaje se
-  pide en la misma hoja que sus transformaciones**, o la transformación sale "otro" personaje. **Hojas 01-14
-  hechas el 2026-10-15**: ya no queda personaje, transformación, proyectil ni objeto del estilo viejo. ⚠️ El
+  pide en la misma hoja que sus transformaciones**, o la transformación sale "otro" personaje. **Las 31 hojas
+  hechas el 2026-10-15**: ya no queda arte del estilo viejo salvo los fondos de página del Home. Las hojas
+  sin alfa (damero pintado) las limpia el script solo. ⚠️ El
   corte de las hojas minimiza un coste (columna llena + desviación del ancho medio); "partes iguales" y
   "huecos primero" fallaron cada uno en una hoja real. ⚠️ **Todos los scripts viejos de sprites se niegan
   a correr** si ya existe la hoja nueva de lo suyo: pisarían el arte nuevo. ⚠️ Las tiras de efecto se reducen con la

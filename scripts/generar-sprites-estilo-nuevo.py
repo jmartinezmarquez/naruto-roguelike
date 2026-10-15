@@ -343,6 +343,41 @@ def colocar(dibujo, tipo):
     return lienzo
 
 
+def quitar_damero_pintado(hoja):
+    """
+    Para las hojas que llegan SIN transparencia, con el damero gris pintado (las 15, 16
+    y 19). Se borra por **inundación desde el borde** sobre lo gris y sin color: el
+    contorno negro de cada dibujo frena el relleno, así que los grises de DENTRO —el
+    aro de piedra de los nodos— no se tocan, que es lo que haría un umbral global.
+    Mismo método que generar-sprites-objetos-nuevos.py, con el damero de estas hojas
+    (grises neutros de ~125 a ~200, más las vetas claras que el generador le pinta).
+    """
+    rgb = hoja.convert('RGB')
+    ancho, alto = rgb.size
+    px = rgb.load()
+
+    def es_fondo(x, y):
+        r, g, b = px[x, y]
+        return min(r, g, b) >= 100 and max(r, g, b) - min(r, g, b) <= 14
+
+    fondo = bytearray(ancho * alto)
+    pila = [(x, y) for x in range(ancho) for y in (0, alto - 1)] + [(x, y) for y in range(alto) for x in (0, ancho - 1)]
+    while pila:
+        x, y = pila.pop()
+        i = y * ancho + x
+        if fondo[i] or not es_fondo(x, y):
+            continue
+        fondo[i] = 1
+        if x > 0: pila.append((x - 1, y))
+        if x < ancho - 1: pila.append((x + 1, y))
+        if y > 0: pila.append((x, y - 1))
+        if y < alto - 1: pila.append((x, y + 1))
+
+    resultado = rgb.convert('RGBA')
+    resultado.putalpha(Image.frombytes('L', (ancho, alto), bytes(0 if v else 255 for v in fondo)))
+    return resultado
+
+
 def colocar_icono(dibujo, carpeta):
     c = ICONOS[carpeta]
     lienzo = Image.new('RGBA', (c['lienzo'], c['lienzo']), (0, 0, 0, 0))
@@ -393,11 +428,14 @@ if __name__ == '__main__':
         if not os.path.exists(ruta):
             print('--', fichero, 'no existe todavía, se salta')
             continue
-        hoja = Image.open(ruta).convert('RGBA')
+        original = Image.open(ruta)
         primera = next(c for c in celdas if c)
         carpeta, ident = primera.split('/')
         tipo = TIPO_POR_CARPETA[carpeta]
         destino = os.path.join(ASSETS, carpeta)
+        # Sin alfa y no siendo un fondo: trae el damero pintado y hay que borrarlo.
+        sin_alfa = 'A' not in original.getbands()
+        hoja = quitar_damero_pintado(original) if sin_alfa and tipo != 'fondo' else original.convert('RGBA')
 
         if tipo == 'tira':
             fotogramas, lado = TIRAS[ident]

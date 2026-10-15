@@ -7,7 +7,13 @@ es el encargo completo: cómo se pide, cómo entra en el juego y los prompts de 
 - **Hojas 01-14**: personajes, transformaciones, proyectiles y objetos. ✅ **HECHAS el 2026-10-15**:
   ya no queda en el juego ningún personaje, transformación, proyectil ni objeto del estilo viejo.
 - **Hojas 15-31**: el resto del arte — nodos del mapa, chakra, menú, medallas, efectos de combate y
-  fondos de columna del mapa.
+  fondos de columna del mapa. ✅ **HECHAS el 2026-10-15**: **ya no queda arte del estilo viejo en el
+  juego**, salvo los fondos de página del Home (`game-background-*.jpg`).
+
+Tres hojas (15, 16 y 19) llegaron **sin transparencia**, con el damero gris pintado: el script lo borra
+solo (`quitar_damero_pintado`, inundación desde el borde sobre gris neutro; el contorno negro de cada
+dibujo protege los grises de dentro, como el aro de piedra de los nodos). Las medallas pasaron a un
+lienzo de 64.
 
 ## Cómo entra una hoja en el juego
 
@@ -52,8 +58,9 @@ conviven.
   `src/assets/sprite-pendientes-personajes.png` y `src/assets/sprite-pendientes-transformaciones-2a.png`;
   para proyectiles, `src/assets/sprite-pendientes-proyectiles.png`; para objetos,
   `src/assets/sprite-objetos-nuevos.png`.
-- Si sale con el damero pintado en vez de transparencia, se pide otra vez: este script, a diferencia del
-  de objetos nuevos, espera alfa de verdad.
+- Si sale con el damero pintado en vez de transparencia, **no hace falta repetirla**: el script lo
+  detecta (hoja sin canal alfa) y lo borra. Sí conviene que el damero sea gris neutro y que el dibujo
+  tenga contorno oscuro, que es lo que frena el borrado.
 
 ## Bloque de estilo — personajes y transformaciones
 
