@@ -331,4 +331,13 @@ def recolorear_pelo(lado, pixeles, banda, tonos, luz_minima=18, luz_maxima=95):
 
 
 if __name__ == '__main__':
+    # ⚠️ Este arte ya está rehecho en el estilo nuevo (documentacion/41). Si existe su
+    # hoja, correr esto PISARÍA el arte nuevo con el viejo: se para.
+    import os as _os
+    import sys as _sys
+    _assets = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), 'src', 'assets')
+    _nuevas = [h for h in ('sprite-estilo-nuevo-01.png', 'sprite-estilo-nuevo-02.png', 'sprite-estilo-nuevo-03.png', 'sprite-estilo-nuevo-04.png', 'sprite-estilo-nuevo-05.png', 'sprite-estilo-nuevo-06.png', 'sprite-estilo-nuevo-07.png', 'sprite-estilo-nuevo-08.png',) if _os.path.exists(_os.path.join(_assets, h))]
+    if _nuevas:
+        _sys.exit(f'No se ejecuta: ya existe {_nuevas} del estilo nuevo, y esto pisaría su arte. '
+                  'Usa scripts/generar-sprites-estilo-nuevo.py.')
     main()

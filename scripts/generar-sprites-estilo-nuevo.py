@@ -10,10 +10,9 @@ de izquierda a derecha. Las hojas que aún no existen se saltan, así que se pue
 a medias, según vayan llegando.
 
 **Cómo separa los dibujos.** En estas hojas las auras de las transformaciones se
-tocan (los dragones de Tenten llegan a Neji y a Shikamaru), así que buscar columnas
-vacías no sirve. Como se piden en UNA fila y equiespaciados, se reparte el ancho
-ocupado en N partes iguales y cada corte se mueve a la columna MÁS FINA de su zona
-(±25% de una celda): donde dos auras se rozan, la columna más fina es justo el roce.
+tocan (los dragones de Tenten llegan a Neji y a Shikamaru), así que no basta con
+buscar columnas vacías: donde no hay hueco se corta por el valle más profundo, la
+columna más fina, que es justo el roce (ver `cortes`).
 Una entrada `None` en los ids descarta ese dibujo (la hoja de transformaciones trajo
 un Pain Camino Animal transformado que no usa nada: ese jefe no tiene modo).
 
@@ -187,51 +186,126 @@ def mascara(im):
     return im.getchannel('A').point(lambda a: 255 if a >= ALFA_MINIMO else 0)
 
 
+PASO_CORTE = 2        # se prueban cortes cada 2 columnas: de sobra para hojas de ~2000 px
+PESO_DENSIDAD = 5.0   # lo que cuesta cortar por una columna llena (frente a una vacía)
+PESO_ANCHO = 3.0      # lo que cuesta que un dibujo se aleje del ancho medio (ver hoja 10)
+
+
 def cortes(hoja, n):
-    """Los n tramos [x0, x1) de la hoja, uno por dibujo (ver el docstring del módulo)."""
-    caja = mascara(hoja).getbbox()
+    """
+    Los n tramos [x0, x1) de la hoja, uno por dibujo.
+
+    Se eligen los n-1 cortes que **minimizan un coste** (programación dinámica sobre
+    las columnas de la hoja):
+
+    - **cortar por una columna pintada** cuesta en proporción a lo llena que esté: un
+      hueco no cuesta nada, un roce de dos auras casi nada, atravesar a un personaje
+      mucho (`PESO_DENSIDAD`);
+    - **que un dibujo salga mucho más ancho o más estrecho que la media** también cuesta
+      (`PESO_ANCHO`), al cuadrado de la desviación.
+
+    ⚠️ **Hacen falta las dos cosas**, y se aprendió por las malas:
+    - Repartir en partes iguales y ajustar a la columna más fina fallaba con dibujos de
+      anchos muy distintos (hoja 04: la transformación de Kiba con Akamaru mide el doble
+      que Ino, y los cortes caían dentro de Chōji).
+    - Cortar primero por los huecos fallaba al revés: las dos manos de Hinata (hoja 10)
+      tienen un hueco real entre ellas, así que salían como dos dibujos, y a cambio
+      Zabuza y Kabuto, que se rozan, salían como uno.
+    Con el coste, ese hueco entre manos pierde: deja dos trozos estrechos y uno el doble
+    de ancho, y eso pesa más que cortar por el roce fino de al lado.
+    """
     datos = mascara(hoja).load()
-    alturas = [sum(1 for y in range(hoja.height) if datos[x, y]) for x in range(hoja.width)]
-    x0, x1 = caja[0], caja[2]
-    celda = (x1 - x0) / n
-    bordes = [x0]
-    for k in range(1, n):
-        ideal = round(x0 + k * celda)
-        ventana = range(max(bordes[-1] + 1, ideal - int(celda * 0.25)), min(x1 - 1, ideal + int(celda * 0.25)))
-        bordes.append(min(ventana, key=lambda x: alturas[x]))
-    bordes.append(x1)
+    alto = hoja.height
+    alturas = [sum(1 for y in range(alto) if datos[x, y]) for x in range(hoja.width)]
+    caja = mascara(hoja).getbbox()
+    inicio, fin = caja[0], caja[2]
+    medio = (fin - inicio) / n
+    if n == 1:
+        return [(inicio, fin)]
+
+    posiciones = list(range(inicio + PASO_CORTE, fin - PASO_CORTE, PASO_CORTE))
+    coste_corte = [PESO_DENSIDAD * alturas[x] / alto for x in posiciones]
+
+    def coste_tramo(a, b):
+        return PESO_ANCHO * ((b - a - medio) / medio) ** 2
+
+    # mejor[k][i] = coste mínimo de partir [inicio, posiciones[i]) en k+1 tramos con el
+    # último corte en posiciones[i]; desde[k][i] = índice del corte anterior.
+    infinito = float('inf')
+    m = len(posiciones)
+    mejor = [[infinito] * m for _ in range(n - 1)]
+    desde = [[-1] * m for _ in range(n - 1)]
+    for i, x in enumerate(posiciones):
+        mejor[0][i] = coste_tramo(inicio, x) + coste_corte[i]
+    for k in range(1, n - 1):
+        for i, x in enumerate(posiciones):
+            mejor_aqui, de = infinito, -1
+            for p in range(i):
+                if mejor[k - 1][p] == infinito:
+                    continue
+                c = mejor[k - 1][p] + coste_tramo(posiciones[p], x)
+                if c < mejor_aqui:
+                    mejor_aqui, de = c, p
+            if de >= 0:
+                mejor[k][i] = mejor_aqui + coste_corte[i]
+                desde[k][i] = de
+
+    ultimo = min(range(m), key=lambda i: mejor[n - 2][i] + coste_tramo(posiciones[i], fin))
+    cortes_x = []
+    i, k = ultimo, n - 2
+    while k >= 0:
+        cortes_x.append(posiciones[i])
+        i, k = desde[k][i], k - 1
+    bordes = [inicio] + sorted(cortes_x) + [fin]
     return list(zip(bordes, bordes[1:]))
 
 
 def quitar_restos_del_vecino(dibujo):
     """
-    Borra las manchas pequeñas que tocan el borde izquierdo o derecho del corte: son
-    trozos del aura del dibujo de al lado (en la primera pasada, un jirón de los dragones
-    de Tenten se colaba en el Shikamaru). "Pequeña" es menos del 3% de lo pintado; una
-    parte del propio dibujo que llegue al borde es mucho más grande que eso.
+    Borra las manchas que tocan el borde izquierdo o derecho del corte y son **mucho más
+    pequeñas que la pieza principal del dibujo** (menos del 35% de ella): son trozos del
+    dibujo de al lado que el corte se ha llevado.
+
+    ⚠️ La primera versión medía contra el TOTAL pintado (menos del 3%) y se quedaba corta
+    con los dibujos finos: la hoja de Kabuto (hoja 10) es tan estrecha que el jirón de la
+    niebla de Zabuza que se colaba pesaba más que ese 3%. Comparar con la pieza principal
+    no depende de lo grande que sea el dibujo.
     """
     ancho, alto = dibujo.size
     datos = mascara(dibujo).load()
-    total = sum(1 for y in range(alto) for x in range(ancho) if datos[x, y])
-    visto = bytearray(ancho * alto)
-    alfa = dibujo.getchannel('A')
-    pa = alfa.load()
-    for x_borde in (0, ancho - 1):
-        for y0 in range(alto):
-            if not datos[x_borde, y0] or visto[y0 * ancho + x_borde]:
+    etiqueta = [0] * (ancho * alto)
+    tamanos = {}
+    toca_borde = set()
+    actual = 0
+    for y0 in range(alto):
+        for x0 in range(ancho):
+            if not datos[x0, y0] or etiqueta[y0 * ancho + x0]:
                 continue
-            mancha, pila = [], [(x_borde, y0)]
-            visto[y0 * ancho + x_borde] = 1
+            actual += 1
+            etiqueta[y0 * ancho + x0] = actual
+            pila, n = [(x0, y0)], 0
             while pila:
                 x, y = pila.pop()
-                mancha.append((x, y))
+                n += 1
+                if x in (0, ancho - 1):
+                    toca_borde.add(actual)
                 for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
-                    if 0 <= nx < ancho and 0 <= ny < alto and datos[nx, ny] and not visto[ny * ancho + nx]:
-                        visto[ny * ancho + nx] = 1
+                    if 0 <= nx < ancho and 0 <= ny < alto and datos[nx, ny] and not etiqueta[ny * ancho + nx]:
+                        etiqueta[ny * ancho + nx] = actual
                         pila.append((nx, ny))
-            if len(mancha) < total * 0.03:
-                for x, y in mancha:
-                    pa[x, y] = 0
+            tamanos[actual] = n
+    if not tamanos:
+        return dibujo
+    principal = max(tamanos, key=tamanos.get)
+    fuera = {e for e in toca_borde if e != principal and tamanos[e] < tamanos[principal] * 0.35}
+    if not fuera:
+        return dibujo
+    alfa = dibujo.getchannel('A')
+    pa = alfa.load()
+    for y in range(alto):
+        for x in range(ancho):
+            if etiqueta[y * ancho + x] in fuera:
+                pa[x, y] = 0
     dibujo.putalpha(alfa)
     return dibujo
 

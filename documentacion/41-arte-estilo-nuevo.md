@@ -4,7 +4,8 @@ El 2026-10-14 se pidieron a un generador de imágenes los 25 sprites que faltaba
 bastante mejor que el arte original. Se decidió **pasar todo el juego a ese estilo**. Este documento
 es el encargo completo: cómo se pide, cómo entra en el juego y los prompts de cada hoja, en orden.
 
-- **Hojas 01-14**: personajes, transformaciones, proyectiles y objetos.
+- **Hojas 01-14**: personajes, transformaciones, proyectiles y objetos. ✅ **HECHAS el 2026-10-15**:
+  ya no queda en el juego ningún personaje, transformación, proyectil ni objeto del estilo viejo.
 - **Hojas 15-31**: el resto del arte — nodos del mapa, chakra, menú, medallas, efectos de combate y
   fondos de columna del mapa.
 
@@ -18,8 +19,22 @@ es el encargo completo: cómo se pide, cómo entra en el juego y los prompts de 
 3. Revisar a ojo y hacer commit. No hay que tocar código: los sprites sustituyen a los viejos con el
    mismo nombre de fichero.
 
-El script **no necesita huecos limpios entre dibujos**: reparte la hoja en partes iguales y ajusta cada
-corte a la columna más fina, y borra los restos del dibujo vecino. Pero sí necesita que los dibujos
+El script **no necesita huecos limpios entre dibujos**: elige los cortes que minimizan un coste —cortar
+por una columna llena cuesta, y que un dibujo salga mucho más ancho o estrecho que la media también—, y
+borra los restos del dibujo vecino.
+
+⚠️ **El corte costó tres intentos**, y los dos primeros fallaban en hojas reales:
+- *Partes iguales + columna más fina*: con dibujos de anchos muy distintos (hoja 04: Kiba con Akamaru
+  mide el doble que Ino) los cortes caían dentro de Chōji.
+- *Huecos primero*: las dos manos de Hinata (hoja 10) tienen un hueco real entre ellas y salían como dos
+  dibujos, mientras Zabuza y Kabuto, que se rozan, salían como uno.
+- *El coste* resuelve los dos: el hueco entre manos deja trozos muy desiguales y pierde frente al roce
+  fino de al lado. `PESO_ANCHO` está en 3 por la hoja 10; con 1 seguía eligiendo mal.
+
+Y la limpieza de restos mide cada mancha del borde **contra la pieza principal del dibujo** (menos del
+35% → fuera), no contra el total pintado: con el 3% del total, un jirón de la niebla de Zabuza se
+quedaba en la hoja de Kabuto, que es tan fina que el jirón pesaba más que eso. Coste conocido: al genin
+de tierra se le va una piedrecita propia que tocaba el corte. Pero sí necesita que los dibujos
 estén **en una sola fila y en el orden del prompt**: si una hoja sale con otro orden o con un dibujo de
 más o de menos, se corrige la lista de esa hoja en `HOJAS` antes de correrlo.
 

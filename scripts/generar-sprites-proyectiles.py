@@ -350,4 +350,13 @@ def main():
 
 
 if __name__ == '__main__':
+    # ⚠️ Este arte ya está rehecho en el estilo nuevo (documentacion/41). Si existe su
+    # hoja, correr esto PISARÍA el arte nuevo con el viejo: se para.
+    import os as _os
+    import sys as _sys
+    _assets = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), 'src', 'assets')
+    _nuevas = [h for h in ('sprite-estilo-nuevo-09.png', 'sprite-estilo-nuevo-10.png', 'sprite-estilo-nuevo-11.png', 'sprite-estilo-nuevo-12.png',) if _os.path.exists(_os.path.join(_assets, h))]
+    if _nuevas:
+        _sys.exit(f'No se ejecuta: ya existe {_nuevas} del estilo nuevo, y esto pisaría su arte. '
+                  'Usa scripts/generar-sprites-estilo-nuevo.py.')
     main()
