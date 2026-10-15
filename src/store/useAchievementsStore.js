@@ -12,8 +12,15 @@ import {
   obtenerPersonajesInicialesDesbloqueados, obtenerObjetosInicialesDesbloqueados,
 } from '../engine/achievements';
 import { nivelDeMaestria, xpParaSubirUnNivel } from '../engine/maestria';
-import { ESTADO_INVOCACION_VACIO, invocar as invocarEnMotor } from '../engine/invocacion';
+import { ESTADO_INVOCACION_VACIO, invocar as invocarEnMotor, catalogoDisponible } from '../engine/invocacion';
 import invocacionData from '../data/invocacion.json';
+import charactersData from '../data/characters.json';
+
+// El catálogo del gacha sin los ninjas que aún esperan su dibujo (ver catalogoDisponible).
+export const CATALOGO_INVOCACION = catalogoDisponible(
+  invocacionData.catalogo,
+  charactersData.personajes.filter((p) => p.pendienteDeArte).map((p) => p.id),
+);
 import configGlobal from '../data/config.json';
 
 const CLAVE_STORAGE = 'naruto-roguelike-logros';
@@ -217,7 +224,7 @@ export const useAchievementsStore = create((set, get) => ({
     const objetosPorLogro = obtenerObjetosInicialesDesbloqueados(achievementsData.logros, get().logrosDesbloqueados);
     const porLogro = { personaje: inicialesPorLogro, objeto: objetosPorLogro, pagina: [] };
     const yaLoTiene = (e) => porLogro[e.tipo].includes(e.id);
-    const { estado, premios } = invocarEnMotor(get().invocacion, reglas.catalogo, reglas, numero, azar, yaLoTiene);
+    const { estado, premios } = invocarEnMotor(get().invocacion, CATALOGO_INVOCACION, reglas, numero, azar, yaLoTiene);
 
     const reglasMaestria = configGlobal.maestria;
     const xpGanada = {};
@@ -258,7 +265,7 @@ export const useAchievementsStore = create((set, get) => ({
       pagina: get().invocacion.paginas ?? [],
     };
     const tiene = (e) => listas[e.tipo].includes(e.id);
-    const catalogo = invocacionData.catalogo;
+    const catalogo = CATALOGO_INVOCACION;
     const completa = (tipo) => catalogo.filter((e) => e.tipo === tipo).every(tiene);
     return { personaje: completa('personaje'), objeto: completa('objeto'), pagina: completa('pagina'), todo: catalogo.every(tiene) };
   },

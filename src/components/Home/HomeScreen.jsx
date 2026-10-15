@@ -59,7 +59,8 @@ const ARCOS_POR_ID = Object.fromEntries(
 
 // Los totales del marcador. Se calculan de los JSON y no se escriben a mano: añadir un
 // personaje o un jefe no puede dejar el contador mintiendo.
-const TOTAL_NINJAS = charactersData.personajes.length;
+// Sin los que esperan su dibujo (`pendienteDeArte`): aún no se pueden conocer.
+const TOTAL_NINJAS = charactersData.personajes.filter((p) => !p.pendienteDeArte).length;
 const TOTAL_ENEMIGOS = enemiesData.jefes.length
   + commonEnemiesData.plantillasGenericas.length
   + commonEnemiesData.enemigosNombrados.length;

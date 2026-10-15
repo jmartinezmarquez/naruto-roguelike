@@ -158,6 +158,18 @@ HOJAS = [
       'aspects/camino_animal_pain_2', 'aspects/pain_camino_deva_1', 'aspects/pain_camino_deva_2']),
     # El icono del gacha en el Home (hasta que llegue, un pergamino de objeto).
     ('sprite-estilo-nuevo-43.png', ['menu/invocacion']),
+
+    # --- Tanda 6 (meta-progresión, fase 3): héroes nuevos, que solo salen del gacha.
+    ('sprite-estilo-nuevo-44.png',
+     ['characters/might_guy', 'transformations/might_guy_0', 'transformations/might_guy_1',
+      'characters/jiraiya', 'transformations/jiraiya_0', 'transformations/jiraiya_1']),
+    ('sprite-estilo-nuevo-45.png',
+     ['characters/asuma', 'transformations/asuma_0', 'characters/kurenai', 'transformations/kurenai_0']),
+    ('sprite-estilo-nuevo-46.png', ['projectiles/jiraiya', 'projectiles/asuma', 'projectiles/kurenai']),
+    ('sprite-estilo-nuevo-47.png',
+     ['aspects/might_guy_1', 'aspects/might_guy_2', 'aspects/jiraiya_1',
+      'aspects/jiraiya_2', 'aspects/asuma_1', 'aspects/asuma_2']),
+    ('sprite-estilo-nuevo-48.png', ['aspects/kurenai_1', 'aspects/kurenai_2']),
 ]
 
 TIPO_POR_CARPETA = {

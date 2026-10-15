@@ -15,6 +15,10 @@
     { "tipo": "personaje", "id": "zabuza", "rareza": "legendario" },
     { "tipo": "personaje", "id": "gaara", "rareza": "legendario" },
     { "tipo": "personaje", "id": "pain_camino_deva", "rareza": "legendario" },
+    { "tipo": "personaje", "id": "might_guy", "rareza": "legendario" },
+    { "tipo": "personaje", "id": "jiraiya", "rareza": "legendario" },
+    { "tipo": "personaje", "id": "asuma", "rareza": "raro" },
+    { "tipo": "personaje", "id": "kurenai", "rareza": "raro" },
     { "tipo": "objeto", "id": "pildora_soldado", "rareza": "comun" },
     { "tipo": "objeto", "id": "unguento_curativo", "rareza": "comun" },
     { "tipo": "objeto", "id": "pergamino_entrenamiento_ataque", "rareza": "comun" },
@@ -44,6 +48,10 @@
     { "tipo": "pagina", "id": "kabuto", "rareza": "comun" },
     { "tipo": "pagina", "id": "gaara", "rareza": "comun" },
     { "tipo": "pagina", "id": "camino_animal_pain", "rareza": "comun" },
-    { "tipo": "pagina", "id": "pain_camino_deva", "rareza": "comun" }
+    { "tipo": "pagina", "id": "pain_camino_deva", "rareza": "comun" },
+    { "tipo": "pagina", "id": "might_guy", "rareza": "comun" },
+    { "tipo": "pagina", "id": "jiraiya", "rareza": "comun" },
+    { "tipo": "pagina", "id": "asuma", "rareza": "comun" },
+    { "tipo": "pagina", "id": "kurenai", "rareza": "comun" }
   ]
 }

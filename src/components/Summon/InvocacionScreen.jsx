@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { useAchievementsStore } from '../../store/useAchievementsStore';
+import { useAchievementsStore, CATALOGO_INVOCACION } from '../../store/useAchievementsStore';
 import { tiradasParaGarantia } from '../../engine/invocacion';
 import invocacionData from '../../data/invocacion.json';
 import itemsData from '../../data/items.json';
@@ -102,7 +102,7 @@ export default function InvocacionScreen() {
   const objetos = useAchievementsStore.getState().objetosInicialesDesbloqueados();
   const listas = { personaje: personajes, objeto: objetos, pagina: estado.paginas ?? [] };
   const tiene = (e) => listas[e.tipo].includes(e.id);
-  const conseguidos = reglas.catalogo.filter(tiene).length;
+  const conseguidos = CATALOGO_INVOCACION.filter(tiene).length;
 
   function invocar(numero) {
     const premios = useAchievementsStore.getState().invocar(numero);
@@ -142,9 +142,9 @@ export default function InvocacionScreen() {
         )}
 
         <div className="flex flex-col gap-2">
-          <TituloBloque>Collection {conseguidos}/{reglas.catalogo.length}</TituloBloque>
+          <TituloBloque>Collection {conseguidos}/{CATALOGO_INVOCACION.length}</TituloBloque>
           <div className="grid grid-cols-5 sm:grid-cols-9 gap-1.5">
-            {reglas.catalogo.map((entrada) => {
+            {CATALOGO_INVOCACION.map((entrada) => {
               const abierto = tiene(entrada);
               const sprite = spriteDePremio(entrada);
               return (

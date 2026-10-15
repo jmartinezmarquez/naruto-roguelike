@@ -260,6 +260,7 @@ Kakashi fueron tres ficheros de datos; el arte ya tiene su proceso montado. Cada
 | | ✅ *Páginas del Bingo Book: 21 historias (`data/bingo-book-pages.json`) como premio común; se leen en la ficha del ninja.* | |
 | | ✅ *Logros de maestría y gacha (6): nivel de ninja 5 y 10, 50 tiradas, 10 legendarios, Bingo Book completo, colección completa. **Fase 2 completa**, salvo el arte (hojas 36-43).* | |
 | **3** | Primera tanda de personajes nuevos (3-4 héroes) con su arte | 1 sesión + arte |
+| | ✅ *Datos de Might Guy y Jiraiya (legendarios) y Asuma y Kurenai (raros), calibrados en el bloque 5 del simulador (Gai 0,82 y Jiraiya 0,83 frente a Kakashi 0,80; Asuma 0,66 y Kurenai 0,62 frente a Yamato 0,68), con su página del Bingo Book. Solo salen del gacha y, una vez conseguidos, se reclutan en cualquier arco. ⏳ Arte: hojas 44-48 del documento 41; hasta entonces llevan `pendienteDeArte` y el juego no los enseña.* | |
 | **4** | Actos variables (campaña por actos) y el primer arco nuevo con sus villanos | 2 sesiones + arte |
 | **5** | Desafío diario y retos opcionales | 1 sesión |
 

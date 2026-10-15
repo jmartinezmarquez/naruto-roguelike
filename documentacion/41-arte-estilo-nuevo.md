@@ -675,3 +675,77 @@ del menú) para que salga a juego con ellos.
 
 One menu icon: a summoning scroll unrolled on the ground with a glowing red summoning circle drawn on it and a small puff of white smoke rising from the center.
 ```
+
+## Tanda 6 — héroes nuevos (hojas 44-48)
+
+⏳ **PENDIENTES.** Might Guy, Jiraiya, Asuma y Kurenai (`documentacion/42`, fase 3) ya están en los datos
+con la marca `pendienteDeArte`: hasta que llegue su sprite **no salen en el gacha ni en el Bingo Book**.
+Cuando llegue cada hoja, además de correr el script hay que **quitar la marca** del personaje en
+`characters.json` — `characterSprites.test.js` falla para recordarlo. No hay que tocar código: los mapas
+de sprites leen las carpetas con `import.meta.glob`.
+
+Las hojas 44-45 llevan el **bloque de estilo de personajes** (cada uno con sus transformaciones en la
+misma hoja), la 46 el de **proyectiles** y las 47-48 el de **aspectos**. Para las de aspectos, adjuntar
+de referencia los sprites que hayan salido en las hojas 44-45. Might Guy no lleva proyectil: es cuerpo a
+cuerpo, como Rock Lee.
+
+### Hoja 44 → `sprite-estilo-nuevo-44.png` (Might Guy y Jiraiya)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Might Guy (normal): shiny black bowl-cut hair, very thick eyebrows, big confident grin, green full-body jumpsuit with a green Konoha flak jacket, orange leg warmers, red forehead protector worn as a belt.
+2. Might Guy – "Gate of Wonder": same Guy with red skin, veins on the face, a swirling green-blue chakra aura and steam rising from his body.
+3. Might Guy – "Eighth Gate: Night Guy": same Guy with red skin, white hair standing up, glowing red-green chakra flames all around him like a dragon of blood-red steam.
+4. Jiraiya (normal): tall old man, long spiky white hair down his back, red lines running down from his eyes, red haori over a green kimono, a tall horned forehead protector with a plain metal plate, wooden geta sandals, a big scroll on his back.
+5. Jiraiya – "Toad Mountain Training": same Jiraiya holding an unrolled summoning scroll, a small orange toad on his shoulder, faint orange chakra aura.
+6. Jiraiya – "Sage Mode": same Jiraiya with a toad-like big nose, orange pigment around yellow toad eyes, a warty chin, two tiny old toads sitting on his shoulders, glowing orange natural-energy aura.
+```
+
+### Hoja 45 → `sprite-estilo-nuevo-45.png` (Asuma y Kurenai)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Asuma Sarutobi (normal): short spiky black hair and a beard, a cigarette in his mouth, green Konoha flak jacket over a dark suit, white sash with a round Fire emblem at his waist, a trench knife in each hand.
+2. Asuma – "Wind Blades": same Asuma with sharp blue wind chakra blades extending far beyond his trench knives and a swirling wind aura.
+3. Kurenai Yuhi (normal): long wavy black hair, red eyes, red lipstick, bandage-wrap dress with a red mesh sleeve on the right arm, Konoha forehead protector.
+4. Kurenai – "Genjutsu Mistress": same Kurenai surrounded by drifting red flower petals and dark tree roots curling around her, faint red illusion aura.
+```
+
+### Hoja 46 → `sprite-estilo-nuevo-46.png` (proyectiles)
+
+```
+[PROJECTILE STYLE BLOCK]
+
+Left to right:
+1. Jiraiya's "Toad Flame Bombs": a big wave of orange flame mixed with drops of shiny yellow toad oil.
+2. Asuma's "Flying Swallow": a long sharp crescent of pale blue wind chakra.
+3. Kurenai's "Tree Binding Death": a burst of red flower petals swirling around a dark twisting tree root.
+```
+
+### Hoja 47 → `sprite-estilo-nuevo-47.png` (aspectos: Might Guy, Jiraiya, Asuma)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Might Guy – Wheelchair hero: a calmer older Guy in a plain green jumpsuit with no flak jacket, thumbs-up pose, bandaged leg.
+2. Might Guy – Youth uniform: young Guy in a red sleeveless training shirt, black shorts and orange leg warmers.
+3. Jiraiya – Pervy Sage writer: same Jiraiya in a plain grey kimono with a notebook and a brush in his hands.
+4. Jiraiya – Young Sannin: Jiraiya younger, shorter spiky white hair, a simple grey ninja outfit and a forehead protector, toad scroll on his back.
+5. Asuma – Guardian Ninja: dark grey Twelve Guardian Ninja outfit with a long sash, trench knives at the belt.
+6. Asuma – Off duty: casual dark shirt, hands in pockets, unlit cigarette, a shogi piece in one hand.
+```
+
+### Hoja 48 → `sprite-estilo-nuevo-48.png` (aspectos: Kurenai)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Kurenai – Jonin vest: green Konoha flak jacket over a dark outfit, hair tied back loosely.
+2. Kurenai – Formal kimono: dark red kimono with a camellia pattern and a black obi, hair pinned up.
+```

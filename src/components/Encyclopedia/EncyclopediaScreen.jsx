@@ -70,7 +70,8 @@ const MENSAJE_MODO_BLOQUEADO = 'See them transform in battle to unlock this form
 
 function entradasDeSeccion(seccionId) {
   if (seccionId === 'ninjas') {
-    return personajesData.personajes.map((p) => ({ id: p.id, base: p }));
+    // Quien espera su dibujo (`pendienteDeArte`) aún no está en el juego.
+    return personajesData.personajes.filter((p) => !p.pendienteDeArte).map((p) => ({ id: p.id, base: p }));
   }
   if (seccionId === 'enemigos') {
     return [

@@ -89,6 +89,16 @@ export function invocar(estado, catalogo, reglas, numero, azar, yaLoTiene = () =
   return { estado: siguiente, premios };
 }
 
+/**
+ * El catálogo sin lo que aún no se puede dar: el ninja que espera su dibujo
+ * (`pendienteDeArte` en characters.json) y su página. Sin esto, el gacha daría un
+ * personaje invisible.
+ */
+export function catalogoDisponible(catalogo, idsPendientesDeArte) {
+  const pendientes = new Set(idsPendientesDeArte);
+  return catalogo.filter((e) => e.tipo === 'objeto' || !pendientes.has(e.id));
+}
+
 /** Cuántas tiradas faltan, como mucho, para cada garantía (lo que enseña la pantalla). */
 export function tiradasParaGarantia(estado, reglas) {
   return {

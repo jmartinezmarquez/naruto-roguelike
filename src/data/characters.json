@@ -1,5 +1,5 @@
 {
-  "_comentario": "Each character has base stats (level 1), a signature jutsu that deals damage, and a 'modos' array with up to 2 transformations. Each mode activates above its nivelDesbloqueo (the engine always picks the highest unlocked one) and multiplies stats — NEVER changes the jutsu, like DBZ transformations. jutsu.efectoEstado is null for all: status effects (temporary buffs/debuffs) were disabled for the MVP — the engine (engine/combat.js) still supports them if refilled in the future, see documentacion/09-motor-engine.md.",
+  "_comentario": "Each character has base stats (level 1), a signature jutsu that deals damage, and a 'modos' array with up to 2 transformations. Each mode activates above its nivelDesbloqueo (the engine always picks the highest unlocked one) and multiplies stats — NEVER changes the jutsu, like DBZ transformations. jutsu.efectoEstado is null for all: status effects (temporary buffs/debuffs) were disabled for the MVP — the engine (engine/combat.js) still supports them if refilled in the future, see documentacion/09-motor-engine.md. pendienteDeArte: el personaje existe en los datos pero su dibujo aún no ha llegado (documentacion/41); hasta que llegue no sale en el gacha, ni en el Bingo Book, ni cuenta en los totales. Un test exige que la marca esté puesta si y solo si falta su sprite.",
   "personajes": [
     {
       "id": "naruto",
@@ -934,6 +934,240 @@
             },
             {
               "id": "priority"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "might_guy",
+      "nombre": "Might Guy",
+      "tipo": "raiton",
+      "rareza": "legendario",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 44,
+        "ataque": 10,
+        "defensa": 8,
+        "velocidad": 11
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 24,
+        "crecimiento": 1.015
+      },
+      "jutsu": {
+        "nombre": "Morning Peacock",
+        "descripcion": "A barrage of punches so fast the air ignites into a fan of burning feathers.",
+        "danoBase": 2.4,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 42,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Gate of Wonder",
+          "nivelDesbloqueo": 7,
+          "multiplicadores": {
+            "ataque": 1.14,
+            "defensa": 1.0,
+            "velocidad": 1.16,
+            "hp": 1.02
+          },
+          "pasivas": [
+            "priority",
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.3
+            }
+          ]
+        },
+        {
+          "nombre": "Eighth Gate: Night Guy",
+          "nivelDesbloqueo": 35,
+          "multiplicadores": {
+            "ataque": 1.5,
+            "defensa": 0.94,
+            "velocidad": 1.4,
+            "hp": 0.96
+          },
+          "pasivas": [
+            "priority",
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.5
+            },
+            {
+              "id": "increase_damage_taken",
+              "cantidad": 0.1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jiraiya",
+      "nombre": "Jiraiya",
+      "tipo": "katon",
+      "rareza": "legendario",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 48,
+        "ataque": 11,
+        "defensa": 9,
+        "velocidad": 8
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 24,
+        "crecimiento": 1.015
+      },
+      "jutsu": {
+        "nombre": "Toad Flame Bombs",
+        "descripcion": "Toad oil set alight with fire chakra: a wave of flame that sticks to whatever it hits.",
+        "danoBase": 2.5,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 32,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Toad Mountain Training",
+          "nivelDesbloqueo": 9,
+          "multiplicadores": {
+            "ataque": 1.08,
+            "defensa": 1.08,
+            "velocidad": 1.04,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "heal_after_battle",
+              "cantidad": 0.12
+            }
+          ]
+        },
+        {
+          "nombre": "Sage Mode",
+          "nivelDesbloqueo": 33,
+          "multiplicadores": {
+            "ataque": 1.3,
+            "defensa": 1.16,
+            "velocidad": 1.06,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "jutsu_bonus",
+              "cantidad": 0.3
+            },
+            {
+              "id": "damage_floor",
+              "cantidad": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "asuma",
+      "nombre": "Asuma Sarutobi",
+      "tipo": "fuuton",
+      "rareza": "raro",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 44,
+        "ataque": 9,
+        "defensa": 9,
+        "velocidad": 8
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 18,
+        "crecimiento": 1.015
+      },
+      "jutsu": {
+        "nombre": "Flying Swallow",
+        "descripcion": "Wind chakra flows through his trench knives and stretches their edge far beyond the blade.",
+        "danoBase": 2.2,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 30,
+          "alRecibirDano": 14,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Wind Blades",
+          "nivelDesbloqueo": 30,
+          "multiplicadores": {
+            "ataque": 1.22,
+            "defensa": 1.1,
+            "velocidad": 1.1,
+            "hp": 1.1
+          },
+          "pasivas": [
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.35
+            },
+            {
+              "id": "basic_attack_bonus",
+              "cantidad": 0.2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kurenai",
+      "nombre": "Kurenai Yuhi",
+      "tipo": "suiton",
+      "rareza": "raro",
+      "pendienteDeArte": true,
+      "statsBase": {
+        "hp": 44,
+        "ataque": 10,
+        "defensa": 9,
+        "velocidad": 9
+      },
+      "curvaXp": {
+        "xpParaSiguienteNivel": 18,
+        "crecimiento": 1.015
+      },
+      "jutsu": {
+        "nombre": "Tree Binding Death",
+        "descripcion": "A genjutsu that roots the enemy to a tree that is not there, then strikes from inside the illusion.",
+        "danoBase": 2.3,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 36,
+          "alRecibirDano": 16,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Genjutsu Mistress",
+          "nivelDesbloqueo": 30,
+          "multiplicadores": {
+            "ataque": 1.18,
+            "defensa": 1.16,
+            "velocidad": 1.1,
+            "hp": 1.12
+          },
+          "pasivas": [
+            {
+              "id": "first_hit_reduction",
+              "cantidad": 0.6
+            },
+            {
+              "id": "low_hp_reduction",
+              "cantidad": 0.4
             }
           ]
         }

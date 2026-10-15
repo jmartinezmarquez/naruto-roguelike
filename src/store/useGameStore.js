@@ -286,6 +286,8 @@ function candidatosReclutables(equipoActual, arcoActualDatos) {
     ...(arcoActualDatos.personajesReclutablesIds ?? []),
     ...idsDesbloqueadosPorLogro,
     ...idsInicialesNoElegidos,
+    // Lo conseguido en el gacha también se recluta, en cualquier arco (documentacion/42).
+    ...useAchievementsStore.getState().invocacion.personajes,
   ];
 
   const idsEnEquipo = new Set(equipoActual.map((p) => p.id));

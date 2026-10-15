@@ -11,7 +11,8 @@ import enemiesData from '../../data/enemies.json';
 
 describe('sprites de transformación (invariante de datos)', () => {
   it('cada modo de cada personaje y jefe tiene el suyo', () => {
-    const luchadores = [...charactersData.personajes, ...enemiesData.jefes];
+    // Los que esperan su dibujo (`pendienteDeArte`) no cuentan todavía: ver characterSprites.test.js.
+    const luchadores = [...charactersData.personajes, ...enemiesData.jefes].filter((p) => !p.pendienteDeArte);
     const faltan = luchadores.flatMap((p) => (p.modos ?? [])
       .map((_, i) => `${p.id}_${i}`)
       .filter((clave) => !SPRITE_MODO[clave]));

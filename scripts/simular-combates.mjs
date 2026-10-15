@@ -142,14 +142,21 @@ function resumir(etiqueta, resultados) {
 // dejaría de poder compararse con las cifras documentadas en
 // documentacion/11-progresion-y-arcos.md — y de paso pintaría un juego más fácil
 // del que juega casi nadie. Su efecto se mide aparte, en `LEGENDARIOS_JUGABLES`.
-const roster = personajesData.personajes.filter((p) => p.rareza !== 'legendario');
+//
+// **Y los que solo salen del gacha, tampoco** (Gai, Jiraiya, Asuma, Kurenai…;
+// documentacion/42): no están en ningún pool de reclutables ni son iniciales, así
+// que en la primera run —la que mide este informe— no existen. Sí entran en el
+// bloque 5, que es donde se calibran.
+const EN_ALGUN_POOL = new Set(ARCOS.flatMap((a) => a.personajesReclutablesIds ?? []));
+const SIN_GACHA = personajesData.personajes.filter((p) => p.rareza === 'inicial' || EN_ALGUN_POOL.has(p.id));
+const roster = SIN_GACHA.filter((p) => p.rareza !== 'legendario');
 
 /**
  * Los legendarios que se pueden acabar teniendo en el equipo (hoy: Kakashi). Se
  * usan para dos cosas distintas: como RIVAL del pergamino dorado, y para medir
  * cuánto cambia un arco cuando el jugador gana ese pergamino y se lo lleva.
  */
-const LEGENDARIOS_JUGABLES = personajesData.personajes.filter((p) => p.rareza === 'legendario');
+const LEGENDARIOS_JUGABLES = SIN_GACHA.filter((p) => p.rareza === 'legendario');
 
 /** Los pisos que se muestrean de cada arco: el primero jugable, el de en medio y el previo al jefe. */
 const pisosMuestreados = (arco) => [2, Math.round(arco.numeroPisos / 2), arco.numeroPisos - 1];
