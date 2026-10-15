@@ -37,24 +37,26 @@ ya tenía, y eso se vive como un castigo, no como un aliciente.
 
 | Fuente | Pergaminos |
 |---|---|
-| Mini-jefe derrotado | 1 |
-| Jefe final derrotado | 2 |
-| Run ganada | +3 |
+| Mini-jefe derrotado | 2 |
+| Jefe final derrotado | 4 |
+| Run ganada | +6 |
 | Ascensión | ×(1 + 0,2 × nivel): A5 dobla |
 | Reto opcional activo | +25% por reto (ver §6) |
-| Desafío diario superado (primera vez del día) | +3 |
-| Primera vez que derrotas a un jefe | +2 (una vez por jefe, en toda la partida guardada) |
-| Logros | 2-5 cada uno (ver §4) |
+| Desafío diario (primera vez del día, gane o pierda) | +5 |
+| Primera vez que derrotas a un jefe | +3 (una vez por jefe, en toda la partida guardada) |
+| Logros | 2-6 cada uno, todos (ver §4) |
 
 Con la estructura actual (3 arcos, mini-jefe y jefe final en cada uno):
 
 | Run típica | Pergaminos |
 |---|---|
-| Cae en el arco 1 antes de Zabuza | 1 |
-| Cae en el arco 2, contra Gaara | 1 + 2 + 1 = **4** |
-| Cae en el arco 3, contra Pain | 1 + 2 + 1 + 2 + 1 = **7** |
-| Gana la run (A0) | 9 + 3 = **12** |
-| Gana en A5 | **24** |
+| Cae en el arco 1 antes de Zabuza | 2 |
+| Cae en el arco 2, contra Gaara | 2 + 4 + 2 = **8** |
+| Cae en el arco 3, contra Pain | 2 + 4 + 2 + 4 + 2 = **14** |
+| Gana la run (A0) | 18 + 6 = **24** |
+| Gana en A5 | **48** |
+
+⚠️ **Doblado el 2026-10-16** para que el summon sea la mecánica recurrente: una run ganada pasa de 2 a ~5 tiradas, y caer contra Gaara ya da para una y media. La maestría también se aceleró (XP por combate 1 → 2, coste por nivel 40 → 30): el primer aspecto, a nivel 4, llega en unas tres runs ganadas con el mismo ninja en vez de seis.
 
 Los primeros jefes derrotados y los logros fáciles dan además un empujón inicial de ~40-60 pergaminos
 en las primeras runs, que es justo cuando más hay que enganchar.

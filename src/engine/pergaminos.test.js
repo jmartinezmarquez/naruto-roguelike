@@ -23,7 +23,7 @@ describe('pergaminosDeLaRun', () => {
     const a1 = pergaminosDeLaRun(run({ miniJefes: 1, ascension: 1 }), reglas).total;
     expect(a1).toBeGreaterThan(a0);
     const a5 = pergaminosDeLaRun(run({ miniJefes: 3, jefesFinales: 3, ganada: true, ascension: 5 }), reglas);
-    expect(a5.total).toBe(Math.ceil(12 * (1 + 5 * reglas.multiplicadorPorAscension)));
+    expect(a5.total).toBe(Math.ceil((3 * reglas.porMiniJefe + 3 * reglas.porJefeFinal + reglas.porRunGanada) * (1 + 5 * reglas.multiplicadorPorAscension)));
   });
 
   it('el extra de primera vez no se multiplica por la ascensión', () => {
@@ -40,7 +40,7 @@ describe('pergaminosDeLaRun', () => {
 describe('retos opcionales', () => {
   it('cada reto activo suma un 25% a lo jugado', () => {
     const r = pergaminosDeLaRun(run({ miniJefes: 3, jefesFinales: 3, ganada: true, retos: 2 }), reglas);
-    expect(r.total).toBe(Math.ceil(12 * (1 + 2 * reglas.multiplicadorPorReto)));
-    expect(r.desglose.retos).toBe(r.total - 12);
+    expect(r.total).toBe(Math.ceil((3 * reglas.porMiniJefe + 3 * reglas.porJefeFinal + reglas.porRunGanada) * (1 + 2 * reglas.multiplicadorPorReto)));
+    expect(r.desglose.retos).toBe(r.total - (3 * reglas.porMiniJefe + 3 * reglas.porJefeFinal + reglas.porRunGanada));
   });
 });
