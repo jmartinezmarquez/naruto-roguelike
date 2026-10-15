@@ -65,6 +65,7 @@ beforeEach(() => {
     notificacionesPendientes: [],
     ascensionesGanadas: {},
     pergaminos: PERGAMINOS_VACIOS,
+    maestria: {},
   });
   // La ascensión elegida vive en el store de la run y sobrevive a iniciarRun (es lo
   // que hace que "reiniciar" repita la misma): sin esto, un test que elige A3 deja a
@@ -1237,6 +1238,28 @@ describe('pergaminos de invocación al acabar la run', () => {
   it('un desafío legendario no cuenta como jefe del arco', () => {
     useGameStore.getState().jugarCombate({ ...enemigoDebilDePrueba, id: 'gaara', recompensa: { xp: 1 } }, 1);
     expect(useGameStore.getState().jefesDerrotadosEnRun).toEqual([]);
+  });
+});
+
+describe('maestría (nivel de ninja) al acabar la run', () => {
+  const reglas = configGlobal.maestria;
+  const perderLaRun = () => useGameStore.getState().jugarCombate(enemigoImbatibleDePrueba, 50);
+
+  it('cada combate ganado da XP a todo el equipo, y un jefe del arco da más; se apunta al cerrar', () => {
+    useGameStore.getState().iniciarRun(['naruto', 'sakura'], arcoDePrueba);
+    useGameStore.getState().jugarCombate({ ...enemigoDebilDePrueba, recompensa: { xp: 1 } }, 1);
+    useGameStore.getState().jugarCombate({ ...enemigoDebilDePrueba, id: arcoDePrueba.miniJefeId, recompensa: { xp: 1 } }, 1);
+    expect(useAchievementsStore.getState().maestria).toEqual({}); // nada hasta que acaba la run
+    perderLaRun();
+    const esperado = 2 * reglas.xpPorCombate + reglas.xpPorJefe;
+    expect(useAchievementsStore.getState().maestria).toEqual({ naruto: esperado, sakura: esperado });
+    expect(useGameStore.getState().maestriaDeLaRun.map((m) => m.id).sort()).toEqual(['naruto', 'sakura']);
+  });
+
+  it('una run sin combates ganados no da maestría', () => {
+    perderLaRun();
+    expect(useAchievementsStore.getState().maestria).toEqual({});
+    expect(useGameStore.getState().maestriaDeLaRun).toEqual([]);
   });
 });
 

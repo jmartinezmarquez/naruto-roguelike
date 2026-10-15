@@ -459,6 +459,9 @@ export const useGameStore = create((set, get) => ({
       // final, y lo que dieron (null hasta que la run termina; ver `_cerrarRun`).
       jefesDerrotadosEnRun: [],
       pergaminosDeLaRun: null,
+      // XP de maestría acumulada en esta run ({ [id]: xp }) y su resultado al cerrar.
+      xpMaestriaDeLaRun: {},
+      maestriaDeLaRun: null,
       // Lo que algunos logros de reto necesitan saber de la run entera.
       estadisticasRun: { tiendasVisitadas: 0, consumiblesUsados: 0 },
     });
@@ -869,9 +872,17 @@ export const useGameStore = create((set, get) => ({
         arcoCompletado = enemigoBase.id === arcoEnCurso?.jefeFinalId;
         // Para los pergaminos: solo cuentan el mini-jefe y el jefe final DEL ARCO. Un
         // desafío legendario también pelea contra un jefe, pero no es el del arco.
-        if (enemigoBase.id === arcoEnCurso?.miniJefeId || arcoCompletado) {
+        const esJefeDelArco = enemigoBase.id === arcoEnCurso?.miniJefeId || arcoCompletado;
+        if (esJefeDelArco) {
           set({ jefesDerrotadosEnRun: [...get().jefesDerrotadosEnRun, { id: enemigoBase.id, final: arcoCompletado }] });
         }
+        // Maestría: todo el que está en el equipo se lleva lo de este combate, haya
+        // peleado o no (como la XP de banquillo), y más si era un jefe del arco.
+        const reglasMaestria = configGlobal.maestria;
+        get()._sumarXpMaestriaDeLaRun(
+          get().equipo.map((p) => p.id),
+          reglasMaestria.xpPorCombate + (esJefeDelArco ? reglasMaestria.xpPorJefe : 0),
+        );
         if (arcoCompletado) {
           // Estilo Slay the Spire: superar el jefe de un acto cura a todo el
           // equipo por completo (y revive a quien hubiera caído), de regalo
@@ -1164,6 +1175,17 @@ export const useGameStore = create((set, get) => ({
     }, configGlobal.pergaminos);
     useAchievementsStore.getState().sumarPergaminos(resultado.total, jefes.map((j) => j.id));
     set({ pergaminosDeLaRun: resultado });
+
+    // Maestría: lo acumulado en la run, más la victoria para quien la gana.
+    if (ganada) get()._sumarXpMaestriaDeLaRun(get().equipo.map((p) => p.id), configGlobal.maestria.xpPorRunGanada);
+    set({ maestriaDeLaRun: useAchievementsStore.getState().sumarXpMaestria(get().xpMaestriaDeLaRun) });
+  },
+
+  /** Interno: suma XP de maestría pendiente (se apunta al cerrar la run) a unos personajes. */
+  _sumarXpMaestriaDeLaRun(ids, xp) {
+    const actual = { ...(get().xpMaestriaDeLaRun ?? {}) };
+    for (const id of ids) actual[id] = (actual[id] ?? 0) + xp;
+    set({ xpMaestriaDeLaRun: actual });
   },
 
   /** Los modificadores de la ascensión de la run en curso (ver engine/ascension.js). */

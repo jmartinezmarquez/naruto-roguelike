@@ -8,6 +8,8 @@ import { create } from 'zustand';
 
 import achievementsData from '../data/achievements.json';
 import { evaluarLogrosDesbloqueables, pergaminosPorCobrar } from '../engine/achievements';
+import { nivelDeMaestria } from '../engine/maestria';
+import configGlobal from '../data/config.json';
 
 const CLAVE_STORAGE = 'naruto-roguelike-logros';
 const CLAVE_VISTOS = 'naruto-roguelike-vistos';
@@ -16,6 +18,7 @@ const CLAVE_MARCA = 'naruto-roguelike-marca';
 const CLAVE_SALON = 'naruto-roguelike-salon';
 const CLAVE_ASCENSION = 'naruto-roguelike-ascension';
 const CLAVE_PERGAMINOS = 'naruto-roguelike-pergaminos';
+const CLAVE_MAESTRIA = 'naruto-roguelike-maestria';
 
 // Cuántas runs ganadas guarda el Salón de la Fama. Las más recientes primero; con un
 // tope para que `localStorage` no crezca sin fin en quien juega mucho.
@@ -104,6 +107,9 @@ export const useAchievementsStore = create((set, get) => ({
   ascensionesGanadas: {},
   // Ver PERGAMINOS_VACIOS.
   pergaminos: PERGAMINOS_VACIOS,
+  // Nivel de ninja: la XP de maestría acumulada de cada personaje, { [id]: xp }. El
+  // nivel se deduce (engine/maestria.js); no se guarda aparte.
+  maestria: {},
 
   /** Carga los logros ya desbloqueados en sesiones anteriores. Llamar una vez al arrancar la app. */
   cargarLogros() {
@@ -130,8 +136,37 @@ export const useAchievementsStore = create((set, get) => ({
     if (ascensionGuardada) set({ ascensionesGanadas: JSON.parse(ascensionGuardada) });
     const pergaminosGuardados = localStorage.getItem(CLAVE_PERGAMINOS);
     if (pergaminosGuardados) set({ pergaminos: { ...PERGAMINOS_VACIOS, ...JSON.parse(pergaminosGuardados) } });
+    const maestriaGuardada = localStorage.getItem(CLAVE_MAESTRIA);
+    if (maestriaGuardada) set({ maestria: JSON.parse(maestriaGuardada) });
     // Los logros conseguidos antes de que dieran pergaminos se cobran aquí, una vez.
     get()._cobrarLogros();
+  },
+
+  /**
+   * Suma XP de maestría a varios personajes a la vez ({ [id]: xp }) y devuelve, de
+   * cada uno, el nivel de antes y el de después: la pantalla de fin de run celebra
+   * las subidas. Un duplicado del gacha también entra por aquí.
+   */
+  sumarXpMaestria(xpPorPersonaje) {
+    const reglas = configGlobal.maestria;
+    const actual = get().maestria;
+    const siguiente = { ...actual };
+    const resultado = [];
+    for (const [id, xp] of Object.entries(xpPorPersonaje)) {
+      if (xp <= 0) continue;
+      const antes = actual[id] ?? 0;
+      siguiente[id] = antes + xp;
+      resultado.push({
+        id,
+        xp,
+        nivelAntes: nivelDeMaestria(antes, reglas).nivel,
+        nivelDespues: nivelDeMaestria(siguiente[id], reglas).nivel,
+      });
+    }
+    if (resultado.length === 0) return [];
+    set({ maestria: siguiente });
+    localStorage.setItem(CLAVE_MAESTRIA, JSON.stringify(siguiente));
+    return resultado;
   },
 
   /**
@@ -320,16 +355,17 @@ export const useAchievementsStore = create((set, get) => ({
    * El "empezar de cero" de toda la meta-progresión, que es una opción de verdad
    * en Ajustes (ver documentacion/34-ajustes.md).
    *
-   * ⚠️ **Borra las SIETE claves.** Dejar los contadores llenos mientras los logros
+   * ⚠️ **Borra las OCHO claves.** Dejar los contadores llenos mientras los logros
    * vuelven a cero es peor que no reiniciar: los de contador se volverían a
    * desbloquear en el acto, en el primer combate, y el jugador vería su reinicio
    * deshacerse solo. Lo mismo con los vistos y la enciclopedia, y con la marca — que
    * es lo primero que se mira en el Home. Y con el Salón de la Fama: reiniciar y seguir
    * viendo tus victorias de antes sería un reinicio a medias.
    *
-   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van siete:
-   * las dos últimas, las ascensiones ganadas y los pergaminos — reiniciar y seguir
-   * pudiendo jugar en A5, o con el saldo intacto, sería otro reinicio a medias.
+   * Cada vez que se añade algo persistido a este store hay que volver aquí. Van ocho:
+   * las tres últimas, las ascensiones ganadas, los pergaminos y la maestría — reiniciar
+   * y seguir pudiendo jugar en A5, con el saldo intacto o con los ninjas a nivel 10
+   * sería otro reinicio a medias.
    */
   reiniciarLogros() {
     set({
@@ -341,6 +377,7 @@ export const useAchievementsStore = create((set, get) => ({
       salonDeLaFama: [],
       ascensionesGanadas: {},
       pergaminos: PERGAMINOS_VACIOS,
+      maestria: {},
     });
     localStorage.removeItem(CLAVE_STORAGE);
     localStorage.removeItem(CLAVE_VISTOS);
@@ -349,5 +386,6 @@ export const useAchievementsStore = create((set, get) => ({
     localStorage.removeItem(CLAVE_SALON);
     localStorage.removeItem(CLAVE_ASCENSION);
     localStorage.removeItem(CLAVE_PERGAMINOS);
+    localStorage.removeItem(CLAVE_MAESTRIA);
   },
 }));

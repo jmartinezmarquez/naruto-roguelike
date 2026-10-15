@@ -128,6 +128,12 @@ Cada personaje tiene un **nivel de ninja** propio, entre runs, distinto del nive
 
 Nivel *n* → *n+1* cuesta 40 × *n* XP. Tope: nivel 10.
 
+✅ *Hecho (XP y niveles): `engine/maestria.js`, `config.maestria`, XP por personaje en
+`useAchievementsStore.maestria` (octava clave persistida; solo se guarda la XP, el nivel se deduce) y
+el panel "Ninja mastery" del Game Over. Una run ganada lleva a un ninja hacia el nivel 2; el 10 son unas
+30 runs ganadas con él, menos con duplicados. Un duplicado da exactamente la XP que falta para subir un
+nivel (`xpParaSubirUnNivel`), así no hay un segundo contador que pueda discrepar.*
+
 ### Qué da
 
 | Nivel | Recompensa |
@@ -233,6 +239,7 @@ Kakashi fueron tres ficheros de datos; el arte ya tiene su proceso montado. Cada
 | | ✅ *14 logros nuevos (por personaje y de reto) con `derrotarJefe` ampliado y el tipo nuevo `ganarRun`. Los de maestría, gacha y diario, con su fase.* | |
 | | ✅ *Los 18 logros de honor dan pergaminos (2-5), cobrados una vez, retroactivos al cargar.* | |
 | | ✅ *Pergaminos por run: hechos (`engine/pergaminos.js`, `config.pergaminos`, saldo en `useAchievementsStore.pergaminos`, desglose en el Game Over, saldo en el Home).* | |
+| | ✅ *Fase 1 completa.* | |
 | **2** | Pantalla de Invocación con probabilidades, garantías y duplicados; catálogo inicial (iniciales, objetos iniciales, páginas); nivel de ninja y sus recompensas | 2 sesiones |
 | **3** | Primera tanda de personajes nuevos (3-4 héroes) con su arte | 1 sesión + arte |
 | **4** | Actos variables (campaña por actos) y el primer arco nuevo con sus villanos | 2 sesiones + arte |

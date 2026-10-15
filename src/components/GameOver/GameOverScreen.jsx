@@ -4,6 +4,37 @@ import { spriteDeCombate } from '../common/datosDeLuchador';
 import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
 import { FilaMedallas } from '../common/Medallas';
 import { useAchievementsStore } from '../../store/useAchievementsStore';
+import { nivelDeMaestria } from '../../engine/maestria';
+import configGlobal from '../../data/config.json';
+
+/**
+ * La XP de ninja (maestría) que se lleva cada uno de la run, con su barra y el aviso
+ * si sube de nivel: es lo que hace que jugar con tu favorito avance algo suyo,
+ * también al perder (documentacion/42).
+ */
+function PanelMaestria({ resultado, maestria }) {
+  if (!resultado || resultado.length === 0) return null;
+  return (
+    <PanelMarco className="p-4 flex flex-col gap-2">
+      <TituloBloque className="text-center">Ninja mastery</TituloBloque>
+      {resultado.map((m) => {
+        const { nivel, xpEnNivel, xpParaSiguiente } = nivelDeMaestria(maestria[m.id] ?? 0, configGlobal.maestria);
+        const subio = m.nivelDespues > m.nivelAntes;
+        return (
+          <div key={m.id} className="flex items-center gap-3">
+            <span className="w-20 shrink-0 text-[10px] font-display text-pergamino-100 truncate">{nombreCorto(m.id)}</span>
+            <div className="flex-1 h-2 bg-tinta-800 rounded-sm overflow-hidden border border-marco">
+              <div className="h-full bg-oro" style={{ width: xpParaSiguiente ? `${(xpEnNivel / xpParaSiguiente) * 100}%` : '100%' }} />
+            </div>
+            <span className={`w-28 shrink-0 text-right text-[9px] ${subio ? 'text-oro font-display' : 'text-pergamino-200/70'}`}>
+              {subio ? `Ninja Lv.${nivel}!` : `Lv.${nivel} · +${m.xp} XP`}
+            </span>
+          </div>
+        );
+      })}
+    </PanelMarco>
+  );
+}
 
 /**
  * Los pergaminos de invocación que ha dado la run, desglosados (documentacion/42).
@@ -50,6 +81,8 @@ export default function GameOverScreen() {
   const obtenerArcosDeLaCampana = useGameStore((s) => s.obtenerArcosDeLaCampana);
   const pergaminosDeLaRun = useGameStore((s) => s.pergaminosDeLaRun);
   const saldoPergaminos = useAchievementsStore((s) => s.pergaminos.saldo);
+  const maestriaDeLaRun = useGameStore((s) => s.maestriaDeLaRun);
+  const maestria = useAchievementsStore((s) => s.maestria);
 
   const pisoAlcanzado = nodoActualId !== null ? mapa?.nodos[nodoActualId]?.piso : null;
 
@@ -124,6 +157,7 @@ export default function GameOverScreen() {
         </PanelMarco>
 
         <PanelPergaminos resultado={pergaminosDeLaRun} saldo={saldoPergaminos} />
+        <PanelMaestria resultado={maestriaDeLaRun} maestria={maestria} />
 
         {/* Las medallas de la run: hasta dónde llegaste, en tres iconos. Al perder es
             lo que queda de la partida; al ganar, la fila llena y la promesa de que

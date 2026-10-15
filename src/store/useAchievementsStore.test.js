@@ -3,6 +3,7 @@ import {
   useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, MAXIMO_SALON_DE_LA_FAMA, PERGAMINOS_VACIOS,
 } from './useAchievementsStore';
 import achievementsData from '../data/achievements.json';
+import configGlobal from '../data/config.json';
 import { TIPOS_DE_CONDICION, TIPOS_DE_RECOMPENSA } from '../engine/achievements';
 import charactersData from '../data/characters.json';
 import enemiesData from '../data/enemies.json';
@@ -13,7 +14,7 @@ beforeEach(() => {
   useAchievementsStore.setState({
     logrosDesbloqueados: [], notificacionesPendientes: [], vistos: VISTOS_VACIO,
     contadores: CONTADORES_VACIO, marca: MARCA_VACIA, salonDeLaFama: [], ascensionesGanadas: {},
-    pergaminos: PERGAMINOS_VACIOS,
+    pergaminos: PERGAMINOS_VACIOS, maestria: {},
   });
 });
 
@@ -435,5 +436,22 @@ describe('pergaminos de invocación', () => {
     useAchievementsStore.getState().reiniciarLogros();
     expect(useAchievementsStore.getState().pergaminos).toEqual(PERGAMINOS_VACIOS);
     expect(localStorage.getItem('naruto-roguelike-pergaminos')).toBeNull();
+  });
+});
+
+describe('maestría', () => {
+  it('suma XP, devuelve niveles de antes y después, sobrevive a recargar y se borra al reiniciar', () => {
+    const coste = configGlobal.maestria.costePorNivel;
+    const r = useAchievementsStore.getState().sumarXpMaestria({ naruto: coste, sakura: 5, sasuke: 0 });
+    expect(r).toEqual([
+      { id: 'naruto', xp: coste, nivelAntes: 1, nivelDespues: 2 },
+      { id: 'sakura', xp: 5, nivelAntes: 1, nivelDespues: 1 },
+    ]);
+    useAchievementsStore.setState({ maestria: {} });
+    useAchievementsStore.getState().cargarLogros();
+    expect(useAchievementsStore.getState().maestria).toEqual({ naruto: coste, sakura: 5 });
+    useAchievementsStore.getState().reiniciarLogros();
+    expect(useAchievementsStore.getState().maestria).toEqual({});
+    expect(localStorage.getItem('naruto-roguelike-maestria')).toBeNull();
   });
 });

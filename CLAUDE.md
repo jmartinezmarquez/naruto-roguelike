@@ -480,9 +480,9 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   tocar. ⚠️ **El resto del simulador promedia el roster y eso esconde a los flojos**: el bloque nuevo "Fuerza
   de cada personaje" los mide uno a uno. Los jefes de los arcos 2-3 se ganan algo más (Gaara 84 → 96%).
 
-- [ ] **Meta-progresión** (`documentacion/42-meta-progresion.md`, en marcha por fases): ✅ pergaminos de
-  invocación al acabar cada run, también perdiendo (`engine/pergaminos.js`). ⚠️ `reiniciarLogros` borra ya
-  **siete** claves. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no.
+- [ ] **Meta-progresión** (`documentacion/42-meta-progresion.md`, en marcha por fases): ✅ fase 1 (pergaminos
+  al acabar cada run, logros que pagan, 14 logros nuevos) y ✅ nivel de ninja (`engine/maestria.js`).
+  ⚠️ `reiniciarLogros` borra ya **ocho** claves. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no.
 
 ## Bugs ya resueltos (para no repetirlos)
 

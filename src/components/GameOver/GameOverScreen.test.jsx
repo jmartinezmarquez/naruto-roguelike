@@ -127,3 +127,19 @@ describe('pergaminos de invocación', () => {
     expect(screen.getByText('You now have 9.')).toBeInTheDocument();
   });
 });
+
+describe('maestría', () => {
+  it('enseña la XP de ninja de cada uno y celebra la subida de nivel', () => {
+    useAchievementsStore.setState({ maestria: { naruto: 45, sakura: 7 } });
+    useGameStore.setState({
+      runTerminada: true, runGanada: false,
+      maestriaDeLaRun: [
+        { id: 'naruto', xp: 10, nivelAntes: 1, nivelDespues: 2 },
+        { id: 'sakura', xp: 7, nivelAntes: 1, nivelDespues: 1 },
+      ],
+    });
+    render(<GameOverScreen />);
+    expect(screen.getByText('Ninja Lv.2!')).toBeInTheDocument();
+    expect(screen.getByText('Lv.1 · +7 XP')).toBeInTheDocument();
+  });
+});
