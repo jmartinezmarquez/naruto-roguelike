@@ -47,5 +47,6 @@
 - [39 - Medallas de arco y Salón de la Fama](./39-medallas-y-salon-de-la-fama.md)
 - [40 - Ascensión](./40-ascension.md)
 - [41 - Arte: el estilo nuevo](./41-arte-estilo-nuevo.md)
+- [42 - Meta-progresión: pergaminos, gacha, maestría y actos variables (diseño)](./42-meta-progresion.md)
 
 > Este índice se actualiza cada vez que se añade un documento nuevo.
