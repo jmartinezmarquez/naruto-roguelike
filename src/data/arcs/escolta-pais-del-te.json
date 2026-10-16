@@ -1,8 +1,7 @@
 {
-  "_comentario": "Arco alternativo del ACTO 1 (documentacion/42 §5): la escolta de Idate Morino hasta la carrera del templo del País del Té, en lugar del País de las Olas. Es el acto que decide la PRIMERA run, así que sus jefes calcan a Haku y Zabuza en stats y niveles de transformación (documentacion/11, v5), y se miden con el bloque de primera run del simulador. pendienteDeArte: fuera de la campaña hasta que llegue su arte.",
+  "_comentario": "Arco alternativo del ACTO 1 (documentacion/42 §5): la escolta de Idate Morino hasta la carrera del templo del País del Té, en lugar del País de las Olas. Es el acto que decide la PRIMERA run, así que sus jefes calcan a Haku y Zabuza en stats y niveles de transformación (documentacion/11, v5), y se miden con el bloque de primera run del simulador.",
   "id": "escolta_pais_del_te",
   "nombre": "Tea Country Escort",
-  "pendienteDeArte": true,
   "medalla": {
     "nombre": "Tea Crest"
   },

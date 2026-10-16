@@ -1030,7 +1030,7 @@ A wide 16:9 pixel art illustration in the exact style of the attached reference 
 
 ## Tanda 11 — la ceremonia del Summon (hojas 72-74)
 
-⏳ **PENDIENTES.** La animación de cada tirada del gacha (`Summon/CeremoniaInvocacion.jsx`): **la marca de
+✅ **HECHAS el 2026-10-16.** La animación de cada tirada del gacha (`Summon/CeremoniaInvocacion.jsx`): **la marca de
 invocación sale del suelo, estalla el humo y el ninja aparece en el centro**, como en una transformación. Ya
 funciona sin ellas (un sello dibujado por código y el humo del relevo ampliado); cuando lleguen, el script las
 deja en `assets/effects/` y `assets/summon/` y la ceremonia las usa sola, sin tocar código.
@@ -1065,7 +1065,7 @@ A wide pixel art background (about 16:9) in the exact style of the attached refe
 
 ## Tanda 12 — arco Tea Country Escort (hojas 75-80)
 
-⏳ **PENDIENTES.** El arco alternativo del **acto 1**, en lugar del País de las Olas: la escolta de Idate Morino
+✅ **HECHAS el 2026-10-16.** El arco alternativo del **acto 1**, en lugar del País de las Olas: la escolta de Idate Morino
 hasta la carrera del templo del País del Té. Como los de las tandas 7-9: en datos con `pendienteDeArte` y fuera
 de la campaña; al llegar el arte, correr el script, quitar las marcas y añadir `escolta_pais_del_te` al acto 1 de
 `campaigns.json`. Bloques: 75-76 personajes, 77 proyectiles, 78 iconos (adjuntar la hoja 19), 79 fondo de mapa
