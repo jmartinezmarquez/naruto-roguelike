@@ -25,7 +25,7 @@ import retosData from '../data/retos.json';
 import { semillaDeTexto, generadorConSemilla } from '../engine/azar';
 import { rosterInicial, ofertaInicial } from '../engine/achievements';
 import { ARCOS_POR_ID } from '../data/arcs';
-import { sortearArcosDeLaRun, primerosArcosDeCampana } from '../engine/campanas';
+import { sortearArcosDeLaRun, primerosArcosDeCampana, actosDeCampana } from '../engine/campanas';
 import { useAchievementsStore } from './useAchievementsStore';
 
 const CLAVE_STORAGE = configGlobal.guardado.claveLocalStorage;
@@ -445,7 +445,15 @@ export const useGameStore = create((set, get) => ({
     azarDeLaRun = esDiario ? generadorConSemilla(semillaDeTexto(`diario-${desafioDiario.fecha}`)) : Math.random;
     // Un arco por acto, sorteado ahora (documentacion/42 §5). Los tests pueden forzar
     // el primero; el resto sigue saliendo del sorteo.
-    const arcosDeLaRunIds = sortearArcosDeLaRun(campanaPorId(get().campanaActualId), azarDeLaRun);
+    const campana = campanaPorId(get().campanaActualId);
+    const arcosDeLaRunIds = sortearArcosDeLaRun(campana, azarDeLaRun);
+    // ⚠️ Un arco forzado ocupa el hueco de SU acto en el sorteo: si no, con dos arcos
+    // posibles en ese acto la run podía estar en uno y haber apuntado el otro, y no
+    // encontraba ni el arco siguiente ni el orden para la marca.
+    if (arcoForzado) {
+      const acto = actosDeCampana(campana).findIndex((a) => a.arcoIds.includes(arcoForzado.id));
+      if (acto !== -1) arcosDeLaRunIds[acto] = arcoForzado.id;
+    }
     const arco = arcoForzado ?? ARCOS_POR_ID[arcosDeLaRunIds[0]];
     const ascension = esDiario ? 0 : get().ascensionElegida;
     const retos = esDiario ? [] : [...get().retosElegidos];

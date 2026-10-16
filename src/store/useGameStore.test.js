@@ -81,6 +81,15 @@ beforeEach(() => {
 });
 
 describe('iniciarRun', () => {
+  it('un arco forzado ocupa el hueco de su acto en el sorteo', () => {
+    // Con dos arcos posibles en el acto 1, el sorteo podía apuntar el otro y la run no
+    // encontraba el arco siguiente ni el orden para la marca.
+    for (const id of campaignsData.campanas[0].actos[0].arcoIds) {
+      useGameStore.getState().iniciarRun(['naruto'], ARCOS_REGISTRADOS.find((a) => a.id === id));
+      expect(useGameStore.getState().arcosDeLaRunIds[0]).toBe(id);
+    }
+  });
+
   it('sortea un arco por acto de la campaña y la run los sigue en ese orden', () => {
     useGameStore.getState().iniciarRun(['naruto']);
     const campana = campaignsData.campanas.find((c) => c.id === useGameStore.getState().campanaActualId);
