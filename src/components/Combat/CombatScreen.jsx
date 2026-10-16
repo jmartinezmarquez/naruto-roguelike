@@ -66,18 +66,6 @@ const MS_CELEBRAR_NIVEL = 1000;
 // velocidad como todo lo demás — antes era un 1600 fijo, así que era lo único de la
 // pantalla que no obedecía al ajuste de animación.
 const MS_ENTRE_ESLABONES = 550;
-// Lo que tarda en irse solo el final de un combate corriente. **No es una espera**: el
-// clic y el espacio lo adelantan en cualquier momento (ver `useAvanzarConTeclado`). Un
-// auto-avance sin salida cambia un clic por una espera, que para el ritmo es peor que el
-// botón que venía a quitar. Solo se aplica al caso llano — con recompensa, arco
-// terminado o run acabada hay algo que leer y manda el botón.
-const MS_AUTO_CONTINUAR = 1100;
-// ⚠️ **Suelo del auto-avance, y no es una precaución: con velocidad "instantánea" el
-// factor de animación es 0**, así que sin esto el cartel de Victory y el panel de
-// recompensas se saltarían enteros — verías el mapa otra vez sin llegar a leer qué te
-// has llevado. Saltarse la ANIMACIÓN es lo que pide ese ajuste; saltarse el RESULTADO
-// es perder información. Se aplica igual en el resultado de un evento.
-const MS_MINIMO_AUTO = 450;
 
 // Verde / oro / rojo son SEMÁNTICOS aquí: dicen cuánta vida queda, no de qué
 // naturaleza es el luchador. Ojo, `colorDelDano` de más abajo es lo contrario —
@@ -982,23 +970,10 @@ export default function CombatScreen() {
   // comparten el teclado y el auto-avance.
   const salidaVisible = combateTotalTerminado && !seguiraLaCadena && !quedanTransformaciones;
 
-  /**
-   * ¿Se va solo? Sí, **salvo en los dos hitos**: run terminada y arco completado.
-   *
-   * ⚠️ La línea no es "si hay algo detrás" sino **qué hay detrás**. La recompensa del
-   * mini-jefe y el pergamino dorado ganado llevan a pantallas de DECISIÓN —coger o
-   * saltar el objeto, reclutar o no al rival—, o sea sitios donde el jugador se para
-   * igualmente: pedirle un clic para llegar hasta ahí es cobrarle el viaje dos veces.
-   * Terminar un arco o una run, en cambio, no lleva a ninguna decisión: lleva a un
-   * momento, y un momento que se va solo no es un momento.
-   */
-  const seVaSolo = salidaVisible && !runTerminada && !resultado?.arcoCompletado;
-
-  useEffect(() => {
-    if (!seVaSolo) return undefined;
-    const t = setTimeout(avanzar, Math.max(MS_MINIMO_AUTO, MS_AUTO_CONTINUAR * factorAnimacion));
-    return () => clearTimeout(t);
-  }, [seVaSolo, avanzar, factorAnimacion]);
+  // ⚠️ **El final de un combate NO se va solo** (playtest 2026-10-16). Hubo un
+  // auto-avance de un segundo en los finales corrientes, y se quitó: te sacaba de la
+  // pantalla de recompensas antes de leerla. Se sale con el botón o con el espacio
+  // (`useAvanzarConTeclado`), los dos por `avanzar`.
 
   // El sonido sigue al replay, golpe a golpe (ver `sonidosDeCombate.js`). Va aquí,
   // antes del `return` temprano, porque es un hook.
