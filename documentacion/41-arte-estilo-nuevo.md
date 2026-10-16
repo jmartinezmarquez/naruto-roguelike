@@ -1062,3 +1062,73 @@ así que la franja de arriba y el suelo tienen que ser tranquilos.
 ```
 A wide pixel art background (about 16:9) in the exact style of the attached reference images, for the banner of a "Summoning" screen: a mystical shrine at night, a large faintly glowing summoning seal drawn on a stone floor in the lower half, purple and deep blue sky with mist, two stone lanterns and hanging paper charms framing the left and right edges. The top third must be calm (a title is written there) and the floor must be flat and calm (three characters stand on it). Crisp pixels, no blur. No characters, no text, no letters, no UI, no frame.
 ```
+
+## Tanda 12 — arco Tea Country Escort (hojas 75-80)
+
+⏳ **PENDIENTES.** El arco alternativo del **acto 1**, en lugar del País de las Olas: la escolta de Idate Morino
+hasta la carrera del templo del País del Té. Como los de las tandas 7-9: en datos con `pendienteDeArte` y fuera
+de la campaña; al llegar el arte, correr el script, quitar las marcas y añadir `escolta_pais_del_te` al acto 1 de
+`campaigns.json`. Bloques: 75-76 personajes, 77 proyectiles, 78 iconos (adjuntar la hoja 19), 79 fondo de mapa
+(adjuntar una columna actual) y 80 aspectos.
+
+### Hoja 75 → `sprite-estilo-nuevo-75.png` (Oboro y Aoi)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Oboro: Hidden Rain genin with a breathing mask over his mouth, a dark hood, a grey-green poncho with a wide umbrella-like hat brim, Rain forehead protector.
+2. Aoi Rokusho (normal): tall thin man with long dark hair and a mean smile, a dark green jonin vest over a dark suit, an old Leaf forehead protector scratched across, a sword hilt at his hip.
+3. Aoi – "Thunder God Unsheathed": same Aoi holding a sword whose blade is pure crackling yellow lightning, sparks around him.
+4. Aoi – "Lightning Overload": same Aoi wrapped in arcs of yellow-white lightning from the sword, eyes glowing, hair standing up.
+```
+
+### Hoja 76 → `sprite-estilo-nuevo-76.png` (entrenadores)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Mubi: Hidden Rain genin with a breathing mask, a hood and a dark poncho, crouching low as if about to sink into the ground.
+2. Kagari: Hidden Rain genin with a breathing mask and goggles, a hooded raincoat, water dripping from his sleeves.
+```
+
+### Hoja 77 → `sprite-estilo-nuevo-77.png` (proyectiles)
+
+```
+[PROJECTILE STYLE BLOCK]
+
+Left to right:
+1. Oboro's "Mist Clones": three faint, translucent copies of a kunai in a puff of grey mist.
+2. Aoi's "Sword of the Thunder God": a long blade of yellow lightning slashing diagonally.
+3. Mubi's "Hiding in the Earth": a hand reaching out of cracked brown earth.
+4. Kagari's "Rain Needles": a burst of sharp blue water needles.
+```
+
+### Hoja 78 → `sprite-estilo-nuevo-78.png` (medalla → `assets/medals/escolta_pais_del_te.png`)
+
+```
+[UI ICON STYLE BLOCK]
+
+One arc medal, like a Pokémon gym badge, matching the shape language of the attached medals: Tea Crest (Tea Country Escort), a green round badge with a tea leaf and a small temple gate in the middle.
+```
+
+### Hoja 79 → `sprite-estilo-nuevo-79.png` (columna → `assets/map-columns/escolta_pais_del_te.png`)
+
+```
+[MAP BACKGROUND STYLE BLOCK]
+
+Tea Country Escort: the flat center is a reddish-brown dirt road. Left and right borders: terraced green tea fields, small tea bushes in rows, wooden fences, a stone lantern or two, and near the top the red gate of a temple on a hill.
+```
+
+### Hoja 80 → `sprite-estilo-nuevo-80.png` (aspectos: Oboro y Aoi)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Oboro – Chunin exam: Oboro in the Rain team outfit he wore at the Chunin exam, a bandage over one eye.
+2. Oboro – Mercenary: a long grey travelling coat and a straw hat, mask still on.
+3. Aoi – Leaf jonin: younger Aoi in a clean Leaf jonin uniform, forehead protector intact.
+4. Aoi – Rain mercenary: Aoi in a Hidden Rain cloak and hood, the sword wrapped in cloth on his back.
+```

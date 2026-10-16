@@ -970,6 +970,161 @@
         }
       ],
       "arcoId": "hidan_y_kakuzu"
+    },
+    {
+      "id": "mensajero_terco",
+      "titulo": "A Stubborn Messenger",
+      "descripcion": "Idate refuses to slow down for anyone. If you keep his pace you will arrive sooner, and much more tired.",
+      "elecciones": [
+        {
+          "texto": "Run at his pace",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 35
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.12
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Make him rest",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.25
+          }
+        }
+      ],
+      "arcoId": "escolta_pais_del_te"
+    },
+    {
+      "id": "casa_de_te",
+      "titulo": "A Roadside Tea House",
+      "descripcion": "The best tea in the country, they say, and a table of gamblers betting on the temple race.",
+      "elecciones": [
+        {
+          "texto": "Bet on Idate",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.5,
+            "exito": {
+              "tipo": "ganarOro",
+              "cantidad": 70
+            },
+            "fallo": {
+              "tipo": "perderOro",
+              "cantidad": 20
+            }
+          }
+        },
+        {
+          "texto": "Just drink the tea",
+          "efecto": {
+            "tipo": "ganarOro",
+            "cantidad": 10
+          }
+        }
+      ],
+      "arcoId": "escolta_pais_del_te"
+    },
+    {
+      "id": "puente_cortado",
+      "titulo": "A Cut Rope Bridge",
+      "descripcion": "Someone has cut the ropes of the bridge over the gorge. Only a few planks are left hanging.",
+      "elecciones": [
+        {
+          "texto": "Leap across the planks",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.6,
+            "exito": {
+              "tipo": "ganarXpEquipo",
+              "cantidad": 45
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.2
+            }
+          }
+        },
+        {
+          "texto": "Climb down the gorge",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 15
+          }
+        }
+      ],
+      "arcoId": "escolta_pais_del_te"
+    },
+    {
+      "id": "rival_wasabi",
+      "titulo": "The Rival Family's Runner",
+      "descripcion": "The rival family's runner offers a truce: share the road until the temple, and settle it there.",
+      "elecciones": [
+        {
+          "texto": "Accept the truce",
+          "efecto": {
+            "tipo": "buffTemporalEquipo",
+            "stat": "velocidad",
+            "multiplicador": 1.2,
+            "combates": 3
+          }
+        },
+        {
+          "texto": "Refuse and spar with him",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 35
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.12
+              }
+            ]
+          }
+        }
+      ],
+      "arcoId": "escolta_pais_del_te"
+    },
+    {
+      "id": "templo_del_te",
+      "titulo": "Shrine of the Tea Leaves",
+      "descripcion": "A small shrine on the road to the temple. Runners leave an offering here for a safe race.",
+      "elecciones": [
+        {
+          "texto": "Leave an offering",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "curarEquipoPorcentaje",
+                "cantidad": 0.3
+              },
+              {
+                "tipo": "perderOro",
+                "cantidad": 20
+              }
+            ]
+          }
+        },
+        {
+          "texto": "Pray for strength",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 20
+          }
+        }
+      ],
+      "arcoId": "escolta_pais_del_te"
     }
   ]
 }

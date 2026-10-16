@@ -623,6 +623,117 @@
         "crecimiento": 1.015
       },
       "desbloqueablePorLogro": true
+    },
+    {
+      "id": "oboro",
+      "nombre": "Oboro",
+      "tipo": "fuuton",
+      "statsBase": {
+        "hp": 47,
+        "ataque": 7,
+        "defensa": 6,
+        "velocidad": 10
+      },
+      "jutsu": {
+        "nombre": "Mist Clones",
+        "descripcion": "Hides inside a genjutsu of identical copies and strikes from the one you did not watch.",
+        "danoBase": 2.6,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 26,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
+      },
+      "modos": [],
+      "recompensa": {
+        "xp": 100,
+        "objetoGarantizado": "pergamino_viento"
+      },
+      "rareza": "raro",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 19,
+        "crecimiento": 1.015
+      },
+      "pendienteDeArte": true,
+      "desbloqueablePorLogro": true
+    },
+    {
+      "id": "aoi",
+      "nombre": "Aoi Rokusho",
+      "tipo": "raiton",
+      "statsBase": {
+        "hp": 49,
+        "ataque": 7,
+        "defensa": 6,
+        "velocidad": 10
+      },
+      "jutsu": {
+        "nombre": "Sword of the Thunder God",
+        "descripcion": "The stolen treasure of the Leaf: a blade of pure lightning that cuts through steel.",
+        "danoBase": 3.05,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 28,
+          "alRecibirDano": 12,
+          "inicial": 0
+        }
+      },
+      "modos": [
+        {
+          "nombre": "Thunder God Unsheathed",
+          "nivelDesbloqueo": 8,
+          "multiplicadores": {
+            "ataque": 1.16,
+            "defensa": 1.08,
+            "velocidad": 1.04,
+            "hp": 1.08
+          },
+          "pasivas": [
+            {
+              "id": "first_attack_bonus",
+              "cantidad": 0.5
+            },
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.15
+            }
+          ]
+        },
+        {
+          "nombre": "Lightning Overload",
+          "nivelDesbloqueo": 20,
+          "multiplicadores": {
+            "ataque": 1.4,
+            "defensa": 1.32,
+            "velocidad": 1.12,
+            "hp": 1.2
+          },
+          "pasivas": [
+            "priority",
+            {
+              "id": "ignore_defense",
+              "cantidad": 0.4
+            },
+            {
+              "id": "heal_on_kill",
+              "cantidad": 0.15
+            }
+          ]
+        }
+      ],
+      "recompensa": {
+        "xp": 165,
+        "objetoGarantizado": "talisman_ocho_puertas",
+        "desbloqueaSiguienteArco": true
+      },
+      "rareza": "legendario",
+      "curvaXp": {
+        "xpParaSiguienteNivel": 24,
+        "crecimiento": 1.015
+      },
+      "pendienteDeArte": true,
+      "desbloqueablePorLogro": true
     }
   ]
 }

@@ -21,6 +21,8 @@ import {
   useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, LOGROS_VISIBLES,
 } from '../../store/useAchievementsStore';
 import { progresoDeLogro, logrosDisponibles } from '../../engine/achievements';
+import enemiesData from '../../data/enemies.json';
+import { ARCOS } from '../../data/arcs';
 import achievementsData from '../../data/achievements.json';
 
 beforeEach(() => {
@@ -102,8 +104,12 @@ describe('logros de contenido a la espera de arte', () => {
       { id: 'c', condicion: { tipo: 'ganarRun', liderId: 'naruto' } },
     ];
     expect(logrosDisponibles(logros, ['nuevo', 'arco_nuevo']).map((l) => l.id)).toEqual(['c']);
-    // Con todo el arte en su sitio, Missions los enseña todos.
-    expect(LOGROS_VISIBLES).toHaveLength(achievementsData.logros.length);
+    // Y en los datos reales, todo logro oculto lo está por un jefe o un arco sin arte.
+    const pendientes = new Set([...enemiesData.jefes, ...ARCOS].filter((x) => x.pendienteDeArte).map((x) => x.id));
+    const ocultos = achievementsData.logros.filter((l) => !LOGROS_VISIBLES.includes(l));
+    for (const l of ocultos) {
+      expect(pendientes.has(l.condicion.jefeId) || pendientes.has(l.condicion.arcoId), l.id).toBe(true);
+    }
   });
 
   it('todo logro paga en pergaminos de invocación', () => {

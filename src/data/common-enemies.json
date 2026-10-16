@@ -317,6 +317,60 @@
       "modos": [],
       "esEntrenador": true,
       "geninAntes": 2
+    },
+    {
+      "id": "mubi",
+      "nombre": "Mubi",
+      "tipo": "doton",
+      "statsBase": {
+        "hp": 42,
+        "ataque": 10,
+        "defensa": 6,
+        "velocidad": 7
+      },
+      "jutsu": {
+        "nombre": "Hiding in the Earth",
+        "descripcion": "Sinks into the ground and drains chakra from below.",
+        "danoBase": 2.45,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "arcoId": "escolta_pais_del_te",
+      "pendienteDeArte": true,
+      "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2
+    },
+    {
+      "id": "kagari",
+      "nombre": "Kagari",
+      "tipo": "suiton",
+      "statsBase": {
+        "hp": 44,
+        "ataque": 10,
+        "defensa": 7,
+        "velocidad": 6
+      },
+      "jutsu": {
+        "nombre": "Rain Needles",
+        "descripcion": "A downpour of chakra-sharpened rain needles.",
+        "danoBase": 2.45,
+        "efectoEstado": null,
+        "carga": {
+          "alAtacar": 34,
+          "alRecibirDano": 10,
+          "inicial": 0
+        }
+      },
+      "arcoId": "escolta_pais_del_te",
+      "pendienteDeArte": true,
+      "modos": [],
+      "esEntrenador": true,
+      "geninAntes": 2
     }
   ]
 }

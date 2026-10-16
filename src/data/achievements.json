@@ -764,6 +764,45 @@
         "tipo": "pergaminos",
         "cantidad": 5
       }
+    },
+    {
+      "id": "derrotar_oboro",
+      "nombre": "Through the Mist",
+      "descripcion": "Defeat Oboro.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "oboro"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "derrotar_aoi",
+      "nombre": "The Sword Comes Home",
+      "descripcion": "Defeat Aoi Rokusho.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "aoi"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "escolta_pais_del_te_sin_bajas",
+      "nombre": "First Across the Line",
+      "descripcion": "Complete Tea Country Escort without losing a single battle.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "escolta_pais_del_te"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
     }
   ],
   "_pendienteDeImplementar": {

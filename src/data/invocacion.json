@@ -29,6 +29,8 @@
     { "tipo": "personaje", "id": "temari", "rareza": "raro" },
     { "tipo": "personaje", "id": "kankuro", "rareza": "raro" },
     { "tipo": "personaje", "id": "konohamaru", "rareza": "raro" },
+    { "tipo": "personaje", "id": "oboro", "rareza": "raro" },
+    { "tipo": "personaje", "id": "aoi", "rareza": "legendario" },
     { "tipo": "objeto", "id": "pildora_soldado", "rareza": "comun" },
     { "tipo": "objeto", "id": "unguento_curativo", "rareza": "comun" },
     { "tipo": "objeto", "id": "pergamino_entrenamiento_ataque", "rareza": "comun" },
@@ -73,6 +75,8 @@
     { "tipo": "pagina", "id": "tsunade", "rareza": "comun" },
     { "tipo": "pagina", "id": "temari", "rareza": "comun" },
     { "tipo": "pagina", "id": "kankuro", "rareza": "comun" },
-    { "tipo": "pagina", "id": "konohamaru", "rareza": "comun" }
+    { "tipo": "pagina", "id": "konohamaru", "rareza": "comun" },
+    { "tipo": "pagina", "id": "oboro", "rareza": "comun" },
+    { "tipo": "pagina", "id": "aoi", "rareza": "comun" }
   ]
 }

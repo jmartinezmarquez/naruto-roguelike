@@ -207,6 +207,13 @@ HOJAS = [
     ('sprite-estilo-nuevo-72.png', ['effects/sello-invocacion']),
     ('sprite-estilo-nuevo-73.png', ['effects/humo-invocacion']),
     ('sprite-estilo-nuevo-74.png', ['summon/cartel']),
+    # --- Tea Country Escort (fase 4), a la espera de arte.
+    ('sprite-estilo-nuevo-75.png', ['characters/oboro', 'characters/aoi', 'transformations/aoi_0', 'transformations/aoi_1']),
+    ('sprite-estilo-nuevo-76.png', ['characters/mubi', 'characters/kagari']),
+    ('sprite-estilo-nuevo-77.png', ['projectiles/oboro', 'projectiles/aoi', 'projectiles/mubi', 'projectiles/kagari']),
+    ('sprite-estilo-nuevo-78.png', ['medals/escolta_pais_del_te']),
+    ('sprite-estilo-nuevo-79.png', ['map-columns/escolta_pais_del_te']),
+    ('sprite-estilo-nuevo-80.png', ['aspects/oboro_1', 'aspects/oboro_2', 'aspects/aoi_1', 'aspects/aoi_2']),
 ]
 
 TIPO_POR_CARPETA = {

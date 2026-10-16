@@ -1,0 +1,58 @@
+{
+  "_comentario": "Arco alternativo del ACTO 1 (documentacion/42 §5): la escolta de Idate Morino hasta la carrera del templo del País del Té, en lugar del País de las Olas. Es el acto que decide la PRIMERA run, así que sus jefes calcan a Haku y Zabuza en stats y niveles de transformación (documentacion/11, v5), y se miden con el bloque de primera run del simulador. pendienteDeArte: fuera de la campaña hasta que llegue su arte.",
+  "id": "escolta_pais_del_te",
+  "nombre": "Tea Country Escort",
+  "pendienteDeArte": true,
+  "medalla": {
+    "nombre": "Tea Crest"
+  },
+  "textoTienda": "A tea house by the road sells supplies to the runners of the temple race, and to anyone else who pays.",
+  "temaVisual": "pais_del_te",
+  "numeroPisos": 8,
+  "nodosPorPiso": {
+    "min": 1,
+    "max": 4
+  },
+  "poolTiposNodo": [
+    {
+      "tipo": "combate",
+      "peso": 52
+    },
+    {
+      "tipo": "evento",
+      "peso": 19
+    },
+    {
+      "tipo": "descanso",
+      "peso": 15
+    },
+    {
+      "tipo": "tienda",
+      "peso": 14
+    }
+  ],
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 80
+    },
+    {
+      "rareza": "legendario",
+      "peso": 20
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 6,
+  "pisoMiniJefe": 4,
+  "miniJefeId": "oboro",
+  "pisoJefeFinal": 8,
+  "jefeFinalId": "aoi",
+  "personajesReclutablesIds": [
+    "kakashi"
+  ],
+  "nivelEnemigoBase": 1,
+  "escaladoNivelPorPiso": 1.0,
+  "nivelMiniJefe": 3,
+  "nivelJefeFinal": 10,
+  "xpCombateComun": 48
+}
