@@ -13,6 +13,7 @@ import enemiesData from '../../data/enemies.json';
 import commonEnemiesData from '../../data/common-enemies.json';
 import campaignsData from '../../data/campaigns.json';
 import { ARCOS } from '../../data/arcs';
+import ultimatesData from '../../data/ultimates.json';
 import arcoOlas from '../../data/arcs/pais-de-las-olas.json';
 import arcoChunin from '../../data/arcs/examen-chunin.json';
 import arcoPain from '../../data/arcs/invasion-de-pain.json';
@@ -48,5 +49,25 @@ describe('arcos a la espera de arte', () => {
         expect(fs.existsSync(path.join(assets, 'medals', `${arco.id}.png`)), `${arco.id}: medalla`).toBe(true);
       }
     }
+  });
+});
+
+describe('skins Ultimate', () => {
+  it('toda Ultimate de los datos tiene su sprite, y no hay sprites de Ultimate sin declarar', () => {
+    const carpeta = path.resolve(CARPETA, '..', 'ultimates');
+    const dibujadas = fs.readdirSync(carpeta).filter((f) => f.endsWith('.png')).map((f) => f.replace(/\.png$/, ''));
+    expect(new Set(dibujadas)).toEqual(new Set(Object.keys(ultimatesData.ultimates)));
+  });
+});
+
+describe('elegir la Ultimate', () => {
+  it('cambia el sprite del ninja en todo el juego', async () => {
+    const { spriteDeLuchador, spriteDeUltimate, spriteBaseDeLuchador } = await import('./characterSprites');
+    const { useAchievementsStore } = await import('../../store/useAchievementsStore');
+    useAchievementsStore.setState({ aspectosElegidos: { naruto: 'ultimate' } });
+    expect(spriteDeLuchador('naruto')).toBe(spriteDeUltimate('naruto'));
+    expect(spriteDeLuchador('naruto')).not.toBe(spriteBaseDeLuchador('naruto'));
+    useAchievementsStore.setState({ aspectosElegidos: {} });
+    expect(spriteDeLuchador('naruto')).toBe(spriteBaseDeLuchador('naruto'));
   });
 });

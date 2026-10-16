@@ -13,6 +13,7 @@ import {
 import { nivelDeMaestria, xpParaSubirUnNivel, xpTotalParaNivel } from '../engine/maestria';
 import { ESTADO_INVOCACION_VACIO, invocar as invocarEnMotor, catalogoDisponible } from '../engine/invocacion';
 import invocacionData from '../data/invocacion.json';
+import ultimatesData from '../data/ultimates.json';
 import charactersData from '../data/characters.json';
 import enemiesData from '../data/enemies.json';
 import { ARCOS } from '../data/arcs';
@@ -315,6 +316,10 @@ export const useAchievementsStore = create((set, get) => ({
     const reglas = configGlobal.maestria;
     const falta = xpTotalParaNivel(reglas.nivelMaximo, reglas) - (get().maestria[idNinja] ?? 0);
     if (falta > 0) get().sumarXpMaestria({ [idNinja]: falta });
+    // Y todas las skins Ultimate, hasta que tengan su forma de salir en el gacha.
+    const invocacion = { ...get().invocacion, ultimates: Object.keys(ultimatesData.ultimates) };
+    set({ invocacion });
+    localStorage.setItem(CLAVE_INVOCACION, JSON.stringify(invocacion));
   },
 
   /** Interno: el diario de una fecha (si lo guardado es de otro día, uno vacío). */

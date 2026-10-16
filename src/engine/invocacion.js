@@ -12,6 +12,8 @@ export const ESTADO_INVOCACION_VACIO = {
   personajes: [],
   objetos: [],
   paginas: [],
+  // Las skins Ultimate conseguidas (ids de ninja, ver data/ultimates.json).
+  ultimates: [],
   legendarios: 0,
 };
 

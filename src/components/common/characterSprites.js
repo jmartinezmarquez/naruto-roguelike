@@ -54,5 +54,20 @@ export function spriteDeAspecto(id, n) {
  */
 export function spriteDeLuchador(id) {
   const elegido = useAchievementsStore.getState().aspectosElegidos?.[id];
+  if (elegido === 'ultimate') return SPRITE_ULTIMATE[id] || SPRITE_LUCHADOR[id] || null;
   return (elegido && SPRITE_ASPECTO[`${id}_${elegido}`]) || SPRITE_LUCHADOR[id] || null;
+}
+
+/**
+ * Las skins Ultimate (documentacion/42, hojas 88-89): una por ninja, en
+ * `assets/ultimates/<id>.png`. Se eligen como un aspecto más (`'ultimate'`).
+ */
+const SPRITE_ULTIMATE = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('../../assets/ultimates/*.png', { eager: true, query: '?url', import: 'default' }),
+  ).map(([ruta, url]) => [ruta.split('/').pop().replace(/\.png$/, ''), url]),
+);
+
+export function spriteDeUltimate(id) {
+  return SPRITE_ULTIMATE[id] ?? null;
 }

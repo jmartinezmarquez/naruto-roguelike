@@ -258,7 +258,7 @@ export default function SettingsScreen() {
       {modoPruebas() && (
         <section className="flex flex-col gap-1 mt-3">
           <TituloBloque>Testing</TituloBloque>
-          <FilaAjuste etiqueta="+10000 scrolls, Naruto at max Ninja Lv." pista="Only for testing the Summon and mastery.">
+          <FilaAjuste etiqueta="+10000 scrolls, Naruto at max Ninja Lv., all Ultimate skins" pista="Only for testing the Summon and mastery.">
             <BotonSecundario onClick={() => herramientaDePruebas('naruto')}>APPLY</BotonSecundario>
           </FilaAjuste>
         </section>

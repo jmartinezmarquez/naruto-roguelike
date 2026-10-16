@@ -1,0 +1,11 @@
+{
+  "_comentario": "Skins Ultimate (documentacion/42): aspectos exclusivos del gacha que representan un momento icónico de la serie. Solo para algunos ninjas. La clave es el id del ninja y el sprite va en assets/ultimates/<id>.png (hojas 88-89 del documento 41). Cómo salen en el gacha está PENDIENTE (rediseño del sistema de probabilidades): de momento se guardan en useAchievementsStore.invocacion.ultimates y se eligen en el Bingo Book.",
+  "ultimates": {
+    "naruto": "Seventh Hokage",
+    "sasuke": "Valley of the End",
+    "kakashi": "Sixth Hokage",
+    "gaara": "Commander of the Allied Forces",
+    "might_guy": "Evening Elephant",
+    "pain_camino_deva": "Nagato Revealed"
+  }
+}

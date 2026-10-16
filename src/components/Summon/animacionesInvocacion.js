@@ -1,9 +1,9 @@
-// Las animaciones dibujadas de la ceremonia del gacha (hojas 72-73 y 81-82 del documento 41).
-// Con `import.meta.glob` para que falten sin romper el build: mientras no existan, la
-// ceremonia usa el sello en SVG y el humo del relevo.
+// Las animaciones dibujadas de la ceremonia del gacha (hojas 72-73, 81-87 del documento
+// 41). Con `import.meta.glob` para que falten sin romper el build: un plano sin dibujo
+// se salta, y la marca y el humo tienen respaldo en código.
 const EFECTOS = Object.fromEntries(
   Object.entries(
-    import.meta.glob('../../assets/effects/*-invocacion.png', { eager: true, query: '?url', import: 'default' }),
+    import.meta.glob('../../assets/effects/*.png', { eager: true, query: '?url', import: 'default' }),
   ).map(([ruta, url]) => [ruta.split('/').pop().replace(/\.png$/, ''), url]),
 );
 
@@ -13,11 +13,19 @@ const FONDOS = Object.fromEntries(
   ).map(([ruta, url]) => [ruta.split('/').pop().replace(/\.[^.]+$/, ''), url]),
 );
 
+function tira(nombre, lado) {
+  return EFECTOS[nombre] ? { src: EFECTOS[nombre], lado, fotogramas: 8 } : null;
+}
+
 export const ANIMACIONES_INVOCACION = {
-  // Los sellos de manos del Kuchiyose (hoja 81): la fase que abre la ceremonia, si existe.
-  manos: EFECTOS['manos-invocacion'] ? { src: EFECTOS['manos-invocacion'], lado: 128, fotogramas: 8 } : null,
-  sello: EFECTOS['sello-invocacion'] ? { src: EFECTOS['sello-invocacion'], lado: 128, fotogramas: 8 } : null,
-  humo: EFECTOS['humo-invocacion'] ? { src: EFECTOS['humo-invocacion'], lado: 160, fotogramas: 8 } : null,
+  manos: tira('manos-invocacion', 128),
+  golpe: tira('golpe-invocacion', 160),
+  sello: tira('sello-invocacion', 128),
+  columna: tira('columna-invocacion', 160),
+  humo: tira('humo-invocacion', 160),
+  auraComun: tira('aura-comun', 160),
+  auraRaro: tira('aura-raro', 160),
+  auraLegendario: tira('aura-legendario', 160),
 };
 
 /** El fondo del cartel del Summon (hoja 74); null mientras no exista. */

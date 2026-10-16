@@ -223,11 +223,18 @@ HOJAS = [
     ('sprite-estilo-nuevo-85.png', ['effects/aura-comun']),
     ('sprite-estilo-nuevo-86.png', ['effects/aura-raro']),
     ('sprite-estilo-nuevo-87.png', ['effects/aura-legendario']),
+    # Skins Ultimate (solo en el gacha): momentos icónicos, y el aura de su revelación.
+    ('sprite-estilo-nuevo-88.png', ['ultimates/naruto', 'ultimates/sasuke', 'ultimates/kakashi']),
+    ('sprite-estilo-nuevo-89.png', ['ultimates/gaara', 'ultimates/might_guy', 'ultimates/pain_camino_deva']),
+    # El aspecto 2 de Kakashi deja de ser el Hokage (que pasa a Ultimate).
+    ('sprite-estilo-nuevo-90.png', ['aspects/kakashi_2']),
+    ('sprite-estilo-nuevo-91.png', ['effects/aura-ultimate']),
 ]
 
 TIPO_POR_CARPETA = {
     'characters': 'personaje',
     'aspects': 'personaje',
+    'ultimates': 'personaje',
     'transformations': 'transformacion',
     'projectiles': 'proyectil',
     'items': 'objeto',
@@ -283,6 +290,7 @@ TIRAS = {
     'aura-comun': (8, 160),
     'aura-raro': (8, 160),
     'aura-legendario': (8, 160),
+    'aura-ultimate': (8, 160),
 }
 
 # Fondos de columna del mapa: el tamaño de los que había. Se recorta para CUBRIR, no
