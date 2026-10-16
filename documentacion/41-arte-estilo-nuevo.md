@@ -1246,7 +1246,9 @@ Attached: previous strip = effects/humo-invocacion.png; a character sprite for s
 
 ## Tanda 15 — skins Ultimate (hojas 88-91)
 
-⏳ **PENDIENTES.** Las skins **Ultimate**: aspectos exclusivos del gacha, con una probabilidad muy baja, que
+✅ **HECHAS el 2026-10-16.** Se eligen ya como aspecto en el Bingo Book; cómo salen en el gacha sigue pendiente.
+
+**Antes:** Las skins **Ultimate**: aspectos exclusivos del gacha, con una probabilidad muy baja, que
 representan **un momento icónico** de la serie (no un traje alternativo más). De momento solo para seis
 ninjas: Naruto, Sasuke, Kakashi, Gaara, Might Guy y Pain. El script las deja en `assets/ultimates/<id>.png`.
 ⚠️ El código y su probabilidad están **pendientes** (se va a rediseñar el sistema de probabilidades del gacha);
