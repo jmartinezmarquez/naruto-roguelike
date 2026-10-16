@@ -1244,3 +1244,69 @@ Attached: previous strip = effects/humo-invocacion.png; a character sprite for s
 8 frames of an overwhelming golden aura around a standing figure (the space in the middle stays EMPTY, the figure is drawn separately), seen from the front with the ground at the bottom of every frame: a pillar of golden chakra erupting from a cracked ring on the floor with crackling yellow lightning, flying rock debris and a shockwave (frames 1-4), then a tall blazing golden flame-aura with lightning arcs and floating sparks (frames 5-8, loopable). Gold, yellow, orange and white only.
 ```
 
+## Tanda 15 — skins Ultimate (hojas 88-91)
+
+⏳ **PENDIENTES.** Las skins **Ultimate**: aspectos exclusivos del gacha, con una probabilidad muy baja, que
+representan **un momento icónico** de la serie (no un traje alternativo más). De momento solo para seis
+ninjas: Naruto, Sasuke, Kakashi, Gaara, Might Guy y Pain. El script las deja en `assets/ultimates/<id>.png`.
+⚠️ El código y su probabilidad están **pendientes** (se va a rediseñar el sistema de probabilidades del gacha);
+las hojas se pueden ir sacando.
+
+Reglas de las hojas 88-89 (bloque de **personajes**, con la frase de aspectos):
+- **Tres ninjas por hoja, una Ultimate cada uno.** Misma cara, ojos y proporciones que su sprite actual:
+  adjuntar `src/assets/characters/<id>.png` de los tres.
+- Más **espectaculares** que un aspecto normal: el momento tiene que leerse de un vistazo (prenda, herida,
+  objeto o pose que lo identifique), pero **sin aura ni brillo** — el aura la pone la revelación (hoja 91).
+- Siguen siendo sprites de pie, de frente: la pose puede insinuar el momento, no recrear la escena.
+
+### Hoja 88 → `sprite-estilo-nuevo-88.png` (Ultimate: Naruto, Sasuke, Kakashi)
+
+```
+[CHARACTER STYLE BLOCK]
+
+These are ULTIMATE OUTFITS that recreate an iconic moment of each character: keep exactly the same face, eyes, body size and proportions as the attached sprite of that character; the outfit, props and pose tell the moment. No glowing aura.
+
+Left to right:
+1. Naruto – "Seventh Hokage": adult Naruto with short spiky blond hair, a calm proud smile, a white Hokage cloak with orange flame patterns at the hem and the kanji-free Hokage mark on the back, worn over his black and orange outfit, arms crossed.
+2. Sasuke – "Valley of the End": Sasuke after the final battle, torn dark cloak, missing his left arm with the empty sleeve hanging, the purple Rinnegan in his left eye visible through his long bangs, bruised and standing tall.
+3. Kakashi – "Sixth Hokage": Kakashi in a white Hokage cloak with red flame patterns at the hem over his jonin outfit, the mask still over his mouth, a relaxed slouch and one hand raised in a lazy wave.
+```
+
+### Hoja 89 → `sprite-estilo-nuevo-89.png` (Ultimate: Gaara, Might Guy, Pain)
+
+```
+[CHARACTER STYLE BLOCK]
+
+These are ULTIMATE OUTFITS that recreate an iconic moment of each character: keep exactly the same face, eyes, body size and proportions as the attached sprite of that character; the outfit, props and pose tell the moment. No glowing aura.
+
+Left to right:
+1. Gaara – "Commander of the Allied Forces": older Gaara in a long dark red coat with a grey flak vest, the Allied Shinobi Forces forehead protector, his gourd on his back, one arm raised as if giving the war speech.
+2. Might Guy – "Evening Elephant": Guy with red skin, white hair standing up, veins on his face, his jumpsuit torn and smoking, fists clenched in a stance, small cracks in the ground under his feet.
+3. Pain – "Nagato Revealed": Nagato himself: a gaunt pale young man with long red hair covering one eye, the purple Rinnegan, black chakra rods piercing his back, sitting inside a dark wooden machine frame with thin legs.
+```
+
+### Hoja 90 → `sprite-estilo-nuevo-90.png` (aspecto: Kakashi ANBU joven) → `assets/aspects/kakashi_2.png`
+
+Sustituye al segundo aspecto de Kakashi (era el Sexto Hokage, que pasa a ser su Ultimate). Bloque de
+**aspectos**; adjuntar `src/assets/characters/kakashi.png`.
+
+```
+[OUTFIT STYLE BLOCK]
+
+One character only:
+1. Kakashi Hatake – Young ANBU: a teenage Kakashi in grey ANBU armour over a black sleeveless suit, the red spiral tattoo on his upper arm, a cracked white dog-like ANBU mask pushed to the side of his head, a short sword on his back.
+```
+
+### Hoja 91 → `sprite-estilo-nuevo-91.png` (tira: aura Ultimate) → `assets/effects/aura-ultimate.png`
+
+El aura de la revelación de una Ultimate: tiene que superar a la legendaria, y con un color que no use ninguna
+otra rareza (rojo carmesí y negro). Mismo bloque y mismas reglas que las hojas 85-87 (cinemática); adjuntar
+`src/assets/effects/aura-legendario.png` de referencia de tamaño y `src/assets/characters/naruto.png` para la
+escala.
+
+```
+A pixel art animation strip in the exact style of the attached reference images, for a cinematic "Summoning Jutsu" sequence in a Naruto game: the SAME scene shown as 8 consecutive animation frames, left to right, in a single horizontal row, evenly spaced, each frame centered in its own equal-width square slot. These frames are one shot of a continuous video, so the motion between frames must be SMOOTH and gradual, with small changes from one frame to the next (no jumps, no missing in-between poses). The camera never moves inside the strip: the ground is a flat horizontal line at the SAME height in every frame, and anything resting on the ground stays on that exact line. Thick black outline where it makes sense, crisp pixels, no blur, no motion-blur smears. Effects that fade out break into sparse dithered pixels instead of becoming transparent. Transparent background (real alpha, NOT a checkerboard pattern) — including the empty space in the middle. No text, no frame numbers, no borders, no UI.
+
+8 frames of an overwhelming crimson-and-black aura around a standing figure (the space in the middle stays EMPTY and fully transparent, the figure is drawn separately), seen from the front with the ground at the bottom of every frame: black ink and crimson chakra erupting from a cracked ring on the floor with red lightning and black flame tongues (frames 1-4), then a towering crimson flame-aura with black smoke edges, red lightning arcs and floating embers (frames 5-8, loopable). Crimson, dark red, black and white highlights only — no gold, no blue, no green, no purple.
+```
+
