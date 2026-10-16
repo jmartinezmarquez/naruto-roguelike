@@ -1,10 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { useAchievementsStore } from '../../store/useAchievementsStore';
 import personajesData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import configGlobal from '../../data/config.json';
-import { rosterInicial } from '../../engine/achievements';
 import { FichaPersonaje } from '../common/PersonajeHoverCard';
 import { InsigniaMaestria } from '../common/Maestria';
 import { useMaestria, CLASE_MARCO_MAESTRIA } from '../common/nivelDeNinja';
@@ -38,9 +36,10 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
 
 /**
  * Pantalla de arranque real: elige `numeroPersonajesInicialesAElegir` (hoy 1)
- * personaje del roster desbloqueado — los "inicial" de characters.json, los
- * que hayas conseguido en el gacha y los de una
- * estrella que ya hayas reclutado alguna vez (`rosterInicial`). El
+ * personaje entre **tres candidatos sorteados** del roster desbloqueado — los
+ * "inicial", los conseguidos en el gacha y los de una estrella que ya hayas
+ * reclutado alguna vez (`rosterInicial`) —, con los raros y los legendarios menos
+ * probables (`ofertaInicial`, pesos en `config.equipo`). El
  * resto del equipo (hasta tamanoMaximo) se rellena reclutando durante la
  * run, no aquí — ver documentacion/19-seleccion-de-personaje.md.
  *
@@ -52,19 +51,21 @@ function TarjetaCandidato({ personaje, seleccionado, onClick }) {
  */
 export default function CharacterSelectScreen({ onConfirmar }) {
   const irAlHome = useGameStore((s) => s.irAlHome);
-  useAchievementsStore((s) => s.logrosDesbloqueados);
-  const personajesVistos = useAchievementsStore((s) => s.vistos.personajes);
-  useAchievementsStore((s) => s.invocacion);
+  const ofertaIds = useGameStore((s) => s.ofertaInicialIds);
+  const sortearOferta = useGameStore((s) => s._sortearOfertaInicial);
   const [seleccionados, setSeleccionados] = useState([]);
 
   const numeroAElegir = configGlobal.equipo.numeroPersonajesInicialesAElegir;
 
-  // Los de un logro y los del gacha. `logrosDesbloqueados` y `invocacion` se leen
-  // arriba para que la pantalla se repinte si cambian.
-  const idsExtra = useAchievementsStore.getState().personajesInicialesExtra();
-  // Los jefes también: el gacha los da como iniciales (documentacion/42).
-  const candidatos = [...personajesData.personajes, ...enemiesData.jefes.filter((j) => j.desbloqueablePorLogro)];
-  const roster = rosterInicial(candidatos, idsExtra, personajesVistos ?? []);
+  // La oferta se sortea al entrar (elegirCampana, el diario o reiniciar). Si se llega
+  // sin ella —una pantalla montada a mano—, se sortea aquí una vez.
+  useEffect(() => {
+    if (ofertaIds.length === 0) sortearOferta();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const candidatos = [...personajesData.personajes, ...enemiesData.jefes];
+  const roster = ofertaIds.map((id) => candidatos.find((p) => p.id === id)).filter(Boolean);
 
   function elegir(id) {
     if (numeroAElegir === 1) {

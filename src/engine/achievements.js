@@ -171,3 +171,25 @@ export function logrosDisponibles(logros, idsPendientesDeArte) {
   const pendientes = new Set(idsPendientesDeArte);
   return logros.filter(({ condicion: c }) => ![c.jefeId, c.arcoId, c.conPersonajeId, c.liderId].some((id) => id && pendientes.has(id)));
 }
+
+/**
+ * Los candidatos que se ofrecen al empezar una run: `cantidad` del roster, al azar y
+ * sin repetir, con un peso por rareza (`config.equipo.pesoRarezaOfertaInicial`): un
+ * raro sale menos que un común y un legendario menos todavía. Con un roster igual o
+ * más corto que `cantidad`, salen todos (la primera run: los tres iniciales).
+ */
+export function ofertaInicial(roster, cantidad, pesos, azar) {
+  const quedan = [...roster];
+  const elegidos = [];
+  while (quedan.length > 0 && elegidos.length < cantidad) {
+    const total = quedan.reduce((s, p) => s + (pesos[p.rareza] ?? 1), 0);
+    let tirada = azar() * total;
+    let i = 0;
+    for (; i < quedan.length - 1; i++) {
+      tirada -= pesos[quedan[i].rareza] ?? 1;
+      if (tirada < 0) break;
+    }
+    elegidos.push(quedan.splice(i, 1)[0]);
+  }
+  return elegidos;
+}

@@ -138,3 +138,13 @@ en el equipo), así que no hizo falta guardar nada nuevo. La regla vive en `rost
   que se calibraron los jefes del arco 1 (`documentacion/11`, "v5").
 - Empezar con un común no saca a nadie del pool de reclutables: los tres iniciales no elegidos siguen
   saliendo en el pergamino verde del arco 1.
+
+## Tres candidatos al azar (2026-10-16)
+
+La pantalla ya no enseña el roster entero: ofrece **siempre tres** candidatos sorteados entre todo lo
+desbloqueado (`ofertaInicial` en `engine/achievements.js`), con peso por rareza
+(`config.equipo.pesoRarezaOfertaInicial`: común e inicial 1, raro 0,4, legendario 0,15). Así un legendario
+sacado en el gacha es una alegría cuando aparece, no la elección obvia de todas las runs. La oferta se sortea
+al ENTRAR en la pantalla (`elegirCampana`, `elegirDesafioDiario`, `reiniciarRun` → `_sortearOfertaInicial`) y
+se guarda en `ofertaInicialIds`, para que no cambie al repintar. En la primera run el roster son los tres
+iniciales, así que salen ellos.

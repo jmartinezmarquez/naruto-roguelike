@@ -3,7 +3,14 @@
   "equipo": {
     "tamanoMaximo": 3,
     "numeroPersonajesInicialesAElegir": 1,
-    "bonusNivelAlReemplazar": 2
+    "bonusNivelAlReemplazar": 2,
+    "tamanoOfertaInicial": 3,
+    "pesoRarezaOfertaInicial": {
+      "inicial": 1,
+      "comun": 1,
+      "raro": 0.4,
+      "legendario": 0.15
+    }
   },
   "economia": {
     "oroInicial": 50,
