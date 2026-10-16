@@ -1950,10 +1950,11 @@ describe('campañas', () => {
     expect(useGameStore.getState().pantalla).toBe('seleccionPersonaje');
   });
 
-  it('iniciarRun sin arco explícito empieza por el PRIMER arco de la campaña elegida', () => {
+  it('iniciarRun sin arco explícito empieza por un arco del PRIMER acto de la campaña elegida', () => {
+    // Del primer acto, no uno fijo: el acto 1 sortea entre varios arcos.
     useGameStore.getState().elegirCampana('camino_ninja');
     useGameStore.getState().iniciarRun(['naruto']);
-    expect(useGameStore.getState().arcoActualId).toBe('pais_de_las_olas');
+    expect(campaignsData.campanas[0].actos[0].arcoIds).toContain(useGameStore.getState().arcoActualId);
   });
 
   it('avanzarSiguienteArco sigue el orden que declara la campaña', () => {
