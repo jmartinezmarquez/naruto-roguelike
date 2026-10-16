@@ -47,8 +47,10 @@ describe('InvocacionScreen', () => {
     expect(useAchievementsStore.getState().pergaminos.saldo).toBe(0);
     // Durante la ceremonia, nada de resultados: destriparían la revelación.
     expect(screen.queryByText('Last summoned')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    // Manos (si están dibujadas), sello y humo, hasta la revelación.
+    for (let i = 0; i < 5 && screen.queryByRole('button', { name: 'Skip' }); i++) {
+      fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    }
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(screen.getByText('Last summoned')).toBeInTheDocument();
   });
