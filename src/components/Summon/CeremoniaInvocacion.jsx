@@ -122,7 +122,9 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
         style={{ background: `radial-gradient(ellipse, ${color}55, transparent 70%)` }} />
 
       {fase === 'sello' && (sello ? (
-        <div className="absolute left-1/2 bottom-24">
+        // La tira viene en blanco-azul: el halo del color de la rareza es lo que sigue
+        // avisando de lo mejor que va a salir.
+        <div className="absolute left-1/2 bottom-24" style={{ filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 4px ${color})` }}>
           <Tira animacion={sello} escala={2} duracion={MS_SELLO * factor} />
         </div>
       ) : (

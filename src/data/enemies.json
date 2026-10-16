@@ -655,7 +655,6 @@
         "xpParaSiguienteNivel": 19,
         "crecimiento": 1.015
       },
-      "pendienteDeArte": true,
       "desbloqueablePorLogro": true
     },
     {
@@ -732,7 +731,6 @@
         "xpParaSiguienteNivel": 24,
         "crecimiento": 1.015
       },
-      "pendienteDeArte": true,
       "desbloqueablePorLogro": true
     }
   ]
