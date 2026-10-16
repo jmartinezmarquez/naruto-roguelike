@@ -154,7 +154,6 @@ export default function TransicionArcoScreen() {
   useAvanzarConTeclado(saltar, faseEnPantalla !== 'siguiente');
   useAvanzarConTeclado(empezar, faseEnPantalla === 'siguiente');
 
-  const jefe = arco ? spriteDeCombate(arco.jefeFinalId, arco.nivelJefeFinal) : null;
   const curando = faseEnPantalla !== 'cierre';
   const fondo = siguiente ? FONDO_COLUMNA[siguiente.id] : null;
 
@@ -173,17 +172,6 @@ export default function TransicionArcoScreen() {
           <div className="flex flex-col items-center mt-3 sello-resultado">
             <Medalla arco={arco} tamano={64} />
             <p className="text-[10px] text-oro font-display mt-1">{arco.medalla.nombre} earned</p>
-          </div>
-        )}
-        {jefe && (
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <img
-              src={jefe}
-              alt=""
-              aria-hidden="true"
-              className="w-12 h-12 object-contain caido-ko"
-              style={{ imageRendering: 'pixelated' }}
-            />
           </div>
         )}
       </header>
