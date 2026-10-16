@@ -685,3 +685,29 @@ img {
   border-radius: 0;
   background: var(--color-pergamino-100);
 }
+
+/* --- Ceremonia de invocación (gacha) -------------------------------------------
+   El sello se traza solo (`stroke-dashoffset` de su largo a 0), brilla en el color
+   de la mejor rareza que va a salir (`--color-sello`) y los premios salen del humo
+   uno detrás de otro. Ver `Summon/CeremoniaInvocacion.jsx`. */
+.sello-invocacion { filter: drop-shadow(0 0 6px var(--color-sello)); animation: brillo-sello calc(600ms * var(--factor-animacion, 1)) ease-in-out infinite alternate; }
+.trazo-sello {
+  fill: none;
+  stroke: var(--color-sello);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: var(--largo);
+  stroke-dashoffset: var(--largo);
+  animation: trazar-sello calc(700ms * var(--factor-animacion, 1)) ease-out forwards;
+}
+.marca-sello { fill: var(--color-sello); opacity: 0; animation: aparecer-marca calc(200ms * var(--factor-animacion, 1)) ease-out forwards; }
+@keyframes trazar-sello { to { stroke-dashoffset: 0; } }
+@keyframes aparecer-marca { to { opacity: 1; } }
+@keyframes brillo-sello { from { filter: drop-shadow(0 0 4px var(--color-sello)); } to { filter: drop-shadow(0 0 14px var(--color-sello)); } }
+@keyframes salir-del-humo {
+  from { opacity: 0; transform: translateY(12px) scale(0.6); }
+  70%  { opacity: 1; transform: translateY(-3px) scale(1.06); }
+  to   { opacity: 1; transform: none; }
+}
+.salir-del-humo { opacity: 0; animation: salir-del-humo calc(380ms * var(--factor-animacion, 1)) ease-out forwards; }
+

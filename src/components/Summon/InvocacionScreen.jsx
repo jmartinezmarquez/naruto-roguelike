@@ -8,6 +8,7 @@ import { spriteDeLuchador } from '../common/characterSprites';
 import { nombrePersonaje } from '../common/nombres';
 import { SPRITE_OBJETO, COLOR_RAREZA, BORDE_RAREZA, ETIQUETA_RAREZA } from '../Inventory/itemSprites';
 import { PanelMarco, VentanaModal, TituloBloque } from '../common/PiezasUI';
+import CeremoniaInvocacion from './CeremoniaInvocacion';
 
 /**
  * El gacha, "Summon" (documentacion/42 §2). Ventana sobre el Home, como Missions o el
@@ -54,10 +55,13 @@ function TextoEfecto({ premio }) {
   return <p className="font-display text-[8px] text-pergamino-200/70">+{premio.cantidad} scrolls</p>;
 }
 
-function TarjetaPremio({ premio }) {
+function TarjetaPremio({ premio, orden = 0 }) {
   const sprite = spriteDePremio(premio);
   return (
-    <div className={`flex flex-col items-center gap-1 p-2 border-2 rounded-sm bg-tinta-950/40 ${BORDE_RAREZA[premio.rareza]}`}>
+    <div
+      className={`salir-del-humo flex flex-col items-center gap-1 p-2 border-2 rounded-sm bg-tinta-950/40 ${BORDE_RAREZA[premio.rareza]}`}
+      style={{ animationDelay: `calc(${orden * 90}ms * var(--factor-animacion, 1))` }}
+    >
       <div className="w-14 h-14 flex items-center justify-center">
         <FondoDePremio premio={premio}>
           {sprite && <img src={sprite} alt="" className="max-w-full max-h-full" style={{ imageRendering: 'pixelated' }} />}
@@ -94,7 +98,9 @@ export default function InvocacionScreen() {
   const saldo = useAchievementsStore((s) => s.pergaminos.saldo);
   const estado = useAchievementsStore((s) => s.invocacion);
   useAchievementsStore((s) => s.logrosDesbloqueados);
+  // Cada tirada lleva su número: la ceremonia se vuelve a montar (y a ver) en cada una.
   const [ultimos, setUltimos] = useState(null);
+  const [tirada, setTirada] = useState(0);
 
   const reglas = invocacionData;
   const garantia = tiradasParaGarantia(estado, reglas);
@@ -106,7 +112,10 @@ export default function InvocacionScreen() {
 
   function invocar(numero) {
     const premios = useAchievementsStore.getState().invocar(numero);
-    if (premios) setUltimos(premios);
+    if (premios) {
+      setUltimos(premios);
+      setTirada((n) => n + 1);
+    }
   }
 
   return (
@@ -135,9 +144,11 @@ export default function InvocacionScreen() {
         {ultimos && (
           <div className="flex flex-col gap-2">
             <TituloBloque>Summoned</TituloBloque>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {ultimos.map((premio, i) => <TarjetaPremio key={`${premio.id}-${i}`} premio={premio} />)}
-            </div>
+            <CeremoniaInvocacion key={tirada} premios={ultimos}>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {ultimos.map((premio, i) => <TarjetaPremio key={`${premio.id}-${i}`} premio={premio} orden={i} />)}
+              </div>
+            </CeremoniaInvocacion>
           </div>
         )}
 

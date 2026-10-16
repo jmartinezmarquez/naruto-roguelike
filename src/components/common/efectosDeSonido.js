@@ -493,6 +493,20 @@ const SONIDOS = {
     SONIDOS.impactoJutsu(t, v);
     [55, 62, 67, 69, 74].forEach((n, i) => cuerda(t + 0.05 + i * 0.02, { midi: n, pico: 0.22, duracion: 1.8 }));
   },
+  // Gacha: el sello de invocación trazándose (un zumbido que sube y papel que se
+  // desliza), el "poof" del Kuchiyose y, si sale un legendario, el estallido grande.
+  selloInvocacion(t, v, { duracion = 1.1 } = {}) {
+    tono(t, { forma: 'triangle', desde: 110 * v, hasta: 330 * v, duracion, pico: 0.08, ataque: duracion * 0.8, vibrato: [6, 6] });
+    ruido(t, { tipo: 'bandpass', desde: 1200, hasta: 4200, q: 4, duracion, pico: 0.12, ataque: duracion * 0.6 });
+  },
+  invocacion(t, v) {
+    taiko(t, { f: 70, pico: 0.45, duracion: 0.5 });
+    SONIDOS.relevo(t + 0.02, v);
+  },
+  invocacionLegendaria(t, v) {
+    SONIDOS.invocacion(t, v);
+    SONIDOS.estallidoTransformacion(t + 0.08, v);
+  },
   // Arco superado: redoble de taiko que se acelera y la campana del templo encima.
   arcoSuperado(t, v) {
     [0, 0.2, 0.34, 0.44, 0.5].forEach((d, i) => taiko(t + d, { f: 66, pico: 0.3 + i * 0.07, duracion: 0.35, eco: i === 4 }));
