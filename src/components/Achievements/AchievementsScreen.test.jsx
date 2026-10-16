@@ -20,7 +20,7 @@ import { useGameStore } from '../../store/useGameStore';
 import {
   useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, LOGROS_VISIBLES,
 } from '../../store/useAchievementsStore';
-import { progresoDeLogro } from '../../engine/achievements';
+import { progresoDeLogro, logrosDisponibles } from '../../engine/achievements';
 import achievementsData from '../../data/achievements.json';
 
 beforeEach(() => {
@@ -95,10 +95,15 @@ describe('lo que ve el jugador de partida', () => {
 });
 
 describe('logros de contenido a la espera de arte', () => {
-  it('no salen en Missions mientras su jefe o su arco no tengan dibujo', () => {
-    render(<AchievementsScreen />);
-    expect(screen.queryByText('Last of the Kaguya')).toBeNull();
-    expect(LOGROS_VISIBLES.length).toBeLessThan(achievementsData.logros.length);
+  it('se ocultan los que nombran un jefe, un arco o un ninja a la espera de arte', () => {
+    const logros = [
+      { id: 'a', condicion: { tipo: 'derrotarJefe', jefeId: 'nuevo' } },
+      { id: 'b', condicion: { tipo: 'completarArcoSinDerrotas', arcoId: 'arco_nuevo' } },
+      { id: 'c', condicion: { tipo: 'ganarRun', liderId: 'naruto' } },
+    ];
+    expect(logrosDisponibles(logros, ['nuevo', 'arco_nuevo']).map((l) => l.id)).toEqual(['c']);
+    // Con todo el arte en su sitio, Missions los enseña todos.
+    expect(LOGROS_VISIBLES).toHaveLength(achievementsData.logros.length);
   });
 
   it('todo logro paga en pergaminos de invocación', () => {

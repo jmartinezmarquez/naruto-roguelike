@@ -68,6 +68,20 @@ export function nombreCorto(id) {
 }
 
 /**
+ * El nombre más largo que cabe en `maximo` letras: el completo, si no la abreviatura
+ * de `nombreCorto` ("Naruto U.") y si tampoco, solo el primer nombre ("Naruto").
+ * Para los sitios estrechos: un nombre cortado con puntos suspensivos ("Naruto U...")
+ * no ahorra nada y se lee peor que el nombre de pila.
+ */
+export function nombreQueCabe(id, maximo) {
+  const completo = nombrePersonaje(id);
+  if (completo.length <= maximo) return completo;
+  const corto = nombreCorto(id);
+  if (corto.length <= maximo) return corto;
+  return completo.split(' ')[0].replace(/:$/, '');
+}
+
+/**
  * Rareza de un luchador reclutable (`comun` | `inicial` | `raro` | `legendario`),
  * o null. Mira también en los jefes: se desbloquean como reclutables por logro.
  */

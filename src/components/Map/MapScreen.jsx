@@ -879,10 +879,8 @@ function RuedaChakra() {
 
   return (
     <PanelMarco className="p-2.5 flex flex-col gap-1">
-      <TituloBloque>Chakra</TituloBloque>
-      <p className="text-[8px] text-pergamino-200/45 mb-1 leading-snug">
-        → is strong against
-      </p>
+      {/* Sin leyenda debajo: las flechas ya dicen quién le gana a quién. */}
+      <TituloBloque>Chakra Types</TituloBloque>
       <svg viewBox="0 0 110 110" className="w-full">
         <defs>
           {ORDEN_CICLO_CHAKRA.map((tipo) => (

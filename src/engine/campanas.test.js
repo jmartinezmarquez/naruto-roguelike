@@ -1,11 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { actosDeCampana, sortearArcosDeLaRun, primerosArcosDeCampana } from './campanas';
 import campaignsData from '../data/campaigns.json';
-import arcoOlas from '../data/arcs/pais-de-las-olas.json';
-import arcoChunin from '../data/arcs/examen-chunin.json';
-import arcoPain from '../data/arcs/invasion-de-pain.json';
-
-const ARCOS = Object.fromEntries([arcoOlas, arcoChunin, arcoPain].map((a) => [a.id, a]));
+import { ARCOS_POR_ID as ARCOS } from '../data/arcs';
 const prueba = { actos: [{ arcoIds: ['a'] }, { arcoIds: ['b1', 'b2'] }, { arcoIds: ['c1', 'c2', 'c3'] }] };
 
 describe('sortearArcosDeLaRun', () => {

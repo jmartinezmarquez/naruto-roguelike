@@ -944,7 +944,6 @@
       "nombre": "Might Guy",
       "tipo": "raiton",
       "rareza": "legendario",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 44,
         "ataque": 10,
@@ -1012,7 +1011,6 @@
       "nombre": "Jiraiya",
       "tipo": "katon",
       "rareza": "legendario",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 48,
         "ataque": 11,
@@ -1078,7 +1076,6 @@
       "nombre": "Asuma Sarutobi",
       "tipo": "fuuton",
       "rareza": "raro",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 44,
         "ataque": 9,
@@ -1128,7 +1125,6 @@
       "nombre": "Kurenai Yuhi",
       "tipo": "suiton",
       "rareza": "raro",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 44,
         "ataque": 10,
@@ -1178,7 +1174,6 @@
       "nombre": "Tsunade",
       "tipo": "doton",
       "rareza": "legendario",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 50,
         "ataque": 11,
@@ -1244,7 +1239,6 @@
       "nombre": "Temari",
       "tipo": "fuuton",
       "rareza": "raro",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 42,
         "ataque": 10,
@@ -1294,7 +1288,6 @@
       "nombre": "Kankuro",
       "tipo": "raiton",
       "rareza": "raro",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 46,
         "ataque": 9,
@@ -1344,7 +1337,6 @@
       "nombre": "Konohamaru",
       "tipo": "katon",
       "rareza": "raro",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 43,
         "ataque": 11,

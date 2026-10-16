@@ -193,7 +193,6 @@
       "nombre": "Kidomaru",
       "tipo": "katon",
       "arcoId": "persecucion_de_sasuke",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 42,
         "ataque": 10,
@@ -220,7 +219,6 @@
       "nombre": "Tayuya",
       "tipo": "fuuton",
       "arcoId": "persecucion_de_sasuke",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 40,
         "ataque": 10,
@@ -247,7 +245,6 @@
       "nombre": "Sakon and Ukon",
       "tipo": "suiton",
       "arcoId": "persecucion_de_sasuke",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 44,
         "ataque": 10,
@@ -291,7 +288,6 @@
         }
       },
       "arcoId": "rescate_de_gaara",
-      "pendienteDeArte": true,
       "modos": [],
       "esEntrenador": true,
       "geninAntes": 2
@@ -318,7 +314,6 @@
         }
       },
       "arcoId": "rescate_de_gaara",
-      "pendienteDeArte": true,
       "modos": [],
       "esEntrenador": true,
       "geninAntes": 2

@@ -103,8 +103,7 @@ export function useSonidosDeCombate({
   }, [indiceRonda]);
 
   // El cierre: fanfarria o derrota, y la subida de nivel detrás. Suena también con la
-  // velocidad instantánea — saltarse la animación no es saltarse el resultado (la
-  // misma regla que `MS_MINIMO_AUTO`).
+  // velocidad instantánea — saltarse la animación no es saltarse el resultado.
   useEffect(() => {
     if (!combateCerrado) return undefined;
     reproducir(sonidoDeCierre(gano, combateImportante));

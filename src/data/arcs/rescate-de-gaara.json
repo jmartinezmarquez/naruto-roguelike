@@ -1,8 +1,7 @@
 {
-  "_comentario": "Arco alternativo del ACTO 3 (documentacion/42 §5): sale en el sorteo en lugar de la Invasión de Pain, a sus mismos niveles, pisos y XP (test de campanas.test.js). Su jefe final acaba la run (recompensa.finDeLaRun), como Pain. pendienteDeArte: fuera de la campaña hasta que llegue su arte.",
+  "_comentario": "Arco alternativo del ACTO 3 (documentacion/42 §5): sale en el sorteo en lugar de la Invasión de Pain, a sus mismos niveles, pisos y XP (test de campanas.test.js). Su jefe final acaba la run (recompensa.finDeLaRun), como Pain.",
   "id": "rescate_de_gaara",
   "nombre": "Kazekage Rescue",
-  "pendienteDeArte": true,
   "medalla": {
     "nombre": "Clay Crest"
   },

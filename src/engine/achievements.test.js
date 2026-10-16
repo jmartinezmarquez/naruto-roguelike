@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  ofertaInicial,
   evaluarLogrosDesbloqueables,
   progresoDeLogro,
   rosterInicial,
@@ -195,5 +196,30 @@ describe('condiciones con filtros (logros por personaje y de reto)', () => {
     expect(evalua({ tipo: 'ganarRun', sinTiendas: true }, ganada)).toBe(true);
     expect(evalua({ tipo: 'ganarRun', sinConsumibles: true }, ganada)).toBe(false);
     expect(evalua({ tipo: 'ganarRun', liderId: 'shikamaru' }, { ...ganada, runGanada: false })).toBe(false);
+  });
+});
+
+describe('ofertaInicial', () => {
+  const pesos = { comun: 1, raro: 0.4, legendario: 0.15 };
+  const roster = [
+    ...['a', 'b', 'c', 'd'].map((id) => ({ id, rareza: 'comun' })),
+    { id: 'r', rareza: 'raro' }, { id: 'l', rareza: 'legendario' },
+  ];
+
+  it('saca tantos como pide, sin repetir, y todos si no hay más', () => {
+    const tres = ofertaInicial(roster, 3, pesos, Math.random);
+    expect(new Set(tres.map((p) => p.id)).size).toBe(3);
+    expect(ofertaInicial(roster.slice(0, 2), 3, pesos, Math.random)).toHaveLength(2);
+  });
+
+  it('un legendario sale menos que un raro, y un raro menos que un común', () => {
+    const veces = { a: 0, r: 0, l: 0 };
+    let semilla = 1;
+    const azar = () => { semilla = (semilla * 16807) % 2147483647; return semilla / 2147483647; };
+    for (let n = 0; n < 4000; n++) {
+      for (const p of ofertaInicial(roster, 3, pesos, azar)) if (p.id in veces) veces[p.id] += 1;
+    }
+    expect(veces.l).toBeLessThan(veces.r);
+    expect(veces.r).toBeLessThan(veces.a);
   });
 });

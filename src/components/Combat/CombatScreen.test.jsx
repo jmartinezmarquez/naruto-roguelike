@@ -6,9 +6,9 @@
 // es lógica pura y de la que depende que no te saltes una pantalla.
 //
 // ⚠️ Sale de la tanda de ritmo del 2026-08-21, donde el final de combate perdió dos
-// botones que eran peaje ("Claim reward", "Recruit them") y ganó un auto-avance. Los dos
-// cambios se pueden estropear sin que falle nada: un botón que vuelve, o un auto-avance
-// que se dispara donde había algo que leer y te roba la recompensa.
+// botones que eran peaje ("Claim reward", "Recruit them"). El auto-avance que ganó
+// entonces se quitó en el playtest del 2026-10-16: te sacaba de las recompensas antes
+// de leerlas. Ahora el final ESPERA, y eso es lo que se prueba.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '../../test-dom';
@@ -54,8 +54,6 @@ beforeEach(() => {
  * golpe encadena un `setTimeout` por golpe desde un efecto, y adelantar el reloj a saco
  * no la termina. En instantánea `rondaCompleta` sale true en el primer render, sin
  * relojes, y el test mide lo único que le interesa: **a dónde lleva el final y cuándo**.
- * El suelo del auto-avance (`MS_MINIMO_AUTO`) sigue aplicándose, que es lo que hace que
- * esto no sea trampa.
  */
 function combateGanado(extra = {}) {
   useSettingsStore.setState({ velocidadCombate: 'instantanea' });
@@ -69,44 +67,16 @@ function correr(ms) {
   act(() => { vi.advanceTimersByTime(ms); });
 }
 
-describe('el final llano de un combate se va solo', () => {
-  it('vuelve al mapa sin que el jugador toque nada', () => {
+describe('el final de un combate espera al jugador', () => {
+  it('no vuelve solo al mapa: se queda en las recompensas hasta el botón', () => {
     vi.useFakeTimers();
     try {
       combateGanado();
       render(<CombatScreen />);
       correr(20000);
-      expect(useGameStore.getState().pantalla).toBe('mapa');
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('⚠️ pero NO al instante: da tiempo a leer lo que has ganado', () => {
-    // Con velocidad "instantánea" el factor de animación es **0**, así que sin suelo el
-    // cartel de Victory y el panel de recompensas se saltarían enteros. Ese ajuste
-    // acelera la ANIMACIÓN, no borra el desenlace.
-    vi.useFakeTimers();
-    try {
-      combateGanado();
-      render(<CombatScreen />);
-
-      correr(100);
       expect(useGameStore.getState().pantalla).toBe('combate');
-      correr(2000);
+      fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
       expect(useGameStore.getState().pantalla).toBe('mapa');
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('y el botón sigue ahí para quien quiera adelantarlo', () => {
-    vi.useFakeTimers();
-    try {
-      combateGanado();
-      render(<CombatScreen />);
-      correr(200);
-      expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
@@ -114,24 +84,23 @@ describe('el final llano de un combate se va solo', () => {
 });
 
 describe('los dos botones que eran peaje', () => {
-  it('el mini-jefe lleva DIRECTO a su recompensa, sin "Claim reward" en medio', () => {
+  it('el mini-jefe lleva con Continue a su recompensa, sin "Claim reward" en medio', () => {
     vi.useFakeTimers();
     try {
       combateGanado({ recompensaMiniJefe: { item: itemsData.objetos[0].id } });
       render(<CombatScreen />);
       correr(200);
-
       // El botón intermedio ya no existe: no decidía nada, la decisión (coger o saltar)
       // está en la pantalla siguiente.
       expect(screen.queryByRole('button', { name: /claim reward/i })).toBeNull();
-      correr(20000);
+      fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
       expect(useGameStore.getState().pantalla).toBe('recompensaMiniJefe');
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('y el desafío ganado lleva directo al pergamino, sin "Recruit them"', () => {
+  it('y el desafío ganado lleva al pergamino, sin "Recruit them"', () => {
     vi.useFakeTimers();
     try {
       combateGanado({
@@ -140,9 +109,8 @@ describe('los dos botones que eran peaje', () => {
       });
       render(<CombatScreen />);
       correr(200);
-
       expect(screen.queryByRole('button', { name: /recruit them/i })).toBeNull();
-      correr(20000);
+      fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
       expect(useGameStore.getState().pantalla).toBe('reclutar');
     } finally {
       vi.useRealTimers();
@@ -150,23 +118,23 @@ describe('los dos botones que eran peaje', () => {
   });
 });
 
-describe('donde SÍ manda el botón', () => {
-  it('⚠️ un arco terminado no se va solo: es una transición, no un trámite', () => {
+describe('un arco o una run terminados', () => {
+  it('⚠️ se queda en pie: es una transición, no un trámite', () => {
     vi.useFakeTimers();
     try {
       const resumen = combateGanado();
       useGameStore.setState({ ultimoResultadoCombate: { ...resumen, arcoCompletado: true } });
       render(<CombatScreen />);
       correr(20000);
-
-      expect(useGameStore.getState().pantalla).toBe('combate');
-      expect(screen.getByRole('button', { name: /continue to next arc/i })).toBeInTheDocument();
+      const enPie = [...document.querySelectorAll('img')]
+        .filter((i) => !i.className.includes('caido-ko') && !i.className.includes('caida-ko'));
+      expect(enPie.length).toBeGreaterThan(0);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('y una run terminada tampoco', () => {
+  it('y una run terminada lleva a sus resultados con su propio botón', () => {
     vi.useFakeTimers();
     try {
       combateGanado({ runTerminada: true, runGanada: true });
@@ -262,12 +230,11 @@ describe('🐛 el caído se queda caído', () => {
 });
 
 describe('el espacio', () => {
-  it('adelanta el final del combate sin esperar al auto-avance', () => {
+  it('sale del final del combate como el botón', () => {
     vi.useFakeTimers();
     try {
       combateGanado();
       render(<CombatScreen />);
-      // Justo antes de que el auto-avance salte por su cuenta.
       correr(100);
       expect(useGameStore.getState().pantalla).toBe('combate');
 

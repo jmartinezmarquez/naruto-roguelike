@@ -112,7 +112,7 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
 ## Estado actual (actualizar tras cada sesión relevante)
 
 - [x] Datos completos, motor puro, store, y las 4 pantallas principales: Mapa, Combate, Evento, Tienda.
-- [x] Testing con Vitest — **640 tests**: 455 de lógica (`engine/*.test.js`, `store/*.test.js`) y 185 de
+- [x] Testing con Vitest — **642 tests**: 455 de lógica (`engine/*.test.js`, `store/*.test.js`) y 185 de
   componente (las 14 pantallas, menos `CombatScreen` y `MapScreen`). Correr `npm test` antes de dar por bueno cualquier cambio en `engine/` o `store/`.
   Requiere `src/test-setup.js` (polyfill de `localStorage`, registrado en `vite.config.js`).
 - **Tests de componente** (`*.test.jsx` junto al componente) — ver `documentacion/16-testing.md`.
@@ -489,8 +489,8 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   objetos iniciales salen del gacha, no de un logro; Missions oculta los logros de contenido con `pendienteDeArte`
   (`LOGROS_VISIBLES`). ⚠️ `reiniciarLogros` borra ya **once** claves. ⚠️ Los logros
   de meta no tienen combate que los dispare: los evalúa y avisa `_evaluarLogrosDeMeta` al tirar y al sumar
-  maestría. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no. Arte pendiente:
-  hojas 36-70 del documento 41. Fase 3: los ocho héroes (Gai, Jiraiya, Asuma, Kurenai, Tsunade, Temari, Kankuro, Konohamaru) en datos con **`pendienteDeArte`**
+  maestría. Solo cuentan el mini-jefe y el jefe final DEL ARCO: el desafío legendario no. Arte de las hojas 36-71 **integrado el
+  2026-10-16**: no queda nada con `pendienteDeArte` y la campaña sortea 2 arcos en el acto 2 y 3 en el acto 3. Fase 3: los ocho héroes (Gai, Jiraiya, Asuma, Kurenai, Tsunade, Temari, Kankuro, Konohamaru) en datos con **`pendienteDeArte`**
   (esconde un personaje, jefe, entrenador o arco hasta que llega su PNG; `characterSprites.test.js` ata la
   marca a que falte el fichero). Fase 4: la campaña es una lista de **actos** con un pool de arcos
   (`engine/campanas.js`, sorteo al empezar; los arcos de un acto comparten niveles por test), **registro

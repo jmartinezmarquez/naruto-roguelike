@@ -1,8 +1,7 @@
 {
-  "_comentario": "Arco alternativo del ACTO 2 (documentacion/42 §5): sale en el sorteo en lugar del Examen Chunin. Por eso se pelea EXACTAMENTE a los mismos niveles, pisos y XP que él (lo exige un test de campanas.test.js). pendienteDeArte: no está en ninguna campaña hasta que llegue su arte (hojas 49-53 del documento 41).",
+  "_comentario": "Arco alternativo del ACTO 2 (documentacion/42 §5): sale en el sorteo en lugar del Examen Chunin. Por eso se pelea EXACTAMENTE a los mismos niveles, pisos y XP que él (lo exige un test de campanas.test.js).",
   "id": "persecucion_de_sasuke",
   "nombre": "Sasuke Retrieval",
-  "pendienteDeArte": true,
   "medalla": {
     "nombre": "Bone Crest"
   },

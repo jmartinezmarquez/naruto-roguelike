@@ -27,8 +27,9 @@ beforeEach(() => {
     contadores: CONTADORES_VACIO,
     marca: MARCA_VACIA,
     notificacionesPendientes: [],
+    invocacion: ESTADO_INVOCACION_VACIO,
   });
-  useGameStore.setState({ pantalla: 'seleccionPersonaje', mapa: null });
+  useGameStore.setState({ pantalla: 'seleccionPersonaje', mapa: null, ofertaInicialIds: [] });
 });
 
 describe('la marcha atrás', () => {
@@ -52,14 +53,19 @@ describe('el roster', () => {
     }
   });
 
-  it('crece con los ninjas conseguidos en el gacha, jefes incluidos', () => {
-    const { unmount } = render(<CharacterSelectScreen onConfirmar={() => {}} />);
-    const antes = screen.getAllByRole('button').length;
-    unmount();
-
-    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['yamato', 'gaara'] } });
-    render(<CharacterSelectScreen onConfirmar={() => {}} />);
-    expect(screen.getAllByRole('button').length).toBe(antes + 2);
+  it('siempre ofrece tres, sorteados entre todo lo desbloqueado (jefes del gacha incluidos)', () => {
+    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['yamato', 'gaara', 'kakashi'] } });
+    const vistos = new Set();
+    for (let i = 0; i < 40; i++) {
+      useGameStore.getState()._sortearOfertaInicial();
+      const { unmount } = render(<CharacterSelectScreen onConfirmar={() => {}} />);
+      const tarjetas = screen.getAllByRole('button').filter((b) => !/back/i.test(b.textContent));
+      expect(tarjetas).toHaveLength(3);
+      useGameStore.getState().ofertaInicialIds.forEach((id) => vistos.add(id));
+      unmount();
+    }
+    // Con seis candidatos y cuarenta sorteos, tienen que haber salido más de tres.
+    expect(vistos.size).toBeGreaterThan(3);
   });
 });
 
@@ -78,10 +84,16 @@ describe('elegir', () => {
 
 describe('los ★ ya reclutados', () => {
   it('un común que estuvo en tu equipo en otra run aparece como inicial; uno que no, no', () => {
+    // La oferta es un sorteo de 3 entre 4 (los iniciales y Rock Lee): se repite hasta
+    // que Rock Lee sale, y Neji, que nunca estuvo en el equipo, no puede salir nunca.
     useAchievementsStore.setState({ vistos: { ...useAchievementsStore.getState().vistos, personajes: ['rock_lee'] } });
-    render(<CharacterSelectScreen onConfirmar={() => {}} />);
-    expect(screen.getAllByText(/Rock Lee/).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Neji/)).toBeNull();
+    const salieron = new Set();
+    for (let i = 0; i < 40; i++) {
+      useGameStore.getState()._sortearOfertaInicial();
+      useGameStore.getState().ofertaInicialIds.forEach((id) => salieron.add(id));
+    }
+    expect(salieron.has('rock_lee')).toBe(true);
+    expect(salieron.has('neji')).toBe(false);
   });
 });
 

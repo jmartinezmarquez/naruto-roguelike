@@ -322,7 +322,6 @@
       "id": "jirobo",
       "nombre": "Jirobo",
       "tipo": "doton",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 55,
         "ataque": 8,
@@ -376,7 +375,6 @@
       "id": "kimimaro",
       "nombre": "Kimimaro",
       "tipo": "raiton",
-      "pendienteDeArte": true,
       "statsBase": {
         "hp": 63,
         "ataque": 10,
@@ -482,7 +480,6 @@
         "xpParaSiguienteNivel": 19,
         "crecimiento": 1.015
       },
-      "pendienteDeArte": true,
       "desbloqueablePorLogro": true
     },
     {
@@ -538,7 +535,6 @@
         "xpParaSiguienteNivel": 25,
         "crecimiento": 1.015
       },
-      "pendienteDeArte": true,
       "desbloqueablePorLogro": true
     },
     {
@@ -571,7 +567,6 @@
         "xpParaSiguienteNivel": 19,
         "crecimiento": 1.015
       },
-      "pendienteDeArte": true,
       "desbloqueablePorLogro": true
     },
     {
@@ -627,7 +622,6 @@
         "xpParaSiguienteNivel": 25,
         "crecimiento": 1.015
       },
-      "pendienteDeArte": true,
       "desbloqueablePorLogro": true
     }
   ]
