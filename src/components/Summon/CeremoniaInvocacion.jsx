@@ -35,6 +35,12 @@ const COLOR_RAREZA = { comun: '#7cbf5a', raro: '#4f9dd9', legendario: '#D4A93A' 
 const COLOR_NEUTRO = '#e8e2d0';
 const ORDEN = ['comun', 'raro', 'legendario'];
 const ETIQUETA = { comun: 'Common', raro: 'Rare', legendario: 'Legendary' };
+const DETALLE_EFECTO = {
+  nuevo: () => ' · NEW!',
+  pagina: () => ' · Bingo Book page',
+  nivel: (p) => ` · Ninja Lv.${p.nivel}`,
+  pergaminos: (p) => ` · +${p.cantidad} scrolls`,
+};
 
 function mejorPremio(premios) {
   return premios.reduce((mejor, p) => (ORDEN.indexOf(p.rareza) > ORDEN.indexOf(mejor.rareza) ? p : mejor), premios[0]);
@@ -86,7 +92,7 @@ function Tira({ animacion, escala, duracion }) {
   );
 }
 
-export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDePremio, children }) {
+export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDePremio, onTerminar = () => {}, children }) {
   const factor = useFactorAnimacion();
   const [fase, setFase] = useState(factor === 0 ? 'fin' : 'sello');
   const mejor = mejorPremio(premios);
@@ -106,6 +112,13 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
     return undefined;
   }, [fase, factor, mejor.rareza]);
 
+  // Quien la monta enseña los resultados SOLO cuando acaba: verlos antes destripaba la
+  // revelación (playtest 2026-10-16).
+  useEffect(() => {
+    if (fase === 'fin') onTerminar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fase]);
+
   if (fase === 'fin') return children;
 
   const siguiente = { sello: 'humo', humo: 'revelacion', revelacion: 'fin' }[fase];
@@ -118,8 +131,13 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
       onClick={() => setFase(siguiente)}
       aria-label={fase === 'revelacion' ? 'Continue' : 'Skip'}
       data-sonido="ninguno"
-      className="escena-oscura relative w-full h-80 flex items-center justify-center overflow-hidden rounded-sm bg-tinta-950/90"
+      className={`escena-oscura relative w-full h-[26rem] flex items-center justify-center overflow-hidden rounded-sm bg-tinta-950/90 ${
+        fase === 'revelacion' && mejor.rareza === 'legendario' ? 'temblor-legendario' : ''}`}
     >
+      {/* El legendario se anuncia con un fogonazo dorado que llena la escena. */}
+      {fase === 'revelacion' && mejor.rareza === 'legendario' && (
+        <div className="absolute inset-0 destello-legendario pointer-events-none" />
+      )}
       {/* El suelo: un óvalo de luz del color de la rareza que crece con el sello. */}
       {/* Sin `-translate-x-1/2`: la animación ya mueve el `transform`, y en Tailwind v4
           las dos cosas se suman (`translate` y `transform` son propiedades distintas),
@@ -149,13 +167,14 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
 
       {fase === 'revelacion' && (
         <div className="relative flex flex-col items-center gap-2">
-          <div className="absolute inset-x-0 top-0 h-44 rayos-invocacion" style={{ '--color-sello': color }} />
-          <div className={`relative w-40 h-40 flex items-center justify-center entrada-transformado ${mejor.tipo === 'pagina' ? 'bg-[#e8d9b0]/85 rounded-sm' : ''}`}>
-            {sprite && <img src={sprite} alt="" className="max-w-full max-h-full" style={{ imageRendering: 'pixelated' }} />}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60%] w-96 h-96 rayos-invocacion" style={{ '--color-sello': color }} />
+          {/* ×3 exacto del lienzo de 96 px: el pixel art a escala entera. */}
+          <div className="relative w-72 h-72 flex items-center justify-center entrada-transformado">
+            {sprite && <img src={sprite} alt="" className="w-72 h-72 object-contain" style={{ imageRendering: 'pixelated' }} />}
           </div>
           <p className="relative font-naruto text-2xl text-pergamino-100 contorno-fijo">{nombreDePremio(mejor)}</p>
           <p className="relative font-display text-[10px]" style={{ color }}>
-            {ETIQUETA[mejor.rareza]}{mejor.efecto === 'nuevo' ? ' · NEW!' : ''}
+            {ETIQUETA[mejor.rareza]}{DETALLE_EFECTO[mejor.efecto]?.(mejor) ?? ''}
           </p>
         </div>
       )}

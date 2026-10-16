@@ -35,15 +35,21 @@ describe('InvocacionScreen', () => {
     expect(screen.getByText('Legendary')).toBeInTheDocument();
     expect(screen.getByText(/^10% · /)).toBeInTheDocument();
     expect(screen.getByText(new RegExp(`every ${invocacionData.garantiaRaro} summons`))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`0 / ${invocacionData.garantiaLegendario}`))).toBeInTheDocument();
+    // El pity es una barra, con cuánto falta escrito encima.
+    expect(screen.getByText(`Legendary guaranteed in ${invocacionData.garantiaLegendario}`)).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'Legendary pity' })).toHaveAttribute('aria-valuenow', '0');
   });
 
-  it('una tirada cobra, enseña el premio y lo apunta en la colección', () => {
+  it('una tirada cobra, y lo que ha salido se ve SOLO cuando acaba la ceremonia', () => {
     conSaldo(invocacionData.precioTirada);
     render(<InvocacionScreen />);
     fireEvent.click(screen.getByRole('button', { name: /Summon ×1 ·/ }));
     expect(useAchievementsStore.getState().pergaminos.saldo).toBe(0);
-    expect(screen.getByText('Summoned')).toBeInTheDocument();
-    expect(screen.getByText(/^Collection 1\//)).toBeInTheDocument();
+    // Durante la ceremonia, nada de resultados: destriparían la revelación.
+    expect(screen.queryByText('Last summoned')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByText('Last summoned')).toBeInTheDocument();
   });
 });

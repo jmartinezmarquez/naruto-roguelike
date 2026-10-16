@@ -723,3 +723,9 @@ img {
   filter: blur(2px);
   animation: rayos-invocacion calc(9s * var(--factor-animacion, 1)) linear infinite;
 }
+/* El legendario: fogonazo dorado que llena la escena y un temblor corto. */
+@keyframes destello-legendario { 0% { opacity: 0; } 12% { opacity: 0.85; } 100% { opacity: 0; } }
+.destello-legendario { background: radial-gradient(circle, #fff6d5 0%, #D4A93A 45%, transparent 75%); animation: destello-legendario calc(900ms * var(--factor-animacion, 1)) ease-out forwards; }
+@keyframes temblor-legendario { 0%, 100% { transform: translate(0, 0); } 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, -1px); } 80% { transform: translate(2px, 1px); } }
+.temblor-legendario { animation: temblor-legendario calc(380ms * var(--factor-animacion, 1)) linear 2; }
+
