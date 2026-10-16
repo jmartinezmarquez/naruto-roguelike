@@ -246,8 +246,10 @@ describe('encadenar arcos', () => {
     expect(avanzo).toBe(true);
 
     const { arcoActualId, mapa, nodoActualId, oro, equipo, huboDerrotaEnEsteArco, pantalla } = useGameStore.getState();
-    expect(arcoActualId).toBe('examen_chunin');
-    expect(mapa.arcoId).toBe('examen_chunin');
+    // El del acto 2 que salió en el sorteo (hay más de uno posible).
+    const segundo = useGameStore.getState().arcosDeLaRunIds[1];
+    expect(arcoActualId).toBe(segundo);
+    expect(mapa.arcoId).toBe(segundo);
     // El arco nuevo arranca plantado en su nodo de salida, no "en ninguna parte".
     expect(nodoActualId).toBe(mapa.nodoInicialId);
     expect(pantalla).toBe('mapa');
@@ -1949,7 +1951,10 @@ describe('campañas', () => {
     useGameStore.getState().elegirCampana('camino_ninja');
     useGameStore.getState().iniciarRun(['naruto']);
     expect(useGameStore.getState().avanzarSiguienteArco()).toBe(true);
-    expect(useGameStore.getState().arcoActualId).toBe('examen_chunin');
+    // El del acto 2 que salió en el sorteo, que es uno de los que declara la campaña.
+    const segundo = useGameStore.getState().arcosDeLaRunIds[1];
+    expect(useGameStore.getState().arcoActualId).toBe(segundo);
+    expect(campaignsData.campanas[0].actos[1].arcoIds).toContain(segundo);
   });
 
   it('irAlHome abandona la run: sin mapa y de vuelta al Home', () => {

@@ -543,7 +543,7 @@ del fondo.
 
 ## Tanda 5 — aspectos alternativos (hojas 36-42)
 
-⏳ **PENDIENTES.** Son los aspectos del nivel de ninja (`documentacion/42-meta-progresion.md`): cada
+✅ **HECHAS el 2026-10-16.** Son los aspectos del nivel de ninja (`documentacion/42-meta-progresion.md`): cada
 ninja —también los seis villanos reclutables— tiene **dos aspectos**, que se abren con el nivel de ninja 4
 y 10 (`aspectos` en `data/maestria.json`) y se eligen en su ficha del Bingo Book. El código ya está: un
 aspecto sin dibujo **no se ofrece**, así que las hojas pueden ir llegando de una en una sin romper nada.
@@ -666,7 +666,7 @@ Left to right:
 
 ## Hoja 43 → `sprite-estilo-nuevo-43.png` (icono del gacha) → `assets/menu/invocacion.png`
 
-⏳ **PENDIENTE.** El atajo "Summon" del Home. Mientras no exista se pinta el sprite del Reserve Scroll
+✅ **HECHA el 2026-10-16.** El atajo "Summon" del Home. Mientras no exista se pinta el sprite del Reserve Scroll
 (`common/iconosMenu.js`), así que puede llegar cuando sea. Adjuntar de referencia la hoja 18 (los iconos
 del menú) para que salga a juego con ellos.
 
@@ -678,7 +678,7 @@ One menu icon: a summoning scroll unrolled on the ground with a glowing red summ
 
 ## Tanda 6 — héroes nuevos (hojas 44-48)
 
-⏳ **PENDIENTES.** Might Guy, Jiraiya, Asuma y Kurenai (`documentacion/42`, fase 3) ya están en los datos
+✅ **HECHAS el 2026-10-16.** Might Guy, Jiraiya, Asuma y Kurenai (`documentacion/42`, fase 3) ya están en los datos
 con la marca `pendienteDeArte`: hasta que llegue su sprite **no salen en el gacha ni en el Bingo Book**.
 Cuando llegue cada hoja, además de correr el script hay que **quitar la marca** del personaje en
 `characters.json` — `characterSprites.test.js` falla para recordarlo. No hay que tocar código: los mapas
@@ -752,7 +752,7 @@ Left to right:
 
 ## Tanda 7 — arco Sasuke Retrieval (hojas 49-54)
 
-⏳ **PENDIENTES.** El primer arco nuevo (`documentacion/42` §5): sale en el acto 2 en lugar del Examen Chunin.
+✅ **HECHAS el 2026-10-16.** El primer arco nuevo (`documentacion/42` §5): sale en el acto 2 en lugar del Examen Chunin.
 Ya está en los datos con `pendienteDeArte` (el arco, Jirobo, Kimimaro y los tres entrenadores del Sonido), y
 **no está en la campaña** hasta que llegue todo su arte. Cuando llegue: correr el script, quitar las marcas
 `pendienteDeArte` (los tests de `characterSprites.test.js` fallan para recordarlo) y añadir
@@ -829,7 +829,7 @@ Left to right:
 
 ## Tanda 8 — arco Kazekage Rescue (hojas 55-60)
 
-⏳ **PENDIENTES.** Arco alternativo del acto 3, en lugar de la Invasión de Pain. Igual que Sasuke Retrieval
+✅ **HECHAS el 2026-10-16.** Arco alternativo del acto 3, en lugar de la Invasión de Pain. Igual que Sasuke Retrieval
 (tanda 7): está en los datos con `pendienteDeArte` y fuera de la campaña; cuando llegue, correr el script,
 quitar las marcas y añadir `rescate_de_gaara` al acto 3 de `campaigns.json`. Bloques: 55-56 personajes, 57
 proyectiles, 58 iconos (adjuntar la hoja 19), 59 fondo de mapa y 60 aspectos.
@@ -897,7 +897,7 @@ Left to right:
 
 ## Tanda 9 — arco The Immortal Duo (hojas 61-65)
 
-⏳ **PENDIENTES.** Hidan y Kakuzu, el otro arco alternativo del acto 3. Igual que las tandas 7 y 8: en datos
+✅ **HECHAS el 2026-10-16.** Hidan y Kakuzu, el otro arco alternativo del acto 3. Igual que las tandas 7 y 8: en datos
 con `pendienteDeArte`, fuera de la campaña hasta que llegue su arte; al llegar, correr el script, quitar las
 marcas y añadir `hidan_y_kakuzu` al acto 3 de `campaigns.json`. Este arco no tiene entrenadores propios (salen
 los genéricos). Bloques: 61 personajes, 62 proyectiles, 63 iconos (adjuntar la hoja 19), 64 fondo de mapa y 65
@@ -954,7 +954,7 @@ Left to right:
 
 ## Tanda 10 — segunda tanda de héroes (hojas 66-70)
 
-⏳ **PENDIENTES.** Tsunade (legendaria), Temari, Kankuro y Konohamaru (raros), en los datos con
+✅ **HECHAS el 2026-10-16.** Tsunade (legendaria), Temari, Kankuro y Konohamaru (raros), en los datos con
 `pendienteDeArte`. Como la tanda 6: correr el script y quitar las marcas. Tsunade no lleva proyectil: es
 cuerpo a cuerpo. Bloques: 66-67 personajes, 68 proyectiles, 69-70 aspectos.
 
@@ -1020,7 +1020,7 @@ Left to right:
 
 ## Hoja 71 → `sprite-estilo-nuevo-71.png` (ilustración del desafío diario) → `assets/campaigns/diario.jpg`
 
-⏳ **PENDIENTE.** La tarjeta del desafío diario en el Home, como la de la campaña (hoja 32): se recorta con
+✅ **HECHA el 2026-10-16.** La tarjeta del desafío diario en el Home, como la de la campaña (hoja 32): se recorta con
 `cover` y lleva el título abajo a la izquierda. Mientras no exista, la tarjeta sale con el fondo liso.
 Adjuntar de referencia la ilustración de la campaña (`assets/campaigns/camino_ninja.jpg`).
 

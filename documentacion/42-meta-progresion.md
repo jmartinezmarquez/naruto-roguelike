@@ -276,6 +276,11 @@ Kakashi fueron tres ficheros de datos; el arte ya tiene su proceso montado. Cada
 Cada fase se juega sola: la 1 ya da progreso; la 2 ya engancha con lo que hay; la 3 y la 4 son las que
 lo mantienen vivo.
 
+✅ **Arte integrado el 2026-10-16** (hojas 36-71): aspectos de los 21 ninjas, los ocho héroes, los tres
+arcos nuevos con sus jefes y entrenadores, el icono del Summon y la ilustración del diario. Ya no queda nada
+con `pendienteDeArte`, y la campaña sortea **dos arcos en el acto 2** (Chunin Exams / Sasuke Retrieval) y
+**tres en el acto 3** (Pain's Invasion / Kazekage Rescue / The Immortal Duo).
+
 ## Decisiones (tomadas el 2026-10-15)
 
 1. **La maestría NO da poder**: solo aspectos, títulos y marcos. Protege la calibración de niveles fijos
