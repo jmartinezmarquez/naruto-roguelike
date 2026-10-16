@@ -59,7 +59,7 @@ const COLOR_TIPO_OBJETO = {
 const COLOR_RAREZA = {
   comun: 'text-exito',
   raro: 'text-suiton',
-  legendario: 'text-sello-500',
+  legendario: 'text-oro',
 };
 
 export function FichaObjeto({ id, equipadoEnNombre, className = '' }) {

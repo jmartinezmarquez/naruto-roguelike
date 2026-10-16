@@ -214,6 +214,9 @@ HOJAS = [
     ('sprite-estilo-nuevo-78.png', ['medals/escolta_pais_del_te']),
     ('sprite-estilo-nuevo-79.png', ['map-columns/escolta_pais_del_te']),
     ('sprite-estilo-nuevo-80.png', ['aspects/oboro_1', 'aspects/oboro_2', 'aspects/aoi_1', 'aspects/aoi_2']),
+    # La ceremonia v2: sellos de manos y la marca en tinta negra (sustituye a la de la hoja 72).
+    ('sprite-estilo-nuevo-81.png', ['effects/manos-invocacion']),
+    ('sprite-estilo-nuevo-82.png', ['effects/sello-invocacion']),
 ]
 
 TIPO_POR_CARPETA = {
@@ -267,6 +270,7 @@ TIRAS = {
     # La ceremonia del gacha (hojas 72-73).
     'sello-invocacion': (8, 128),
     'humo-invocacion': (8, 160),
+    'manos-invocacion': (8, 128),
 }
 
 # Fondos de columna del mapa: el tamaño de los que había. Se recorta para CUBRIR, no

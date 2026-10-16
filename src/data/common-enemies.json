@@ -340,7 +340,6 @@
         }
       },
       "arcoId": "escolta_pais_del_te",
-      "pendienteDeArte": true,
       "modos": [],
       "esEntrenador": true,
       "geninAntes": 2
@@ -367,7 +366,6 @@
         }
       },
       "arcoId": "escolta_pais_del_te",
-      "pendienteDeArte": true,
       "modos": [],
       "esEntrenador": true,
       "geninAntes": 2

@@ -26,12 +26,22 @@ import { ANIMACIONES_INVOCACION } from './animacionesInvocacion';
  * velocidad instantánea de Ajustes no se ve.
  */
 
+const MS_MANOS = 1100;
 const MS_SELLO = 1300;
 const MS_HUMO = 650;
 
-const COLOR_SELLO = { comun: '#7cbf5a', raro: '#4f9dd9', legendario: '#b07cd9' };
+// El color de la rareza SOLO sale en la revelación: el sello y la luz del suelo son
+// neutros, para no destripar lo que va a salir (playtest 2026-10-16).
+const COLOR_RAREZA = { comun: '#7cbf5a', raro: '#4f9dd9', legendario: '#D4A93A' };
+const COLOR_NEUTRO = '#e8e2d0';
 const ORDEN = ['comun', 'raro', 'legendario'];
 const ETIQUETA = { comun: 'Common', raro: 'Rare', legendario: 'Legendary' };
+const DETALLE_EFECTO = {
+  nuevo: () => ' · NEW!',
+  pagina: () => ' · Bingo Book page',
+  nivel: (p) => ` · Ninja Lv.${p.nivel}`,
+  pergaminos: (p) => ` · +${p.cantidad} scrolls`,
+};
 
 function mejorPremio(premios) {
   return premios.reduce((mejor, p) => (ORDEN.indexOf(p.rareza) > ORDEN.indexOf(mejor.rareza) ? p : mejor), premios[0]);
@@ -83,13 +93,18 @@ function Tira({ animacion, escala, duracion }) {
   );
 }
 
-export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDePremio, children }) {
+export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDePremio, onTerminar = () => {}, children }) {
   const factor = useFactorAnimacion();
-  const [fase, setFase] = useState(factor === 0 ? 'fin' : 'sello');
+  // Si están dibujados, la ceremonia abre con los sellos de manos (hoja 81).
+  const [fase, setFase] = useState(factor === 0 ? 'fin' : ANIMACIONES_INVOCACION.manos ? 'manos' : 'sello');
   const mejor = mejorPremio(premios);
-  const color = COLOR_SELLO[mejor.rareza];
+  const color = COLOR_RAREZA[mejor.rareza];
 
   useEffect(() => {
+    if (fase === 'manos') {
+      const t = setTimeout(() => setFase('sello'), MS_MANOS * factor);
+      return () => clearTimeout(t);
+    }
     if (fase === 'sello') {
       reproducir('selloInvocacion', { duracion: (MS_SELLO * factor) / 1000 });
       const t = setTimeout(() => setFase('humo'), MS_SELLO * factor);
@@ -103,11 +118,18 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
     return undefined;
   }, [fase, factor, mejor.rareza]);
 
+  // Quien la monta enseña los resultados SOLO cuando acaba: verlos antes destripaba la
+  // revelación (playtest 2026-10-16).
+  useEffect(() => {
+    if (fase === 'fin') onTerminar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fase]);
+
   if (fase === 'fin') return children;
 
-  const siguiente = { sello: 'humo', humo: 'revelacion', revelacion: 'fin' }[fase];
+  const siguiente = { manos: 'sello', sello: 'humo', humo: 'revelacion', revelacion: 'fin' }[fase];
   const sprite = spriteDePremio(mejor);
-  const { sello, humo } = ANIMACIONES_INVOCACION;
+  const { manos, sello, humo } = ANIMACIONES_INVOCACION;
 
   return (
     <button
@@ -115,19 +137,35 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
       onClick={() => setFase(siguiente)}
       aria-label={fase === 'revelacion' ? 'Continue' : 'Skip'}
       data-sonido="ninguno"
-      className="escena-oscura relative w-full h-80 flex items-center justify-center overflow-hidden rounded-sm bg-tinta-950/90"
+      className={`escena-oscura relative w-full h-[26rem] flex items-center justify-center overflow-hidden rounded-sm bg-tinta-950/90 ${
+        fase === 'revelacion' && mejor.rareza === 'legendario' ? 'temblor-legendario' : ''}`}
     >
+      {/* El legendario se anuncia con un fogonazo dorado que llena la escena. */}
+      {fase === 'revelacion' && mejor.rareza === 'legendario' && (
+        <div className="absolute inset-0 destello-legendario pointer-events-none" />
+      )}
       {/* El suelo: un óvalo de luz del color de la rareza que crece con el sello. */}
-      <div className="absolute left-1/2 bottom-10 -translate-x-1/2 w-80 h-16 rounded-[50%] suelo-invocacion"
-        style={{ background: `radial-gradient(ellipse, ${color}55, transparent 70%)` }} />
+      {/* Sin `-translate-x-1/2`: la animación ya mueve el `transform`, y en Tailwind v4
+          las dos cosas se suman (`translate` y `transform` son propiedades distintas),
+          así que la luz salía media anchura a la izquierda del personaje. */}
+      <div className="absolute left-1/2 bottom-10 w-80 h-16 rounded-[50%] suelo-invocacion"
+        style={{ background: `radial-gradient(ellipse, ${COLOR_NEUTRO}40, transparent 70%)` }} />
+
+      {fase === 'manos' && manos && (
+        <div className="absolute left-1/2 top-1/2">
+          <Tira animacion={manos} escala={2} duracion={MS_MANOS * factor} />
+        </div>
+      )}
 
       {fase === 'sello' && (sello ? (
-        <div className="absolute left-1/2 bottom-24">
+        // La marca es de tinta negra (hoja 82): un contorno claro la despega del fondo
+        // oscuro sin darle color, que destriparía la rareza.
+        <div className="absolute left-1/2 bottom-24" style={{ filter: 'drop-shadow(0 0 2px rgba(232, 226, 208, 0.75)) drop-shadow(0 0 6px rgba(232, 226, 208, 0.3))' }}>
           <Tira animacion={sello} escala={2} duracion={MS_SELLO * factor} />
         </div>
       ) : (
-        <div className="absolute left-1/2 bottom-2 -translate-x-1/2 sello-sube">
-          <div style={{ transform: 'perspective(600px) rotateX(62deg)' }}><SelloDibujado color={color} /></div>
+        <div className="absolute left-1/2 bottom-2 sello-sube">
+          <div style={{ transform: 'perspective(600px) rotateX(62deg)' }}><SelloDibujado color="#111111" /></div>
         </div>
       ))}
 
@@ -141,13 +179,14 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
 
       {fase === 'revelacion' && (
         <div className="relative flex flex-col items-center gap-2">
-          <div className="absolute inset-x-0 top-0 h-44 rayos-invocacion" style={{ '--color-sello': color }} />
-          <div className={`relative w-40 h-40 flex items-center justify-center entrada-transformado ${mejor.tipo === 'pagina' ? 'bg-[#e8d9b0]/85 rounded-sm' : ''}`}>
-            {sprite && <img src={sprite} alt="" className="max-w-full max-h-full" style={{ imageRendering: 'pixelated' }} />}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60%] w-96 h-96 rayos-invocacion" style={{ '--color-sello': color }} />
+          {/* ×3 exacto del lienzo de 96 px: el pixel art a escala entera. */}
+          <div className="relative w-72 h-72 flex items-center justify-center entrada-transformado">
+            {sprite && <img src={sprite} alt="" className="w-72 h-72 object-contain" style={{ imageRendering: 'pixelated' }} />}
           </div>
           <p className="relative font-naruto text-2xl text-pergamino-100 contorno-fijo">{nombreDePremio(mejor)}</p>
           <p className="relative font-display text-[10px]" style={{ color }}>
-            {ETIQUETA[mejor.rareza]}{mejor.efecto === 'nuevo' ? ' · NEW!' : ''}
+            {ETIQUETA[mejor.rareza]}{DETALLE_EFECTO[mejor.efecto]?.(mejor) ?? ''}
           </p>
         </div>
       )}

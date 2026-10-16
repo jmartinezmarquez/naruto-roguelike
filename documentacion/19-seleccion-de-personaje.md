@@ -148,3 +148,6 @@ sacado en el gacha es una alegría cuando aparece, no la elección obvia de toda
 al ENTRAR en la pantalla (`elegirCampana`, `elegirDesafioDiario`, `reiniciarRun` → `_sortearOfertaInicial`) y
 se guarda en `ofertaInicialIds`, para que no cambie al repintar. En la primera run el roster son los tres
 iniciales, así que salen ellos.
+
+⚠️ **Desde el 2026-10-16 reclutar ya no desbloquea iniciales**: solo el gacha (documentacion/42). El roster es
+los tres "inicial" más lo conseguido en el gacha, de cualquier rareza.

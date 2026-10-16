@@ -97,7 +97,7 @@ function claseMarcoDeEntrada(seccionId, entrada, bloqueada) {
   if (bloqueada) return 'border-marco';
   if (seccionId === 'objetos') {
     return {
-      comun: 'border-[#7cbf5a]/60', raro: 'border-[#4f9dd9]/60', legendario: 'border-[#b07cd9]/60',
+      comun: 'border-[#7cbf5a]/60', raro: 'border-[#4f9dd9]/60', legendario: 'border-oro/60',
     }[entrada.base.rareza] ?? 'border-marco';
   }
   return {

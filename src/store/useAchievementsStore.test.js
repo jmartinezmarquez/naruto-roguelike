@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   useAchievementsStore, VISTOS_VACIO, CONTADORES_VACIO, MARCA_VACIA, MAXIMO_SALON_DE_LA_FAMA, PERGAMINOS_VACIOS,
 } from './useAchievementsStore';
+import { CATALOGO_INVOCACION } from './useAchievementsStore';
 import achievementsData from '../data/achievements.json';
 import configGlobal from '../data/config.json';
 import { TIPOS_DE_CONDICION, TIPOS_DE_RECOMPENSA } from '../engine/achievements';
@@ -492,9 +493,11 @@ describe('invocación (gacha)', () => {
 
   it('un ninja repetido sube un nivel de ninja; uno al máximo devuelve pergaminos', () => {
     conSaldo(100);
-    const premios = s().invocar(3, () => 0.05);
-    expect(premios.map((p) => p.efecto)).toEqual(['nuevo', 'nivel', 'nivel']);
-    expect(premios[2].nivel).toBe(3);
+    // Ninja, su página, y a partir de ahí nivel de ninja.
+    const premios = s().invocar(4, () => 0.05);
+    expect(premios.map((p) => p.efecto)).toEqual(['nuevo', 'pagina', 'nivel', 'nivel']);
+    expect(premios[3].nivel).toBe(3);
+    expect(s().invocacion.paginas).toContain('kakashi');
     useAchievementsStore.setState({ maestria: { kakashi: 1e6 } });
     s().evaluarLogros({}); // los logros de nivel de ninja pagan aparte: que no se cuelen en la cuenta
     const saldoAntes = s().pergaminos.saldo;
@@ -529,7 +532,8 @@ describe('logros de la meta-progresión', () => {
   });
 
   it('tener todas las páginas desbloquea "bingo_book_completo", y no antes', () => {
-    const paginas = invocacionData.catalogo.filter((e) => e.tipo === 'pagina').map((e) => e.id);
+    // Una página por ninja del catálogo: ya no son premios sueltos.
+    const paginas = CATALOGO_INVOCACION.filter((e) => e.tipo === 'personaje').map((e) => e.id);
     useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, paginas: paginas.slice(1) } });
     s().evaluarLogros({});
     expect(s().estaDesbloqueado('bingo_book_completo')).toBe(false);

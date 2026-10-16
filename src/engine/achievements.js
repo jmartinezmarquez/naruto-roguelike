@@ -125,26 +125,12 @@ export function evaluarLogrosDesbloqueables(logros, idsYaDesbloqueados, contexto
 }
 
 /**
- * Las rarezas de "una estrella": las que se pueden elegir como inicial en cuanto
- * se han tenido en el equipo alguna vez. Raros y legendarios no — esos salen del
- * gacha, o el reto de conseguirlos (el pergamino dorado) dejaría de existir.
+ * El roster de la pantalla de selección: los "inicial" de siempre y **los
+ * conseguidos en el gacha**, que desde el 2026-10-16 es lo único que desbloquea a un
+ * ninja como inicial (los comunes también). En las runs se siguen reclutando todos.
  */
-export const RAREZAS_DE_UNA_ESTRELLA = ['inicial', 'comun'];
-
-/**
- * El roster de la pantalla de selección: los "inicial" de siempre, los conseguidos
- * en el gacha y **los de una estrella
- * que ya hayan estado en tu equipo en alguna run** (`idsVistos`, el registro de
- * ninjas del Bingo Book). Reclutar a alguien es lo que lo desbloquea.
- *
- * En la primera run `idsVistos` está vacío y salen solo los tres iniciales, así que
- * la calibración de la primera run (documentacion/11, "v5") no se mueve.
- * Conserva el orden de `personajes`, que es el del JSON.
- */
-export function rosterInicial(personajes, idsDelGacha, idsVistos) {
-  return personajes.filter((p) => p.rareza === 'inicial'
-    || idsDelGacha.includes(p.id)
-    || (RAREZAS_DE_UNA_ESTRELLA.includes(p.rareza) && idsVistos.includes(p.id)));
+export function rosterInicial(personajes, idsDelGacha) {
+  return personajes.filter((p) => p.rareza === 'inicial' || idsDelGacha.includes(p.id));
 }
 
 /**

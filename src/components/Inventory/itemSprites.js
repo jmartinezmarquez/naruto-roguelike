@@ -59,17 +59,19 @@ export const SPRITE_OBJETO = {
 };
 
 // Color por rareza, el mismo código que usa la hoja de sprites del artista:
-// verde común, azul raro, morado legendario.
+// verde común, azul raro y DORADO legendario: el oro es el color de lo legendario en
+// todo el juego (tarjetas, pergamino del mapa, gacha). Hasta el 2026-10-16 aquí era
+// morado, y la misma rareza salía de dos colores según la pantalla.
 export const COLOR_RAREZA = {
   comun: 'text-[#7cbf5a]',
   raro: 'text-[#4f9dd9]',
-  legendario: 'text-[#b07cd9]',
+  legendario: 'text-oro',
 };
 
 export const BORDE_RAREZA = {
   comun: 'border-[#7cbf5a]/60',
   raro: 'border-[#4f9dd9]/60',
-  legendario: 'border-[#b07cd9]/60',
+  legendario: 'border-oro/60',
 };
 
 export const ETIQUETA_RAREZA = {

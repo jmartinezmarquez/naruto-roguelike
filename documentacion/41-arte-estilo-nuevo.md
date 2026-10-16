@@ -1030,7 +1030,7 @@ A wide 16:9 pixel art illustration in the exact style of the attached reference 
 
 ## Tanda 11 — la ceremonia del Summon (hojas 72-74)
 
-⏳ **PENDIENTES.** La animación de cada tirada del gacha (`Summon/CeremoniaInvocacion.jsx`): **la marca de
+✅ **HECHAS el 2026-10-16.** La animación de cada tirada del gacha (`Summon/CeremoniaInvocacion.jsx`): **la marca de
 invocación sale del suelo, estalla el humo y el ninja aparece en el centro**, como en una transformación. Ya
 funciona sin ellas (un sello dibujado por código y el humo del relevo ampliado); cuando lleguen, el script las
 deja en `assets/effects/` y `assets/summon/` y la ceremonia las usa sola, sin tocar código.
@@ -1065,7 +1065,7 @@ A wide pixel art background (about 16:9) in the exact style of the attached refe
 
 ## Tanda 12 — arco Tea Country Escort (hojas 75-80)
 
-⏳ **PENDIENTES.** El arco alternativo del **acto 1**, en lugar del País de las Olas: la escolta de Idate Morino
+✅ **HECHAS el 2026-10-16.** El arco alternativo del **acto 1**, en lugar del País de las Olas: la escolta de Idate Morino
 hasta la carrera del templo del País del Té. Como los de las tandas 7-9: en datos con `pendienteDeArte` y fuera
 de la campaña; al llegar el arte, correr el script, quitar las marcas y añadir `escolta_pais_del_te` al acto 1 de
 `campaigns.json`. Bloques: 75-76 personajes, 77 proyectiles, 78 iconos (adjuntar la hoja 19), 79 fondo de mapa
@@ -1132,3 +1132,28 @@ Left to right:
 3. Aoi – Leaf jonin: younger Aoi in a clean Leaf jonin uniform, forehead protector intact.
 4. Aoi – Rain mercenary: Aoi in a Hidden Rain cloak and hood, the sword wrapped in cloth on his back.
 ```
+
+## Tanda 13 — la ceremonia del Summon, versión 2 (hojas 81-82)
+
+✅ **HECHAS el 2026-10-16.** Del playtest del 2026-10-16. La 81 añade una fase al principio de la ceremonia (los sellos de
+manos del Kuchiyose) y la 82 **sustituye** a la marca de la hoja 72: la quiere en **tinta negra, sin color**,
+para que no destripe la rareza de lo que va a salir. El código ya está: la fase de manos solo aparece si existe
+su dibujo, y la 82 pisa el fichero de la 72 al correr el script. Bloque de **tiras de animación**; adjuntar de
+referencia `src/assets/effects/sello-invocacion.png` y `humo-invocacion.png` para que salgan a juego.
+
+### Hoja 81 → `sprite-estilo-nuevo-81.png` (tira: los sellos de manos) → `assets/effects/manos-invocacion.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of a pair of ninja hands performing the Summoning Jutsu hand seals, seen from the front at chest height, big and readable: 1) open hands coming together, 2) Boar seal, 3) Dog seal, 4) Bird seal, 5) Monkey seal, 6) Ram seal, 7) one hand biting the thumb with a small drop of blood, 8) the bloody palm slammed flat downward, ink lines bursting out from under it. Dark sleeves, skin tones, black ink only; no glow, no colour effects.
+```
+
+### Hoja 82 → `sprite-estilo-nuevo-82.png` (tira: la marca en tinta negra) → `assets/effects/sello-invocacion.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of a Naruto "Summoning Jutsu" seal appearing on the ground, seen from slightly above so the circle looks like a flattened ellipse lying on the floor: 1) a single drop of black ink on the ground, 2) black ink lines spreading out from it like cracks, 3) the lines curving into the outer circle, 4) the full seal in black ink: outer ring, inner ring and radial lines with small ink marks between them (no real letters), 5) the black lines starting to smoke slightly, 6) wisps of grey smoke rising from every line, 7) a column of pure white light rising from the centre, 8) the white column at its brightest. Black ink, grey smoke and pure white light only — no blue, no purple, no colour of any kind.
+```
+

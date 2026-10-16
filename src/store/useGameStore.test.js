@@ -81,6 +81,15 @@ beforeEach(() => {
 });
 
 describe('iniciarRun', () => {
+  it('un arco forzado ocupa el hueco de su acto en el sorteo', () => {
+    // Con dos arcos posibles en el acto 1, el sorteo podía apuntar el otro y la run no
+    // encontraba el arco siguiente ni el orden para la marca.
+    for (const id of campaignsData.campanas[0].actos[0].arcoIds) {
+      useGameStore.getState().iniciarRun(['naruto'], ARCOS_REGISTRADOS.find((a) => a.id === id));
+      expect(useGameStore.getState().arcosDeLaRunIds[0]).toBe(id);
+    }
+  });
+
   it('sortea un arco por acto de la campaña y la run los sigue en ese orden', () => {
     useGameStore.getState().iniciarRun(['naruto']);
     const campana = campaignsData.campanas.find((c) => c.id === useGameStore.getState().campanaActualId);
@@ -1941,10 +1950,11 @@ describe('campañas', () => {
     expect(useGameStore.getState().pantalla).toBe('seleccionPersonaje');
   });
 
-  it('iniciarRun sin arco explícito empieza por el PRIMER arco de la campaña elegida', () => {
+  it('iniciarRun sin arco explícito empieza por un arco del PRIMER acto de la campaña elegida', () => {
+    // Del primer acto, no uno fijo: el acto 1 sortea entre varios arcos.
     useGameStore.getState().elegirCampana('camino_ninja');
     useGameStore.getState().iniciarRun(['naruto']);
-    expect(useGameStore.getState().arcoActualId).toBe('pais_de_las_olas');
+    expect(campaignsData.campanas[0].actos[0].arcoIds).toContain(useGameStore.getState().arcoActualId);
   });
 
   it('avanzarSiguienteArco sigue el orden que declara la campaña', () => {

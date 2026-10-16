@@ -14,6 +14,12 @@ const premios = [
 ];
 const props = { premios, spriteDePremio: () => null, nombreDePremio: (p) => p.id };
 
+function saltarHastaLaRevelacion() {
+  for (let i = 0; i < 5 && screen.queryByRole('button', { name: 'Skip' }); i++) {
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+  }
+}
+
 beforeEach(() => {
   localStorage.clear();
   useSettingsStore.setState(AJUSTES_POR_DEFECTO);
@@ -23,8 +29,8 @@ describe('CeremoniaInvocacion', () => {
   it('sello, humo y revelación del MEJOR premio; luego lo de debajo', () => {
     render(<CeremoniaInvocacion {...props}><p>después</p></CeremoniaInvocacion>);
     expect(screen.queryByText('después')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' })); // sello → humo
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' })); // humo → revelación
+    // Manos (si están dibujadas), sello y humo: se saltan hasta la revelación.
+    saltarHastaLaRevelacion();
     // En una tanda de dos, solo se revela el de mayor rareza.
     expect(screen.getByText('kakashi')).toBeInTheDocument();
     expect(screen.queryByText('pildora_soldado')).toBeNull();

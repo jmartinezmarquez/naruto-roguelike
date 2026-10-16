@@ -37,16 +37,12 @@ function nombreDePremio(premio) {
   return nombrePersonaje(premio.id);
 }
 
-const QUE_ES_NUEVO = { personaje: 'Starter', objeto: 'Starting item', pagina: 'Bingo Book page' };
+const QUE_ES_NUEVO = { personaje: 'Starter', objeto: 'Starting item' };
 
-/** Una página se dibuja con el sprite del ninja sobre un papel, para no confundirla con el ninja. */
-function FondoDePremio({ premio, children }) {
-  if (premio.tipo !== 'pagina') return children;
-  return <div className="w-full h-full flex items-center justify-center rounded-sm bg-[#e8d9b0]/85 border border-[#8a6d3b]">{children}</div>;
-}
 
 function TextoEfecto({ premio }) {
   if (premio.efecto === 'nuevo') return <p className="font-display text-[8px] text-oro">NEW! {QUE_ES_NUEVO[premio.tipo]}</p>;
+  if (premio.efecto === 'pagina') return <p className="font-display text-[8px] text-oro">NEW! Bingo Book page</p>;
   if (premio.efecto === 'nivel') return <p className="font-display text-[8px] text-exito">Ninja Lv.{premio.nivel}</p>;
   return <p className="font-display text-[8px] text-pergamino-200/70">+{premio.cantidad} scrolls</p>;
 }
@@ -58,10 +54,8 @@ function TarjetaPremio({ premio, orden = 0 }) {
       className={`salir-del-humo flex flex-col items-center gap-1 p-2 border-2 rounded-sm bg-tinta-950/40 ${BORDE_RAREZA[premio.rareza]}`}
       style={{ animationDelay: `calc(${orden * 90}ms * var(--factor-animacion, 1))` }}
     >
-      <div className="w-14 h-14 flex items-center justify-center">
-        <FondoDePremio premio={premio}>
-          {sprite && <img src={sprite} alt="" className="max-w-full max-h-full" style={{ imageRendering: 'pixelated' }} />}
-        </FondoDePremio>
+      <div className="w-24 h-24 flex items-center justify-center">
+        {sprite && <img src={sprite} alt="" className="w-24 h-24 object-contain" style={{ imageRendering: 'pixelated' }} />}
       </div>
       <p className="font-display text-[8px] text-pergamino-100 text-center leading-tight">{nombreDePremio(premio)}</p>
       <p className={`font-display text-[7px] ${COLOR_RAREZA[premio.rareza]}`}>{ETIQUETA_RAREZA[premio.rareza]}</p>
@@ -96,7 +90,7 @@ function Cartel({ conseguidos, total }) {
   const legendarios = CATALOGO_INVOCACION.filter((e) => e.tipo === 'personaje' && e.rareza === 'legendario').slice(0, 3);
   return (
     <div
-      className="escena-oscura relative h-80 rounded-sm overflow-hidden border border-marco"
+      className="escena-oscura relative h-[26rem] rounded-sm overflow-hidden border border-marco"
       style={FONDO_CARTEL_INVOCACION
         ? { backgroundImage: `url(${FONDO_CARTEL_INVOCACION})`, backgroundSize: 'cover', backgroundPosition: 'center' }
         : { background: 'linear-gradient(135deg, #3b2457 0%, #2a2f5c 55%, #1f4a5e 100%)' }}
@@ -109,12 +103,13 @@ function Cartel({ conseguidos, total }) {
         </p>
         <p className="text-[9px] text-pergamino-200/70 mt-1">You have {conseguidos} of {total}</p>
       </div>
-      <div className="absolute inset-x-0 bottom-6 flex justify-around items-end px-6">
+      <div className="absolute inset-x-0 bottom-4 flex justify-around items-end px-4">
         {legendarios.map((e) => (
           <div key={e.id} className="flex flex-col items-center">
-            <img src={spriteDeLuchador(e.id)} alt="" aria-hidden="true" className="w-24 h-24 object-contain"
+            {/* ×2 exacto del lienzo de 96 px. */}
+            <img src={spriteDeLuchador(e.id)} alt="" aria-hidden="true" className="w-48 h-48 object-contain"
               style={{ imageRendering: 'pixelated' }} />
-            <div className="w-16 h-3 -mt-2 rounded-[50%] bg-black/40" />
+            <div className="w-28 h-4 -mt-5 rounded-[50%] bg-black/45" />
           </div>
         ))}
       </div>
@@ -125,6 +120,7 @@ function Cartel({ conseguidos, total }) {
 function PanelProbabilidades({ estado }) {
   const reglas = invocacionData;
   const garantia = tiradasParaGarantia(estado, reglas);
+  const hechas = reglas.garantiaLegendario - garantia.legendario;
   return (
     <PanelMarco className="p-4 flex flex-col gap-3 h-full">
       <TituloBloque tono="seccion">Odds</TituloBloque>
@@ -140,13 +136,17 @@ function PanelProbabilidades({ estado }) {
       </ul>
       <ul className="text-[9px] text-pergamino-200/80 leading-relaxed flex flex-col gap-1.5">
         <li>· A rare or better at least every {reglas.garantiaRaro} summons.</li>
-        <li>· After {reglas.garantiaLegendario - 1} summons without a legendary, the next one is.</li>
-        <li>· A repeated ninja gains +1 Ninja Lv. A repeated item or page gives back {reglas.reembolsoDuplicado} scrolls.</li>
+        {reglas.diezGarantizaLegendario && <li>· Summon ×10 always brings a <span className="text-oro">legendary</span>.</li>}
         <li>· Scrolls come from bosses, won runs, missions and the daily challenge.</li>
       </ul>
-      <p className="text-[9px] text-pergamino-200/60 mt-auto">
-        Summons without a legendary: {reglas.garantiaLegendario - garantia.legendario} / {reglas.garantiaLegendario}
-      </p>
+      {/* El pity como barra y no como "2 / 20": lo que se quiere ver es cuánto falta. */}
+      <div className="mt-auto flex flex-col gap-1">
+        <p className="text-[9px] text-pergamino-200/70">Legendary guaranteed in {garantia.legendario}</p>
+        <div className="h-2.5 w-full bg-tinta-950 border border-marco rounded-sm overflow-hidden"
+          role="progressbar" aria-label="Legendary pity" aria-valuemin={0} aria-valuemax={reglas.garantiaLegendario} aria-valuenow={hechas}>
+          <div className="h-full bg-oro transition-[width] duration-500" style={{ width: `${(hechas / reglas.garantiaLegendario) * 100}%` }} />
+        </div>
+      </div>
     </PanelMarco>
   );
 }
@@ -159,31 +159,34 @@ export default function InvocacionScreen() {
   // Cada tirada lleva su número: la ceremonia se vuelve a montar (y a ver) en cada una.
   const [ultimos, setUltimos] = useState(null);
   const [tirada, setTirada] = useState(0);
+  // Los resultados solo se enseñan cuando la ceremonia acaba: antes destripaban la revelación.
+  const [ceremoniaVista, setCeremoniaVista] = useState(false);
 
   const reglas = invocacionData;
   const personajes = useAchievementsStore.getState().personajesInicialesExtra();
   const objetos = useAchievementsStore.getState().objetosInicialesDesbloqueados();
-  const listas = { personaje: personajes, objeto: objetos, pagina: estado.paginas ?? [] };
-  const tiene = (e) => listas[e.tipo].includes(e.id);
-  const conseguidos = CATALOGO_INVOCACION.filter(tiene).length;
+  const listas = { personaje: personajes, objeto: objetos };
+  const conseguidos = CATALOGO_INVOCACION.filter((e) => listas[e.tipo].includes(e.id)).length;
 
   function invocar(numero) {
     const premios = useAchievementsStore.getState().invocar(numero);
     if (premios) {
       setUltimos(premios);
       setTirada((n) => n + 1);
+      setCeremoniaVista(false);
     }
   }
 
   const cartel = <Cartel conseguidos={conseguidos} total={CATALOGO_INVOCACION.length} />;
 
   return (
-    <VentanaModal titulo="Summon" subtitulo={`${saldo} summoning scrolls`} onCerrar={volverAlMapa} ancho="max-w-4xl">
+    <VentanaModal titulo="Summon" onCerrar={volverAlMapa} ancho="max-w-5xl">
       <div className="p-4 flex flex-col gap-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 flex flex-col gap-3">
             {ultimos ? (
-              <CeremoniaInvocacion key={tirada} premios={ultimos} spriteDePremio={spriteDePremio} nombreDePremio={nombreDePremio}>
+              <CeremoniaInvocacion key={tirada} premios={ultimos} spriteDePremio={spriteDePremio} nombreDePremio={nombreDePremio}
+                onTerminar={() => setCeremoniaVista(true)}>
                 {cartel}
               </CeremoniaInvocacion>
             ) : cartel}
@@ -200,39 +203,16 @@ export default function InvocacionScreen() {
           <PanelProbabilidades estado={estado} />
         </div>
 
-        {ultimos && (
+        {/* Solo lo último que ha salido, y solo cuando la ceremonia acaba. La colección
+            entera está en el Bingo Book. */}
+        {ultimos && ceremoniaVista && (
           <div className="flex flex-col gap-2">
-            <TituloBloque>Summoned</TituloBloque>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            <TituloBloque>Last summoned</TituloBloque>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {ultimos.map((premio, i) => <TarjetaPremio key={`${tirada}-${premio.id}-${i}`} premio={premio} orden={i} />)}
             </div>
           </div>
         )}
-
-        <div className="flex flex-col gap-2">
-          <TituloBloque>Collection {conseguidos}/{CATALOGO_INVOCACION.length}</TituloBloque>
-          <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5">
-            {CATALOGO_INVOCACION.map((entrada) => {
-              const abierto = tiene(entrada);
-              const sprite = spriteDePremio(entrada);
-              return (
-                <div
-                  key={`${entrada.tipo}-${entrada.id}`}
-                  title={abierto ? nombreDePremio(entrada) : `??? (${ETIQUETA_RAREZA[entrada.rareza]})`}
-                  className={`aspect-square flex items-center justify-center border rounded-sm ${BORDE_RAREZA[entrada.rareza]}`}
-                >
-                  <FondoDePremio premio={entrada}>
-                    {sprite && (
-                      <img src={sprite} alt={abierto ? nombreDePremio(entrada) : '???'}
-                        className={`max-w-[85%] max-h-[85%] ${abierto ? '' : 'brightness-0 opacity-60'}`}
-                        style={{ imageRendering: 'pixelated' }} />
-                    )}
-                  </FondoDePremio>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
     </VentanaModal>
   );
