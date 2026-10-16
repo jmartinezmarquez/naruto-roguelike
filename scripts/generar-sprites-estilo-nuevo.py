@@ -217,6 +217,12 @@ HOJAS = [
     # La ceremonia v2: sellos de manos y la marca en tinta negra (sustituye a la de la hoja 72).
     ('sprite-estilo-nuevo-81.png', ['effects/manos-invocacion']),
     ('sprite-estilo-nuevo-82.png', ['effects/sello-invocacion']),
+    # La cinemática del Summon: el golpe al suelo, la columna de humo y el aura de cada rareza.
+    ('sprite-estilo-nuevo-83.png', ['effects/golpe-invocacion']),
+    ('sprite-estilo-nuevo-84.png', ['effects/columna-invocacion']),
+    ('sprite-estilo-nuevo-85.png', ['effects/aura-comun']),
+    ('sprite-estilo-nuevo-86.png', ['effects/aura-raro']),
+    ('sprite-estilo-nuevo-87.png', ['effects/aura-legendario']),
 ]
 
 TIPO_POR_CARPETA = {
@@ -271,6 +277,12 @@ TIRAS = {
     'sello-invocacion': (8, 128),
     'humo-invocacion': (8, 160),
     'manos-invocacion': (8, 128),
+    # La cinemática del Summon (hojas 83-87).
+    'golpe-invocacion': (8, 160),
+    'columna-invocacion': (8, 160),
+    'aura-comun': (8, 160),
+    'aura-raro': (8, 160),
+    'aura-legendario': (8, 160),
 }
 
 # Fondos de columna del mapa: el tamaño de los que había. Se recorta para CUBRIR, no

@@ -1157,3 +1157,65 @@ referencia `src/assets/effects/sello-invocacion.png` y `humo-invocacion.png` par
 8 frames of a Naruto "Summoning Jutsu" seal appearing on the ground, seen from slightly above so the circle looks like a flattened ellipse lying on the floor: 1) a single drop of black ink on the ground, 2) black ink lines spreading out from it like cracks, 3) the lines curving into the outer circle, 4) the full seal in black ink: outer ring, inner ring and radial lines with small ink marks between them (no real letters), 5) the black lines starting to smoke slightly, 6) wisps of grey smoke rising from every line, 7) a column of pure white light rising from the centre, 8) the white column at its brightest. Black ink, grey smoke and pure white light only — no blue, no purple, no colour of any kind.
 ```
 
+## Tanda 14 — la cinemática del Summon (hojas 83-87)
+
+⏳ **PENDIENTES.** Del playtest del 2026-10-16: la ceremonia "parece un pase de diapositivas". La propuesta es
+encadenar SEIS tiras de 8 fotogramas como planos de un mismo vídeo, sin cortes, con la cámara moviéndose por
+código (acercamiento lento, temblor en el golpe, fundidos entre planos):
+
+1. **Sellos de manos** (hoja 81, ya está) — la cámara se acerca despacio.
+2. **El golpe** (hoja 83) — la palma contra el suelo y la onda de tinta. Temblor de cámara.
+3. **La marca** (hoja 82, ya está) — la onda de tinta se cierra en el círculo.
+4. **La columna** (hoja 84) — el humo sube de las líneas de la marca y se enrosca hasta formar una columna.
+5. **La explosión** (hoja 73, ya está) — la columna estalla y el humo se abre por el centro.
+6. **El aura** (hojas 85-87, una por rareza) — detrás del ninja, que sale del humo primero en silueta negra y
+   luego a color. Sustituye a los rayos.
+
+⚠️ **Reglas de estas hojas**, además del bloque de tiras de animación:
+- **Mismo suelo en todos los fotogramas**: lo que toca el suelo, en la misma fila de píxeles en los 8 (el script
+  ya conserva la altura de cada fotograma; si el dibujo salta, salta en el juego).
+- **Continuidad con la hoja anterior**: adjuntar SIEMPRE de referencia la tira del plano anterior y la del
+  siguiente (`src/assets/effects/…`), y pedir que el primer fotograma empiece donde acaba el anterior.
+- **Sin color en 83 y 84**: tinta negra, humo gris y luz blanca. El color solo aparece en el aura, que es la
+  revelación.
+
+### Hoja 83 → `sprite-estilo-nuevo-83.png` (tira: el golpe) → `assets/effects/golpe-invocacion.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of a ninja's palm slamming onto the ground for a Summoning Jutsu, continuing from the attached hand-seal strip, seen from slightly above with the ground as a flat horizontal surface at the bottom of every frame: 1) the open palm just above the ground, 2) the palm hitting the ground, dust puffing out, 3) black ink bursting out from under the palm in sharp lines, 4) the ink lines racing outward along the ground in a ring, 5) the ring of ink wider, small rocks and dust jumping, 6) the ring at its widest, flattened like an ellipse on the floor, 7) the palm lifting away, the ink ring settling, 8) only the black ink ring on the ground. Black ink, grey dust, skin and dark sleeve only; no colour, no glow.
+```
+
+### Hoja 84 → `sprite-estilo-nuevo-84.png` (tira: la columna de humo) → `assets/effects/columna-invocacion.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of smoke rising from the lines of a black ink summoning seal drawn on the floor (the attached seal strip, last frames), seen from slightly above, with the seal staying exactly at the same place at the bottom of every frame: 1) thin grey wisps rising from every line of the seal, 2) the wisps taller and curling, 3) the wisps twisting toward the centre, 4) a spinning column of grey smoke forming above the seal, 5) the column taller and thicker, spinning faster, 6) the column filling the frame height, white light leaking through cracks in it, 7) the column bulging, about to burst, bright white light inside, 8) the column at bursting point, almost pure white. Grey smoke and pure white light only — no colour.
+```
+
+### Hoja 85 → `sprite-estilo-nuevo-85.png` (tira: aura común) → `assets/effects/aura-comun.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of a soft green chakra aura that rises from the ground around a standing figure (the space in the middle stays EMPTY, the figure is drawn separately), seen from the front with the ground at the bottom of every frame: green leaves and small green chakra flames swirling upward in a gentle spiral around the empty centre, growing from a ring on the floor (frames 1-4) and then looping calmly (frames 5-8, so frames 5-8 can repeat). Light green and white only.
+```
+
+### Hoja 86 → `sprite-estilo-nuevo-86.png` (tira: aura rara) → `assets/effects/aura-raro.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of a strong blue chakra aura around a standing figure (the space in the middle stays EMPTY, the figure is drawn separately), seen from the front with the ground at the bottom of every frame: a vortex of blue chakra wind bursting up from a ring on the floor (frames 1-4), then roaring in a tall spiral with small blue sparks and streaks of wind (frames 5-8, loopable). Bright blue, cyan and white only.
+```
+
+### Hoja 87 → `sprite-estilo-nuevo-87.png` (tira: aura legendaria) → `assets/effects/aura-legendario.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of an overwhelming golden aura around a standing figure (the space in the middle stays EMPTY, the figure is drawn separately), seen from the front with the ground at the bottom of every frame: a pillar of golden chakra erupting from a cracked ring on the floor with crackling yellow lightning, flying rock debris and a shockwave (frames 1-4), then a tall blazing golden flame-aura with lightning arcs and floating sparks (frames 5-8, loopable). Gold, yellow, orange and white only.
+```
+
