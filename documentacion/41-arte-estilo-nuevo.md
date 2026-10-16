@@ -1027,3 +1027,38 @@ Adjuntar de referencia la ilustración de la campaña (`assets/campaigns/camino_
 ```
 A wide 16:9 pixel art illustration in the exact style of the attached reference image, for a "Daily Challenge" mode card: a wooden mission board at the gate of the Hidden Leaf village at dawn, one fresh mission scroll pinned in the centre with a red seal, a rising sun behind the gate, birds in the sky. The main subject is in the CENTER; the bottom quarter is calm ground with little detail (a title will be written over it). Crisp pixels, no blur. No text, no letters, no logo, no UI, no frame.
 ```
+
+## Tanda 11 — la ceremonia del Summon (hojas 72-74)
+
+⏳ **PENDIENTES.** La animación de cada tirada del gacha (`Summon/CeremoniaInvocacion.jsx`): **la marca de
+invocación sale del suelo, estalla el humo y el ninja aparece en el centro**, como en una transformación. Ya
+funciona sin ellas (un sello dibujado por código y el humo del relevo ampliado); cuando lleguen, el script las
+deja en `assets/effects/` y `assets/summon/` y la ceremonia las usa sola, sin tocar código.
+
+Las dos tiras llevan el **bloque de tiras de animación** y se reproducen a ×2, así que el dibujo tiene que leerse
+grande. Adjuntar de referencia `src/assets/effects/humo.png` (el humo del relevo) para que salga a juego.
+
+### Hoja 72 → `sprite-estilo-nuevo-72.png` (tira: el sello de invocación) → `assets/effects/sello-invocacion.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of a Naruto "Summoning Jutsu" seal appearing on the ground, seen from slightly above so the circle looks like a flattened ellipse lying on the floor: 1) a single drop of ink on the ground, 2) black ink lines spreading out from it like cracks, 3) the lines curving into the outer circle, 4) the full seal: an outer ring, an inner ring and radial lines with small ink marks between them (no real letters), 5) the seal starting to glow white-blue along its lines, 6) the seal glowing brightly with small sparks of chakra jumping up, 7) a column of light rising from the centre of the seal, 8) the column of light at its brightest, filling the frame. Black ink and white-blue light only, so it can be tinted.
+```
+
+### Hoja 73 → `sprite-estilo-nuevo-73.png` (tira: el humo de la invocación) → `assets/effects/humo-invocacion.png`
+
+```
+[ANIMATION STRIP STYLE BLOCK]
+
+8 frames of a huge "summoning" smoke explosion, much bigger and fuller than a normal ninja poof: 1) a burst of white smoke from the ground, 2) the smoke shooting upward and outward, 3) a big round cloud filling most of the frame, 4) the cloud at full size with rolling puffs, 5) the cloud starting to split open in the middle (where a figure will appear), 6) the cloud opening wider and drifting to the sides, 7) wisps curling away at the edges, 8) almost gone, a few dithered wisps.
+```
+
+### Hoja 74 → `sprite-estilo-nuevo-74.png` (fondo del cartel del Summon) → `assets/summon/cartel.jpg`
+
+El fondo del cartel de la página del Summon: el título va arriba a la izquierda y tres legendarios de pie abajo,
+así que la franja de arriba y el suelo tienen que ser tranquilos.
+
+```
+A wide pixel art background (about 16:9) in the exact style of the attached reference images, for the banner of a "Summoning" screen: a mystical shrine at night, a large faintly glowing summoning seal drawn on a stone floor in the lower half, purple and deep blue sky with mist, two stone lanterns and hanging paper charms framing the left and right edges. The top third must be calm (a title is written there) and the floor must be flat and calm (three characters stand on it). Crisp pixels, no blur. No characters, no text, no letters, no UI, no frame.
+```

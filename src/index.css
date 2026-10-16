@@ -711,3 +711,16 @@ img {
 }
 .salir-del-humo { opacity: 0; animation: salir-del-humo calc(380ms * var(--factor-animacion, 1)) ease-out forwards; }
 
+/* Ceremonia v2: el sello SUBE del suelo (escala vertical desde 0), el óvalo de luz del
+   suelo crece con él, y en la revelación unos rayos giran detrás del premio. */
+@keyframes sello-sube { from { transform: translateX(-50%) scaleY(0.05); opacity: 0; } 40% { opacity: 1; } to { transform: translateX(-50%) scaleY(1); opacity: 1; } }
+.sello-sube { transform-origin: bottom center; animation: sello-sube calc(500ms * var(--factor-animacion, 1)) ease-out forwards; }
+@keyframes suelo-invocacion { from { transform: translateX(-50%) scale(0.2); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+.suelo-invocacion { animation: suelo-invocacion calc(700ms * var(--factor-animacion, 1)) ease-out forwards; }
+@keyframes rayos-invocacion { to { transform: rotate(360deg); } }
+.rayos-invocacion {
+  background: repeating-conic-gradient(from 0deg at 50% 50%, color-mix(in srgb, var(--color-sello) 45%, transparent) 0deg 10deg, transparent 10deg 30deg);
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: rayos-invocacion calc(9s * var(--factor-animacion, 1)) linear infinite;
+}

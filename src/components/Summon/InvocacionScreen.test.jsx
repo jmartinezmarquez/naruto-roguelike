@@ -32,9 +32,10 @@ describe('InvocacionScreen', () => {
   it('enseña las probabilidades y cuántas tiradas faltan para cada garantía', () => {
     conSaldo(0);
     render(<InvocacionScreen />);
-    expect(screen.getByText(/Legendary 10%/)).toBeInTheDocument();
-    expect(screen.getByText(String(invocacionData.garantiaRaro))).toBeInTheDocument();
-    expect(screen.getByText(String(invocacionData.garantiaLegendario))).toBeInTheDocument();
+    expect(screen.getByText('Legendary')).toBeInTheDocument();
+    expect(screen.getByText(/^10% · /)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`every ${invocacionData.garantiaRaro} summons`))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`0 / ${invocacionData.garantiaLegendario}`))).toBeInTheDocument();
   });
 
   it('una tirada cobra, enseña el premio y lo apunta en la colección', () => {

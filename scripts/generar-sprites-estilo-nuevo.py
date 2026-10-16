@@ -203,6 +203,10 @@ HOJAS = [
     ('sprite-estilo-nuevo-70.png', ['aspects/konohamaru_1', 'aspects/konohamaru_2']),
     # La ilustración de la tarjeta del desafío diario en el Home.
     ('sprite-estilo-nuevo-71.png', ['campaigns/diario']),
+    # La ceremonia del gacha y el fondo del cartel del Summon.
+    ('sprite-estilo-nuevo-72.png', ['effects/sello-invocacion']),
+    ('sprite-estilo-nuevo-73.png', ['effects/humo-invocacion']),
+    ('sprite-estilo-nuevo-74.png', ['summon/cartel']),
 ]
 
 TIPO_POR_CARPETA = {
@@ -219,6 +223,7 @@ TIPO_POR_CARPETA = {
     'map-columns': 'fondo',
     'campaigns': 'fondo',
     'home': 'fondo',
+    'summon': 'fondo',
     'favicon': 'favicon',
 }
 
@@ -252,6 +257,9 @@ TIRAS = {
     'explosion-doton': (6, 96),
     'explosion-suiton': (6, 96),
     'humo': (6, 80),
+    # La ceremonia del gacha (hojas 72-73).
+    'sello-invocacion': (8, 128),
+    'humo-invocacion': (8, 160),
 }
 
 # Fondos de columna del mapa: el tamaño de los que había. Se recorta para CUBRIR, no
@@ -265,6 +273,8 @@ FONDOS = {
     # El tamaño de los que había. En JPEG: son las dos imágenes más pesadas de la primera
     # carga (ver documentacion/37-publicacion-web.md) y el PNG pesaba el triple.
     'home': (1672, 941, 'jpg'),
+    # El cartel del Summon: apaisado, con los tres legendarios pintados encima.
+    'summon': (1200, 640, 'jpg'),
 }
 
 # El favicon: un icono cuadrado ampliado a múltiplo entero, como el que había.
