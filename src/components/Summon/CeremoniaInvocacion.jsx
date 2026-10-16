@@ -26,6 +26,7 @@ import { ANIMACIONES_INVOCACION } from './animacionesInvocacion';
  * velocidad instantánea de Ajustes no se ve.
  */
 
+const MS_MANOS = 1100;
 const MS_SELLO = 1300;
 const MS_HUMO = 650;
 
@@ -94,11 +95,16 @@ function Tira({ animacion, escala, duracion }) {
 
 export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDePremio, onTerminar = () => {}, children }) {
   const factor = useFactorAnimacion();
-  const [fase, setFase] = useState(factor === 0 ? 'fin' : 'sello');
+  // Si están dibujados, la ceremonia abre con los sellos de manos (hoja 81).
+  const [fase, setFase] = useState(factor === 0 ? 'fin' : ANIMACIONES_INVOCACION.manos ? 'manos' : 'sello');
   const mejor = mejorPremio(premios);
   const color = COLOR_RAREZA[mejor.rareza];
 
   useEffect(() => {
+    if (fase === 'manos') {
+      const t = setTimeout(() => setFase('sello'), MS_MANOS * factor);
+      return () => clearTimeout(t);
+    }
     if (fase === 'sello') {
       reproducir('selloInvocacion', { duracion: (MS_SELLO * factor) / 1000 });
       const t = setTimeout(() => setFase('humo'), MS_SELLO * factor);
@@ -121,9 +127,9 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
 
   if (fase === 'fin') return children;
 
-  const siguiente = { sello: 'humo', humo: 'revelacion', revelacion: 'fin' }[fase];
+  const siguiente = { manos: 'sello', sello: 'humo', humo: 'revelacion', revelacion: 'fin' }[fase];
   const sprite = spriteDePremio(mejor);
-  const { sello, humo } = ANIMACIONES_INVOCACION;
+  const { manos, sello, humo } = ANIMACIONES_INVOCACION;
 
   return (
     <button
@@ -144,6 +150,12 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
           así que la luz salía media anchura a la izquierda del personaje. */}
       <div className="absolute left-1/2 bottom-10 w-80 h-16 rounded-[50%] suelo-invocacion"
         style={{ background: `radial-gradient(ellipse, ${COLOR_NEUTRO}40, transparent 70%)` }} />
+
+      {fase === 'manos' && manos && (
+        <div className="absolute left-1/2 top-1/2">
+          <Tira animacion={manos} escala={2} duracion={MS_MANOS * factor} />
+        </div>
+      )}
 
       {fase === 'sello' && (sello ? (
         // En tinta, sin color: `grayscale` quita el azul de la tira de la hoja 72 hasta que
