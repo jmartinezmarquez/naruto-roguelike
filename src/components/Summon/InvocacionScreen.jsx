@@ -106,10 +106,10 @@ function Cartel({ conseguidos, total }) {
       <div className="absolute inset-x-0 bottom-4 flex justify-around items-end px-4">
         {legendarios.map((e) => (
           <div key={e.id} className="flex flex-col items-center">
-            {/* ×2 exacto del lienzo de 96 px. */}
-            <img src={spriteDeLuchador(e.id)} alt="" aria-hidden="true" className="w-48 h-48 object-contain"
+            {/* ×1,5 del lienzo de 96 px: a ×2 se veían demasiado pixelados. */}
+            <img src={spriteDeLuchador(e.id)} alt="" aria-hidden="true" className="w-36 h-36 object-contain"
               style={{ imageRendering: 'pixelated' }} />
-            <div className="w-28 h-4 -mt-5 rounded-[50%] bg-black/45" />
+            <div className="w-20 h-3 -mt-4 rounded-[50%] bg-black/45" />
           </div>
         ))}
       </div>
@@ -161,6 +161,9 @@ export default function InvocacionScreen() {
   const [tirada, setTirada] = useState(0);
   // Los resultados solo se enseñan cuando la ceremonia acaba: antes destripaban la revelación.
   const [ceremoniaVista, setCeremoniaVista] = useState(false);
+  // El estado del gacha ANTES de la última tirada: el pity se enseña con él hasta que
+  // acaba la ceremonia, o la barra vaciándose chivaba que había salido un legendario.
+  const [estadoAntes, setEstadoAntes] = useState(null);
 
   const reglas = invocacionData;
   const personajes = useAchievementsStore.getState().personajesInicialesExtra();
@@ -169,11 +172,13 @@ export default function InvocacionScreen() {
   const conseguidos = CATALOGO_INVOCACION.filter((e) => listas[e.tipo].includes(e.id)).length;
 
   function invocar(numero) {
+    const antes = useAchievementsStore.getState().invocacion;
     const premios = useAchievementsStore.getState().invocar(numero);
     if (premios) {
       setUltimos(premios);
       setTirada((n) => n + 1);
       setCeremoniaVista(false);
+      setEstadoAntes(antes);
     }
   }
 
@@ -200,7 +205,7 @@ export default function InvocacionScreen() {
               {saldo} summoning scrolls
             </p>
           </div>
-          <PanelProbabilidades estado={estado} />
+          <PanelProbabilidades estado={!ceremoniaVista && estadoAntes ? estadoAntes : estado} />
         </div>
 
         {/* Solo lo último que ha salido, y solo cuando la ceremonia acaba. La colección

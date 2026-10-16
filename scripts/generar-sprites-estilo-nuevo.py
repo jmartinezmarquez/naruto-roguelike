@@ -520,20 +520,30 @@ def tira(hoja, fotogramas, lado):
     del mismo tamaño. Por lo mismo no se limpian "restos del vecino": los últimos
     fotogramas de un desvanecido son motas sueltas a propósito.
     """
+    # ⚠️ En vertical se CONSERVA la posición que cada fotograma trae en la hoja (se
+    # recorta la banda común a todos, no cada uno a su caja). Centrando cada uno por
+    # separado, la marca de invocación "bajaba" en cuanto le crecía la columna de luz
+    # por encima, y el humo saltaba de altura: lo que está en el suelo tiene que
+    # seguir en el suelo en todos los fotogramas (playtest 2026-10-16).
     trozos = []
     for x0, x1 in cortes(hoja, fotogramas):
         trozo = hoja.crop((x0, 0, x1, hoja.height))
         trozo.putalpha(trozo.getchannel('A').point(lambda a: a if a >= ALFA_MINIMO else 0))
         caja = mascara(trozo).getbbox()
-        trozos.append(trozo.crop(caja) if caja else None)
+        trozos.append((trozo, caja) if caja else None)
     vivos = [x for x in trozos if x]
-    escala = min(lado * 0.94 / max(x.width for x in vivos), lado * 0.94 / max(x.height for x in vivos))
+    arriba = min(caja[1] for _, caja in vivos)
+    abajo = max(caja[3] for _, caja in vivos)
+    alto_banda = abajo - arriba
+    escala = min(lado * 0.94 / max(caja[2] - caja[0] for _, caja in vivos), lado * 0.94 / alto_banda)
+    y_banda = (lado - alto_banda * escala) / 2
     resultado = Image.new('RGBA', (lado * fotogramas, lado), (0, 0, 0, 0))
-    for k, trozo in enumerate(trozos):
-        if trozo is None:
+    for k, par in enumerate(trozos):
+        if par is None:
             continue
-        d = reducir(trozo, trozo.width * escala, trozo.height * escala)
-        resultado.alpha_composite(d, (k * lado + (lado - d.width) // 2, (lado - d.height) // 2))
+        trozo, caja = par
+        d = reducir(trozo.crop(caja), (caja[2] - caja[0]) * escala, (caja[3] - caja[1]) * escala)
+        resultado.alpha_composite(d, (k * lado + (lado - d.width) // 2, round(y_banda + (caja[1] - arriba) * escala)))
     return resultado
 
 

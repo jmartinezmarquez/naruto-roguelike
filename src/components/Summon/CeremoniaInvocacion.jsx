@@ -72,6 +72,35 @@ function SelloDibujado({ color }) {
   );
 }
 
+// La línea de suelo de la escena (px desde abajo) y dónde anclar cada tira para que
+// apoye en ella. Las tiras traen el suelo en la misma fila de píxeles en todos sus
+// fotogramas (ver `tira()` en el script de sprites): la marca a 91 px de 128 en su
+// fotograma (27 por debajo del centro) y el humo a 154 de 160 (74). A ×2.
+const SUELO = 72;
+const ANCLA_SELLO = SUELO + 27 * 2;
+const ANCLA_HUMO = SUELO + 74 * 2;
+const CONTORNO_TINTA = 'drop-shadow(0 0 2px rgba(232, 226, 208, 0.75)) drop-shadow(0 0 6px rgba(232, 226, 208, 0.3))';
+
+/** Un fotograma concreto de una tira, quieto (la marca ya trazada, en el suelo). */
+function FotogramaQuieto({ animacion, indice, escala }) {
+  return (
+    <div style={{ transform: `scale(${escala})` }}>
+      <div
+        aria-hidden="true"
+        className="absolute pointer-events-none"
+        style={{
+          width: animacion.lado,
+          height: animacion.lado,
+          backgroundImage: `url(${animacion.src})`,
+          backgroundPosition: `-${indice * animacion.lado}px 0`,
+          imageRendering: 'pixelated',
+          transform: 'translate(-50%, -50%)',
+        }}
+      />
+    </div>
+  );
+}
+
 /** Una tira dibujada reproducida una vez, a `escala` enteros (pixel art). */
 function Tira({ animacion, escala, duracion }) {
   return (
@@ -144,51 +173,55 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
       {fase === 'revelacion' && mejor.rareza === 'legendario' && (
         <div className="absolute inset-0 destello-legendario pointer-events-none" />
       )}
-      {/* El suelo: un óvalo de luz del color de la rareza que crece con el sello. */}
-      {/* Sin `-translate-x-1/2`: la animación ya mueve el `transform`, y en Tailwind v4
-          las dos cosas se suman (`translate` y `transform` son propiedades distintas),
-          así que la luz salía media anchura a la izquierda del personaje. */}
-      <div className="absolute left-1/2 bottom-10 w-80 h-16 rounded-[50%] suelo-invocacion"
-        style={{ background: `radial-gradient(ellipse, ${COLOR_NEUTRO}40, transparent 70%)` }} />
+      {/* EL SUELO. Todo se ancla a la misma línea: el centro de la luz del suelo está a
+          SUELO px del borde de abajo, y la marca, el humo y el ninja se colocan respecto a
+          ella. Antes cada uno iba a su altura y la marca "subía y bajaba" entre fases.
+          Sin `-translate-x-1/2` en la luz: su animación ya mueve el `transform`, y en
+          Tailwind v4 las dos cosas se suman. */}
+      <div className="absolute left-1/2 w-80 h-16 rounded-[50%] suelo-invocacion"
+        style={{ bottom: SUELO - 32, background: `radial-gradient(ellipse, ${COLOR_NEUTRO}40, transparent 70%)` }} />
 
       {fase === 'manos' && manos && (
-        <div className="absolute left-1/2 top-1/2">
+        <div className="absolute left-1/2 top-[42%]">
           <Tira animacion={manos} escala={2} duracion={MS_MANOS * factor} />
         </div>
       )}
 
-      {fase === 'sello' && (sello ? (
-        // La marca es de tinta negra (hoja 82): un contorno claro la despega del fondo
-        // oscuro sin darle color, que destriparía la rareza.
-        <div className="absolute left-1/2 bottom-24" style={{ filter: 'drop-shadow(0 0 2px rgba(232, 226, 208, 0.75)) drop-shadow(0 0 6px rgba(232, 226, 208, 0.3))' }}>
-          <Tira animacion={sello} escala={2} duracion={MS_SELLO * factor} />
+      {/* La marca se traza en su fase y SE QUEDA en el suelo durante el humo y la
+          revelación (su fotograma completo, quieto): es donde aparece el ninja. */}
+      {sello ? (
+        <div className="absolute left-1/2" style={{ bottom: ANCLA_SELLO, filter: CONTORNO_TINTA, opacity: fase === 'sello' ? 1 : 0.85 }}>
+          {fase === 'sello'
+            ? <Tira animacion={sello} escala={2} duracion={MS_SELLO * factor} />
+            : fase !== 'manos' && <FotogramaQuieto animacion={sello} indice={3} escala={2} />}
         </div>
-      ) : (
+      ) : fase === 'sello' && (
         <div className="absolute left-1/2 bottom-2 sello-sube">
           <div style={{ transform: 'perspective(600px) rotateX(62deg)' }}><SelloDibujado color="#111111" /></div>
         </div>
-      ))}
-
-      {fase === 'humo' && (
-        <div className="absolute left-1/2 top-1/2">
-          {humo
-            ? <Tira animacion={humo} escala={2} duracion={MS_HUMO * factor} />
-            : <div style={{ transform: 'scale(4)' }}><TiraDeEfecto nombre="humo" /></div>}
-        </div>
       )}
 
-      {fase === 'revelacion' && (
-        <div className="relative flex flex-col items-center gap-2">
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60%] w-96 h-96 rayos-invocacion" style={{ '--color-sello': color }} />
-          {/* ×3 exacto del lienzo de 96 px: el pixel art a escala entera. */}
-          <div className="relative w-72 h-72 flex items-center justify-center entrada-transformado">
-            {sprite && <img src={sprite} alt="" className="w-72 h-72 object-contain" style={{ imageRendering: 'pixelated' }} />}
-          </div>
-          <p className="relative font-naruto text-2xl text-pergamino-100 contorno-fijo">{nombreDePremio(mejor)}</p>
-          <p className="relative font-display text-[10px]" style={{ color }}>
-            {ETIQUETA[mejor.rareza]}{DETALLE_EFECTO[mejor.efecto]?.(mejor) ?? ''}
-          </p>
+      {fase === 'humo' && (humo ? (
+        <div className="absolute left-1/2" style={{ bottom: ANCLA_HUMO }}>
+          <Tira animacion={humo} escala={2} duracion={MS_HUMO * factor} />
         </div>
+      ) : (
+        <div className="absolute left-1/2 top-1/2"><div style={{ transform: 'scale(4)' }}><TiraDeEfecto nombre="humo" /></div></div>
+      ))}
+
+      {fase === 'revelacion' && (
+        <>
+          {/* El ninja DE PIE sobre la marca, a ×2 (192 px): a ×3 se veía pixelado. */}
+          <div className="absolute left-1/2 -translate-x-1/2 w-48 h-48 entrada-transformado" style={{ bottom: SUELO - 36 }}>
+            {sprite && <img src={sprite} alt="" className="w-48 h-48 object-contain" style={{ imageRendering: 'pixelated' }} />}
+          </div>
+          <div className="absolute top-6 inset-x-0 flex flex-col items-center gap-1 aparecer-nombre">
+            <p className="font-naruto text-3xl text-pergamino-100 contorno-fijo">{nombreDePremio(mejor)}</p>
+            <p className="font-display text-[10px]" style={{ color }}>
+              {ETIQUETA[mejor.rareza]}{DETALLE_EFECTO[mejor.efecto]?.(mejor) ?? ''}
+            </p>
+          </div>
+        </>
       )}
 
       <p className="absolute bottom-2 text-[9px] font-display text-pergamino-200/50">
