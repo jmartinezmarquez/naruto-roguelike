@@ -139,15 +139,13 @@ en el equipo), así que no hizo falta guardar nada nuevo. La regla vive en `rost
 - Empezar con un común no saca a nadie del pool de reclutables: los tres iniciales no elegidos siguen
   saliendo en el pergamino verde del arco 1.
 
-## Tres candidatos al azar (2026-10-16)
+## Rejilla de retratos (2026-10-16)
 
-La pantalla ya no enseña el roster entero: ofrece **siempre tres** candidatos sorteados entre todo lo
-desbloqueado (`ofertaInicial` en `engine/achievements.js`), con peso por rareza
-(`config.equipo.pesoRarezaOfertaInicial`: común e inicial 1, raro 0,4, legendario 0,15). Así un legendario
-sacado en el gacha es una alegría cuando aparece, no la elección obvia de todas las runs. La oferta se sortea
-al ENTRAR en la pantalla (`elegirCampana`, `elegirDesafioDiario`, `reiniciarRun` → `_sortearOfertaInicial`) y
-se guarda en `ofertaInicialIds`, para que no cambie al repintar. En la primera run el roster son los tres
-iniciales, así que salen ellos.
+La selección es una **rejilla de retratos estilo Street Fighter** con todos los ninjas del juego, ordenados por
+rareza: los que tienes, en color y elegibles; los que no, en silueta con "?" (lo que te queda por invocar). Al
+lado, la ficha grande del que tengas bajo el ratón o el cursor del teclado (flechas y Enter), y un botón
+**Random**. Sustituye a los tres candidatos al azar que hubo unas horas: con el gacha como forma de desbloquear,
+el sorteo escondía justo lo que habías conseguido.
 
 ⚠️ **Desde el 2026-10-16 reclutar ya no desbloquea iniciales**: solo el gacha (documentacion/42). El roster es
 los tres "inicial" más lo conseguido en el gacha, de cualquier rareza.

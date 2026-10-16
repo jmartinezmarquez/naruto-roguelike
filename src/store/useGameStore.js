@@ -23,7 +23,6 @@ import { pergaminosDeLaRun } from '../engine/pergaminos';
 import { modificadoresDeRetos, combinarModificadores, tamanoEquipoConRetos } from '../engine/retos';
 import retosData from '../data/retos.json';
 import { semillaDeTexto, generadorConSemilla } from '../engine/azar';
-import { rosterInicial, ofertaInicial } from '../engine/achievements';
 import { ARCOS_POR_ID } from '../data/arcs';
 import { sortearArcosDeLaRun, primerosArcosDeCampana, actosDeCampana } from '../engine/campanas';
 import { useAchievementsStore } from './useAchievementsStore';
@@ -425,8 +424,6 @@ export const useGameStore = create((set, get) => ({
   // que "reintentar" repita el del día); `desafioDiario` es el de la run en curso.
   diarioElegido: false,
   desafioDiario: null,
-  // Los candidatos de la pantalla de selección, sorteados al entrar (ver _sortearOfertaInicial).
-  ofertaInicialIds: [],
 
   // ---------- ACCIONES ----------
 
@@ -1222,26 +1219,11 @@ export const useGameStore = create((set, get) => ({
    */
   elegirCampana(campanaId, ascension = 0) {
     set({ campanaActualId: campanaId, ascensionElegida: ascension, diarioElegido: false, pantalla: 'seleccionPersonaje' });
-    get()._sortearOfertaInicial();
-  },
-
-  /**
-   * Interno: los candidatos de la pantalla de selección (ver `ofertaInicial`). Se
-   * sortean al ENTRAR en ella y se guardan, para que no cambien en cada repintado ni
-   * se puedan "rerollear" volviendo a abrir la pantalla dentro de la misma elección.
-   */
-  _sortearOfertaInicial() {
-    const meta = useAchievementsStore.getState();
-    const candidatos = [...personajesData.personajes, ...enemiesData.jefes.filter((j) => j.desbloqueablePorLogro)];
-    const roster = rosterInicial(candidatos, meta.personajesInicialesExtra());
-    const { tamanoOfertaInicial, pesoRarezaOfertaInicial } = configGlobal.equipo;
-    set({ ofertaInicialIds: ofertaInicial(roster, tamanoOfertaInicial, pesoRarezaOfertaInicial, Math.random).map((p) => p.id) });
   },
 
   /** El desafío diario: la primera campaña con la fecha de hoy como semilla. */
   elegirDesafioDiario() {
     set({ campanaActualId: CAMPANA_POR_DEFECTO, diarioElegido: true, pantalla: 'seleccionPersonaje' });
-    get()._sortearOfertaInicial();
   },
 
   /**
@@ -1541,7 +1523,6 @@ export const useGameStore = create((set, get) => ({
    * run nueva automáticamente, sin duplicar esa lógica aquí.
    */
   reiniciarRun() {
-    get()._sortearOfertaInicial();
     set({
       mapa: null,
       pantalla: 'seleccionPersonaje',

@@ -9,8 +9,9 @@
 // mapa. ⚠️ La lección que deja el test: **meter una pantalla delante convierte a la
 // siguiente en un paso, y todo paso necesita marcha atrás.**
 //
-// **El roster.** Es "inicial" + lo que hayan desbloqueado los logros, y esa suma vive
-// entre dos stores. Si el enlace se corta, la pantalla no falla: enseña menos gente.
+// **El roster.** Una rejilla con todos los ninjas: los "inicial" y lo sacado en el gacha
+// se eligen, el resto sale bloqueado. Esa suma vive entre dos stores: si el enlace se
+// corta, la pantalla no falla, solo enseña candados donde no los hay.
 
 import { ESTADO_INVOCACION_VACIO } from '../../engine/invocacion';
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -45,58 +46,52 @@ describe('la marcha atrás', () => {
   });
 });
 
+const elegibles = () => screen.getAllByRole('button')
+  .filter((b) => b.getAttribute('aria-label') && b.getAttribute('aria-label') !== 'Locked ninja');
+
 describe('el roster', () => {
-  it('siempre ofrece a los tres iniciales, aunque no haya ningún logro', () => {
+  it('enseña a todos los ninjas: los tres iniciales elegibles y el resto bloqueados', () => {
     render(<CharacterSelectScreen onConfirmar={() => {}} />);
-    for (const nombre of ['Naruto', 'Sasuke', 'Sakura']) {
-      expect(screen.getAllByText(new RegExp(nombre)).length).toBeGreaterThan(0);
+    for (const nombre of ['Naruto Uzumaki', 'Sasuke Uchiha', 'Sakura Haruno']) {
+      expect(screen.getByRole('button', { name: nombre })).toBeInTheDocument();
     }
+    expect(elegibles()).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: 'Locked ninja' }).length).toBeGreaterThan(10);
   });
 
-  it('siempre ofrece tres, sorteados entre todo lo desbloqueado (jefes del gacha incluidos)', () => {
-    useAchievementsStore.setState({ invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['yamato', 'gaara', 'kakashi'] } });
-    const vistos = new Set();
-    for (let i = 0; i < 40; i++) {
-      useGameStore.getState()._sortearOfertaInicial();
-      const { unmount } = render(<CharacterSelectScreen onConfirmar={() => {}} />);
-      const tarjetas = screen.getAllByRole('button').filter((b) => !/back/i.test(b.textContent));
-      expect(tarjetas).toHaveLength(3);
-      useGameStore.getState().ofertaInicialIds.forEach((id) => vistos.add(id));
-      unmount();
-    }
-    // Con seis candidatos y cuarenta sorteos, tienen que haber salido más de tres.
-    expect(vistos.size).toBeGreaterThan(3);
+  it('el gacha desbloquea (jefes incluidos); haberlo tenido en el equipo, ya no', () => {
+    useAchievementsStore.setState({
+      vistos: { ...useAchievementsStore.getState().vistos, personajes: ['rock_lee'] },
+      invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['neji', 'gaara'] },
+    });
+    render(<CharacterSelectScreen onConfirmar={() => {}} />);
+    expect(screen.getByRole('button', { name: 'Neji Hyuga' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Gaara' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Rock Lee' })).toBeNull();
+    expect(elegibles()).toHaveLength(5);
   });
 });
 
 describe('elegir', () => {
-  it('confirma con UN solo personaje: el resto del equipo se recluta jugando', async () => {
+  it('un clic en un retrato desbloqueado empieza con UN solo personaje', async () => {
     let elegidos = null;
     render(<CharacterSelectScreen onConfirmar={(ids) => { elegidos = ids; }} />);
-
-    // La primera tarjeta que no sea el "← Back".
-    const tarjetas = screen.getAllByRole('button').filter((b) => !/back/i.test(b.textContent));
-    await userEvent.click(tarjetas[0]);
-
-    expect(elegidos).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Sasuke Uchiha' }));
+    expect(elegidos).toEqual(['sasuke']);
   });
-});
 
-describe('qué desbloquea a un inicial', () => {
-  it('el gacha sí; haberlo tenido en el equipo, ya no', () => {
-    // Rock Lee estuvo en el equipo (Bingo Book) pero no ha salido en el gacha: no es
-    // inicial. Neji sí ha salido: lo es.
-    useAchievementsStore.setState({
-      vistos: { ...useAchievementsStore.getState().vistos, personajes: ['rock_lee'] },
-      invocacion: { ...ESTADO_INVOCACION_VACIO, personajes: ['neji'] },
-    });
-    const salieron = new Set();
-    for (let i = 0; i < 40; i++) {
-      useGameStore.getState()._sortearOfertaInicial();
-      useGameStore.getState().ofertaInicialIds.forEach((id) => salieron.add(id));
-    }
-    expect(salieron.has('neji')).toBe(true);
-    expect(salieron.has('rock_lee')).toBe(false);
+  it('un retrato bloqueado no hace nada', async () => {
+    let elegidos = null;
+    render(<CharacterSelectScreen onConfirmar={(ids) => { elegidos = ids; }} />);
+    await userEvent.click(screen.getAllByRole('button', { name: 'Locked ninja' })[0]);
+    expect(elegidos).toBeNull();
+  });
+
+  it('Random elige a uno de los desbloqueados', async () => {
+    let elegidos = null;
+    render(<CharacterSelectScreen onConfirmar={(ids) => { elegidos = ids; }} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Random' }));
+    expect(['naruto', 'sasuke', 'sakura']).toContain(elegidos[0]);
   });
 });
 
