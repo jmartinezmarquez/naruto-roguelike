@@ -447,9 +447,11 @@ Regla estricta: `engine/` nunca importa de `react` ni de `store/`. Son funciones
   combate). **El oro no se bajó**: sin nada que comprar, menos oro solo aburre antes. Bloque
   "Economía" en el simulador.
 
-- [x] **Los ★ ya reclutados son iniciales** (`rosterInicial` en `engine/achievements.js`): desde la segunda
-  run, cualquier común que haya estado en tu equipo (registro del Bingo Book) se puede elegir para empezar.
-  Raros y legendarios, solo por logro. La primera run sigue siendo solo los tres iniciales.
+- [x] **Iniciales: solo por el gacha** (2026-10-16, `rosterInicial`). Hasta entonces, un común reclutado una
+  vez quedaba como inicial para siempre; ahora TODOS los ninjas están en el gacha y es lo único que los
+  desbloquea para empezar (en las runs se siguen reclutando todos). Un ninja sale primero como ninja, luego
+  como su página del Bingo Book y luego como +1 de nivel de ninja. El ×10 cuesta 50 y garantiza un
+  legendario; pity a 20.
 
 - [x] **Ocho objetos más** (`documentacion/21-objetos-equipables.md`): 5 equipables con las cuatro pasivas
   que ningún objeto usaba y 3 consumibles (ungüento, kit médico que revive, manual de XP de equipo).

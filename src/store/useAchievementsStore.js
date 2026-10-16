@@ -18,6 +18,8 @@ import enemiesData from '../data/enemies.json';
 import { ARCOS } from '../data/arcs';
 
 // Todo lo que aún espera su dibujo: personajes, jefes, entrenadores y arcos.
+const INICIALES = charactersData.personajes.filter((p) => p.rareza === 'inicial').map((p) => p.id);
+
 const IDS_PENDIENTES_DE_ARTE = [
   ...charactersData.personajes, ...enemiesData.jefes, ...ARCOS,
 ].filter((x) => x.pendienteDeArte).map((x) => x.id);
@@ -233,13 +235,19 @@ export const useAchievementsStore = create((set, get) => ({
     const { pergaminos } = get();
     if (pergaminos.saldo < precio) return null;
 
-    const { estado, premios } = invocarEnMotor(get().invocacion, CATALOGO_INVOCACION, reglas, numero, azar);
+    // Los iniciales (Naruto, Sasuke, Sakura) se tienen desde el principio: su primera
+    // tirada ya es su página.
+    const yaLoTiene = (e) => e.tipo === 'personaje' && INICIALES.includes(e.id);
+    const { estado, premios } = invocarEnMotor(get().invocacion, CATALOGO_INVOCACION, reglas, numero, azar, yaLoTiene,
+      { garantizarLegendario: numero === 10 && reglas.diezGarantizaLegendario });
 
     const reglasMaestria = configGlobal.maestria;
     const xpGanada = {};
     let reembolso = 0;
     const conEfecto = premios.map((premio) => {
-      if (!premio.duplicado) return { ...premio, efecto: 'nuevo' };
+      if (premio.resultado === 'personaje') return { ...premio, efecto: 'nuevo' };
+      if (premio.resultado === 'objeto') return { ...premio, efecto: 'nuevo' };
+      if (premio.resultado === 'pagina') return { ...premio, efecto: 'pagina' };
       if (premio.tipo === 'personaje') {
         // Con la XP ya sumada en esta misma tanda: dos Kakashi repetidos, dos niveles.
         const xpActual = (get().maestria[premio.id] ?? 0) + (xpGanada[premio.id] ?? 0);
@@ -276,7 +284,12 @@ export const useAchievementsStore = create((set, get) => ({
     const tiene = (e) => listas[e.tipo].includes(e.id);
     const catalogo = CATALOGO_INVOCACION;
     const completa = (tipo) => catalogo.filter((e) => e.tipo === tipo).every(tiene);
-    return { personaje: completa('personaje'), objeto: completa('objeto'), pagina: completa('pagina'), todo: catalogo.every(tiene) };
+    // Las páginas ya no son premios sueltos: hay una por ninja del catálogo.
+    const paginas = catalogo.filter((e) => e.tipo === 'personaje').every((e) => listas.pagina.includes(e.id));
+    return {
+      personaje: completa('personaje'), objeto: completa('objeto'), pagina: paginas,
+      todo: completa('personaje') && completa('objeto') && paginas,
+    };
   },
 
   /**

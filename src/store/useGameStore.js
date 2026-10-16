@@ -1233,7 +1233,7 @@ export const useGameStore = create((set, get) => ({
   _sortearOfertaInicial() {
     const meta = useAchievementsStore.getState();
     const candidatos = [...personajesData.personajes, ...enemiesData.jefes.filter((j) => j.desbloqueablePorLogro)];
-    const roster = rosterInicial(candidatos, meta.personajesInicialesExtra(), meta.vistos.personajes ?? []);
+    const roster = rosterInicial(candidatos, meta.personajesInicialesExtra());
     const { tamanoOfertaInicial, pesoRarezaOfertaInicial } = configGlobal.equipo;
     set({ ofertaInicialIds: ofertaInicial(roster, tamanoOfertaInicial, pesoRarezaOfertaInicial, Math.random).map((p) => p.id) });
   },

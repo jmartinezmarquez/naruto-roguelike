@@ -289,6 +289,11 @@ con `pendienteDeArte`, y la campaña sortea **dos arcos en el acto 2** (Chunin E
 2. **El objeto inicial sale AL AZAR** entre los desbloqueados, sin elegir.
 3. **Los villanos reclutables también tienen aspecto alternativo**, no solo los héroes.
 
+5. **Todos los ninjas en el gacha** (2026-10-16): es lo único que desbloquea a un ninja como inicial (los
+   comunes también; en las runs se siguen reclutando todos). Cada ninja sale primero como ninja, luego como
+   su página del Bingo Book y luego como +1 de nivel de ninja: las páginas ya no son premios sueltos. Un
+   objeto repetido devuelve 3 pergaminos. El ×10 cuesta 50 (lo mismo que diez sueltas) y a cambio garantiza un
+   legendario; el pity de legendario baja a 20.
 4. **Todo logro paga en pergaminos** (2026-10-16): el gacha es la mecánica principal. Lo que los logros
    desbloqueaban (jefes, Yamato, objetos iniciales) sale ahora del gacha. Ver documentacion/18.
 

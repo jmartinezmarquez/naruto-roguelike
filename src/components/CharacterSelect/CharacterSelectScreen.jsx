@@ -96,8 +96,8 @@ export default function CharacterSelectScreen({ onConfirmar }) {
       <div className="max-w-3xl w-full text-center flex flex-col gap-6">
         <CabeceraPantalla antetitulo="A new path" titulo="Choose your ninja" />
         <p className="text-[10px] text-pergamino-200 -mt-4">
-          The rest of your team is built by recruiting during the adventure. Any ★ ninja you
-          recruit can be your starter in later runs.
+          The rest of your team is built by recruiting during the adventure. Summon ninja to
+          unlock them as starters.
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

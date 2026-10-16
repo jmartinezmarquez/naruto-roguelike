@@ -37,15 +37,32 @@ describe('invocar', () => {
     }
   });
 
-  it('marca duplicado lo que ya se tenía y lo repetido dentro de la misma tanda', () => {
-    const { premios, estado } = invocar(ESTADO_INVOCACION_VACIO, reglas.catalogo, reglas, 3, fijo(0.05),
-      (e) => e.id === 'nadie');
+  it('un ninja sale primero como ninja, luego como su página y luego repetido', () => {
     // azar fijo → siempre el mismo legendario
-    expect(premios.map((p) => p.duplicado)).toEqual([false, true, true]);
+    const { premios, estado } = invocar(ESTADO_INVOCACION_VACIO, reglas.catalogo, reglas, 3, fijo(0.05));
+    expect(premios.map((p) => p.resultado)).toEqual(['personaje', 'pagina', 'repetido']);
     expect(estado.personajes).toHaveLength(1);
+    expect(estado.paginas).toEqual([premios[0].id]);
     expect(estado.legendarios).toBe(3);
-    const yaTenido = invocar(ESTADO_INVOCACION_VACIO, reglas.catalogo, reglas, 1, fijo(0.05), () => true);
-    expect(yaTenido.premios[0].duplicado).toBe(true);
+  });
+
+  it('lo que ya se tenía (un inicial) empieza directamente por la página', () => {
+    const { premios } = invocar(ESTADO_INVOCACION_VACIO, reglas.catalogo, reglas, 1, fijo(0.05), () => true);
+    expect(premios[0].resultado).toBe('pagina');
+  });
+
+  it('un objeto repetido es repetido', () => {
+    const soloObjeto = reglas.catalogo.filter((e) => e.tipo === 'objeto').slice(0, 1);
+    const { premios } = invocar(ESTADO_INVOCACION_VACIO, soloObjeto, reglas, 2, fijo(0.9));
+    expect(premios.map((p) => p.resultado)).toEqual(['objeto', 'repetido']);
+  });
+
+  it('el ×10 con garantía acaba con al menos un legendario, aunque el azar no lo dé', () => {
+    const { premios } = invocar(ESTADO_INVOCACION_VACIO, reglas.catalogo, reglas, 10, fijo(0.999), () => false,
+      { garantizarLegendario: true });
+    expect(premios.some((p) => p.rareza === 'legendario')).toBe(true);
+    const sin = invocar(ESTADO_INVOCACION_VACIO, reglas.catalogo, reglas, 9, fijo(0.999));
+    expect(sin.premios.some((p) => p.rareza === 'legendario')).toBe(false);
   });
 
   it('no muta el estado de entrada', () => {
@@ -56,7 +73,7 @@ describe('invocar', () => {
 
   it('las garantías cuentan desde el estado que se pasa', () => {
     const estado = { ...ESTADO_INVOCACION_VACIO, sinRaro: 4, sinLegendario: 12 };
-    expect(tiradasParaGarantia(estado, reglas)).toEqual({ raro: 6, legendario: 18 });
+    expect(tiradasParaGarantia(estado, reglas)).toEqual({ raro: 6, legendario: reglas.garantiaLegendario - 12 });
   });
 });
 
@@ -75,17 +92,21 @@ describe('invariantes de invocacion.json', () => {
     }
   });
 
-  it('regla de oro: ningún ninja que se recluta desde la primera run sale en el gacha', () => {
-    const abiertos = charactersData.personajes.filter((p) => ['inicial', 'comun'].includes(p.rareza)).map((p) => p.id);
-    for (const e of reglas.catalogo.filter((x) => x.tipo === 'personaje')) {
-      expect(abiertos).not.toContain(e.id);
+  it('todo ninja del juego sale en el gacha, los comunes como comunes', () => {
+    // Desde el 2026-10-16 el gacha es lo único que desbloquea a un ninja como inicial.
+    const enCatalogo = new Map(reglas.catalogo.filter((x) => x.tipo === 'personaje').map((e) => [e.id, e.rareza]));
+    for (const p of charactersData.personajes) {
+      expect(enCatalogo.has(p.id), p.id).toBe(true);
+      if (['inicial', 'comun'].includes(p.rareza)) expect(enCatalogo.get(p.id), p.id).toBe('comun');
     }
   });
 
-  it('las probabilidades suman 1 y diez tiradas salen más baratas que diez sueltas', () => {
+  it('las probabilidades suman 1 y el ×10 no sale más caro que diez sueltas', () => {
+    // A cambio de no ser más barato, garantiza un legendario.
     const { comun, raro, legendario } = reglas.probabilidades;
     expect(comun + raro + legendario).toBeCloseTo(1);
-    expect(reglas.precioDiez).toBeLessThan(10 * reglas.precioTirada);
+    expect(reglas.precioDiez).toBeLessThanOrEqual(10 * reglas.precioTirada);
+    expect(reglas.diezGarantizaLegendario).toBe(true);
   });
 });
 
@@ -100,15 +121,4 @@ describe('invariantes de bingo-book-pages.json', () => {
     for (const id of ids) expect(paginasData.paginas[id], id).toBeTruthy();
   });
 
-  it('las páginas salen en el gacha como comunes', () => {
-    const enCatalogo = reglas.catalogo.filter((e) => e.tipo === 'pagina').map((e) => e.id);
-    expect(new Set(enCatalogo)).toEqual(new Set(Object.keys(paginasData.paginas)));
-  });
-
-  it('una página repetida es duplicado como cualquier otro premio', () => {
-    const soloPaginas = reglas.catalogo.filter((e) => e.tipo === 'pagina').slice(0, 1);
-    const { premios, estado } = invocar(ESTADO_INVOCACION_VACIO, soloPaginas, reglas, 2, () => 0.9);
-    expect(premios.map((p) => p.duplicado)).toEqual([false, true]);
-    expect(estado.paginas).toEqual([soloPaginas[0].id]);
-  });
 });

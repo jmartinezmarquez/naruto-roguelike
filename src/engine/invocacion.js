@@ -15,8 +15,6 @@ export const ESTADO_INVOCACION_VACIO = {
   legendarios: 0,
 };
 
-// En qué lista del estado se apunta cada tipo de premio.
-const LISTA_POR_TIPO = { personaje: 'personajes', objeto: 'objetos', pagina: 'paginas' };
 
 const ORDEN_RAREZAS = ['comun', 'raro', 'legendario'];
 
@@ -52,14 +50,22 @@ function entradasDeRareza(catalogo, rareza) {
 }
 
 /**
- * Hace `numero` tiradas seguidas. `yaLoTiene(entrada)` dice si el jugador ya tenía
- * ese premio ANTES de tirar (por un logro, por ejemplo); lo que salga en esta misma
- * tanda también cuenta, así que el segundo Kakashi de una tirada de diez es duplicado.
+ * Hace `numero` tiradas seguidas y dice qué da cada una (`resultado`):
  *
- * Devuelve el estado nuevo y cada premio con `duplicado`. Qué se hace con un
- * duplicado (nivel de ninja o pergaminos) lo decide el store, que es quien sabe.
+ * - Un **ninja**: la primera vez, el ninja (`'personaje'`, desbloqueado como inicial);
+ *   la segunda, **su página** del Bingo Book (`'pagina'`); a partir de ahí,
+ *   `'repetido'` (el store lo convierte en nivel de ninja). Vale para todas las rarezas
+ *   (playtest 2026-10-16).
+ * - Un **objeto**: la primera vez el objeto (`'objeto'`), luego `'repetido'` (pergaminos).
+ *
+ * `yaLoTiene(entrada)` dice si el jugador ya tenía ese ninja u objeto ANTES de tirar
+ * sin haberlo sacado aquí (los tres iniciales, por ejemplo); lo que sale en la misma
+ * tanda cuenta, así que el segundo Kakashi de un ×10 ya es su página.
+ *
+ * `garantizarLegendario`: si la tanda acaba sin ningún legendario, la última tirada lo
+ * es (el ×10, documentacion/42).
  */
-export function invocar(estado, catalogo, reglas, numero, azar, yaLoTiene = () => false) {
+export function invocar(estado, catalogo, reglas, numero, azar, yaLoTiene = () => false, { garantizarLegendario = false } = {}) {
   let siguiente = {
     ...estado,
     personajes: [...estado.personajes],
@@ -68,14 +74,31 @@ export function invocar(estado, catalogo, reglas, numero, azar, yaLoTiene = () =
   };
   const premios = [];
   for (let n = 0; n < numero; n++) {
-    const rareza = rarezaDeTirada(siguiente, reglas, azar);
+    const ultima = n === numero - 1;
+    const faltaLegendario = garantizarLegendario && ultima && !premios.some((p) => p.rareza === 'legendario');
+    const rareza = faltaLegendario ? 'legendario' : rarezaDeTirada(siguiente, reglas, azar);
     const entradas = entradasDeRareza(catalogo, rareza);
     const entrada = entradas[Math.floor(azar() * entradas.length)];
-    const lista = siguiente[LISTA_POR_TIPO[entrada.tipo]];
-    const duplicado = lista.includes(entrada.id) || yaLoTiene(entrada);
-    if (!lista.includes(entrada.id)) lista.push(entrada.id);
-    // Las garantías miran la rareza que ha SALIDO, no la que se pidió: con un
-    // catálogo sin comunes, la tirada común que da un raro también la cumple.
+
+    let resultado;
+    if (entrada.tipo === 'personaje') {
+      const loTiene = siguiente.personajes.includes(entrada.id) || yaLoTiene(entrada);
+      if (!loTiene) {
+        siguiente.personajes.push(entrada.id);
+        resultado = 'personaje';
+      } else if (!siguiente.paginas.includes(entrada.id)) {
+        siguiente.paginas.push(entrada.id);
+        resultado = 'pagina';
+      } else {
+        resultado = 'repetido';
+      }
+    } else {
+      const loTiene = siguiente.objetos.includes(entrada.id) || yaLoTiene(entrada);
+      if (!loTiene) siguiente.objetos.push(entrada.id);
+      resultado = loTiene ? 'repetido' : 'objeto';
+    }
+
+    // Las garantías miran la rareza que ha SALIDO, no la que se pidió.
     const salio = entrada.rareza;
     siguiente = {
       ...siguiente,
@@ -84,14 +107,14 @@ export function invocar(estado, catalogo, reglas, numero, azar, yaLoTiene = () =
       sinLegendario: salio === 'legendario' ? 0 : siguiente.sinLegendario + 1,
       legendarios: siguiente.legendarios + (salio === 'legendario' ? 1 : 0),
     };
-    premios.push({ ...entrada, duplicado });
+    premios.push({ ...entrada, resultado });
   }
   return { estado: siguiente, premios };
 }
 
 /**
  * El catálogo sin lo que aún no se puede dar: el ninja que espera su dibujo
- * (`pendienteDeArte` en characters.json) y su página. Sin esto, el gacha daría un
+ * (`pendienteDeArte` en characters.json). Sin esto, el gacha daría un
  * personaje invisible.
  */
 export function catalogoDisponible(catalogo, idsPendientesDeArte) {

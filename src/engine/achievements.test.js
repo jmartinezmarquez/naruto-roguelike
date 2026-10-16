@@ -147,13 +147,9 @@ describe('rosterInicial', () => {
     expect(rosterInicial(personajes, [], []).map((p) => p.id)).toEqual(['a']);
   });
 
-  it('un común que ya estuvo en tu equipo pasa a ser elegible', () => {
-    expect(rosterInicial(personajes, [], ['c']).map((p) => p.id)).toEqual(['a', 'c']);
-  });
-
-  it('raros y legendarios no se desbloquean por haberlos tenido: solo por logro', () => {
-    expect(rosterInicial(personajes, [], ['d', 'e']).map((p) => p.id)).toEqual(['a']);
-    expect(rosterInicial(personajes, ['d'], ['e']).map((p) => p.id)).toEqual(['a', 'd']);
+  it('solo los iniciales y lo conseguido en el gacha, de cualquier rareza', () => {
+    expect(rosterInicial(personajes, []).map((p) => p.id)).toEqual(['a']);
+    expect(rosterInicial(personajes, ['c', 'd']).map((p) => p.id)).toEqual(['a', 'c', 'd']);
   });
 });
 
