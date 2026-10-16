@@ -9,7 +9,7 @@
 // y eso solo se sabe preguntando por todos.
 
 import { describe, it, expect } from 'vitest';
-import { nombrePersonaje, nombreCorto, tipoDeLuchador, rarezaDeLuchador } from './nombres';
+import { nombrePersonaje, nombreCorto, tipoDeLuchador, rarezaDeLuchador, nombreQueCabe } from './nombres';
 import charactersData from '../../data/characters.json';
 import enemiesData from '../../data/enemies.json';
 import commonEnemiesData from '../../data/common-enemies.json';
@@ -81,5 +81,17 @@ describe('tipo y rareza', () => {
   it('todo personaje jugable tiene rareza, que es lo que decide por qué pergamino sale', () => {
     const sinRareza = charactersData.personajes.filter((p) => rarezaDeLuchador(p.id) === null);
     expect(sinRareza.map((p) => p.id)).toEqual([]);
+  });
+});
+
+describe('nombreQueCabe', () => {
+  it('el completo si cabe, si no la abreviatura y si tampoco el nombre de pila', () => {
+    expect(nombreQueCabe('rock_lee', 8)).toBe('Rock Lee');
+    expect(nombreQueCabe('naruto', 11)).toBe('Naruto U.');
+    expect(nombreQueCabe('naruto', 8)).toBe('Naruto');
+    expect(nombreQueCabe('camino_animal_pain', 8)).toBe('Pain');
+  });
+  it('nunca devuelve puntos suspensivos ni pasa del máximo si hay nombre de pila corto', () => {
+    expect(nombreQueCabe('kakashi', 8)).toBe('Kakashi');
   });
 });

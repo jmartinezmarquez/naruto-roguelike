@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { useFactorAnimacion } from '../../store/useSettingsStore';
 import { spriteDeCombate } from '../common/datosDeLuchador';
-import { nombreCorto, nombrePersonaje } from '../common/nombres';
+import { nombreQueCabe } from '../common/nombres';
 import { FONDO_COLUMNA } from '../common/fondosDeArco';
 import { reproducir } from '../common/efectosDeSonido';
 import { useAvanzarConTeclado } from '../common/useAvanzarConTeclado';
@@ -87,9 +87,10 @@ function TarjetaRecuperacion({ miembro, curando }) {
           </div>
         )}
       </div>
-      <p className="font-display text-[10px] text-pergamino-100 mt-1 truncate max-w-full">
-        {nombreCorto(miembro.id)} <span className="text-pergamino-200/60">Lv.{miembro.nivel}</span>
-      </p>
+      {/* El nivel en su propia línea: junto al nombre no cabía y la tarjeta lo cortaba
+          con puntos suspensivos ("Naruto U..."). */}
+      <p className="font-display text-[10px] text-pergamino-100 mt-1 whitespace-nowrap">{nombreQueCabe(miembro.id, 11)}</p>
+      <p className="text-[9px] text-pergamino-200/60">Lv.{miembro.nivel}</p>
       <div className="relative h-2.5 w-full bg-tinta-800 rounded-sm overflow-hidden mt-1 border border-marco">
         <div
           className={`absolute inset-y-0 left-0 bg-exito ${curando ? 'llenar-hp' : ''}`}
@@ -183,7 +184,6 @@ export default function TransicionArcoScreen() {
               className="w-12 h-12 object-contain caido-ko"
               style={{ imageRendering: 'pixelated' }}
             />
-            <p className="text-[10px] text-pergamino-200">{nombrePersonaje(arco.jefeFinalId)} defeated</p>
           </div>
         )}
       </header>

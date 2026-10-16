@@ -1,5 +1,5 @@
 import { useGameStore } from '../../store/useGameStore';
-import { nombreCorto } from '../common/nombres';
+import { nombreQueCabe } from '../common/nombres';
 import { spriteDeCombate } from '../common/datosDeLuchador';
 import { PanelMarco, CabeceraPantalla, TituloBloque, BotonPrincipal } from '../common/PiezasUI';
 import { FilaMedallas } from '../common/Medallas';
@@ -22,7 +22,7 @@ function PanelMaestria({ resultado, maestria }) {
         const subio = m.nivelDespues > m.nivelAntes;
         return (
           <div key={m.id} className="flex items-center gap-3">
-            <span className="w-20 shrink-0 text-[10px] font-display text-pergamino-100 truncate">{nombreCorto(m.id)}</span>
+            <span className="w-20 shrink-0 text-[10px] font-display text-pergamino-100 whitespace-nowrap">{nombreQueCabe(m.id, 8)}</span>
             <div className="flex-1 h-2 bg-tinta-800 rounded-sm overflow-hidden border border-marco">
               <div className="h-full bg-oro" style={{ width: xpParaSiguiente ? `${(xpEnNivel / xpParaSiguiente) * 100}%` : '100%' }} />
             </div>
@@ -141,7 +141,7 @@ export default function GameOverScreen() {
                       />
                     )}
                     <div className="min-w-0">
-                      <p className="text-[11px] font-display truncate">{nombreCorto(p.id)}</p>
+                      <p className="text-[11px] font-display whitespace-nowrap">{nombreQueCabe(p.id, 10)}</p>
                       <p className="text-[9px] text-pergamino-200/50">Lv. {p.nivel}</p>
                     </div>
                   </div>
