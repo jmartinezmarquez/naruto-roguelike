@@ -764,6 +764,45 @@
         "tipo": "pergaminos",
         "cantidad": 5
       }
+    },
+    {
+      "id": "derrotar_fubuki",
+      "nombre": "Wings Clipped",
+      "descripcion": "Defeat Fubuki.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "fubuki"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 3
+      }
+    },
+    {
+      "id": "derrotar_doto",
+      "nombre": "Spring Comes to the Snow",
+      "descripcion": "Defeat Doto Kazahana.",
+      "condicion": {
+        "tipo": "derrotarJefe",
+        "jefeId": "doto"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
+    },
+    {
+      "id": "pais_de_la_nieve_sin_bajas",
+      "nombre": "Princess Escort",
+      "descripcion": "Complete Land of Snow without losing a single battle.",
+      "condicion": {
+        "tipo": "completarArcoSinDerrotas",
+        "arcoId": "pais_de_la_nieve"
+      },
+      "recompensa": {
+        "tipo": "pergaminos",
+        "cantidad": 4
+      }
     }
   ],
   "_pendienteDeImplementar": {

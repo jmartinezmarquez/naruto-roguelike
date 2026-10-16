@@ -1,0 +1,59 @@
+{
+  "_comentario": "Arco alternativo del ACTO 1 (documentacion/42 §5): la escolta de la princesa Koyuki por el País de la Nieve, en lugar del País de las Olas. Es el acto que decide la PRIMERA run, así que sus jefes calcan a Haku y Zabuza en naturaleza, stats y niveles de transformación (ver documentacion/11, v5). pendienteDeArte: fuera de la campaña hasta que llegue su arte.",
+  "id": "pais_de_la_nieve",
+  "nombre": "Land of Snow",
+  "pendienteDeArte": true,
+  "medalla": {
+    "nombre": "Snow Crest"
+  },
+  "textoTienda": "A film crew's supply wagon, stuck in the snow, sells whatever the actors will not miss.",
+  "colorCaminosMapa": "#4a4440",
+  "temaVisual": "pais_de_la_nieve",
+  "numeroPisos": 8,
+  "nodosPorPiso": {
+    "min": 1,
+    "max": 4
+  },
+  "poolTiposNodo": [
+    {
+      "tipo": "combate",
+      "peso": 52
+    },
+    {
+      "tipo": "evento",
+      "peso": 19
+    },
+    {
+      "tipo": "descanso",
+      "peso": 15
+    },
+    {
+      "tipo": "tienda",
+      "peso": 14
+    }
+  ],
+  "poolRarezaReclutar": [
+    {
+      "rareza": "comun",
+      "peso": 80
+    },
+    {
+      "rareza": "legendario",
+      "peso": 20
+    }
+  ],
+  "probabilidadSegundoNodoReclutar": 0.15,
+  "nivelDesafioLegendario": 6,
+  "pisoMiniJefe": 4,
+  "miniJefeId": "fubuki",
+  "pisoJefeFinal": 8,
+  "jefeFinalId": "doto",
+  "personajesReclutablesIds": [
+    "kakashi"
+  ],
+  "nivelEnemigoBase": 1,
+  "escaladoNivelPorPiso": 1.0,
+  "nivelMiniJefe": 3,
+  "nivelJefeFinal": 10,
+  "xpCombateComun": 48
+}

@@ -970,6 +970,161 @@
         }
       ],
       "arcoId": "hidan_y_kakuzu"
+    },
+    {
+      "id": "princesa_actriz",
+      "titulo": "The Runaway Actress",
+      "descripcion": "The lead actress of the film you are escorting has slipped away again. Rumour says she is the lost princess of this land.",
+      "elecciones": [
+        {
+          "texto": "Search the blizzard for her",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.55,
+            "exito": {
+              "tipo": "varios",
+              "efectos": [
+                {
+                  "tipo": "ganarOro",
+                  "cantidad": 40
+                },
+                {
+                  "tipo": "ganarXpEquipo",
+                  "cantidad": 25
+                }
+              ]
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.18
+            }
+          }
+        },
+        {
+          "texto": "Wait for her by the fire",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 15
+          }
+        }
+      ],
+      "arcoId": "pais_de_la_nieve"
+    },
+    {
+      "id": "barco_del_rodaje",
+      "titulo": "The Film Crew's Ship",
+      "descripcion": "The film crew offers you a warm cabin and hot food aboard their ship, if you help unload the props.",
+      "elecciones": [
+        {
+          "texto": "Rest aboard",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.3
+          }
+        },
+        {
+          "texto": "Unload for pay",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarOro",
+                "cantidad": 35
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.1
+              }
+            ]
+          }
+        }
+      ],
+      "arcoId": "pais_de_la_nieve"
+    },
+    {
+      "id": "lago_helado",
+      "titulo": "A Frozen Lake",
+      "descripcion": "The shortcut runs across a frozen lake. The ice groans under every step.",
+      "elecciones": [
+        {
+          "texto": "Cross the ice",
+          "efecto": {
+            "tipo": "azar",
+            "probabilidad": 0.6,
+            "exito": {
+              "tipo": "ganarXpEquipo",
+              "cantidad": 45
+            },
+            "fallo": {
+              "tipo": "perderHpEquipo",
+              "porcentaje": 0.2
+            }
+          }
+        },
+        {
+          "texto": "Take the long way",
+          "efecto": {
+            "tipo": "ganarXpEquipo",
+            "cantidad": 15
+          }
+        }
+      ],
+      "arcoId": "pais_de_la_nieve"
+    },
+    {
+      "id": "aguas_termales",
+      "titulo": "Hot Springs in the Snow",
+      "descripcion": "Steam rises from a hot spring hidden between the rocks. The water is said to restore chakra.",
+      "elecciones": [
+        {
+          "texto": "Soak until sunset",
+          "efecto": {
+            "tipo": "curarEquipoPorcentaje",
+            "cantidad": 0.35
+          }
+        },
+        {
+          "texto": "Train in the cold instead",
+          "efecto": {
+            "tipo": "varios",
+            "efectos": [
+              {
+                "tipo": "ganarXpEquipo",
+                "cantidad": 35
+              },
+              {
+                "tipo": "perderHpEquipo",
+                "porcentaje": 0.12
+              }
+            ]
+          }
+        }
+      ],
+      "arcoId": "pais_de_la_nieve"
+    },
+    {
+      "id": "armadura_robada",
+      "titulo": "A Crate of Chakra Armour",
+      "descripcion": "A broken sled spills crates stamped with the Snow ninja crest. One holds a prototype of their chakra armour.",
+      "elecciones": [
+        {
+          "texto": "Try the armour on",
+          "efecto": {
+            "tipo": "buffTemporalEquipo",
+            "stat": "defensa",
+            "multiplicador": 1.25,
+            "combates": 3
+          }
+        },
+        {
+          "texto": "Sell the crates",
+          "efecto": {
+            "tipo": "ganarOro",
+            "cantidad": 30
+          }
+        }
+      ],
+      "arcoId": "pais_de_la_nieve"
     }
   ]
 }

@@ -1062,3 +1062,74 @@ así que la franja de arriba y el suelo tienen que ser tranquilos.
 ```
 A wide pixel art background (about 16:9) in the exact style of the attached reference images, for the banner of a "Summoning" screen: a mystical shrine at night, a large faintly glowing summoning seal drawn on a stone floor in the lower half, purple and deep blue sky with mist, two stone lanterns and hanging paper charms framing the left and right edges. The top third must be calm (a title is written there) and the floor must be flat and calm (three characters stand on it). Crisp pixels, no blur. No characters, no text, no letters, no UI, no frame.
 ```
+
+## Tanda 12 — arco Land of Snow (hojas 75-80)
+
+⏳ **PENDIENTES.** El arco alternativo del **acto 1**, en lugar del País de las Olas: la escolta de la princesa
+Koyuki (la primera película). Como los de las tandas 7-9: en datos con `pendienteDeArte` y fuera de la campaña;
+al llegar el arte, correr el script, quitar las marcas y añadir `pais_de_la_nieve` al acto 1 de
+`campaigns.json`. Bloques: 75-76 personajes, 77 proyectiles, 78 iconos (adjuntar la hoja 19), 79 fondo de mapa
+(adjuntar una columna actual) y 80 aspectos. ⚠️ El fondo es nieve clara: el arco ya lleva los caminos del mapa
+en gris oscuro (`colorCaminosMapa`).
+
+### Hoja 75 → `sprite-estilo-nuevo-75.png` (Fubuki y Doto)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Fubuki Kakuyoku: young woman with short pink hair, a white and pale-blue Snow ninja bodysuit with chakra armour plates on the shoulders and two folded mechanical wings on her back, Snow forehead protector.
+2. Doto Kazahana (normal): big bearded man with a grey ponytail and a scar, a heavy dark fur coat over a purple armoured robe, a cruel smile.
+3. Doto – "Chakra Armor": same Doto wearing a sleek black-and-purple chakra armour suit with a round crystal in the chest, faint blue aura.
+4. Doto – "Full Armor Release": same armoured Doto with big black wings of ice and chakra spreading behind him, a dragon of black ice coiling around him.
+```
+
+### Hoja 76 → `sprite-estilo-nuevo-76.png` (entrenadores)
+
+```
+[CHARACTER STYLE BLOCK]
+
+Left to right:
+1. Nadare Roga: tall man with long silver-white hair, cold eyes, a white Snow ninja coat with chakra armour plates, an icy mist at his feet.
+2. Mizore Fuyukuma: huge burly man with a dark beard, a thick Snow ninja suit with armour plates and a wide metal snowboard strapped to his back.
+```
+
+### Hoja 77 → `sprite-estilo-nuevo-77.png` (proyectiles)
+
+```
+[PROJECTILE STYLE BLOCK]
+
+Left to right:
+1. Fubuki's "Ice Sword Dance": two crossed curved blades of pale blue ice with snow sparkles.
+2. Doto's "Black Dragon Blizzard": the head of a dragon made of black ice, roaring, with snow swirling around it.
+3. Nadare's "Ice Wolf Fang": a snarling wolf head made of ice and snow.
+4. Mizore's "Snow Bear Charge": a metal snowboard flying forward leaving a trail of snow.
+```
+
+### Hoja 78 → `sprite-estilo-nuevo-78.png` (medalla → `assets/medals/pais_de_la_nieve.png`)
+
+```
+[UI ICON STYLE BLOCK]
+
+One arc medal, like a Pokémon gym badge, matching the shape language of the attached medals: Snow Crest (Land of Snow), a pale blue six-pointed snowflake badge with a small crown in the middle.
+```
+
+### Hoja 79 → `sprite-estilo-nuevo-79.png` (columna → `assets/map-columns/pais_de_la_nieve.png`)
+
+```
+[MAP BACKGROUND STYLE BLOCK]
+
+Land of Snow: the flat center is packed white snow. Left and right borders: snowy pine trees, icicles on dark rocks, a frozen river edge, and near the top the roof of a snow-covered castle half hidden in the blizzard.
+```
+
+### Hoja 80 → `sprite-estilo-nuevo-80.png` (aspectos: Fubuki y Doto)
+
+```
+[OUTFIT STYLE BLOCK]
+
+Left to right:
+1. Fubuki – Winter disguise: a long white fur coat and hood over her armour, wings hidden.
+2. Fubuki – Film extra: a costume of a fairy-tale ice queen with a paper crown.
+3. Doto – Usurper king: a heavy royal robe of white fur with a golden crown.
+4. Doto – Young prince: younger Doto in a simple dark kimono, no armour, hair tied back.
+```
