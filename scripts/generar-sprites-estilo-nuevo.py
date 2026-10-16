@@ -201,6 +201,8 @@ HOJAS = [
     ('sprite-estilo-nuevo-68.png', ['projectiles/temari', 'projectiles/kankuro', 'projectiles/konohamaru']),
     ('sprite-estilo-nuevo-69.png', ['aspects/tsunade_1', 'aspects/tsunade_2', 'aspects/temari_1', 'aspects/temari_2', 'aspects/kankuro_1', 'aspects/kankuro_2']),
     ('sprite-estilo-nuevo-70.png', ['aspects/konohamaru_1', 'aspects/konohamaru_2']),
+    # La ilustración de la tarjeta del desafío diario en el Home.
+    ('sprite-estilo-nuevo-71.png', ['campaigns/diario']),
 ]
 
 TIPO_POR_CARPETA = {

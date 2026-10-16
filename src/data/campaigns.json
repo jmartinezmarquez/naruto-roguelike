@@ -1,5 +1,5 @@
 {
-  "_comentario": "Las campañas del juego: una lista ordenada de arcos con nombre propio. Hoy hay UNA (la del MVP), y el fichero existe igualmente por la regla del proyecto — el motor y el store no saben de contenido. Hasta ahora la campaña estaba repartida entre una constante del store (ORDEN_ARCOS) y una llamada de App.jsx que arrancaba en el arco 1 a pelo, así que añadir una segunda habría sido tocar código. Ahora es añadir una entrada aquí. Ver documentacion/38-home-y-campanas.md. Desde 2026-10-15 la campaña es una lista de ACTOS y cada acto, un pool de arcos: al empezar la run se sortea uno por acto (engine/campanas.js, documentacion/42 §5). Los arcos de un mismo acto se pelean a los mismos niveles; lo comprueba un test.",
+  "_comentario": "Las campañas del juego: una lista ordenada de arcos con nombre propio. Hoy hay UNA (la del MVP), y el fichero existe igualmente por la regla del proyecto — el motor y el store no saben de contenido. Hasta ahora la campaña estaba repartida entre una constante del store (ORDEN_ARCOS) y una llamada de App.jsx que arrancaba en el arco 1 a pelo, así que añadir una segunda habría sido tocar código. Ahora es añadir una entrada aquí. Ver documentacion/38-home-y-campanas.md. Desde 2026-10-15 la campaña es una lista de ACTOS y cada acto, un pool de arcos: al empezar la run se sortea uno por acto (engine/campanas.js, documentacion/42 §5). Los arcos de un mismo acto se pelean a los mismos niveles; lo comprueba un test. lema: la línea corta bajo el nombre en la tarjeta del Home (los arcos ya no se listan: se sortean).",
   "campanas": [
     {
       "id": "camino_ninja",
@@ -21,7 +21,8 @@
             "invasion_de_pain"
           ]
         }
-      ]
+      ],
+      "lema": "From genin to legend"
     }
   ],
   "_pendienteDeImplementar": {

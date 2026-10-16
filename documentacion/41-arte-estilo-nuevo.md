@@ -1017,3 +1017,13 @@ Left to right:
 1. Konohamaru – Genin: slightly older Konohamaru in a long scarf and a dark jacket, goggles on his forehead.
 2. Konohamaru – Academy days: younger Konohamaru in a yellow shirt and grey shorts, a long blue scarf and a helmet with goggles.
 ```
+
+## Hoja 71 → `sprite-estilo-nuevo-71.png` (ilustración del desafío diario) → `assets/campaigns/diario.jpg`
+
+⏳ **PENDIENTE.** La tarjeta del desafío diario en el Home, como la de la campaña (hoja 32): se recorta con
+`cover` y lleva el título abajo a la izquierda. Mientras no exista, la tarjeta sale con el fondo liso.
+Adjuntar de referencia la ilustración de la campaña (`assets/campaigns/camino_ninja.jpg`).
+
+```
+A wide 16:9 pixel art illustration in the exact style of the attached reference image, for a "Daily Challenge" mode card: a wooden mission board at the gate of the Hidden Leaf village at dawn, one fresh mission scroll pinned in the centre with a red seal, a rising sun behind the gate, birds in the sky. The main subject is in the CENTER; the bottom quarter is calm ground with little detail (a title will be written over it). Crisp pixels, no blur. No text, no letters, no logo, no UI, no frame.
+```

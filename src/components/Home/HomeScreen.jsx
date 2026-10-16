@@ -2,9 +2,6 @@ import { useState } from 'react';
 import { useGameStore, fechaDeHoy } from '../../store/useGameStore';
 import { useAchievementsStore, LOGROS_VISIBLES } from '../../store/useAchievementsStore';
 import campaignsData from '../../data/campaigns.json';
-import charactersData from '../../data/characters.json';
-import enemiesData from '../../data/enemies.json';
-import commonEnemiesData from '../../data/common-enemies.json';
 import ascensionsData from '../../data/ascensions.json';
 import retosData from '../../data/retos.json';
 import configGlobal from '../../data/config.json';
@@ -57,10 +54,6 @@ const ILUSTRACIONES = Object.fromEntries(
 // Los totales del marcador. Se calculan de los JSON y no se escriben a mano: añadir un
 // personaje o un jefe no puede dejar el contador mintiendo.
 // Sin los que esperan su dibujo (`pendienteDeArte`): aún no se pueden conocer.
-const TOTAL_NINJAS = charactersData.personajes.filter((p) => !p.pendienteDeArte).length;
-const TOTAL_ENEMIGOS = [
-  ...enemiesData.jefes, ...commonEnemiesData.plantillasGenericas, ...commonEnemiesData.enemigosNombrados,
-].filter((e) => !e.pendienteDeArte).length;
 const TOTAL_LOGROS = LOGROS_VISIBLES.length;
 
 /** Una línea del marcador: etiqueta a la izquierda, cifra a la derecha, como en la referencia. */
@@ -76,64 +69,47 @@ function FilaMarcador({ etiqueta, valor }) {
   );
 }
 
-function TarjetaCampana({ campana, marcador, logros, onElegir }) {
-  const ilustracion = ILUSTRACIONES[campana.id] ?? null;
-  // ⚠️ **Los nombres de los arcos, que son la promesa concreta de la campaña.** La
-  // primera versión de esta pantalla los listaba y la segunda los perdió al copiar la
-  // forma de la referencia: allí "KANTO · GEN 1" ya le dice todo a quien la lee, y
-  // "The Ninja Road" no dice nada. Salen de sus actos, o sea que reordenar la campaña
-  // en el JSON reordena también esta línea.
-  // Por actos: un acto con varios arcos posibles se lee "A / B" (sale uno al azar).
-  const nombresDeArcos = actosDeCampana(campana)
-    .map((acto) => acto.arcoIds.map((id) => ARCOS_POR_ID[id]?.nombre).filter(Boolean).join(' / '))
-    .filter(Boolean)
-    .join(' · ');
-
+/**
+ * La tarjeta de un modo de juego: ilustración con el nombre encima, el marcador en
+ * medio y una celda propia a la derecha. La usan la campaña y el desafío diario, para
+ * que se lean como dos modos del mismo tipo — lo que los separa es la sección en la
+ * que están, no un diseño distinto. La tarjeta ENTERA es el botón, como en la
+ * referencia: un botón del tamaño de la fila es más fácil de acertar.
+ */
+function TarjetaModo({ ilustracion, titulo, subtitulo, marcador, celda, acento = false, onClick }) {
   return (
-    // La tarjeta ENTERA es el botón, como en la referencia: allí se pulsa la región,
-    // no un "Start" dentro de ella. Un botón del tamaño de la fila también es más
-    // fácil de acertar, y aquí solo hay una acción posible.
-    <button type="button" onClick={() => onElegir(campana.id)} className="elevar-hover w-full text-left group">
+    <button type="button" onClick={onClick} className="elevar-hover w-full text-left group">
       <PanelMarco className="p-0 overflow-hidden">
         <div className="flex flex-col sm:flex-row">
-          {/* 1) La ilustración, con el nombre encima */}
           <div
-            className="escena-oscura relative w-full sm:w-64 h-32 sm:h-auto shrink-0 bg-tinta-950 border-b sm:border-b-0 sm:border-r border-marco"
-            style={ilustracion ? {
-              backgroundImage: `url(${ilustracion})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            } : undefined}
+            className="escena-oscura relative w-full sm:w-64 h-32 sm:h-auto sm:min-h-32 shrink-0 bg-tinta-950 border-b sm:border-b-0 sm:border-r border-marco"
+            style={ilustracion ? { backgroundImage: `url(${ilustracion})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
           >
             {/* Degradado por debajo del texto y no un velo uniforme: el nombre necesita
-                fondo, pero oscurecer la ilustración entera sería tapar justo lo que
-                se ha puesto ahí para que se vea. */}
+                fondo, pero oscurecer la ilustración entera sería tapar lo que se ve. */}
             <div className="absolute inset-0 bg-gradient-to-t from-tinta-950/95 via-tinta-950/30 to-transparent" />
             <div className="absolute bottom-2 left-3 right-3">
-              <h2 className="font-naruto text-2xl text-pergamino-100 leading-none">{campana.nombre}</h2>
-              <p className="font-display text-[8px] text-pergamino-200/70 tracking-[0.15em] uppercase mt-1 leading-relaxed">
-                {nombresDeArcos}
-              </p>
+              <h2 className="font-naruto text-2xl text-pergamino-100 leading-none">{titulo}</h2>
+              <p className="font-display text-[8px] text-pergamino-200/70 tracking-[0.15em] uppercase mt-1">{subtitulo}</p>
             </div>
           </div>
-
-          {/* 2) El marcador */}
           <div className="flex-1 p-4 flex flex-col justify-center gap-1.5 min-w-0">
-            {marcador.map((fila) => (
-              <FilaMarcador key={fila.etiqueta} {...fila} />
-            ))}
+            {marcador.map((fila) => <FilaMarcador key={fila.etiqueta} {...fila} />)}
           </div>
-
-          {/* 3) Las misiones, en su propia celda como en la referencia: no es una cifra
-                más del marcador, es la meta-progresión del juego entero. */}
           <div className="sm:w-32 shrink-0 p-4 flex flex-col items-center justify-center gap-1 border-t sm:border-t-0 sm:border-l border-marco">
-            <TituloBloque className="text-center">Missions</TituloBloque>
-            <p className="font-display text-[13px] text-oro">{logros}</p>
+            <TituloBloque className="text-center">{celda.titulo}</TituloBloque>
+            <p className={`font-display text-[13px] ${acento ? 'text-exito' : 'text-oro'}`}>{celda.valor}</p>
           </div>
         </div>
       </PanelMarco>
     </button>
   );
+}
+
+/** El subtítulo de una campaña: su lema y cuántos actos tiene (los arcos ya se sortean). */
+function subtituloDeCampana(campana) {
+  const actos = actosDeCampana(campana).length;
+  return [campana.lema, `${actos} acts`].filter(Boolean).join(' · ');
 }
 
 /**
@@ -236,37 +212,31 @@ function SelectorRetos({ abiertos }) {
 }
 
 /**
- * El desafío diario (documentacion/42 §6): la misma run para todos ese día, sin
- * ascensión ni retos, con su premio una vez al día y su récord. El récord y el premio
- * son del día en curso: mañana empiezan de cero.
+ * El desafío diario (documentacion/42 §6) en una tarjeta como la de la campaña, en su
+ * propia sección: es otro modo, no una opción de la campaña. El récord y el premio son
+ * del día en curso; mañana empiezan de cero.
  */
-function PanelDiario() {
+function TarjetaDiario() {
   const elegirDesafioDiario = useGameStore((s) => s.elegirDesafioDiario);
   const diario = useAchievementsStore((s) => s.diario);
   const hoy = fechaDeHoy();
   const deHoy = diario.fecha === hoy ? diario : null;
   const mejor = deHoy?.mejor;
   const arco = mejor ? ARCOS_POR_ID[mejor.arcoId] : null;
+  const premio = configGlobal.pergaminos.porDesafioDiario;
   return (
-    <button type="button" onClick={elegirDesafioDiario} className="elevar-hover w-full text-left">
-      <PanelMarco esquinas={false} className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <p className="font-display text-[11px] text-pergamino-100">Daily challenge · {hoy}</p>
-          <p className="text-[9px] text-pergamino-200/70 mt-1">
-            The same road for everyone today: same map, same offers, no ascension.
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[9px] text-pergamino-200/80">
-            {deHoy?.ganado ? <span className="text-oro">Won today!</span>
-              : arco ? `Today's best: ${arco.nombre} · Floor ${mejor.piso}` : 'Not played yet today'}
-          </p>
-          <p className="text-[9px] text-pergamino-200/60 mt-1">
-            {deHoy?.premioCobrado ? 'Bonus collected' : `+${configGlobal.pergaminos.porDesafioDiario} scrolls the first time today`}
-          </p>
-        </div>
-      </PanelMarco>
-    </button>
+    <TarjetaModo
+      ilustracion={ILUSTRACIONES.diario ?? null}
+      titulo="Daily Challenge"
+      subtitulo={`${hoy} · same road for everyone`}
+      marcador={[
+        { etiqueta: "Today's best", valor: deHoy?.ganado ? 'Won!' : arco ? `${arco.nombre} · Floor ${mejor.piso}` : '—' },
+        { etiqueta: 'Rules', valor: 'No ascension' },
+      ]}
+      celda={deHoy?.premioCobrado ? { titulo: 'Bonus', valor: 'Done' } : { titulo: 'Bonus', valor: `+${premio}` }}
+      acento={Boolean(deHoy?.premioCobrado)}
+      onClick={elegirDesafioDiario}
+    />
   );
 }
 
@@ -279,7 +249,6 @@ export default function HomeScreen() {
   const abrirInvocacion = useGameStore((s) => s.abrirInvocacion);
   const logrosDesbloqueados = useAchievementsStore((s) => s.logrosDesbloqueados);
   const contadores = useAchievementsStore((s) => s.contadores);
-  const vistos = useAchievementsStore((s) => s.vistos);
   const marca = useAchievementsStore((s) => s.marca);
   const ascensionesGanadas = useAchievementsStore((s) => s.ascensionesGanadas);
   const pergaminos = useAchievementsStore((s) => s.pergaminos);
@@ -297,17 +266,13 @@ export default function HomeScreen() {
   // ningún progreso, cuando a lo mejor llegó a pelear contra Pain. La referencia no
   // tiene este problema porque allí la campaña se termina; aquí no.
   const arcoDeLaMarca = marca.arcoId ? ARCOS_POR_ID[marca.arcoId] : null;
+  // Cuatro cifras y no siete: lo que se ha visto (ninjas, enemigos) ya lo cuenta el
+  // Bingo Book, y aquí solo restaba sitio a lo que importa al empezar una run.
   const marcador = [
-    {
-      etiqueta: 'Furthest',
-      valor: arcoDeLaMarca ? `${arcoDeLaMarca.nombre} · Floor ${marca.piso}` : '—',
-    },
-    { etiqueta: 'Scrolls', valor: pergaminos.saldo },
-    { etiqueta: 'Runs won', valor: contadores.runsCompletadas },
-    { etiqueta: 'Runs lost', valor: contadores.runsPerdidas },
+    { etiqueta: 'Furthest', valor: arcoDeLaMarca ? `${arcoDeLaMarca.nombre} · Floor ${marca.piso}` : '—' },
+    { etiqueta: 'Runs won', valor: `${contadores.runsCompletadas} of ${contadores.runsCompletadas + contadores.runsPerdidas}` },
     { etiqueta: 'Battles won', valor: contadores.combatesGanados },
-    { etiqueta: 'Ninja met', valor: `${(vistos.personajes ?? []).length}/${TOTAL_NINJAS}` },
-    { etiqueta: 'Enemies faced', valor: `${(vistos.enemigos ?? []).length}/${TOTAL_ENEMIGOS}` },
+    { etiqueta: 'Scrolls', valor: pergaminos.saldo },
   ];
 
   const ATAJOS = [
@@ -323,31 +288,25 @@ export default function HomeScreen() {
     <div className="min-h-screen bg-transparent text-pergamino-100 font-body px-4 py-8 flex flex-col items-center gap-4">
       <header className="text-center pt-4">
         <h1 className="font-naruto text-5xl text-pergamino-100">Narutolike</h1>
+        <p className="font-display text-[9px] text-pergamino-200/80 tracking-[0.2em] uppercase mt-2">
+          One run · Every arc · Keep what you unlock
+        </p>
       </header>
 
-      {/* El panel que explica el modo, como el "Story" de la referencia. Aquí sí hace
-          falta texto de apoyo y no es ruido: es lo primero que ve alguien que no sabe
-          qué es esto, y dice las dos reglas que definen la partida. */}
-      <PanelMarco className="p-4 w-full max-w-3xl">
+      <section className="w-full max-w-3xl flex flex-col gap-2">
         <TituloBloque tono="seccion">Campaign</TituloBloque>
-        <p className="text-[10px] text-pergamino-200 leading-relaxed mt-2">
-          A campaign is one continuous run through several arcs. Your squad, your gold and your
-          wounds carry from one arc to the next — and if the whole squad falls, the run is over.
-          What you unlock along the way is yours to keep.
-        </p>
-      </PanelMarco>
-
-      <div className="w-full max-w-3xl flex flex-col gap-3">
         {campaignsData.campanas.map((campana) => {
           const maxima = ascensionMaximaDisponible(ascensionsData.niveles, ascensionesGanadas[campana.id]);
           const elegida = Math.min(ascensionTocada[campana.id] ?? maxima, maxima);
           return (
             <div key={campana.id} className="flex flex-col gap-2">
-              <TarjetaCampana
-                campana={campana}
+              <TarjetaModo
+                ilustracion={ILUSTRACIONES[campana.id] ?? null}
+                titulo={campana.nombre}
+                subtitulo={subtituloDeCampana(campana)}
                 marcador={marcador}
-                logros={`${logrosDesbloqueados.length}/${TOTAL_LOGROS}`}
-                onElegir={(id) => elegirCampana(id, elegida)}
+                celda={{ titulo: 'Missions', valor: `${logrosDesbloqueados.length}/${TOTAL_LOGROS}` }}
+                onClick={() => elegirCampana(campana.id, elegida)}
               />
               <SelectorAscension
                 elegida={elegida}
@@ -358,20 +317,17 @@ export default function HomeScreen() {
             </div>
           );
         })}
-      </div>
+      </section>
 
-      <div className="w-full max-w-3xl">
-        <PanelDiario />
-      </div>
+      {/* El diario va en su propia sección, separado por aire y un filete: es otro modo
+          de juego, y pegado debajo de los selectores se leía como una opción más de la
+          campaña. */}
+      <section className="w-full max-w-3xl flex flex-col gap-2 mt-4 pt-5 border-t border-marco/60">
+        <TituloBloque tono="seccion">Daily</TituloBloque>
+        <TarjetaDiario />
+      </section>
 
-      <PanelMarco tono="hueco" className="p-3 w-full max-w-3xl">
-        <p className="text-[9px] text-pergamino-200/60 leading-relaxed text-center">
-          More campaigns are on the way. In the meantime, the Bingo Book keeps track of everyone
-          you meet.
-        </p>
-      </PanelMarco>
-
-      <nav className="flex items-center gap-2 flex-wrap justify-center pt-1">
+      <nav className="flex items-center gap-2 flex-wrap justify-center pt-4">
         {/* ⚠️ `sobreFondo`: estos tres botones no están dentro de ningún panel, se
             pintan **directamente encima del dibujo de fondo**. Sin él, el kit los deja
             con el fondo transparente y el texto al 60%, que es lo correcto dentro de
