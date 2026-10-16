@@ -10,7 +10,7 @@ import achievementsData from '../data/achievements.json';
 import {
   evaluarLogrosDesbloqueables, pergaminosPorCobrar, logrosDisponibles,
 } from '../engine/achievements';
-import { nivelDeMaestria, xpParaSubirUnNivel } from '../engine/maestria';
+import { nivelDeMaestria, xpParaSubirUnNivel, xpTotalParaNivel } from '../engine/maestria';
 import { ESTADO_INVOCACION_VACIO, invocar as invocarEnMotor, catalogoDisponible } from '../engine/invocacion';
 import invocacionData from '../data/invocacion.json';
 import charactersData from '../data/characters.json';
@@ -286,6 +286,22 @@ export const useAchievementsStore = create((set, get) => ({
    */
   _evaluarLogrosDeMeta() {
     get().notificar(get().evaluarLogros({}));
+  },
+
+  /**
+   * SOLO PARA PROBAR (Ajustes → Testing, que solo sale en desarrollo o con `?pruebas`
+   * en la URL): +10000 pergaminos y un ninja al nivel de ninja máximo, para ver el
+   * gacha y la maestría completa sin jugar cien runs. Pasa por los caminos de
+   * siempre (`sumarXpMaestria`), así que salta lo mismo que saltaría jugando.
+   */
+  herramientaDePruebas(idNinja = 'naruto') {
+    const actual = get().pergaminos;
+    const siguiente = { ...actual, saldo: actual.saldo + 10000 };
+    set({ pergaminos: siguiente });
+    localStorage.setItem(CLAVE_PERGAMINOS, JSON.stringify(siguiente));
+    const reglas = configGlobal.maestria;
+    const falta = xpTotalParaNivel(reglas.nivelMaximo, reglas) - (get().maestria[idNinja] ?? 0);
+    if (falta > 0) get().sumarXpMaestria({ [idNinja]: falta });
   },
 
   /** Interno: el diario de una fecha (si lo guardado es de otro día, uno vacío). */

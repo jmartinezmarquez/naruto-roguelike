@@ -121,6 +121,16 @@ function Deslizador({ valor, onCambiar, etiqueta, alSoltar = null }) {
   );
 }
 
+/** ¿Se enseñan las herramientas de prueba? En desarrollo, o con `?pruebas` en la URL. */
+function modoPruebas() {
+  if (import.meta.env.DEV) return true;
+  try {
+    return new URLSearchParams(window.location.search).has('pruebas');
+  } catch {
+    return false;
+  }
+}
+
 export default function SettingsScreen() {
   const volverAlMapa = useGameStore((s) => s.volverAlMapa);
   const tema = useSettingsStore((s) => s.tema);
@@ -130,6 +140,7 @@ export default function SettingsScreen() {
   const volumenEfectos = useSettingsStore((s) => s.volumenEfectos);
   const cambiarAjuste = useSettingsStore((s) => s.cambiarAjuste);
   const reiniciarLogros = useAchievementsStore((s) => s.reiniciarLogros);
+  const herramientaDePruebas = useAchievementsStore((s) => s.herramientaDePruebas);
 
   // Pantalla completa se muda aquí desde el menú del mapa: el engranaje que la
   // abría era un apaño (la maqueta lo dibujó como "ajustes") y este es su sitio.
@@ -241,6 +252,17 @@ export default function SettingsScreen() {
           </BotonSecundario>
         </FilaAjuste>
       </section>
+
+      {/* Solo en desarrollo (`npm run dev`) o abriendo el juego con `?pruebas` en la URL:
+          en el juego publicado no existe para nadie que no lo busque. */}
+      {modoPruebas() && (
+        <section className="flex flex-col gap-1 mt-3">
+          <TituloBloque>Testing</TituloBloque>
+          <FilaAjuste etiqueta="+10000 scrolls, Naruto at max Ninja Lv." pista="Only for testing the Summon and mastery.">
+            <BotonSecundario onClick={() => herramientaDePruebas('naruto')}>APPLY</BotonSecundario>
+          </FilaAjuste>
+        </section>
+      )}
     </VentanaModal>
 
     {confirmandoReinicio && (

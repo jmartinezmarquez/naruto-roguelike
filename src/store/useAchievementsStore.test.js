@@ -1,3 +1,4 @@
+import { nivelDeMaestria } from '../engine/maestria';
 import { ESTADO_INVOCACION_VACIO } from '../engine/invocacion';
 import invocacionData from '../data/invocacion.json';
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -536,5 +537,16 @@ describe('logros de la meta-progresión', () => {
     s().evaluarLogros({});
     expect(s().estaDesbloqueado('bingo_book_completo')).toBe(true);
     expect(s().estaDesbloqueado('coleccion_completa')).toBe(false);
+  });
+});
+
+describe('herramienta de pruebas', () => {
+  it('da 10000 pergaminos y deja al ninja en el nivel de ninja máximo', () => {
+    const s = () => useAchievementsStore.getState();
+    s().herramientaDePruebas('naruto');
+    // 10000, más lo de los logros de nivel de ninja que saltan al subirlo.
+    expect(s().pergaminos.saldo).toBeGreaterThanOrEqual(10000);
+    const reglas = configGlobal.maestria;
+    expect(nivelDeMaestria(s().maestria.naruto, reglas).nivel).toBe(reglas.nivelMaximo);
   });
 });
