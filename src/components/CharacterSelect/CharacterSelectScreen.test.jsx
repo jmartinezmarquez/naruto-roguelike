@@ -84,10 +84,16 @@ describe('elegir', () => {
 
 describe('los ★ ya reclutados', () => {
   it('un común que estuvo en tu equipo en otra run aparece como inicial; uno que no, no', () => {
+    // La oferta es un sorteo de 3 entre 4 (los iniciales y Rock Lee): se repite hasta
+    // que Rock Lee sale, y Neji, que nunca estuvo en el equipo, no puede salir nunca.
     useAchievementsStore.setState({ vistos: { ...useAchievementsStore.getState().vistos, personajes: ['rock_lee'] } });
-    render(<CharacterSelectScreen onConfirmar={() => {}} />);
-    expect(screen.getAllByText(/Rock Lee/).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Neji/)).toBeNull();
+    const salieron = new Set();
+    for (let i = 0; i < 40; i++) {
+      useGameStore.getState()._sortearOfertaInicial();
+      useGameStore.getState().ofertaInicialIds.forEach((id) => salieron.add(id));
+    }
+    expect(salieron.has('rock_lee')).toBe(true);
+    expect(salieron.has('neji')).toBe(false);
   });
 });
 
