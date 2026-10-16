@@ -158,9 +158,9 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
       )}
 
       {fase === 'sello' && (sello ? (
-        // En tinta, sin color: `grayscale` quita el azul de la tira de la hoja 72 hasta que
-        // llegue la versión en tinta negra (hoja 82).
-        <div className="absolute left-1/2 bottom-24" style={{ filter: 'grayscale(1) brightness(0.8)' }}>
+        // La marca es de tinta negra (hoja 82): un contorno claro la despega del fondo
+        // oscuro sin darle color, que destriparía la rareza.
+        <div className="absolute left-1/2 bottom-24" style={{ filter: 'drop-shadow(0 0 2px rgba(232, 226, 208, 0.75)) drop-shadow(0 0 6px rgba(232, 226, 208, 0.3))' }}>
           <Tira animacion={sello} escala={2} duracion={MS_SELLO * factor} />
         </div>
       ) : (

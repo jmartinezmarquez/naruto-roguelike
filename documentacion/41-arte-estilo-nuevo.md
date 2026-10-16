@@ -1135,7 +1135,7 @@ Left to right:
 
 ## Tanda 13 — la ceremonia del Summon, versión 2 (hojas 81-82)
 
-⏳ **PENDIENTES.** Del playtest del 2026-10-16. La 81 añade una fase al principio de la ceremonia (los sellos de
+✅ **HECHAS el 2026-10-16.** Del playtest del 2026-10-16. La 81 añade una fase al principio de la ceremonia (los sellos de
 manos del Kuchiyose) y la 82 **sustituye** a la marca de la hoja 72: la quiere en **tinta negra, sin color**,
 para que no destripe la rareza de lo que va a salir. El código ya está: la fase de manos solo aparece si existe
 su dibujo, y la 82 pisa el fichero de la 72 al correr el script. Bloque de **tiras de animación**; adjuntar de
