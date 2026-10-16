@@ -7,6 +7,7 @@
     "nombre": "Clay Crest"
   },
   "textoTienda": "A Sand merchant sells water and supplies from the back of a camel, glancing nervously at the sky.",
+  "colorCaminosMapa": "#4a4440",
   "temaVisual": "desierto_de_la_arena",
   "numeroPisos": 8,
   "nodosPorPiso": {

@@ -1130,6 +1130,7 @@ export default function MapScreen() {
   const irAlHome = useGameStore((s) => s.irAlHome);
 
   const fondoColumna = FONDO_COLUMNA[arcoActualDatos?.id];
+  const colorCaminos = arcoActualDatos?.colorCaminosMapa ?? 'var(--color-pergamino-100)';
 
   const posiciones = useMemo(() => (mapa ? calcularPosiciones(mapa) : {}), [mapa]);
   const disponibles = useMemo(() => new Set(obtenerNodosDisponibles()), [mapa, nodoActualId]);
@@ -1315,7 +1316,9 @@ export default function MapScreen() {
                     const disponibleAhora = !recorrido && nodo.id === nodoActualId && disponibles.has(destinoId);
                     const sigueEnJuego = alcanzables.has(nodo.id);
 
-                    let stroke = 'var(--color-pergamino-100)';
+                    // El color de los caminos lo puede fijar el arco (`colorCaminosMapa`):
+                    // el crema de siempre desaparece sobre la arena clara de la playa.
+                    let stroke = colorCaminos;
                     let strokeOpacity = 0.15;
                     let strokeWidth = 1.5;
                     let strokeDasharray;
