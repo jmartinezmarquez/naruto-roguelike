@@ -724,3 +724,20 @@ img {
 @keyframes aparecer-nombre { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
 .aparecer-nombre { animation: aparecer-nombre calc(450ms * var(--factor-animacion, 1)) ease-out 200ms both; }
 
+/* Ceremonia v3, montada como vídeo: la cámara se acerca despacio durante toda la
+   ceremonia (centrada en el suelo), cada plano entra con un fundido corto, el aura
+   arranca (fotogramas 1-4) y se queda en bucle (5-8), y el ninja pasa de silueta a color. */
+@keyframes camara-invocacion { from { transform: scale(1); } to { transform: scale(1.14); } }
+.camara-invocacion { transform-origin: 50% 82%; animation: camara-invocacion calc(var(--duracion-camara, 5s) * var(--factor-animacion, 1)) ease-in-out forwards; }
+@keyframes aparecer-plano { from { opacity: 0; } to { opacity: 1; } }
+.aparecer-plano { animation: aparecer-plano calc(120ms * var(--factor-animacion, 1)) ease-out both; }
+@keyframes tira-aura-entrada { from { background-position: 0 0; } to { background-position: calc(var(--lado) * -4) 0; } }
+@keyframes tira-aura-bucle { from { background-position: calc(var(--lado) * -4) 0; } to { background-position: calc(var(--lado) * -8) 0; } }
+.tira-aura {
+  position: absolute; left: 0; top: 0;
+  animation:
+    tira-aura-entrada calc(var(--ms-entrada) * var(--factor-animacion, 1)) steps(4) forwards,
+    tira-aura-bucle calc(var(--ms-bucle) * var(--factor-animacion, 1)) steps(4) calc(var(--ms-entrada) * var(--factor-animacion, 1)) infinite;
+}
+@keyframes silueta-a-color { from { filter: brightness(0); opacity: 0; transform: translateY(8px); } 35% { filter: brightness(0); opacity: 1; transform: none; } to { filter: brightness(1); opacity: 1; } }
+.silueta-a-color { animation: silueta-a-color calc(900ms * var(--factor-animacion, 1)) ease-out both; }

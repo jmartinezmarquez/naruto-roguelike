@@ -1159,7 +1159,9 @@ referencia `src/assets/effects/sello-invocacion.png` y `humo-invocacion.png` par
 
 ## Tanda 14 — la cinemática del Summon (hojas 83-87)
 
-⏳ **PENDIENTES.** Del playtest del 2026-10-16: la ceremonia "parece un pase de diapositivas". La propuesta es
+✅ **HECHAS el 2026-10-16.** ⚠️ La 87 (aura legendaria) llegó con el damero pintado DENTRO del hueco central, encerrado por las llamas, donde la limpieza desde el borde no llega: se borró a mano (grises neutros de toda la tira). Si se rehace, pedirla otra vez con fondo transparente de verdad.
+
+**Antes:** Del playtest del 2026-10-16: la ceremonia "parece un pase de diapositivas". La propuesta es
 encadenar SEIS tiras de 8 fotogramas como planos de un mismo vídeo, sin cortes, con la cámara moviéndose por
 código (acercamiento lento, temblor en el golpe, fundidos entre planos):
 

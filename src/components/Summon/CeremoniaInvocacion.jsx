@@ -5,33 +5,39 @@ import { TiraDeEfecto } from '../Combat/EfectoSprite';
 import { ANIMACIONES_INVOCACION } from './animacionesInvocacion';
 
 /**
- * La ceremonia de una tirada del gacha, como un Kuchiyose de la serie y con el ritmo
- * de la pantalla de transformación:
+ * La ceremonia de una tirada del gacha: un Kuchiyose montado como **planos de un mismo
+ * vídeo** (documentacion/41, tanda 14), no como diapositivas. Cada plano es una tira
+ * dibujada de 8 fotogramas; entre plano y plano hay un fundido corto, y la cámara se
+ * acerca despacio durante toda la ceremonia y tiembla en el golpe:
  *
- *   1. `sello`     — la marca de invocación sale del suelo y se carga de luz.
- *   2. `humo`      — estalla una nube de humo enorme.
- *   3. `revelacion`— en el centro, en grande, **el mejor premio de la tanda** con su
- *                    nombre y su rareza. En un ×10 solo se revela ese; los demás salen
- *                    después en la lista (`children`), que es lo que pidió el playtest:
- *                    diez revelaciones seguidas se vuelven un trámite.
+ *   manos → golpe → sello → columna → humo → revelación
  *
- * ⚠️ **El color del sello avisa de lo mejor que va a salir** (verde, azul, morado),
- * como el destello de los gachas: la emoción está en ver el color antes que el premio.
- * Las probabilidades siguen a la vista en la pantalla; esto es solo el orden en que se
- * cuenta.
+ * En la revelación el ninja sale del humo **en silueta negra y pasa a color**, de pie
+ * sobre la marca, con el aura de su rareza detrás (que arranca y luego se queda en
+ * bucle). Es el único momento con color: la marca y el humo son de tinta y luz neutra
+ * para no destripar lo que va a salir (playtest 2026-10-16).
  *
- * Usa las animaciones dibujadas (`assets/effects/sello-invocacion.png`,
- * `humo-invocacion.png`, hojas 72-73 del documento 41) si existen, y si no el sello
- * en SVG y el humo del relevo ampliado. Un clic pasa a la fase siguiente, y con la
- * velocidad instantánea de Ajustes no se ve.
+ * En un ×10 solo se revela **el mejor premio**; los demás salen después en la lista
+ * (`children`), que quien monta la ceremonia enseña al llamarse `onTerminar`.
+ *
+ * Un plano cuyo dibujo no existe se salta (la marca y el humo tienen respaldo en código).
+ * Un clic pasa al plano siguiente, y con la velocidad instantánea de Ajustes no se ve.
  */
 
-const MS_MANOS = 1100;
-const MS_SELLO = 1300;
-const MS_HUMO = 650;
+// La línea de suelo de la escena: el centro de la luz del suelo, en px desde abajo.
+// Cada plano se ancla a ella con la fila de su fotograma que toca el suelo (`suelo`,
+// medida sobre las tiras: el script de sprites conserva esa fila en los 8 fotogramas)
+// y con una `escala` elegida para que el aro de la marca mida lo mismo en todos.
+const SUELO = 72;
+const PLANOS = [
+  { fase: 'manos', anim: 'manos', ms: 1100, escala: 2, centro: true },
+  { fase: 'golpe', anim: 'golpe', ms: 700, escala: 1.5, suelo: 110, sonido: 'impactoJutsu', temblor: true, tinta: true },
+  { fase: 'sello', anim: 'sello', ms: 900, escala: 2, suelo: 91, sonido: 'selloInvocacion', tinta: true },
+  { fase: 'columna', anim: 'columna', ms: 900, escala: 2.75, suelo: 145, sonido: 'cargaTransformacion' },
+  { fase: 'humo', anim: 'humo', ms: 650, escala: 2, suelo: 154 },
+];
+const AURA = { escala: 1.75, suelo: 148, msEntrada: 450, msBucle: 650 };
 
-// El color de la rareza SOLO sale en la revelación: el sello y la luz del suelo son
-// neutros, para no destripar lo que va a salir (playtest 2026-10-16).
 const COLOR_RAREZA = { comun: '#7cbf5a', raro: '#4f9dd9', legendario: '#D4A93A' };
 const COLOR_NEUTRO = '#e8e2d0';
 const ORDEN = ['comun', 'raro', 'legendario'];
@@ -42,113 +48,80 @@ const DETALLE_EFECTO = {
   nivel: (p) => ` · Ninja Lv.${p.nivel}`,
   pergaminos: (p) => ` · +${p.cantidad} scrolls`,
 };
+const CONTORNO_TINTA = 'drop-shadow(0 0 2px rgba(232, 226, 208, 0.75)) drop-shadow(0 0 6px rgba(232, 226, 208, 0.3))';
 
 function mejorPremio(premios) {
   return premios.reduce((mejor, p) => (ORDEN.indexOf(p.rareza) > ORDEN.indexOf(mejor.rareza) ? p : mejor), premios[0]);
 }
 
-/** El sello del suelo en SVG: el respaldo mientras no llegue su animación dibujada. */
-function SelloDibujado({ color }) {
+/** Dónde anclar (px desde abajo) una tira de `lado` px para que su fila `suelo` caiga en el suelo. */
+function ancla(lado, suelo, escala) {
+  return SUELO + (suelo - lado / 2) * escala;
+}
+
+/** Una tira dibujada, centrada en su punto de anclaje (un padre posicionado). */
+function Tira({ animacion, escala, duracion, clase = 'efecto-sprite', estilo = {} }) {
+  return (
+    <div style={{ transform: `scale(${escala})` }}>
+      <div
+        aria-hidden="true"
+        className={`${clase} pointer-events-none`}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: animacion.lado,
+          height: animacion.lado,
+          backgroundImage: `url(${animacion.src})`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          transform: 'translate(-50%, -50%)',
+          '--ancho-tira': `${animacion.lado * animacion.fotogramas}px`,
+          '--fotogramas': animacion.fotogramas,
+          '--duracion-efecto': `${duracion}ms`,
+          '--lado': `${animacion.lado}px`,
+          ...estilo,
+        }}
+      />
+    </div>
+  );
+}
+
+/** El sello del suelo en SVG: el respaldo si no existe su tira dibujada. */
+function SelloDibujado() {
   const radios = Array.from({ length: 12 }, (_, i) => (i * Math.PI) / 6);
   return (
-    <svg viewBox="-100 -100 200 200" className="sello-invocacion w-72 h-72" aria-hidden="true" style={{ '--color-sello': color }}>
+    <svg viewBox="-100 -100 200 200" className="sello-invocacion w-72 h-72" aria-hidden="true" style={{ '--color-sello': '#111111' }}>
       <circle r="92" className="trazo-sello" style={{ '--largo': 580 }} />
       <circle r="70" className="trazo-sello" style={{ '--largo': 440, animationDelay: '120ms' }} />
-      <circle r="18" className="trazo-sello" style={{ '--largo': 115, animationDelay: '260ms' }} />
       {radios.map((a, i) => (
-        <line
-          key={i}
-          x1={Math.cos(a) * 22} y1={Math.sin(a) * 22}
-          x2={Math.cos(a) * (i % 2 ? 68 : 90)} y2={Math.sin(a) * (i % 2 ? 68 : 90)}
-          className="trazo-sello"
-          style={{ '--largo': 70, animationDelay: `${300 + i * 35}ms` }}
-        />
-      ))}
-      {radios.map((a, i) => (
-        <rect key={`m${i}`} x={Math.cos(a + 0.26) * 80 - 3} y={Math.sin(a + 0.26) * 80 - 3} width="6" height="6"
-          className="marca-sello" style={{ animationDelay: `${650 + i * 25}ms` }} />
+        <line key={i} x1={Math.cos(a) * 22} y1={Math.sin(a) * 22} x2={Math.cos(a) * 90} y2={Math.sin(a) * 90}
+          className="trazo-sello" style={{ '--largo': 70, animationDelay: `${300 + i * 35}ms` }} />
       ))}
     </svg>
   );
 }
 
-// La línea de suelo de la escena (px desde abajo) y dónde anclar cada tira para que
-// apoye en ella. Las tiras traen el suelo en la misma fila de píxeles en todos sus
-// fotogramas (ver `tira()` en el script de sprites): la marca a 91 px de 128 en su
-// fotograma (27 por debajo del centro) y el humo a 154 de 160 (74). A ×2.
-const SUELO = 72;
-const ANCLA_SELLO = SUELO + 27 * 2;
-const ANCLA_HUMO = SUELO + 74 * 2;
-const CONTORNO_TINTA = 'drop-shadow(0 0 2px rgba(232, 226, 208, 0.75)) drop-shadow(0 0 6px rgba(232, 226, 208, 0.3))';
-
-/** Un fotograma concreto de una tira, quieto (la marca ya trazada, en el suelo). */
-function FotogramaQuieto({ animacion, indice, escala }) {
-  return (
-    <div style={{ transform: `scale(${escala})` }}>
-      <div
-        aria-hidden="true"
-        className="absolute pointer-events-none"
-        style={{
-          width: animacion.lado,
-          height: animacion.lado,
-          backgroundImage: `url(${animacion.src})`,
-          backgroundPosition: `-${indice * animacion.lado}px 0`,
-          imageRendering: 'pixelated',
-          transform: 'translate(-50%, -50%)',
-        }}
-      />
-    </div>
-  );
-}
-
-/** Una tira dibujada reproducida una vez, a `escala` enteros (pixel art). */
-function Tira({ animacion, escala, duracion }) {
-  return (
-    <div style={{ transform: `scale(${escala})` }}>
-      <div
-        aria-hidden="true"
-        className="efecto-sprite pointer-events-none"
-        style={{
-          width: animacion.lado,
-          height: animacion.lado,
-          backgroundImage: `url(${animacion.src})`,
-          transform: 'translate(-50%, -50%)',
-          '--ancho-tira': `${animacion.lado * animacion.fotogramas}px`,
-          '--fotogramas': animacion.fotogramas,
-          '--duracion-efecto': `${duracion}ms`,
-        }}
-      />
-    </div>
-  );
-}
-
 export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDePremio, onTerminar = () => {}, children }) {
   const factor = useFactorAnimacion();
-  // Si están dibujados, la ceremonia abre con los sellos de manos (hoja 81).
-  const [fase, setFase] = useState(factor === 0 ? 'fin' : ANIMACIONES_INVOCACION.manos ? 'manos' : 'sello');
+  // Solo los planos que tienen dibujo; la marca y el humo entran siempre (tienen respaldo).
+  const planos = PLANOS.filter((p) => ANIMACIONES_INVOCACION[p.anim] || p.fase === 'sello' || p.fase === 'humo');
+  const [indice, setIndice] = useState(factor === 0 ? planos.length + 1 : 0);
+  const plano = planos[indice] ?? null;
+  const fase = indice < planos.length ? plano.fase : indice === planos.length ? 'revelacion' : 'fin';
   const mejor = mejorPremio(premios);
   const color = COLOR_RAREZA[mejor.rareza];
 
   useEffect(() => {
-    if (fase === 'manos') {
-      const t = setTimeout(() => setFase('sello'), MS_MANOS * factor);
-      return () => clearTimeout(t);
-    }
-    if (fase === 'sello') {
-      reproducir('selloInvocacion', { duracion: (MS_SELLO * factor) / 1000 });
-      const t = setTimeout(() => setFase('humo'), MS_SELLO * factor);
-      return () => clearTimeout(t);
-    }
-    if (fase === 'humo') {
-      reproducir(mejor.rareza === 'legendario' ? 'invocacionLegendaria' : 'invocacion');
-      const t = setTimeout(() => setFase('revelacion'), MS_HUMO * factor);
-      return () => clearTimeout(t);
-    }
-    return undefined;
-  }, [fase, factor, mejor.rareza]);
+    if (!plano) return undefined;
+    if (plano.sonido) reproducir(plano.sonido, { duracion: (plano.ms * factor) / 1000 });
+    if (plano.fase === 'humo') reproducir(mejor.rareza === 'legendario' ? 'invocacionLegendaria' : 'invocacion');
+    const t = setTimeout(() => setIndice((i) => i + 1), plano.ms * factor);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indice]);
 
-  // Quien la monta enseña los resultados SOLO cuando acaba: verlos antes destripaba la
-  // revelación (playtest 2026-10-16).
+  // Quien la monta enseña los resultados SOLO cuando acaba.
   useEffect(() => {
     if (fase === 'fin') onTerminar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,75 +129,77 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
 
   if (fase === 'fin') return children;
 
-  const siguiente = { manos: 'sello', sello: 'humo', humo: 'revelacion', revelacion: 'fin' }[fase];
   const sprite = spriteDePremio(mejor);
-  const { manos, sello, humo } = ANIMACIONES_INVOCACION;
+  const anim = plano ? ANIMACIONES_INVOCACION[plano.anim] : null;
+  const sello = ANIMACIONES_INVOCACION.sello;
+  const aura = ANIMACIONES_INVOCACION[`aura${mejor.rareza[0].toUpperCase()}${mejor.rareza.slice(1)}`];
+  // La marca ya trazada se queda en el suelo desde que acaba su plano.
+  const selloEnElSuelo = sello && ['humo', 'revelacion'].includes(fase);
 
   return (
     <button
       type="button"
-      onClick={() => setFase(siguiente)}
+      onClick={() => setIndice((i) => i + 1)}
       aria-label={fase === 'revelacion' ? 'Continue' : 'Skip'}
       data-sonido="ninguno"
-      className={`escena-oscura relative w-full h-[26rem] flex items-center justify-center overflow-hidden rounded-sm bg-tinta-950/90 ${
-        fase === 'revelacion' && mejor.rareza === 'legendario' ? 'temblor-legendario' : ''}`}
+      className={`escena-oscura relative w-full h-[26rem] overflow-hidden rounded-sm bg-tinta-950/90 ${
+        plano?.temblor || (fase === 'revelacion' && mejor.rareza === 'legendario') ? 'temblor-legendario' : ''}`}
     >
-      {/* El legendario se anuncia con un fogonazo dorado que llena la escena. */}
-      {fase === 'revelacion' && mejor.rareza === 'legendario' && (
-        <div className="absolute inset-0 destello-legendario pointer-events-none" />
-      )}
-      {/* EL SUELO. Todo se ancla a la misma línea: el centro de la luz del suelo está a
-          SUELO px del borde de abajo, y la marca, el humo y el ninja se colocan respecto a
-          ella. Antes cada uno iba a su altura y la marca "subía y bajaba" entre fases.
-          Sin `-translate-x-1/2` en la luz: su animación ya mueve el `transform`, y en
-          Tailwind v4 las dos cosas se suman. */}
-      <div className="absolute left-1/2 w-80 h-16 rounded-[50%] suelo-invocacion"
-        style={{ bottom: SUELO - 32, background: `radial-gradient(ellipse, ${COLOR_NEUTRO}40, transparent 70%)` }} />
+      {/* La cámara: un acercamiento lento y continuo durante toda la ceremonia, centrado
+          en el suelo. Es lo que más ayuda a que los planos se lean como un vídeo. */}
+      <div className="absolute inset-0 camara-invocacion" style={{ '--duracion-camara': `${planos.reduce((s, p) => s + p.ms, 0) + 1500}ms` }}>
+        <div className="absolute left-1/2 w-80 h-16 rounded-[50%] suelo-invocacion"
+          style={{ bottom: SUELO - 32, background: `radial-gradient(ellipse, ${COLOR_NEUTRO}40, transparent 70%)` }} />
 
-      {fase === 'manos' && manos && (
-        <div className="absolute left-1/2 top-[42%]">
-          <Tira animacion={manos} escala={2} duracion={MS_MANOS * factor} />
-        </div>
-      )}
+        {selloEnElSuelo && (
+          <div className="absolute left-1/2" style={{ bottom: ancla(sello.lado, 91, 2), filter: CONTORNO_TINTA, opacity: 0.85 }}>
+            <Tira animacion={sello} escala={2} duracion={0} clase="" estilo={{ backgroundPosition: `${-3 * sello.lado}px 0` }} />
+          </div>
+        )}
 
-      {/* La marca se traza en su fase y SE QUEDA en el suelo durante el humo y la
-          revelación (su fotograma completo, quieto): es donde aparece el ninja. */}
-      {sello ? (
-        <div className="absolute left-1/2" style={{ bottom: ANCLA_SELLO, filter: CONTORNO_TINTA, opacity: fase === 'sello' ? 1 : 0.85 }}>
-          {fase === 'sello'
-            ? <Tira animacion={sello} escala={2} duracion={MS_SELLO * factor} />
-            : fase !== 'manos' && <FotogramaQuieto animacion={sello} indice={3} escala={2} />}
-        </div>
-      ) : fase === 'sello' && (
-        <div className="absolute left-1/2 bottom-2 sello-sube">
-          <div style={{ transform: 'perspective(600px) rotateX(62deg)' }}><SelloDibujado color="#111111" /></div>
-        </div>
-      )}
+        {plano && (anim ? (
+          // Un fundido corto al entrar cada plano: tapa el salto entre tiras.
+          <div key={plano.fase} className="absolute left-1/2 aparecer-plano"
+            style={plano.centro
+              ? { top: '42%' }
+              : { bottom: ancla(anim.lado, plano.suelo, plano.escala), filter: plano.tinta ? CONTORNO_TINTA : undefined }}>
+            <Tira animacion={anim} escala={plano.escala} duracion={plano.ms} />
+          </div>
+        ) : plano.fase === 'sello' ? (
+          <div className="absolute left-1/2 bottom-2 sello-sube">
+            <div style={{ transform: 'perspective(600px) rotateX(62deg)' }}><SelloDibujado /></div>
+          </div>
+        ) : (
+          <div className="absolute left-1/2 top-1/2"><div style={{ transform: 'scale(4)' }}><TiraDeEfecto nombre="humo" /></div></div>
+        ))}
 
-      {fase === 'humo' && (humo ? (
-        <div className="absolute left-1/2" style={{ bottom: ANCLA_HUMO }}>
-          <Tira animacion={humo} escala={2} duracion={MS_HUMO * factor} />
-        </div>
-      ) : (
-        <div className="absolute left-1/2 top-1/2"><div style={{ transform: 'scale(4)' }}><TiraDeEfecto nombre="humo" /></div></div>
-      ))}
+        {fase === 'revelacion' && (
+          <>
+            {mejor.rareza === 'legendario' && <div className="absolute inset-0 destello-legendario pointer-events-none" />}
+            {aura && (
+              <div className="absolute left-1/2" style={{ bottom: ancla(aura.lado, AURA.suelo, AURA.escala) }}>
+                <Tira animacion={aura} escala={AURA.escala} duracion={AURA.msEntrada} clase="tira-aura"
+                  estilo={{ '--ms-entrada': `${AURA.msEntrada}ms`, '--ms-bucle': `${AURA.msBucle}ms` }} />
+              </div>
+            )}
+            {/* El ninja de pie sobre la marca, a ×2; sale del humo en silueta y pasa a color. */}
+            <div className="absolute left-1/2 -translate-x-1/2 w-48 h-48" style={{ bottom: SUELO - 36 }}>
+              {sprite && <img src={sprite} alt="" className="w-48 h-48 object-contain silueta-a-color" style={{ imageRendering: 'pixelated' }} />}
+            </div>
+          </>
+        )}
+      </div>
 
       {fase === 'revelacion' && (
-        <>
-          {/* El ninja DE PIE sobre la marca, a ×2 (192 px): a ×3 se veía pixelado. */}
-          <div className="absolute left-1/2 -translate-x-1/2 w-48 h-48 entrada-transformado" style={{ bottom: SUELO - 36 }}>
-            {sprite && <img src={sprite} alt="" className="w-48 h-48 object-contain" style={{ imageRendering: 'pixelated' }} />}
-          </div>
-          <div className="absolute top-6 inset-x-0 flex flex-col items-center gap-1 aparecer-nombre">
-            <p className="font-naruto text-3xl text-pergamino-100 contorno-fijo">{nombreDePremio(mejor)}</p>
-            <p className="font-display text-[10px]" style={{ color }}>
-              {ETIQUETA[mejor.rareza]}{DETALLE_EFECTO[mejor.efecto]?.(mejor) ?? ''}
-            </p>
-          </div>
-        </>
+        <div className="absolute top-6 inset-x-0 flex flex-col items-center gap-1 aparecer-nombre">
+          <p className="font-naruto text-3xl text-pergamino-100 contorno-fijo">{nombreDePremio(mejor)}</p>
+          <p className="font-display text-[10px]" style={{ color }}>
+            {ETIQUETA[mejor.rareza]}{DETALLE_EFECTO[mejor.efecto]?.(mejor) ?? ''}
+          </p>
+        </div>
       )}
 
-      <p className="absolute bottom-2 text-[9px] font-display text-pergamino-200/50">
+      <p className="absolute bottom-2 inset-x-0 text-center text-[9px] font-display text-pergamino-200/50">
         {fase === 'revelacion' ? (premios.length > 1 ? `Click to see all ${premios.length}` : 'Click to continue') : 'Click to skip'}
       </p>
     </button>
