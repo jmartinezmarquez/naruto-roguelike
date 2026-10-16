@@ -1179,10 +1179,25 @@ código (acercamiento lento, temblor en el golpe, fundidos entre planos):
 - **Sin color en 83 y 84**: tinta negra, humo gris y luz blanca. El color solo aparece en el aura, que es la
   revelación.
 
+### Bloque de estilo — cinemática del Summon
+
+Sustituye al bloque de tiras de animación en las hojas 83-87 (ya va metido en cada prompt de abajo, listo para
+copiar). Lo que añade: que los 8 fotogramas son un plano continuo de vídeo (cambios pequeños entre uno y otro),
+la cámara quieta con el suelo en la misma fila, y la continuidad con la tira anterior y la siguiente.
+
+```
+A pixel art animation strip in the exact style of the attached reference images, for a cinematic "Summoning Jutsu" sequence in a Naruto game: the SAME scene shown as 8 consecutive animation frames, left to right, in a single horizontal row, evenly spaced, each frame centered in its own equal-width square slot. These frames are one shot of a continuous video, so the motion between frames must be SMOOTH and gradual, with small changes from one frame to the next (no jumps, no missing in-between poses). The camera never moves inside the strip: the ground is a flat horizontal line at the SAME height in every frame, and anything resting on the ground stays on that exact line. The first frame must continue naturally from the attached previous strip, and the last frame must lead naturally into the attached next strip. Thick black outline where it makes sense, crisp pixels, no blur, no motion-blur smears. Effects that fade out break into sparse dithered pixels instead of becoming transparent. Transparent background (real alpha, NOT a checkerboard pattern). No text, no frame numbers, no borders, no UI, no characters unless the description asks for them.
+```
+
+Adjuntar en cada hoja: una hoja del estilo nuevo, **la tira del plano anterior y la del siguiente** (las que dice
+cada prompt) y, para las auras, un sprite de personaje (`src/assets/characters/naruto.png`) para la escala.
+
 ### Hoja 83 → `sprite-estilo-nuevo-83.png` (tira: el golpe) → `assets/effects/golpe-invocacion.png`
 
 ```
-[ANIMATION STRIP STYLE BLOCK]
+A pixel art animation strip in the exact style of the attached reference images, for a cinematic "Summoning Jutsu" sequence in a Naruto game: the SAME scene shown as 8 consecutive animation frames, left to right, in a single horizontal row, evenly spaced, each frame centered in its own equal-width square slot. These frames are one shot of a continuous video, so the motion between frames must be SMOOTH and gradual, with small changes from one frame to the next (no jumps, no missing in-between poses). The camera never moves inside the strip: the ground is a flat horizontal line at the SAME height in every frame, and anything resting on the ground stays on that exact line. The first frame must continue naturally from the attached previous strip, and the last frame must lead naturally into the attached next strip. Thick black outline where it makes sense, crisp pixels, no blur, no motion-blur smears. Effects that fade out break into sparse dithered pixels instead of becoming transparent. Transparent background (real alpha, NOT a checkerboard pattern). No text, no frame numbers, no borders, no UI, no characters unless the description asks for them.
+
+Attached: previous strip = effects/manos-invocacion.png, next strip = effects/sello-invocacion.png.
 
 8 frames of a ninja's palm slamming onto the ground for a Summoning Jutsu, continuing from the attached hand-seal strip, seen from slightly above with the ground as a flat horizontal surface at the bottom of every frame: 1) the open palm just above the ground, 2) the palm hitting the ground, dust puffing out, 3) black ink bursting out from under the palm in sharp lines, 4) the ink lines racing outward along the ground in a ring, 5) the ring of ink wider, small rocks and dust jumping, 6) the ring at its widest, flattened like an ellipse on the floor, 7) the palm lifting away, the ink ring settling, 8) only the black ink ring on the ground. Black ink, grey dust, skin and dark sleeve only; no colour, no glow.
 ```
@@ -1190,7 +1205,9 @@ código (acercamiento lento, temblor en el golpe, fundidos entre planos):
 ### Hoja 84 → `sprite-estilo-nuevo-84.png` (tira: la columna de humo) → `assets/effects/columna-invocacion.png`
 
 ```
-[ANIMATION STRIP STYLE BLOCK]
+A pixel art animation strip in the exact style of the attached reference images, for a cinematic "Summoning Jutsu" sequence in a Naruto game: the SAME scene shown as 8 consecutive animation frames, left to right, in a single horizontal row, evenly spaced, each frame centered in its own equal-width square slot. These frames are one shot of a continuous video, so the motion between frames must be SMOOTH and gradual, with small changes from one frame to the next (no jumps, no missing in-between poses). The camera never moves inside the strip: the ground is a flat horizontal line at the SAME height in every frame, and anything resting on the ground stays on that exact line. The first frame must continue naturally from the attached previous strip, and the last frame must lead naturally into the attached next strip. Thick black outline where it makes sense, crisp pixels, no blur, no motion-blur smears. Effects that fade out break into sparse dithered pixels instead of becoming transparent. Transparent background (real alpha, NOT a checkerboard pattern). No text, no frame numbers, no borders, no UI, no characters unless the description asks for them.
+
+Attached: previous strip = effects/sello-invocacion.png, next strip = effects/humo-invocacion.png.
 
 8 frames of smoke rising from the lines of a black ink summoning seal drawn on the floor (the attached seal strip, last frames), seen from slightly above, with the seal staying exactly at the same place at the bottom of every frame: 1) thin grey wisps rising from every line of the seal, 2) the wisps taller and curling, 3) the wisps twisting toward the centre, 4) a spinning column of grey smoke forming above the seal, 5) the column taller and thicker, spinning faster, 6) the column filling the frame height, white light leaking through cracks in it, 7) the column bulging, about to burst, bright white light inside, 8) the column at bursting point, almost pure white. Grey smoke and pure white light only — no colour.
 ```
@@ -1198,7 +1215,9 @@ código (acercamiento lento, temblor en el golpe, fundidos entre planos):
 ### Hoja 85 → `sprite-estilo-nuevo-85.png` (tira: aura común) → `assets/effects/aura-comun.png`
 
 ```
-[ANIMATION STRIP STYLE BLOCK]
+A pixel art animation strip in the exact style of the attached reference images, for a cinematic "Summoning Jutsu" sequence in a Naruto game: the SAME scene shown as 8 consecutive animation frames, left to right, in a single horizontal row, evenly spaced, each frame centered in its own equal-width square slot. These frames are one shot of a continuous video, so the motion between frames must be SMOOTH and gradual, with small changes from one frame to the next (no jumps, no missing in-between poses). The camera never moves inside the strip: the ground is a flat horizontal line at the SAME height in every frame, and anything resting on the ground stays on that exact line. The first frame must continue naturally from the attached previous strip, and the last frame must lead naturally into the attached next strip. Thick black outline where it makes sense, crisp pixels, no blur, no motion-blur smears. Effects that fade out break into sparse dithered pixels instead of becoming transparent. Transparent background (real alpha, NOT a checkerboard pattern). No text, no frame numbers, no borders, no UI, no characters unless the description asks for them.
+
+Attached: previous strip = effects/humo-invocacion.png; a character sprite for scale.
 
 8 frames of a soft green chakra aura that rises from the ground around a standing figure (the space in the middle stays EMPTY, the figure is drawn separately), seen from the front with the ground at the bottom of every frame: green leaves and small green chakra flames swirling upward in a gentle spiral around the empty centre, growing from a ring on the floor (frames 1-4) and then looping calmly (frames 5-8, so frames 5-8 can repeat). Light green and white only.
 ```
@@ -1206,7 +1225,9 @@ código (acercamiento lento, temblor en el golpe, fundidos entre planos):
 ### Hoja 86 → `sprite-estilo-nuevo-86.png` (tira: aura rara) → `assets/effects/aura-raro.png`
 
 ```
-[ANIMATION STRIP STYLE BLOCK]
+A pixel art animation strip in the exact style of the attached reference images, for a cinematic "Summoning Jutsu" sequence in a Naruto game: the SAME scene shown as 8 consecutive animation frames, left to right, in a single horizontal row, evenly spaced, each frame centered in its own equal-width square slot. These frames are one shot of a continuous video, so the motion between frames must be SMOOTH and gradual, with small changes from one frame to the next (no jumps, no missing in-between poses). The camera never moves inside the strip: the ground is a flat horizontal line at the SAME height in every frame, and anything resting on the ground stays on that exact line. The first frame must continue naturally from the attached previous strip, and the last frame must lead naturally into the attached next strip. Thick black outline where it makes sense, crisp pixels, no blur, no motion-blur smears. Effects that fade out break into sparse dithered pixels instead of becoming transparent. Transparent background (real alpha, NOT a checkerboard pattern). No text, no frame numbers, no borders, no UI, no characters unless the description asks for them.
+
+Attached: previous strip = effects/humo-invocacion.png; a character sprite for scale.
 
 8 frames of a strong blue chakra aura around a standing figure (the space in the middle stays EMPTY, the figure is drawn separately), seen from the front with the ground at the bottom of every frame: a vortex of blue chakra wind bursting up from a ring on the floor (frames 1-4), then roaring in a tall spiral with small blue sparks and streaks of wind (frames 5-8, loopable). Bright blue, cyan and white only.
 ```
@@ -1214,7 +1235,9 @@ código (acercamiento lento, temblor en el golpe, fundidos entre planos):
 ### Hoja 87 → `sprite-estilo-nuevo-87.png` (tira: aura legendaria) → `assets/effects/aura-legendario.png`
 
 ```
-[ANIMATION STRIP STYLE BLOCK]
+A pixel art animation strip in the exact style of the attached reference images, for a cinematic "Summoning Jutsu" sequence in a Naruto game: the SAME scene shown as 8 consecutive animation frames, left to right, in a single horizontal row, evenly spaced, each frame centered in its own equal-width square slot. These frames are one shot of a continuous video, so the motion between frames must be SMOOTH and gradual, with small changes from one frame to the next (no jumps, no missing in-between poses). The camera never moves inside the strip: the ground is a flat horizontal line at the SAME height in every frame, and anything resting on the ground stays on that exact line. The first frame must continue naturally from the attached previous strip, and the last frame must lead naturally into the attached next strip. Thick black outline where it makes sense, crisp pixels, no blur, no motion-blur smears. Effects that fade out break into sparse dithered pixels instead of becoming transparent. Transparent background (real alpha, NOT a checkerboard pattern). No text, no frame numbers, no borders, no UI, no characters unless the description asks for them.
+
+Attached: previous strip = effects/humo-invocacion.png; a character sprite for scale.
 
 8 frames of an overwhelming golden aura around a standing figure (the space in the middle stays EMPTY, the figure is drawn separately), seen from the front with the ground at the bottom of every frame: a pillar of golden chakra erupting from a cracked ring on the floor with crackling yellow lightning, flying rock debris and a shockwave (frames 1-4), then a tall blazing golden flame-aura with lightning arcs and floating sparks (frames 5-8, loopable). Gold, yellow, orange and white only.
 ```
