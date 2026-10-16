@@ -317,60 +317,6 @@
       "modos": [],
       "esEntrenador": true,
       "geninAntes": 2
-    },
-    {
-      "id": "nadare",
-      "nombre": "Nadare Roga",
-      "tipo": "doton",
-      "statsBase": {
-        "hp": 42,
-        "ataque": 10,
-        "defensa": 6,
-        "velocidad": 7
-      },
-      "jutsu": {
-        "nombre": "Ice Wolf Fang",
-        "descripcion": "Shapes the snow into a pack of ice wolves that bite through armour.",
-        "danoBase": 2.45,
-        "efectoEstado": null,
-        "carga": {
-          "alAtacar": 34,
-          "alRecibirDano": 10,
-          "inicial": 0
-        }
-      },
-      "arcoId": "pais_de_la_nieve",
-      "pendienteDeArte": true,
-      "modos": [],
-      "esEntrenador": true,
-      "geninAntes": 2
-    },
-    {
-      "id": "mizore",
-      "nombre": "Mizore Fuyukuma",
-      "tipo": "raiton",
-      "statsBase": {
-        "hp": 44,
-        "ataque": 10,
-        "defensa": 7,
-        "velocidad": 6
-      },
-      "jutsu": {
-        "nombre": "Snow Bear Charge",
-        "descripcion": "Rides a chakra-powered snowboard straight through the enemy.",
-        "danoBase": 2.45,
-        "efectoEstado": null,
-        "carga": {
-          "alAtacar": 34,
-          "alRecibirDano": 10,
-          "inicial": 0
-        }
-      },
-      "arcoId": "pais_de_la_nieve",
-      "pendienteDeArte": true,
-      "modos": [],
-      "esEntrenador": true,
-      "geninAntes": 2
     }
   ]
 }

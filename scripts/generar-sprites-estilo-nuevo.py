@@ -207,13 +207,6 @@ HOJAS = [
     ('sprite-estilo-nuevo-72.png', ['effects/sello-invocacion']),
     ('sprite-estilo-nuevo-73.png', ['effects/humo-invocacion']),
     ('sprite-estilo-nuevo-74.png', ['summon/cartel']),
-    # --- Land of Snow (fase 4), a la espera de arte.
-    ('sprite-estilo-nuevo-75.png', ['characters/fubuki', 'characters/doto', 'transformations/doto_0', 'transformations/doto_1']),
-    ('sprite-estilo-nuevo-76.png', ['characters/nadare', 'characters/mizore']),
-    ('sprite-estilo-nuevo-77.png', ['projectiles/fubuki', 'projectiles/doto', 'projectiles/nadare', 'projectiles/mizore']),
-    ('sprite-estilo-nuevo-78.png', ['medals/pais_de_la_nieve']),
-    ('sprite-estilo-nuevo-79.png', ['map-columns/pais_de_la_nieve']),
-    ('sprite-estilo-nuevo-80.png', ['aspects/fubuki_1', 'aspects/fubuki_2', 'aspects/doto_1', 'aspects/doto_2']),
 ]
 
 TIPO_POR_CARPETA = {
