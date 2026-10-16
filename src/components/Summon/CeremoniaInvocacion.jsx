@@ -29,7 +29,10 @@ import { ANIMACIONES_INVOCACION } from './animacionesInvocacion';
 const MS_SELLO = 1300;
 const MS_HUMO = 650;
 
-const COLOR_SELLO = { comun: '#7cbf5a', raro: '#4f9dd9', legendario: '#b07cd9' };
+// El color de la rareza SOLO sale en la revelación: el sello y la luz del suelo son
+// neutros, para no destripar lo que va a salir (playtest 2026-10-16).
+const COLOR_RAREZA = { comun: '#7cbf5a', raro: '#4f9dd9', legendario: '#D4A93A' };
+const COLOR_NEUTRO = '#e8e2d0';
 const ORDEN = ['comun', 'raro', 'legendario'];
 const ETIQUETA = { comun: 'Common', raro: 'Rare', legendario: 'Legendary' };
 
@@ -87,7 +90,7 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
   const factor = useFactorAnimacion();
   const [fase, setFase] = useState(factor === 0 ? 'fin' : 'sello');
   const mejor = mejorPremio(premios);
-  const color = COLOR_SELLO[mejor.rareza];
+  const color = COLOR_RAREZA[mejor.rareza];
 
   useEffect(() => {
     if (fase === 'sello') {
@@ -118,18 +121,21 @@ export default function CeremoniaInvocacion({ premios, spriteDePremio, nombreDeP
       className="escena-oscura relative w-full h-80 flex items-center justify-center overflow-hidden rounded-sm bg-tinta-950/90"
     >
       {/* El suelo: un óvalo de luz del color de la rareza que crece con el sello. */}
-      <div className="absolute left-1/2 bottom-10 -translate-x-1/2 w-80 h-16 rounded-[50%] suelo-invocacion"
-        style={{ background: `radial-gradient(ellipse, ${color}55, transparent 70%)` }} />
+      {/* Sin `-translate-x-1/2`: la animación ya mueve el `transform`, y en Tailwind v4
+          las dos cosas se suman (`translate` y `transform` son propiedades distintas),
+          así que la luz salía media anchura a la izquierda del personaje. */}
+      <div className="absolute left-1/2 bottom-10 w-80 h-16 rounded-[50%] suelo-invocacion"
+        style={{ background: `radial-gradient(ellipse, ${COLOR_NEUTRO}40, transparent 70%)` }} />
 
       {fase === 'sello' && (sello ? (
-        // La tira viene en blanco-azul: el halo del color de la rareza es lo que sigue
-        // avisando de lo mejor que va a salir.
-        <div className="absolute left-1/2 bottom-24" style={{ filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 4px ${color})` }}>
+        // En tinta, sin color: `grayscale` quita el azul de la tira de la hoja 72 hasta que
+        // llegue la versión en tinta negra (hoja 82).
+        <div className="absolute left-1/2 bottom-24" style={{ filter: 'grayscale(1) brightness(0.8)' }}>
           <Tira animacion={sello} escala={2} duracion={MS_SELLO * factor} />
         </div>
       ) : (
-        <div className="absolute left-1/2 bottom-2 -translate-x-1/2 sello-sube">
-          <div style={{ transform: 'perspective(600px) rotateX(62deg)' }}><SelloDibujado color={color} /></div>
+        <div className="absolute left-1/2 bottom-2 sello-sube">
+          <div style={{ transform: 'perspective(600px) rotateX(62deg)' }}><SelloDibujado color="#111111" /></div>
         </div>
       ))}
 
